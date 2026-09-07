@@ -62,15 +62,24 @@ export default function PrivacyPage() {
           <section className="space-y-3 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm">
               <UserX className="w-4 h-4 text-rose-500" />
-              <span>4. Account & Data Deletion (Google Play Compliance)</span>
+              <span>4. Account & Data Deletion (Google Play Compliance / खाता और डेटा हटाने की नीति)</span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300">
-              In accordance with Google Play Developer Policies, all users have the right to completely and permanently delete their account and all associated cloud data:
+              In accordance with Google Play Developer Policies and global data privacy standards, all users have the absolute right to completely and permanently delete their account and all associated cloud and device data at any time:
             </p>
-            <ul className="list-disc pl-5 space-y-1 text-xs text-slate-500 dark:text-slate-400">
-              <li><strong>In-App Deletion:</strong> Go to <strong>Profile ➔ Clear Device Local Cache &amp; Reset</strong> or tap <strong>Delete Account</strong> in Account Settings.</li>
-              <li><strong>Web Deletion Request:</strong> If you have uninstalled the application, you can submit an instant deletion request by contacting our Data Protection Officer at <span className="font-mono text-brand-600 dark:text-brand-400">privacy@miftahtools.app</span> or via our <Link href="/contact" className="underline font-bold text-brand-600">Contact Form</Link>.</li>
-              <li><strong>What is Purged:</strong> Your Firebase profile, authentication tokens, course enrollment records, pinned favorites, notification history, and all locally cached metadata are permanently deleted immediately upon confirmation.</li>
+            <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <li>
+                <strong>In-App Deletion (तुरंत खाता हटाएं):</strong> Open the <strong>Account / Profile</strong> tab inside the Miftah Tools app and tap <strong>&quot;Delete Account &amp; Wipe Data&quot;</strong>. This immediately purges your Firebase authentication record, synced profile, and all locally cached files in one tap.
+              </li>
+              <li>
+                <strong>Web Deletion Request (ईमेल द्वारा अनुरोध):</strong> If you have uninstalled the application or cannot access your account, you can submit an instant data deletion request by emailing our team directly at <a href="mailto:jrahmanansari132@gmail.com" className="font-mono text-brand-600 dark:text-brand-400 font-bold underline">jrahmanansari132@gmail.com</a> with the subject <em>&quot;Account &amp; Data Deletion Request - Miftah Tools&quot;</em>. All records will be wiped within 24 hours.
+              </li>
+              <li>
+                <strong>Official Privacy Policy URL:</strong> <a href="https://jamil8655.github.io/miftahi-tools/privacy" target="_blank" rel="noopener noreferrer" className="font-mono text-brand-600 dark:text-brand-400 underline">https://jamil8655.github.io/miftahi-tools/privacy</a>
+              </li>
+              <li>
+                <strong>What is Purged:</strong> Your Firebase account credentials, authentication tokens, course enrollment records, saved favorites, notification history, and all locally cached metadata are permanently erased.
+              </li>
             </ul>
           </section>
 
@@ -82,10 +91,10 @@ export default function PrivacyPage() {
           </section>
 
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-xs text-slate-400">Have privacy or data safety questions?</span>
-            <Link href="/contact" className="text-xs font-bold text-brand-600 hover:underline">
-              Contact Privacy Officer
-            </Link>
+            <span className="text-xs text-slate-400">Support &amp; Privacy Contact:</span>
+            <a href="mailto:jrahmanansari132@gmail.com" className="text-xs font-bold text-brand-600 hover:underline">
+              jrahmanansari132@gmail.com
+            </a>
           </div>
         </div>
       </div>

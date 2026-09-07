@@ -44,7 +44,7 @@ export function QrGenerator() {
   const [wifiSec, setWifiSec] = useState<string>('WPA');
   const [smsNumber, setSmsNumber] = useState<string>('+91 98765 43210');
   const [smsMsg, setSmsMsg] = useState<string>('Hi there!');
-  const [emailTo, setEmailTo] = useState<string>('contact@miftahtools.app');
+  const [emailTo, setEmailTo] = useState<string>('jrahmanansari132@gmail.com');
   const [emailSubj, setEmailSubj] = useState<string>('Inquiry via QR Code');
 
   // Styling

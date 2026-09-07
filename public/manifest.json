@@ -1,29 +1,29 @@
 {
-  "id": "/nexora-tools/",
+  "id": "/miftahi-tools/",
   "name": "Miftah Tools - 220+ High-Performance Digital Utilities",
   "short_name": "Miftah Tools",
   "description": "220+ Free High-Performance Online Tools: PDF to Word, Audio Booster, Video Tools, Developer Utilities & Converters.",
-  "start_url": "/nexora-tools/",
-  "scope": "/nexora-tools/",
+  "start_url": "/miftahi-tools/",
+  "scope": "/miftahi-tools/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#020617",
   "theme_color": "#0284c7",
   "icons": [
     {
-      "src": "/nexora-tools/icon-192.png",
+      "src": "/miftahi-tools/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/nexora-tools/icon-512.png",
+      "src": "/miftahi-tools/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/nexora-tools/icon.svg",
+      "src": "/miftahi-tools/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
@@ -33,22 +33,22 @@
   "shortcuts": [
     {
       "name": "PDF to Word (OCR)",
-      "url": "/nexora-tools/tools/pdf-to-docx",
+      "url": "/miftahi-tools/tools/pdf-to-docx",
       "description": "Convert PDF to Microsoft Word"
     },
     {
       "name": "Audio Volume Booster",
-      "url": "/nexora-tools/tools/audio-booster",
+      "url": "/miftahi-tools/tools/audio-booster",
       "description": "Boost volume up to 500%"
     },
     {
       "name": "Image Studio",
-      "url": "/nexora-tools/image-studio",
+      "url": "/miftahi-tools/image-studio",
       "description": "Compress, resize, and convert images"
     },
     {
       "name": "Developer Courses",
-      "url": "/nexora-tools/courses",
+      "url": "/miftahi-tools/courses",
       "description": "Master digital skills and engineering"
     }
   ]

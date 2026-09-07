@@ -13,8 +13,9 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
   updateProfile,
+  deleteUser,
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { verifyUserAdminClaims } from '@/lib/firebase/admin-claims';
 
 export type UserRole = 'admin' | 'user' | 'guest';
@@ -38,6 +39,7 @@ interface AuthContextType {
   signupWithEmail: (email: string, pass: string, name: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   refreshAdminStatus: () => Promise<void>;
 }
 
@@ -217,6 +219,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRole('guest');
   };
 
+  // 5. Complete Account & Data Deletion (Google Play Compliance)
+  const deleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (auth && auth.currentUser) {
+        const currentUser = auth.currentUser;
+        const uid = currentUser.uid;
+
+        // Delete Firestore user profile if present
+        if (db) {
+          try {
+            await deleteDoc(doc(db, 'users', uid));
+          } catch (docErr) {
+            console.warn('Firestore doc deletion notice:', docErr);
+          }
+        }
+
+        // Delete Firebase Authentication User
+        await deleteUser(currentUser);
+      }
+
+      setUser(null);
+      setRole('guest');
+      return { success: true };
+    } catch (err: any) {
+      console.error('Account deletion error:', err);
+      if (err.code === 'auth/requires-recent-login') {
+        return {
+          success: false,
+          error:
+            'For security reasons, please log out and log back in before deleting your account to re-authenticate.',
+        };
+      }
+      return {
+        success: false,
+        error: err.message || 'Failed to delete account. Please try again.',
+      };
+    }
+  };
+
   const isAuthenticated = !!user;
   const isAdmin = role === 'admin';
 
@@ -233,6 +274,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signupWithEmail,
         loginWithGoogle,
         logout,
+        deleteAccount,
         refreshAdminStatus,
       }}
     >

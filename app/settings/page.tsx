@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useTheme } from '@/components/layout/ThemeContext';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -17,6 +18,8 @@ import {
   CheckCircle2,
   Vibrate,
   Smartphone,
+  UserX,
+  ChevronRight,
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -198,6 +201,29 @@ export default function SettingsPage() {
               {t.settings.cacheCleared}
             </div>
           )}
+        </div>
+
+        {/* Google Play Account & Data Deletion */}
+        <div className="md:col-span-2 p-5 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950 text-rose-600 flex items-center justify-center shrink-0">
+              <UserX className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Account &amp; Data Deletion</h3>
+              <p className="text-xs text-slate-500">
+                Permanently purge your account, cloud sync, and device data (Google Play Policy Compliant).
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/account"
+            className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0 active:scale-95"
+          >
+            <span>Manage Deletion</span>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </div>

@@ -40,7 +40,7 @@ export default function RefundPage() {
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">3. How to Request Billing Support</h3>
             <p>
-              For any billing inquiries, invoice requests, or payment concerns regarding future premium services, please contact our support team at <strong>support@miftahtools.app</strong> with your registered email and account UID.
+              For any billing inquiries, invoice requests, or payment concerns regarding future premium services, please contact our support team at <strong>jrahmanansari132@gmail.com</strong> with your registered email and account UID.
             </p>
           </section>
 

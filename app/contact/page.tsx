@@ -45,8 +45,7 @@ export default function ContactPage() {
                 <Mail className="w-4 h-4" />
               </div>
               <h4 className="text-xs font-bold text-slate-900 dark:text-white">Email Support</h4>
-              <p className="text-[11px] text-slate-500">support@miftahtools.app</p>
-              <p className="text-[11px] text-slate-500">contact@miftahtools.app</p>
+              <p className="text-[11px] text-slate-500 font-mono">jrahmanansari132@gmail.com</p>
             </div>
 
             <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs">
