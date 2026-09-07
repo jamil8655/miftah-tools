@@ -74,7 +74,7 @@ export async function pdfToImages(
 }
 
 /**
- * Generate a full multi-size Favicon package (16x16, 32x32, 48x48, 180x180) from an image.
+ * Generate a full multi-size Favicon package (16x16, 32x32, 48x48, 180x180, 192x192, 512x512) from an image.
  */
 export async function generateFaviconPackage(
   imageFile: File,
@@ -83,46 +83,57 @@ export async function generateFaviconPackage(
   onProgress?.(20, 'Loading source image...');
   const img = new Image();
   const dataUrl = URL.createObjectURL(imageFile);
-  img.src = dataUrl;
-  await new Promise((r) => (img.onload = r));
 
-  const zip = new JSZip();
-  const sizes = [
-    { name: 'favicon-16x16.png', size: 16 },
-    { name: 'favicon-32x32.png', size: 32 },
-    { name: 'favicon-48x48.png', size: 48 },
-    { name: 'apple-touch-icon.png', size: 180 },
-    { name: 'android-chrome-192x192.png', size: 192 },
-    { name: 'android-chrome-512x512.png', size: 512 },
-  ];
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => {
+      URL.revokeObjectURL(dataUrl);
+      reject(new Error('Failed to load image for favicon generation'));
+    };
+    img.src = dataUrl;
+  });
 
-  for (let i = 0; i < sizes.length; i++) {
-    const { name, size } = sizes[i];
-    onProgress?.(30 + Math.floor((i / sizes.length) * 50), `Generating ${name}...`);
+  try {
+    const zip = new JSZip();
+    const sizes = [
+      { name: 'favicon-16x16.png', size: 16 },
+      { name: 'favicon-32x32.png', size: 32 },
+      { name: 'favicon-48x48.png', size: 48 },
+      { name: 'apple-touch-icon.png', size: 180 },
+      { name: 'android-chrome-192x192.png', size: 192 },
+      { name: 'android-chrome-512x512.png', size: 512 },
+    ];
 
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, 0, 0, size, size);
-      const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), 'image/png'));
-      zip.file(name, blob);
+    for (let i = 0; i < sizes.length; i++) {
+      const { name, size } = sizes[i];
+      onProgress?.(30 + Math.floor((i / sizes.length) * 50), `Generating ${name}...`);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, size, size);
+        const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), 'image/png'));
+        zip.file(name, blob);
+      }
     }
-  }
 
-  // Generate HTML snippet for web integration
-  const htmlSnippet = `<!-- NEXORA Favicon Package Integration -->
+    // Generate HTML snippet for web integration
+    const htmlSnippet = `<!-- NEXORA Favicon Package Integration -->
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="manifest" href="/site.webmanifest">`;
-  zip.file('favicon_html_tags.html', htmlSnippet);
+    zip.file('favicon_html_tags.html', htmlSnippet);
 
-  onProgress?.(95, 'Zipping favicon package...');
-  URL.revokeObjectURL(dataUrl);
-  return await zip.generateAsync({ type: 'blob' });
+    onProgress?.(95, 'Zipping favicon package...');
+    return await zip.generateAsync({ type: 'blob' });
+  } finally {
+    URL.revokeObjectURL(dataUrl);
+  }
 }
 
 /**
@@ -131,35 +142,46 @@ export async function generateFaviconPackage(
 export async function extractColorPalette(imageFile: File): Promise<{ hex: string; rgb: string; count: number }[]> {
   const img = new Image();
   const dataUrl = URL.createObjectURL(imageFile);
-  img.src = dataUrl;
-  await new Promise((r) => (img.onload = r));
 
-  const canvas = document.createElement('canvas');
-  canvas.width = 100;
-  canvas.height = 100;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return [];
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => {
+      URL.revokeObjectURL(dataUrl);
+      reject(new Error('Failed to load image for color extraction'));
+    };
+    img.src = dataUrl;
+  });
 
-  ctx.drawImage(img, 0, 0, 100, 100);
-  const imageData = ctx.getImageData(0, 0, 100, 100).data;
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return [];
 
-  const colorMap: Record<string, number> = {};
-  for (let i = 0; i < imageData.length; i += 16) {
-    const r = Math.round(imageData[i] / 24) * 24;
-    const g = Math.round(imageData[i + 1] / 24) * 24;
-    const b = Math.round(imageData[i + 2] / 24) * 24;
-    const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
-    colorMap[hex] = (colorMap[hex] || 0) + 1;
+    ctx.drawImage(img, 0, 0, 100, 100);
+    const imageData = ctx.getImageData(0, 0, 100, 100).data;
+
+    const colorMap: Record<string, number> = {};
+    for (let i = 0; i < imageData.length; i += 16) {
+      const r = Math.round(imageData[i] / 24) * 24;
+      const g = Math.round(imageData[i + 1] / 24) * 24;
+      const b = Math.round(imageData[i + 2] / 24) * 24;
+      const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+      colorMap[hex] = (colorMap[hex] || 0) + 1;
+    }
+
+    return Object.entries(colorMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([hex, count]) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return { hex, rgb: `rgb(${r}, ${g}, ${b})`, count };
+      });
+  } finally {
+    URL.revokeObjectURL(dataUrl);
   }
-
-  URL.revokeObjectURL(dataUrl);
-  return Object.entries(colorMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
-    .map(([hex, count]) => {
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-      return { hex, rgb: `rgb(${r}, ${g}, ${b})`, count };
-    });
 }
+

@@ -22,9 +22,12 @@ import {
   compressImage,
   compressImageToTargetKB,
   resizeImage,
+  cropImage,
   rotateAndFlipImage,
+  watermarkImage,
   stripExifAndMetadata,
 } from '@/lib/image/image-manipulator';
+import { extractColorPalette } from '@/lib/image/image-tools';
 import { pdfToDocx } from '@/lib/documents/doc-converter';
 import {
   deletePdfPages,
@@ -99,6 +102,7 @@ import { PassportPhotoStudio } from '@/components/image/PassportPhotoStudio';
 import { BackgroundRemoverStudio } from '@/components/image/BackgroundRemoverStudio';
 import { FaviconStudio } from '@/components/image/FaviconStudio';
 import { AutoCropImagesToPdfStudio } from '@/components/image/AutoCropImagesToPdfStudio';
+import { UnifiedImageStudio } from '@/components/image/UnifiedImageStudio';
 import { OcrStudio } from '@/components/ocr/OcrStudio';
 
 interface ToolPageClientProps {
@@ -230,8 +234,19 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     customWorkspace = <PassportPhotoStudio />;
   } else if (tool.id === 'background-remover' || tool.slug === 'background-remover') {
     customWorkspace = <BackgroundRemoverStudio />;
-  } else if (tool.id === 'favicon-generator') {
+  } else if (tool.id === 'favicon-generator' || tool.slug === 'favicon-generator') {
     customWorkspace = <FaviconStudio />;
+  } else if (
+    tool.id === 'image-converter' ||
+    tool.slug === 'image-converter' ||
+    tool.id === 'image-studio' ||
+    tool.slug === 'image-studio' ||
+    tool.id === 'photo-editor' ||
+    tool.slug === 'photo-editor' ||
+    tool.id === 'image-cropper' ||
+    tool.slug === 'image-cropper'
+  ) {
+    customWorkspace = <UnifiedImageStudio />;
   } else if (
     tool.id === 'auto-crop-images-to-pdf' ||
     tool.slug === 'auto-crop-images-to-pdf' ||
@@ -837,19 +852,160 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return [{ name: 'converted-document.pdf', originalSize: files.reduce((a, f) => a + f.size, 0), processedSize: blob.size, blob }];
     }
 
-    // 17. IMAGE FORMAT CONVERSIONS (JPG, PNG, WEBP, BMP, TIFF)
+    // 17. IMAGE ROTATOR & FLIPPER
     if (
-      tool.id.includes('-to-') &&
+      tool.id === 'image-rotator' ||
+      tool.id === 'image-rotate' ||
+      tool.slug === 'image-rotator' ||
+      tool.slug === 'rotate-image' ||
+      tool.id === 'image-flipper' ||
+      tool.id === 'image-flip' ||
+      tool.slug === 'image-flipper' ||
+      tool.slug === 'flip-image'
+    ) {
+      const action = tool.id.includes('flip') || tool.slug.includes('flip')
+        ? (options.mode || 'flip-h')
+        : (options.action || options.angle || 'rotate-90');
+      onProgress(40, 'Rotating / flipping image(s)...');
+      const results = [];
+      for (const f of files) {
+        const res = await rotateAndFlipImage(f, action);
+        results.push({
+          name: `transformed-${f.name}`,
+          originalSize: f.size,
+          processedSize: res.blob.size,
+          blob: res.blob,
+          dataUrl: res.dataUrl,
+        });
+      }
+      return results;
+    }
+
+    // 18. IMAGE WATERMARK
+    if (
+      tool.id === 'image-watermark' ||
+      tool.id === 'watermark-image' ||
+      tool.slug === 'image-watermark' ||
+      tool.slug === 'watermark-image'
+    ) {
+      onProgress(40, 'Applying custom watermark to image(s)...');
+      const results = [];
+      for (const f of files) {
+        const res = await watermarkImage(
+          f,
+          options.text || 'NEXORA TOOLS',
+          options.opacity ?? 0.5,
+          options.color || '#ffffff',
+          options.position || 'bottom-right'
+        );
+        results.push({
+          name: `watermarked-${f.name}`,
+          originalSize: f.size,
+          processedSize: res.blob.size,
+          blob: res.blob,
+          dataUrl: res.dataUrl,
+        });
+      }
+      return results;
+    }
+
+    // 19. IMAGE EXIF & METADATA CLEANER
+    if (
+      tool.id === 'strip-exif' ||
+      tool.id === 'remove-exif' ||
+      tool.id === 'clean-exif' ||
+      tool.id === 'image-metadata-cleaner' ||
+      tool.slug === 'strip-exif' ||
+      tool.slug === 'remove-exif' ||
+      tool.slug === 'clean-exif' ||
+      tool.slug === 'image-metadata-cleaner'
+    ) {
+      onProgress(40, 'Stripping all EXIF tags, GPS metadata, and privacy markers...');
+      const results = [];
+      for (const f of files) {
+        const res = await stripExifAndMetadata(f);
+        results.push({
+          name: `clean-${f.name}`,
+          originalSize: f.size,
+          processedSize: res.blob.size,
+          blob: res.blob,
+          dataUrl: res.dataUrl,
+        });
+      }
+      return results;
+    }
+
+    // 20. IMAGE COLOR PALETTE EXTRACTOR
+    if (tool.id === 'image-palette' || tool.slug === 'image-palette') {
+      onProgress(40, 'Extracting color palette and dominant tones...');
+      const results = [];
+      for (const f of files) {
+        const colors = await extractColorPalette(f);
+        const paletteText = `COLOR PALETTE ANALYSIS - ${f.name}\n` +
+          `Generated by NEXORA Tools\n\n` +
+          colors.map((c, i) => `${i + 1}. HEX: ${c.hex} | RGB: ${c.rgb} | Prevalence: ${c.count}px`).join('\n');
+        const blob = new Blob([paletteText], { type: 'text/plain;charset=utf-8' });
+        results.push({
+          name: `${f.name.replace(/\.[^/.]+$/, '')}_palette.txt`,
+          originalSize: f.size,
+          processedSize: blob.size,
+          blob,
+        });
+      }
+      return results;
+    }
+
+    // 21. IMAGE RESIZER & EXACT SIZE (BATCH / STANDARD RUNNER)
+    if (tool.id === 'image-resizer' || tool.slug === 'image-resizer') {
+      onProgress(30, 'Resizing image dimensions & optimizing size...');
+      const results = [];
+      for (const f of files) {
+        let resBlob: Blob;
+        let dataUrl: string | undefined;
+
+        if (options.targetKb && options.targetKb > 0) {
+          const comp = await compressImageToTargetKB(f, options.targetKb, options.format || 'image/jpeg');
+          resBlob = comp.blob;
+          dataUrl = comp.dataUrl;
+        } else {
+          const resized = await resizeImage(
+            f,
+            options.width || 1200,
+            options.height || 1200,
+            options.lockAspect ?? true,
+            options.format || 'image/jpeg',
+            options.quality ?? 0.92
+          );
+          resBlob = resized.blob;
+          dataUrl = resized.dataUrl;
+        }
+
+        results.push({
+          name: `resized-${f.name}`,
+          originalSize: f.size,
+          processedSize: resBlob.size,
+          blob: resBlob,
+          dataUrl,
+        });
+      }
+      return results;
+    }
+
+    // 22. UNIVERSAL IMAGE FORMAT CONVERSIONS (JPG, PNG, WEBP, BMP, TIFF, HEIC, ICO)
+    if (
+      (tool.id.includes('-to-') || tool.id === 'image-converter' || tool.slug === 'image-converter') &&
       (tool.id.includes('jpg') ||
         tool.id.includes('jpeg') ||
         tool.id.includes('png') ||
         tool.id.includes('webp') ||
         tool.id.includes('bmp') ||
         tool.id.includes('tiff') ||
-        tool.id.includes('heic')) &&
-      tool.category === 'image'
+        tool.id.includes('heic') ||
+        tool.id.includes('ico') ||
+        tool.id === 'image-converter' ||
+        tool.category === 'image')
     ) {
-      let targetMime: 'image/jpeg' | 'image/png' | 'image/webp' = 'image/jpeg';
+      let targetMime: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/x-icon' = 'image/jpeg';
       let targetExt = 'jpg';
 
       if (tool.id.endsWith('-to-png') || tool.id.endsWith('-to-webp-png')) {
@@ -858,6 +1014,12 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       } else if (tool.id.endsWith('-to-webp')) {
         targetMime = 'image/webp';
         targetExt = 'webp';
+      } else if (tool.id.endsWith('-to-ico') || tool.id.includes('ico')) {
+        targetMime = 'image/x-icon';
+        targetExt = 'ico';
+      } else if (options.outputFormat) {
+        targetMime = options.outputFormat;
+        targetExt = targetMime === 'image/png' ? 'png' : targetMime === 'image/webp' ? 'webp' : 'jpg';
       }
 
       onProgress(40, `Converting image(s) to ${targetExt.toUpperCase()}...`);
