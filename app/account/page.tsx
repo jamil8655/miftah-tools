@@ -44,7 +44,7 @@ import {
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, firebaseUser, isAuthenticated, isAdmin, logout, deleteAccount } = useAuth();
+  const { user, firebaseUser, isAuthenticated, isAdmin, updateUserProfile, logout, deleteAccount } = useAuth();
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useI18n();
   const {
@@ -76,7 +76,7 @@ export default function AccountPage() {
     setBio(savedBio);
   }, [user]);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhotoError('');
     const file = e.target.files?.[0];
     if (!file) return;
@@ -87,9 +87,9 @@ export default function AccountPage() {
     }
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         const canvas = document.createElement('canvas');
         canvas.width = 256;
         canvas.height = 256;
@@ -97,7 +97,8 @@ export default function AccountPage() {
         if (ctx) {
           ctx.drawImage(img, 0, 0, 256, 256);
           const compressed = canvas.toDataURL('image/jpeg', 0.85);
-          updateProfilePhoto(compressed);
+          await updateProfilePhoto(compressed);
+          await updateUserProfile(displayName || user?.name || 'User', compressed);
         }
       };
       img.src = reader.result as string;
@@ -105,14 +106,21 @@ export default function AccountPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!displayName.trim()) return;
+
     localStorage.setItem('nexora_user_bio', bio);
-    setProfileSaved(true);
-    setTimeout(() => {
-      setProfileSaved(false);
-      setIsEditProfileOpen(false);
-    }, 1500);
+    const res = await updateUserProfile(displayName.trim());
+    if (res.success) {
+      setProfileSaved(true);
+      setTimeout(() => {
+        setProfileSaved(false);
+        setIsEditProfileOpen(false);
+      }, 1000);
+    } else {
+      alert(res.error || 'Failed to update name');
+    }
   };
 
   const handleConfirmLogout = async () => {
@@ -196,30 +204,30 @@ export default function AccountPage() {
 
         {photoError && <p className="text-xs text-rose-500 font-medium">{photoError}</p>}
 
-        <div className="flex items-center gap-2 pt-1">
-          {isAuthenticated ? (
-            <button
-              type="button"
-              onClick={() => setIsEditProfileOpen(true)}
-              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold active:scale-95 transition-all flex items-center gap-1.5"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Edit Profile</span>
-            </button>
-          ) : (
+        <div className="flex items-center flex-wrap gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => setIsEditProfileOpen(true)}
+            className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold active:scale-95 transition-all shadow-md shadow-brand-500/20 flex items-center gap-1.5"
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Edit Name &amp; Profile</span>
+          </button>
+
+          {!isAuthenticated && (
             <button
               type="button"
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold active:scale-95 transition-all shadow-md shadow-brand-500/25 flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold active:scale-95 transition-all flex items-center gap-1.5 border border-slate-200 dark:border-slate-700"
             >
-              <LogIn className="w-4 h-4" />
-              <span>Sign In / Register</span>
+              <LogIn className="w-4 h-4 text-brand-600" />
+              <span>Sign In with Google</span>
             </button>
           )}
 
           <Link
             href="/settings"
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all border border-slate-200 dark:border-slate-700"
             title="App Settings"
           >
             <SettingsIcon className="w-4 h-4" />

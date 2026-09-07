@@ -40,6 +40,7 @@ interface AuthContextType {
   loginWithEmail: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signupWithEmail: (email: string, pass: string, name: string) => Promise<{ success: boolean; error?: string }>;
   loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  updateUserProfile: (name: string, photoURL?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   refreshAdminStatus: () => Promise<void>;
@@ -56,7 +57,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const evaluateUser = async (firebaseUser: FirebaseUser | null, forceRefresh = false) => {
     setRawFirebaseUser(firebaseUser);
     if (!firebaseUser) {
-      setUser(null);
+      const savedLocalName = typeof window !== 'undefined' ? localStorage.getItem('miftah_user_name') : null;
+      if (savedLocalName) {
+        setUser({
+          uid: 'local_user',
+          name: savedLocalName,
+          role: 'guest',
+        });
+      } else {
+        setUser(null);
+      }
       setRole('guest');
       setIsLoading(false);
       return;
@@ -65,9 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isAdminClaim = await verifyUserAdminClaims(firebaseUser, forceRefresh);
     const assignedRole: UserRole = isAdminClaim ? 'admin' : 'user';
 
+    const localSavedName = typeof window !== 'undefined' ? localStorage.getItem('miftah_user_name') : null;
+    const resolvedName = firebaseUser.displayName || localSavedName || firebaseUser.email?.split('@')[0] || 'User';
+
     const authUser: AuthUser = {
       uid: firebaseUser.uid,
-      name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+      name: resolvedName,
       email: firebaseUser.email || undefined,
       photoURL: firebaseUser.photoURL || undefined,
       role: assignedRole,
@@ -245,8 +258,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // 4. Real Firebase Sign-Out
+  // 4. Update Profile (Display Name & Avatar Photo)
+  const updateUserProfile = async (name: string, photoURL?: string): Promise<{ success: boolean; error?: string }> => {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return { success: false, error: 'Name cannot be empty.' };
+    }
+
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('miftah_user_name', trimmedName);
+      }
+
+      if (auth && auth.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: trimmedName,
+          ...(photoURL !== undefined ? { photoURL } : {}),
+        });
+
+        if (db) {
+          try {
+            const userDocRef = doc(db, 'users', auth.currentUser.uid);
+            await setDoc(
+              userDocRef,
+              {
+                displayName: trimmedName,
+                ...(photoURL !== undefined ? { photoURL } : {}),
+                updatedAt: Date.now(),
+              },
+              { merge: true }
+            );
+          } catch (docErr) {
+            console.warn('Firestore profile update notice:', docErr);
+          }
+        }
+      }
+
+      setUser((prev) => {
+        if (!prev) {
+          return {
+            uid: 'local_user',
+            name: trimmedName,
+            role: 'user',
+            photoURL: photoURL || undefined,
+          };
+        }
+        return {
+          ...prev,
+          name: trimmedName,
+          ...(photoURL !== undefined ? { photoURL } : {}),
+        };
+      });
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Update profile error:', err);
+      return { success: false, error: err.message || 'Failed to update profile.' };
+    }
+  };
+
+  // 5. Real Firebase Sign-Out
   const logout = async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('miftah_user_name');
+    }
     if (Capacitor.isNativePlatform()) {
       try {
         const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
@@ -320,6 +395,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginWithEmail,
         signupWithEmail,
         loginWithGoogle,
+        updateUserProfile,
         logout,
         deleteAccount,
         refreshAdminStatus,

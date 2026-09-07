@@ -126,12 +126,9 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
           {/* Brand Col */}
           <div className="lg:col-span-2 space-y-4">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-brand-500/20">
-                <Sparkles className="w-4 h-4 fill-current" />
-              </div>
-              <span className="text-lg font-black text-slate-900 dark:text-white">
-                MIFTAH <span className="text-brand-600 text-xs ml-0.5 font-mono uppercase font-black">TOOLS</span>
+            <Link href="/" className="flex items-center gap-2 select-none">
+              <span className="text-xl font-black tracking-tight text-brand-600 dark:text-brand-400">
+                MIFTAH <span className="px-1.5 py-0.5 rounded-md bg-brand-600 text-white text-[10px] ml-0.5 uppercase font-black">TOOLS</span>
               </span>
             </Link>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
