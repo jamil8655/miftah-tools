@@ -4,8 +4,8 @@ const isGitHubActions = !isCapacitor && process.env.GITHUB_ACTIONS === 'true';
 
 const nextConfig = {
   output: 'export',
-  basePath: isGitHubActions ? '/nexora-tools' : '',
-  assetPrefix: isGitHubActions ? '/nexora-tools/' : '',
+  basePath: isGitHubActions ? '/miftah-tools' : '',
+  assetPrefix: isGitHubActions ? '/miftah-tools/' : '',
   trailingSlash: true,
   images: {
     unoptimized: true,

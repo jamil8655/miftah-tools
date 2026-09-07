@@ -30,11 +30,11 @@ export const siteConfig: SiteConfig = {
   tagline: 'The Master Key to 220+ Private Document & Productivity Utilities.',
   description:
     'Convert, compress, edit, calculate, code and manage your files with 100% private client-side processing.',
-  url: 'https://jamil8655.github.io/nexora-tools/',
+  url: 'https://jamil8655.github.io/miftah-tools/',
   ogImage: '/icon-512.png',
   slogan: 'Your All-in-One Master Key for Digital Mastery & Workflow Automation.',
   links: {
-    github: 'https://github.com/jamil8655/nexora-tools',
+    github: 'https://github.com/jamil8655/miftah-tools',
     docs: '/tools',
     privacy: '/privacy',
     terms: '/terms',
