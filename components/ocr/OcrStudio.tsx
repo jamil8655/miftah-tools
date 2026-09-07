@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { runOcr, OcrResult } from '@/lib/ocr/ocr-engine';
+import { textToWordDocx } from '@/lib/documents/doc-converter';
+import { getPdfJsLib } from '@/lib/utils/formatters';
 import { FileUploader } from '@/components/shared/FileUploader';
 import { ProgressBar } from '@/components/shared/ProgressBar';
-import { ScanText, Copy, Check, Download, Languages, Sparkles } from 'lucide-react';
+import { ScanText, Copy, Check, Download, Languages, Sparkles, FileText } from 'lucide-react';
 import { downloadSingleFile } from '@/lib/utils/download';
 import { addHistoryItem } from '@/lib/storage/file-store';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -22,6 +24,7 @@ const OCR_LOCALES = {
     copied: 'Copied!',
     copyText: 'Copy Text',
     exportTxt: 'Export .TXT',
+    exportDocx: 'Export Word (.DOCX)',
     scanAnother: 'Scan Another Document',
   },
   ur: {
@@ -36,6 +39,7 @@ const OCR_LOCALES = {
     copied: 'کاپی ہو گیا!',
     copyText: 'متن کاپی کریں',
     exportTxt: 'TXT برآمد کریں',
+    exportDocx: 'Word DOCX برآمد کریں',
     scanAnother: 'دوسری دستاویز اسکین کریں',
   },
   ar: {
@@ -50,6 +54,7 @@ const OCR_LOCALES = {
     copied: 'تم النسخ!',
     copyText: 'نسخ النص',
     exportTxt: 'تصدير TXT',
+    exportDocx: 'تصدير Word (.DOCX)',
     scanAnother: 'مسح مستند آخر',
   },
   hi: {
@@ -64,6 +69,7 @@ const OCR_LOCALES = {
     copied: 'कॉपी हो गया!',
     copyText: 'टेक्स्ट कॉपी करें',
     exportTxt: 'TXT निर्यात करें',
+    exportDocx: 'Word (.DOCX) निर्यात करें',
     scanAnother: 'दूसरा दस्तावेज़ स्कैन करें',
   },
 };
@@ -91,18 +97,68 @@ export function OcrStudio() {
 
     try {
       const file = selectedFiles[0];
-      const result = await runOcr(file, language, (pct, status) => {
-        setProgress(pct);
-        setStatusText(status);
-      });
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
 
-      setOcrResult(result);
+      if (isPdf) {
+        setStatusText('Loading PDF pages for OCR scanning...');
+        const pdfjsLib = await getPdfJsLib();
+        if (!pdfjsLib) throw new Error('PDF library unavailable');
+
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
+        const pdfDoc = await loadingTask.promise;
+        const totalPages = pdfDoc.numPages;
+
+        let combinedText = '';
+        let totalConf = 0;
+        let countedPages = 0;
+
+        for (let p = 1; p <= totalPages; p++) {
+          const basePct = Math.round((p / totalPages) * 85);
+          setProgress(basePct);
+          setStatusText(`Scanning page ${p} of ${totalPages}...`);
+
+          const page = await pdfDoc.getPage(p);
+          const viewport = page.getViewport({ scale: 1.6 });
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            const dataUrl = canvas.toDataURL('image/png');
+            const pageRes = await runOcr(dataUrl, language);
+            if (pageRes.text && pageRes.text.trim()) {
+              combinedText += (combinedText ? '\n\n' : '') + pageRes.text.trim();
+              totalConf += pageRes.confidence;
+              countedPages++;
+            }
+          }
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+
+        const avgConf = countedPages > 0 ? Math.round(totalConf / countedPages) : 90;
+        const res: OcrResult = {
+          text: combinedText || 'No text could be recognized from the PDF.',
+          confidence: avgConf,
+          lines: combinedText.split('\n').map((l) => ({ text: l, confidence: avgConf })),
+        };
+        setOcrResult(res);
+      } else {
+        const result = await runOcr(file, language, (pct, status) => {
+          setProgress(pct);
+          setStatusText(status);
+        });
+        setOcrResult(result);
+      }
+
       addHistoryItem({
         toolId: 'ocr-image-to-text',
-        toolName: 'OCR Image to Text',
+        toolName: 'OCR Image/PDF to Text & Word',
         fileName: file.name,
         originalSize: file.size,
-        outputSize: result.text.length,
+        outputSize: ocrResult?.text.length || file.size,
         success: true,
       });
     } catch (err: any) {
@@ -122,8 +178,16 @@ export function OcrStudio() {
 
   const handleDownloadTxt = () => {
     if (!ocrResult?.text) return;
+    const baseName = selectedFiles[0]?.name ? selectedFiles[0].name.replace(/\.[^/.]+$/, '') : 'ocr-extracted';
     const blob = new Blob([ocrResult.text], { type: 'text/plain;charset=utf-8' });
-    downloadSingleFile(blob, `ocr-extracted-text.txt`);
+    downloadSingleFile(blob, `${baseName}.txt`);
+  };
+
+  const handleDownloadDocx = async () => {
+    if (!ocrResult?.text) return;
+    const baseName = selectedFiles[0]?.name ? selectedFiles[0].name.replace(/\.[^/.]+$/, '') : 'ocr-extracted';
+    const blob = await textToWordDocx(ocrResult.text, baseName);
+    downloadSingleFile(blob, `${baseName}.docx`);
   };
 
   return (
@@ -132,10 +196,10 @@ export function OcrStudio() {
       {!ocrResult && !isProcessing && (
         <div className="space-y-6">
           <FileUploader
-            acceptedExtensions={['.jpg', '.jpeg', '.png', '.webp', '.bmp']}
-            acceptedMimeTypes={['image/*']}
+            acceptedExtensions={['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.pdf']}
+            acceptedMimeTypes={['image/*', 'application/pdf']}
             maxFiles={1}
-            maxFileSizeMB={25}
+            maxFileSizeMB={50}
             selectedFiles={selectedFiles}
             onFilesSelected={setSelectedFiles}
             onRemoveFile={() => setSelectedFiles([])}
@@ -215,11 +279,11 @@ export function OcrStudio() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 shadow-sm"
+                className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 shadow-sm"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? loc.copied : loc.copyText}</span>
@@ -227,8 +291,17 @@ export function OcrStudio() {
 
               <button
                 type="button"
+                onClick={handleDownloadDocx}
+                className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-500/20"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{loc.exportDocx}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleDownloadTxt}
-                className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-brand-500/20"
+                className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-brand-500/20"
               >
                 <Download className="w-4 h-4" />
                 <span>{loc.exportTxt}</span>

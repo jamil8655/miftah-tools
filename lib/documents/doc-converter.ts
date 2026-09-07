@@ -17,9 +17,19 @@ import { getPdfJsLib } from '@/lib/utils/formatters';
  * Monotonic progress guaranteed (never jumps backwards).
  */
 export async function pdfToDocx(
-  file: File,
+  file: File | Blob,
   onProgress?: (percent: number, status: string) => void
 ): Promise<Blob> {
+  const fileName = (file as File).name || 'document.pdf';
+  
+  // If user dropped an image file into the PDF converter, route to Image-to-Word
+  if (
+    file.type?.startsWith('image/') ||
+    /\.(jpg|jpeg|png|webp|bmp|tiff|heic|svg)$/i.test(fileName)
+  ) {
+    return imageToDocx(file, onProgress);
+  }
+
   let currentMaxPercent = 5;
   const updateProgress = (pct: number, status: string) => {
     if (pct > currentMaxPercent) {
@@ -47,9 +57,8 @@ export async function pdfToDocx(
     const pageNextPct = 20 + Math.floor((pageNum / totalPages) * 70);
     updateProgress(pageBasePct, `Processing page ${pageNum} of ${totalPages}...`);
 
-    // Micro-delay between pages to allow UI repaints and garbage collection
     if (pageNum % 2 === 0 || totalPages > 10) {
-      await new Promise((resolve) => setTimeout(resolve, 8));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
 
     try {
@@ -60,7 +69,7 @@ export async function pdfToDocx(
       // Extract existing digital text
       const digitalText = items.map((i) => i.str || '').join(' ').trim();
 
-      if (items.length > 0 && digitalText.length > 25) {
+      if (items.length > 0 && digitalText.length > 0) {
         // 1. Digital PDF Vector Layout Reconstruction
         items.sort((a, b) => {
           const yDiff = b.transform[5] - a.transform[5];
@@ -137,8 +146,8 @@ export async function pdfToDocx(
         }
         updateProgress(pageNextPct, `Finished page ${pageNum} of ${totalPages}`);
       } else {
-        // 2. SCANNED PAPER / IMAGE PDF -> RUN OPTICAL CHARACTER RECOGNITION (OCR)
-        updateProgress(pageBasePct + 2, `Scanned page ${pageNum} detected. Extracting text...`);
+        // 2. SCANNED / IMAGE PDF -> RUN OPTICAL CHARACTER RECOGNITION (OCR)
+        updateProgress(pageBasePct + 2, `Scanned page ${pageNum} detected. Extracting text via OCR...`);
 
         const ocrScale = totalPages > 15 ? 1.25 : totalPages > 6 ? 1.5 : 1.85;
         const viewport = page.getViewport({ scale: ocrScale });
@@ -165,7 +174,7 @@ export async function pdfToDocx(
                       children: [
                         new TextRun({
                           text: cleanP,
-                          size: 24, // 12pt standard
+                          size: 24, // 12pt
                         }),
                       ],
                       spacing: { after: 140 },
@@ -183,11 +192,23 @@ export async function pdfToDocx(
                       color: '888888',
                     }),
                   ],
+                  spacing: { after: 120 },
                 })
               );
             }
           } catch (ocrErr) {
-            console.error('OCR Error on page', pageNum, ocrErr);
+            console.warn('OCR fallback warning on page', pageNum, ocrErr);
+            docChildren.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `[Page ${pageNum} content]`,
+                    color: '666666',
+                  }),
+                ],
+                spacing: { after: 120 },
+              })
+            );
           }
         }
 
@@ -207,13 +228,18 @@ export async function pdfToDocx(
       }
     } catch (pageErr) {
       console.warn(`Error processing page ${pageNum}:`, pageErr);
+      docChildren.push(
+        new Paragraph({
+          children: [new TextRun({ text: `[Page ${pageNum}]` })],
+        })
+      );
     }
   }
 
   updateProgress(94, 'Assembling editable Microsoft Word document...');
 
   const doc = new Document({
-    title: file.name.replace(/\.pdf$/i, ''),
+    title: fileName.replace(/\.[^/.]+$/, ''),
     description: 'Converted from PDF with OCR by Miftah Tools',
     sections: [
       {
@@ -226,6 +252,240 @@ export async function pdfToDocx(
   const docxBlob = await Packer.toBlob(doc);
   onProgress?.(100, 'Word document successfully created!');
   return docxBlob;
+}
+
+/**
+ * High-Fidelity Image to Word (DOCX) Converter using OCR.
+ */
+export async function imageToDocx(
+  file: File | Blob,
+  onProgress?: (percent: number, status: string) => void,
+  language: string = 'eng'
+): Promise<Blob> {
+  const fileName = (file as File).name || 'image-document';
+  const cleanTitle = fileName.replace(/\.[^/.]+$/, '');
+
+  onProgress?.(15, 'Loading image for text recognition...');
+  
+  let ocrText = '';
+  try {
+    onProgress?.(30, 'Extracting text and structure from image...');
+    const result = await runOcr(file, language, (pct, status) => {
+      onProgress?.(30 + Math.round(pct * 0.5), status);
+    });
+    ocrText = result.text || '';
+  } catch (err) {
+    console.warn('Image OCR error:', err);
+  }
+
+  onProgress?.(85, 'Formatting editable Word document...');
+
+  const paragraphs: Paragraph[] = [];
+
+  if (ocrText.trim()) {
+    const rawParagraphs = ocrText.split(/\n\s*\n/);
+    let isFirst = true;
+
+    for (const p of rawParagraphs) {
+      const clean = p.trim();
+      if (!clean) continue;
+
+      if (isFirst && clean.length < 80 && !clean.includes('\n')) {
+        // First short line as Title / Heading 1
+        paragraphs.push(
+          new Paragraph({
+            text: clean,
+            heading: HeadingLevel.HEADING_1,
+            spacing: { before: 200, after: 120 },
+          })
+        );
+        isFirst = false;
+      } else {
+        isFirst = false;
+        // Split internal single linebreaks into text runs
+        const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean);
+        paragraphs.push(
+          new Paragraph({
+            children: lines.map(
+              (line, idx) =>
+                new TextRun({
+                  text: line + (idx < lines.length - 1 ? ' ' : ''),
+                  size: 24, // 12pt standard
+                })
+            ),
+            spacing: { after: 140 },
+          })
+        );
+      }
+    }
+  }
+
+  if (paragraphs.length === 0) {
+    paragraphs.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: `Document extracted from ${fileName}`,
+            bold: true,
+            size: 28,
+          }),
+        ],
+        spacing: { after: 160 },
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'No clear text was recognized from the uploaded image. Please ensure the image contains clear, high-contrast text.',
+            italics: true,
+            color: '666666',
+          }),
+        ],
+      })
+    );
+  }
+
+  onProgress?.(95, 'Packaging Microsoft Word DOCX file...');
+
+  const doc = new Document({
+    title: cleanTitle,
+    description: 'Converted from Image via OCR by Miftah Tools',
+    sections: [
+      {
+        properties: {},
+        children: paragraphs,
+      },
+    ],
+  });
+
+  const docxBlob = await Packer.toBlob(doc);
+  onProgress?.(100, 'Word DOCX document ready!');
+  return docxBlob;
+}
+
+/**
+ * Convert Multiple Images to a single multi-page Word DOCX document.
+ */
+export async function imagesToDocx(
+  files: (File | Blob)[],
+  onProgress?: (percent: number, status: string) => void,
+  language: string = 'eng'
+): Promise<Blob> {
+  const total = files.length;
+  const allParagraphs: Paragraph[] = [];
+
+  for (let i = 0; i < total; i++) {
+    const f = files[i];
+    const name = (f as File).name || `Image ${i + 1}`;
+    const basePct = Math.round((i / total) * 90);
+    onProgress?.(basePct, `Processing image ${i + 1} of ${total} (${name})...`);
+
+    try {
+      const result = await runOcr(f, language);
+      const text = (result.text || '').trim();
+
+      if (text) {
+        const blocks = text.split(/\n\s*\n/);
+        for (const block of blocks) {
+          const clean = block.trim();
+          if (clean) {
+            allParagraphs.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: clean.replace(/\n/g, ' '),
+                    size: 24,
+                  }),
+                ],
+                spacing: { after: 140 },
+              })
+            );
+          }
+        }
+      } else {
+        allParagraphs.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `[Image ${i + 1}: ${name} - No text detected]`,
+                italics: true,
+                color: '888888',
+              }),
+            ],
+            spacing: { after: 120 },
+          })
+        );
+      }
+
+      if (i < total - 1) {
+        allParagraphs.push(new Paragraph({ children: [new PageBreak()] }));
+      }
+    } catch (err) {
+      console.warn(`Error processing image ${i + 1}:`, err);
+    }
+  }
+
+  onProgress?.(95, 'Building combined Word document...');
+
+  const doc = new Document({
+    title: 'Converted Images Document',
+    description: 'Converted from images by Miftah Tools',
+    sections: [
+      {
+        properties: {},
+        children: allParagraphs.length > 0 ? allParagraphs : [new Paragraph({ text: 'Converted Document' })],
+      },
+    ],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  onProgress?.(100, 'Word document generated!');
+  return blob;
+}
+
+/**
+ * Convert plain or formatted text to a Word DOCX file.
+ */
+export async function textToWordDocx(text: string, title: string = 'Document'): Promise<Blob> {
+  const paragraphs: Paragraph[] = [];
+  const rawBlocks = text.split(/\n\s*\n/);
+
+  let isFirst = true;
+  for (const block of rawBlocks) {
+    const clean = block.trim();
+    if (!clean) continue;
+
+    if (isFirst && clean.length < 80 && !clean.includes('\n')) {
+      paragraphs.push(
+        new Paragraph({
+          text: clean,
+          heading: HeadingLevel.HEADING_1,
+          spacing: { before: 200, after: 120 },
+        })
+      );
+      isFirst = false;
+    } else {
+      isFirst = false;
+      const lines = clean.split('\n');
+      paragraphs.push(
+        new Paragraph({
+          children: lines.map((l, idx) => new TextRun({ text: l + (idx < lines.length - 1 ? '\n' : '') })),
+          spacing: { after: 140 },
+        })
+      );
+    }
+  }
+
+  const doc = new Document({
+    title,
+    sections: [
+      {
+        properties: {},
+        children: paragraphs.length > 0 ? paragraphs : [new Paragraph({ text: text || 'Empty Document' })],
+      },
+    ],
+  });
+
+  return await Packer.toBlob(doc);
 }
 
 function buildParagraph(lines: { text: string; isBold: boolean; fontSize: number }[]): Paragraph {

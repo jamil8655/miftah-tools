@@ -28,7 +28,7 @@ import {
   stripExifAndMetadata,
 } from '@/lib/image/image-manipulator';
 import { extractColorPalette } from '@/lib/image/image-tools';
-import { pdfToDocx } from '@/lib/documents/doc-converter';
+import { pdfToDocx, imageToDocx, imagesToDocx, textToWordDocx } from '@/lib/documents/doc-converter';
 import {
   deletePdfPages,
   reversePdfPages,
@@ -652,15 +652,32 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return results;
     }
 
-    // 10. PDF TO WORD / EXCEL / CSV / RTF / PPTX
-    if (tool.id === 'pdf-to-docx' || tool.id === 'pdf-to-doc' || tool.id === 'pdf-to-word' || tool.slug === 'pdf-to-word') {
+    // 10. PDF TO WORD / IMAGE TO WORD / OCR TO WORD / EXCEL / CSV / RTF / PPTX
+    if (
+      tool.id === 'pdf-to-docx' ||
+      tool.id === 'pdf-to-doc' ||
+      tool.id === 'pdf-to-word' ||
+      tool.slug === 'pdf-to-word' ||
+      tool.id === 'ocr-to-word' ||
+      tool.slug === 'ocr-to-word' ||
+      tool.id.includes('image-to-word') ||
+      tool.slug.includes('image-to-word') ||
+      tool.id.includes('jpg-to-word') ||
+      tool.id.includes('png-to-word') ||
+      tool.id.includes('photo-to-word') ||
+      tool.slug.includes('jpg-to-word') ||
+      tool.slug.includes('png-to-word') ||
+      tool.id === 'image-to-docx' ||
+      tool.slug === 'image-to-docx'
+    ) {
       const results = [];
       for (let i = 0; i < files.length; i++) {
         const f = files[i];
+        const isImg = f.type?.startsWith('image/') || /\.(jpg|jpeg|png|webp|bmp|tiff|heic)$/i.test(f.name);
         onProgress(Math.round(((i + 1) / files.length) * 80), `Converting ${f.name} to editable Word document...`);
-        const docxBlob = await pdfToDocx(f, onProgress);
+        const docxBlob = isImg ? await imageToDocx(f, onProgress) : await pdfToDocx(f, onProgress);
         results.push({
-          name: `${f.name.replace(/\.pdf$/i, '')}.docx`,
+          name: `${f.name.replace(/\.[^/.]+$/, '')}.docx`,
           originalSize: f.size,
           processedSize: docxBlob.size,
           blob: docxBlob,
