@@ -6,7 +6,7 @@ This project is a hybrid **Production-Grade Web & Native Android Application** p
 
 ## 🚀 Quick Summary
 - **App Name**: Miftah Tools
-- **Application ID / Package**: `com.nexoratools.app`
+- **Application ID / Package**: `com.miftahtools.app`
 - **Minimum Android SDK**: 22 (Android 5.1 Lollipop)
 - **Target Android SDK**: 34 (Android 14 Ready)
 - **Firebase Project**: `studio-3108342384-2960a`

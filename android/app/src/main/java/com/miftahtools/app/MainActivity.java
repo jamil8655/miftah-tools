@@ -1,4 +1,4 @@
-package com.nexoratools.app;
+package com.miftahtools.app;
 
 import android.content.ContentValues;
 import android.content.Context;
