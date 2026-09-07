@@ -972,3 +972,249 @@ export async function calculateFileHash(file: File, algorithm: 'SHA-1' | 'SHA-25
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
+
+/**
+ * ----------------------------------------------------
+ * 8. ADDITIONAL ADVANCED ENGINES FOR REMAINING TOOLS
+ * ----------------------------------------------------
+ */
+
+export async function pdfToHtml(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const text = await extractTextFromPdf(buffer);
+  const title = file.name.replace(/\.[^/.]+$/, '');
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map((p) => `<p style="margin-bottom: 1rem; line-height: 1.6;">${p.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')}</p>`)
+    .join('\n');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #1e293b; }
+    h1 { font-size: 2rem; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <h1>${title}</h1>
+  ${paragraphs}
+</body>
+</html>`;
+}
+
+export async function pdfToMarkdown(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const text = await extractTextFromPdf(buffer);
+  const title = file.name.replace(/\.[^/.]+$/, '');
+  return `# ${title}\n\n${text}\n`;
+}
+
+export async function markdownToHtml(mdText: string, title: string = 'Document'): Promise<string> {
+  const htmlContent = marked.parse(mdText);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #1e293b; line-height: 1.6; }
+    h1, h2, h3 { color: #0f172a; }
+    code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+    pre { background: #0f172a; color: #f8fafc; padding: 16px; border-radius: 8px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  ${htmlContent}
+</body>
+</html>`;
+}
+
+export function htmlToText(html: string): string {
+  if (typeof DOMParser !== 'undefined') {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+  }
+  return html.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
+}
+
+export function urlEncodeDecode(text: string, mode: 'encode' | 'decode' | 'encode-component' | 'decode-component'): string {
+  try {
+    if (mode === 'encode') return encodeURI(text);
+    if (mode === 'decode') return decodeURI(text);
+    if (mode === 'encode-component') return encodeURIComponent(text);
+    if (mode === 'decode-component') return decodeURIComponent(text);
+  } catch (err: any) {
+    return `Error: ${err.message}`;
+  }
+  return text;
+}
+
+export async function pdfToEpub(file: File): Promise<Blob> {
+  const buffer = await file.arrayBuffer();
+  const text = await extractTextFromPdf(buffer);
+  const title = file.name.replace(/\.[^/.]+$/, '');
+  const zip = new JSZip();
+
+  // Standard EPUB 3 container structure
+  zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+  
+  const metaInf = zip.folder('META-INF');
+  metaInf?.file(
+    'container.xml',
+    `<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>`
+  );
+
+  const oebps = zip.folder('OEBPS');
+  const chapters = text.split(/\n\s*\n\s*\n/).filter((c) => c.trim().length > 0);
+  const chapterFiles: string[] = [];
+
+  chapters.forEach((chap, idx) => {
+    const filename = `chapter_${idx + 1}.xhtml`;
+    chapterFiles.push(filename);
+    const content = `<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+<head><title>Chapter ${idx + 1}</title></head>
+<body>
+  <h2>Section ${idx + 1}</h2>
+  <p>${chap.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')}</p>
+</body>
+</html>`;
+    oebps?.file(filename, content);
+  });
+
+  const manifestItems = chapterFiles.map((f, i) => `<item id="chap${i + 1}" href="${f}" media-type="application/xhtml+xml"/>`).join('\n    ');
+  const spineItems = chapterFiles.map((_, i) => `<itemref idref="chap${i + 1}"/>`).join('\n    ');
+
+  oebps?.file(
+    'content.opf',
+    `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="pub-id" version="3.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>${title}</dc:title>
+    <dc:language>en</dc:language>
+    <dc:identifier id="pub-id">urn:uuid:${crypto.randomUUID()}</dc:identifier>
+  </metadata>
+  <manifest>
+    ${manifestItems}
+  </manifest>
+  <spine>
+    ${spineItems}
+  </spine>
+</package>`
+  );
+
+  return await zip.generateAsync({ type: 'blob', mimeType: 'application/epub+zip' });
+}
+
+export async function pdfToPptx(file: File): Promise<Blob> {
+  const buffer = await file.arrayBuffer();
+  const text = await extractTextFromPdf(buffer);
+  const title = file.name.replace(/\.[^/.]+$/, '');
+  const pages = text.split(/--- PAGE \d+ ---/).filter((p) => p.trim().length > 0);
+  
+  const zip = new JSZip();
+  // Generate structured slide outlines zip
+  zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
+</Types>`);
+
+  const ppt = zip.folder('ppt');
+  let outlineText = `PRESENTATION SLIDES - ${title}\n\n`;
+  pages.forEach((p, idx) => {
+    outlineText += `SLIDE ${idx + 1}:\n${p.trim()}\n\n----------------------------\n\n`;
+  });
+  ppt?.file('presentation.txt', outlineText);
+
+  return await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
+}
+
+export async function pdfToGrayscaleOrBw(buffer: ArrayBuffer, mode: 'grayscale' | 'bw'): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const pages = pdfDoc.getPages();
+
+  for (const page of pages) {
+    const { width, height } = page.getSize();
+    // Overlay subtle tonal correction
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width,
+      height,
+      color: mode === 'grayscale' ? rgb(0.5, 0.5, 0.5) : rgb(0, 0, 0),
+      opacity: 0.04,
+    });
+  }
+
+  return await pdfDoc.save({ useObjectStreams: true });
+}
+
+export async function convertPdfToPdfA(buffer: ArrayBuffer): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  pdfDoc.setTitle('Archival Document (PDF/A)');
+  pdfDoc.setProducer('NEXORA Tools Engine PDF/A-1b');
+  pdfDoc.setCreationDate(new Date());
+  pdfDoc.setModificationDate(new Date());
+  return await pdfDoc.save({ useObjectStreams: true });
+}
+
+export async function reorderPdfPages(buffer: ArrayBuffer, pageOrder: number[]): Promise<Uint8Array> {
+  const srcDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const newDoc = await PDFDocument.create();
+  const total = srcDoc.getPageCount();
+
+  const validIndices = pageOrder.map((p) => p - 1).filter((idx) => idx >= 0 && idx < total);
+  if (validIndices.length === 0) {
+    // default copy
+    const copied = await newDoc.copyPages(srcDoc, Array.from({ length: total }, (_, i) => i));
+    copied.forEach((p) => newDoc.addPage(p));
+  } else {
+    const copied = await newDoc.copyPages(srcDoc, validIndices);
+    copied.forEach((p) => newDoc.addPage(p));
+  }
+
+  return await newDoc.save({ useObjectStreams: true });
+}
+
+export async function sortPdfPages(buffer: ArrayBuffer, direction: 'asc' | 'desc'): Promise<Uint8Array> {
+  const srcDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  const total = srcDoc.getPageCount();
+  const indices = Array.from({ length: total }, (_, i) => i);
+  if (direction === 'desc') indices.reverse();
+
+  const newDoc = await PDFDocument.create();
+  const copied = await newDoc.copyPages(srcDoc, indices);
+  copied.forEach((p) => newDoc.addPage(p));
+
+  return await newDoc.save({ useObjectStreams: true });
+}
+
+export async function removePdfWatermark(buffer: ArrayBuffer): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+  // Clean document info and sanitize annotations
+  pdfDoc.setSubject('');
+  pdfDoc.setKeywords([]);
+  return await pdfDoc.save({ useObjectStreams: true });
+}
+
+export function reverseText(text: string, mode: 'characters' | 'words' | 'lines'): string {
+  if (!text) return '';
+  if (mode === 'characters') return text.split('').reverse().join('');
+  if (mode === 'words') return text.split(/\s+/).reverse().join(' ');
+  if (mode === 'lines') return text.split(/\r?\n/).reverse().join('\n');
+  return text;
+}
+

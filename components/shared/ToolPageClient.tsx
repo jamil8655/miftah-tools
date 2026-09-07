@@ -76,6 +76,19 @@ import {
   htmlToPdf,
   csvToPdf,
   epubToPdf,
+  pdfToHtml,
+  pdfToMarkdown,
+  markdownToHtml,
+  htmlToText,
+  urlEncodeDecode,
+  pdfToEpub,
+  pdfToPptx,
+  pdfToGrayscaleOrBw,
+  convertPdfToPdfA,
+  reorderPdfPages,
+  sortPdfPages,
+  removePdfWatermark,
+  reverseText,
 } from '@/lib/engines/comprehensive-engines';
 
 // Interactive Specialized Custom Workspaces
@@ -125,7 +138,19 @@ interface ToolPageClientProps {
 export function ToolPageClient({ tool }: ToolPageClientProps) {
   let customWorkspace: React.ReactNode = null;
 
-  if (tool.id === 'pdf-editor' || tool.slug === 'edit-pdf' || tool.id === 'pdf-sign' || tool.id === 'pdf-add-text') {
+  if (
+    tool.id === 'pdf-editor' ||
+    tool.slug === 'edit-pdf' ||
+    tool.id === 'pdf-sign' ||
+    tool.id === 'pdf-add-text' ||
+    tool.id === 'pdf-crop' ||
+    tool.slug === 'crop-pdf' ||
+    tool.id === 'pdf-add-image' ||
+    tool.id === 'pdf-add-shape' ||
+    tool.id === 'pdf-draw' ||
+    tool.id === 'pdf-highlight' ||
+    tool.id === 'pdf-add-stamp'
+  ) {
     customWorkspace = <VisualPdfEditor />;
   } else if (
     tool.id === 'pdf-protect' ||
@@ -133,6 +158,8 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'pdf-encrypt' ||
     tool.id === 'encrypt-pdf' ||
     tool.id === 'pdf-password' ||
+    tool.id === 'pdf-permissions' ||
+    tool.slug === 'pdf-permission-manager' ||
     tool.slug === 'protect-pdf' ||
     tool.slug === 'encrypt-pdf' ||
     tool.slug === 'pdf-protect'
@@ -158,7 +185,7 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     customWorkspace = <PasswordStudio />;
   } else if (tool.id === 'general-unit-converter') {
     customWorkspace = <GeneralUnitConverter />;
-  } else if (tool.id === 'file-size-converter') {
+  } else if (tool.id === 'file-size-converter' || tool.id === 'pdf-size-analyzer' || tool.id === 'file-size-analyzer' || tool.slug === 'pdf-size-analyzer' || tool.slug === 'file-size-analyzer') {
     customWorkspace = <StorageUnitConverter />;
   } else if (tool.id === 'bandwidth-calculator') {
     customWorkspace = <BandwidthCalculator />;
@@ -204,6 +231,12 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'sort-lines-za' ||
     tool.id === 'remove-extra-spaces' ||
     tool.id === 'remove-blank-lines' ||
+    tool.id === 'reverse-text' ||
+    tool.slug === 'reverse-text' ||
+    tool.id === 'reverse-lines' ||
+    tool.slug === 'reverse-lines' ||
+    tool.id === 'url-encoder-decoder' ||
+    tool.slug === 'url-encoder-decoder' ||
     tool.id === 'extract-emails' ||
     tool.id === 'extract-urls' ||
     tool.id === 'extract-phones' ||
@@ -237,9 +270,24 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     customWorkspace = <VideoToMp3Studio />;
   } else if (tool.id === 'image-palette') {
     customWorkspace = <ColorPaletteStudio />;
-  } else if (tool.id === 'pdf-organizer' || tool.slug === 'organize-pdf') {
+  } else if (
+    tool.id === 'pdf-organizer' ||
+    tool.slug === 'organize-pdf' ||
+    tool.id === 'pdf-reorder-pages' ||
+    tool.slug === 'reorder-pdf-pages' ||
+    tool.id === 'pdf-replace-pages' ||
+    tool.slug === 'replace-pdf-pages' ||
+    tool.id === 'pdf-sort-pages' ||
+    tool.slug === 'sort-pdf-pages'
+  ) {
     customWorkspace = <PdfOrganizerStudio />;
-  } else if (tool.id === 'markdown-editor') {
+  } else if (
+    tool.id === 'markdown-editor' ||
+    tool.id === 'markdown-to-html' ||
+    tool.slug === 'markdown-to-html' ||
+    tool.id === 'pdf-to-markdown' ||
+    tool.slug === 'pdf-to-markdown'
+  ) {
     customWorkspace = <MarkdownLiveStudio />;
   } else if (tool.id === 'image-resizer') {
     customWorkspace = <ImageResizerStudio />;
@@ -274,7 +322,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'ocr-to-txt' ||
     tool.id === 'ocr-to-excel' ||
     tool.id === 'ocr-to-csv' ||
-    tool.id === 'image-searchable-pdf'
+    tool.id === 'image-searchable-pdf' ||
+    tool.id === 'pdf-optimize-scan' ||
+    tool.slug === 'optimize-scanned-pdf' ||
+    tool.id === 'scan-to-pdf' ||
+    tool.slug === 'scan-to-pdf' ||
+    tool.id === 'make-pdf-searchable' ||
+    tool.slug === 'make-pdf-searchable' ||
+    tool.id === 'extract-text-image' ||
+    tool.slug === 'extract-text-from-image'
   ) {
     customWorkspace = <OcrStudio />;
   } else if (
@@ -542,7 +598,17 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       tool.id === 'pdf-hq-compress' ||
       tool.id === 'pdf-optimize' ||
       tool.id === 'pdf-to-smaller' ||
-      tool.id === 'pdf-linearize'
+      tool.id === 'pdf-linearize' ||
+      tool.id === 'pdf-image-compress' ||
+      tool.id === 'pdf-font-opt' ||
+      tool.id === 'pdf-remove-objects' ||
+      tool.id === 'pdf-optimize-images' ||
+      tool.id === 'pdf-resolution-reducer' ||
+      tool.slug === 'pdf-image-compression' ||
+      tool.slug === 'pdf-font-optimization' ||
+      tool.slug === 'remove-unused-pdf-objects' ||
+      tool.slug === 'optimize-image-heavy-pdf' ||
+      tool.slug === 'pdf-resolution-reducer'
     ) {
       const results = [];
       const targetLimit = tool.id === 'pdf-extreme-compress' ? '200kb' : options.targetSizeLimit || 'auto';
@@ -823,7 +889,18 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return results;
     }
 
-    if (tool.id.includes('compress') && tool.category === 'image') {
+    if (
+      (tool.id.includes('compress') ||
+        tool.id === 'image-compress' ||
+        tool.slug === 'image-compressor' ||
+        tool.id === 'jpg-compressor' ||
+        tool.id === 'png-compressor' ||
+        tool.id === 'webp-compressor' ||
+        tool.slug === 'jpg-compressor' ||
+        tool.slug === 'png-compressor' ||
+        tool.slug === 'webp-compressor') &&
+      (tool.category === 'image' || tool.category === 'compress')
+    ) {
       const results = [];
       const targetFormat = options.outputFormat || 'image/jpeg';
       const targetKb = options.targetKb;
@@ -1173,6 +1250,128 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
           blob: docxBlob,
         },
       ];
+    }
+
+    // 19. PDF TO HTML & MARKDOWN
+    if (tool.id === 'pdf-to-html' || tool.slug === 'pdf-to-html') {
+      onProgress(40, 'Converting PDF to HTML document...');
+      const results = [];
+      for (const f of files) {
+        const html = await pdfToHtml(f);
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        results.push({ name: `${f.name.replace(/\.[^/.]+$/, '')}.html`, originalSize: f.size, processedSize: blob.size, blob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'pdf-to-markdown' || tool.slug === 'pdf-to-markdown') {
+      onProgress(40, 'Converting PDF to Markdown...');
+      const results = [];
+      for (const f of files) {
+        const md = await pdfToMarkdown(f);
+        const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+        results.push({ name: `${f.name.replace(/\.[^/.]+$/, '')}.md`, originalSize: f.size, processedSize: blob.size, blob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'markdown-to-html' || tool.slug === 'markdown-to-html') {
+      onProgress(40, 'Converting Markdown to HTML...');
+      const text = await files[0].text();
+      const html = await markdownToHtml(text, files[0].name.replace(/\.[^/.]+$/, ''));
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.html`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'html-to-text' || tool.slug === 'html-to-text') {
+      onProgress(40, 'Stripping HTML tags to plain text...');
+      const text = await files[0].text();
+      const plain = htmlToText(text);
+      const blob = new Blob([plain], { type: 'text/plain;charset=utf-8' });
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.txt`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'url-encoder-decoder' || tool.slug === 'url-encoder-decoder') {
+      onProgress(40, 'Encoding / Decoding URL content...');
+      const text = await files[0].text();
+      const mode = options.mode || 'encode';
+      const output = urlEncodeDecode(text, mode);
+      const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+      return [{ name: `url-${mode}-${files[0].name}`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    // 20. PDF TO EPUB & PPTX
+    if (tool.id === 'pdf-to-epub' || tool.slug === 'pdf-to-epub') {
+      onProgress(40, 'Converting PDF to EPUB eBook...');
+      const results = [];
+      for (const f of files) {
+        const epubBlob = await pdfToEpub(f);
+        results.push({ name: `${f.name.replace(/\.[^/.]+$/, '')}.epub`, originalSize: f.size, processedSize: epubBlob.size, blob: epubBlob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'pdf-to-pptx' || tool.id === 'pdf-to-ppt' || tool.slug === 'pdf-to-powerpoint' || tool.slug === 'pdf-to-ppt-slides') {
+      onProgress(40, 'Converting PDF pages to PowerPoint slides...');
+      const results = [];
+      for (const f of files) {
+        const pptxBlob = await pdfToPptx(f);
+        results.push({ name: `${f.name.replace(/\.[^/.]+$/, '')}.pptx`, originalSize: f.size, processedSize: pptxBlob.size, blob: pptxBlob });
+      }
+      return results;
+    }
+
+    // 21. PDF COLOR CONVERSIONS & ARCHIVAL
+    if (tool.id === 'pdf-to-grayscale' || tool.id === 'pdf-to-bw' || tool.slug === 'pdf-to-grayscale' || tool.slug === 'pdf-to-black-and-white') {
+      const mode = (tool.id === 'pdf-to-bw' || tool.slug === 'pdf-to-black-and-white') ? 'bw' : 'grayscale';
+      onProgress(40, `Converting PDF to ${mode.toUpperCase()}...`);
+      const results = [];
+      for (const f of files) {
+        const buf = await f.arrayBuffer();
+        const converted = await pdfToGrayscaleOrBw(buf, mode);
+        const blob = new Blob([converted as any], { type: 'application/pdf' });
+        results.push({ name: `${mode}-${f.name}`, originalSize: f.size, processedSize: blob.size, blob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'pdf-to-pdfa' || tool.id === 'pdf-to-pdfx' || tool.slug === 'pdf-to-pdf-a' || tool.slug === 'pdf-to-pdf-x') {
+      onProgress(40, 'Converting PDF to Archival PDF/A...');
+      const results = [];
+      for (const f of files) {
+        const buf = await f.arrayBuffer();
+        const converted = await convertPdfToPdfA(buf);
+        const blob = new Blob([converted as any], { type: 'application/pdf' });
+        results.push({ name: `pdfa-${f.name}`, originalSize: f.size, processedSize: blob.size, blob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'pdf-reorder-pages' || tool.id === 'pdf-replace-pages' || tool.id === 'pdf-sort-pages' || tool.slug === 'reorder-pdf-pages' || tool.slug === 'sort-pdf-pages') {
+      onProgress(40, 'Reorganizing PDF pages...');
+      const buf = await files[0].arrayBuffer();
+      const converted = tool.id === 'pdf-sort-pages' || tool.slug === 'sort-pdf-pages'
+        ? await sortPdfPages(buf, options.direction || 'asc')
+        : await reorderPdfPages(buf, options.pageOrder || [1, 2]);
+      const blob = new Blob([converted as any], { type: 'application/pdf' });
+      return [{ name: `reordered-${files[0].name}`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'pdf-remove-watermark' || tool.slug === 'remove-watermark-pdf') {
+      onProgress(40, 'Cleaning watermark elements...');
+      const buf = await files[0].arrayBuffer();
+      const cleaned = await removePdfWatermark(buf);
+      const blob = new Blob([cleaned as any], { type: 'application/pdf' });
+      return [{ name: `cleaned-${files[0].name}`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'reverse-text' || tool.id === 'reverse-lines' || tool.slug === 'reverse-text' || tool.slug === 'reverse-lines') {
+      onProgress(40, 'Reversing text content...');
+      const text = await files[0].text();
+      const mode = (tool.id === 'reverse-lines' || tool.slug === 'reverse-lines') ? 'lines' : 'characters';
+      const reversed = reverseText(text, mode);
+      const blob = new Blob([reversed], { type: 'text/plain;charset=utf-8' });
+      return [{ name: `reversed-${files[0].name}`, originalSize: files[0].size, processedSize: blob.size, blob }];
     }
 
     // Default Fallback
