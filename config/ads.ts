@@ -38,7 +38,7 @@ export const adConfig: AdConfig = {
   admob: {
     // Google AdMob Production IDs
     appIdAndroid: 'ca-app-pub-3660764533582226~6406066130',
-    appOpenId: 'ca-app-pub-3940256099942544/9257395921',
+    appOpenId: 'ca-app-pub-3660764533582226/1916156788',
     adaptiveBannerId: 'ca-app-pub-3660764533582226/7382282057',
     fixedBannerId: 'ca-app-pub-3660764533582226/7382282057',
     interstitialId: 'ca-app-pub-3660764533582226/8769822246',
