@@ -36,11 +36,11 @@ export const adConfig: AdConfig = {
     },
   },
   admob: {
-    // Official Google AdMob Testing IDs
-    appIdAndroid: 'ca-app-pub-3940256099942544~3347511713',
+    // Google AdMob Production IDs
+    appIdAndroid: 'ca-app-pub-3660764533582226~6406066130',
     appOpenId: 'ca-app-pub-3940256099942544/9257395921',
-    adaptiveBannerId: 'ca-app-pub-3940256099942544/9214589741',
-    fixedBannerId: 'ca-app-pub-3940256099942544/6300978111',
+    adaptiveBannerId: 'ca-app-pub-3660764533582226/7382282057',
+    fixedBannerId: 'ca-app-pub-3660764533582226/7382282057',
     interstitialId: 'ca-app-pub-3940256099942544/1033173712',
     rewardedId: 'ca-app-pub-3940256099942544/5224354917',
     rewardedInterstitialId: 'ca-app-pub-3940256099942544/5354046379',
