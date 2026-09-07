@@ -243,79 +243,128 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
         </p>
       </div>
 
-      {/* Main Tool Container */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-xl shadow-slate-200/40 dark:shadow-none backdrop-blur-md">
-        {/* Custom interactive workspace (for calculators, QR, visual editor) */}
-        {customWorkspace ? (
-          customWorkspace
-        ) : results ? (
-          <ResultPreview
-            files={results}
-            onDownloadSingle={handleDownloadSingle}
-            onDownloadAllZip={results.length > 1 ? handleDownloadAllZip : undefined}
-            onReset={handleReset}
-          />
-        ) : isProcessing ? (
-          <div className="py-12 text-center space-y-6">
-            <div className="w-16 h-16 mx-auto rounded-full bg-brand-50 dark:bg-brand-950/40 border-2 border-brand-500 border-t-transparent animate-spin flex items-center justify-center" />
-            <div className="space-y-2 max-w-md mx-auto">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                {t.processing}
-              </h3>
-              <ProgressBar progress={progress} statusText={progressStatus} />
+      {/* Main Tool Card Container */}
+      <div className="relative rounded-3xl bg-white dark:bg-slate-800/95 border border-slate-200/90 dark:border-slate-700/80 shadow-2xl shadow-slate-900/5 dark:shadow-none overflow-hidden transition-all">
+        {/* Top Accent Gradient Bar */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600" />
+
+        <div className="p-5 sm:p-8">
+          {/* Custom interactive workspace (for calculators, QR, visual editor, OCR, image studio) */}
+          {customWorkspace ? (
+            customWorkspace
+          ) : results ? (
+            <ResultPreview
+              files={results}
+              onDownloadSingle={handleDownloadSingle}
+              onDownloadAllZip={results.length > 1 ? handleDownloadAllZip : undefined}
+              onReset={handleReset}
+            />
+          ) : isProcessing ? (
+            <div className="py-14 text-center space-y-6 animate-in fade-in duration-200">
+              <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full border-4 border-brand-100 dark:border-brand-950/60" />
+                <div className="w-20 h-20 rounded-full border-4 border-brand-600 border-t-transparent animate-spin" />
+                <Sparkles className="w-6 h-6 text-brand-600 dark:text-brand-400 animate-pulse" />
+              </div>
+              <div className="space-y-2.5 max-w-md mx-auto">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                  {t.processing || 'Processing Your File...'}
+                </h3>
+                <ProgressBar progress={progress} statusText={progressStatus} />
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* File Upload Zone */}
-            {tool.maxFiles > 0 && (
-              <FileUploader
-                acceptedExtensions={tool.acceptedExtensions}
-                acceptedMimeTypes={tool.acceptedMimeTypes}
-                maxFiles={tool.maxFiles}
-                maxFileSizeMB={tool.maxFileSizeMB}
-                selectedFiles={selectedFiles}
-                onFilesSelected={setSelectedFiles}
-                onRemoveFile={(idx) => setSelectedFiles((prev) => prev.filter((_, i) => i !== idx))}
-              />
-            )}
+          ) : (
+            <div className="space-y-6">
+              {/* Step 1: File Upload Zone */}
+              {tool.maxFiles > 0 && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
+                        1
+                      </span>
+                      <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                        {language === 'ur'
+                          ? 'فائل منتخب کریں'
+                          : language === 'ar'
+                          ? 'اختر الملف'
+                          : language === 'hi'
+                          ? 'फ़ाइल चुनें'
+                          : 'Select File(s)'}
+                      </h3>
+                    </div>
+                    <span className="text-[11px] font-semibold text-slate-400">
+                      {tool.acceptedExtensions.slice(0, 4).join(', ')}
+                    </span>
+                  </div>
 
-            {/* In-Tool Contextual Ad Placement */}
-            <AdSlot placement="in-feed" />
+                  <FileUploader
+                    acceptedExtensions={tool.acceptedExtensions}
+                    acceptedMimeTypes={tool.acceptedMimeTypes}
+                    maxFiles={tool.maxFiles}
+                    maxFileSizeMB={tool.maxFileSizeMB}
+                    selectedFiles={selectedFiles}
+                    onFilesSelected={setSelectedFiles}
+                    onRemoveFile={(idx) => setSelectedFiles((prev) => prev.filter((_, i) => i !== idx))}
+                  />
+                </div>
+              )}
 
-            {/* Dynamic & Fine-Grained Tool Options with Sliders & Controls */}
-            {selectedFiles.length > 0 && (
-              <ToolOptionControls
-                tool={tool}
-                files={selectedFiles}
-                options={options}
-                onOptionsChange={setOptions}
-              />
-            )}
+              {/* In-Tool Contextual Ad Placement */}
+              <AdSlot placement="in-feed" />
 
-            {/* Error Message */}
-            {errorMessage && (
-              <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs sm:text-sm">
-                {errorMessage}
-              </div>
-            )}
+              {/* Step 2: Dynamic & Fine-Grained Tool Options */}
+              {selectedFiles.length > 0 && (
+                <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
+                      2
+                    </span>
+                    <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                      {language === 'ur'
+                        ? 'اختیارات اور سیٹنگز'
+                        : language === 'ar'
+                        ? 'الخيارات والإعدادات'
+                        : language === 'hi'
+                        ? 'विकल्प व सेटिंग्स'
+                        : 'Custom Options & Settings'}
+                    </h3>
+                  </div>
 
-            {/* Action Trigger Button */}
-            {(selectedFiles.length > 0 || tool.maxFiles === 0) && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  disabled={isProcessing}
-                  onClick={handleStartProcess}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-sm sm:text-base shadow-xl shadow-brand-500/25 hover:shadow-brand-500/40 transition-all duration-150 flex items-center justify-center gap-2.5 select-none"
-                >
-                  <Play className="w-5 h-5 fill-current" />
-                  <span>{loc.startAction(localized.name)}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+                  <ToolOptionControls
+                    tool={tool}
+                    files={selectedFiles}
+                    options={options}
+                    onOptionsChange={setOptions}
+                  />
+                </div>
+              )}
+
+              {/* Error Message Alert */}
+              {errorMessage && (
+                <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 text-xs sm:text-sm font-medium flex items-start gap-2.5 shadow-xs">
+                  <span className="text-rose-600 font-bold shrink-0">⚠️</span>
+                  <div className="flex-1 leading-relaxed">{errorMessage}</div>
+                </div>
+              )}
+
+              {/* Step 3: Action Trigger Button */}
+              {(selectedFiles.length > 0 || tool.maxFiles === 0) && (
+                <div className="pt-3">
+                  <button
+                    type="button"
+                    disabled={isProcessing}
+                    onClick={handleStartProcess}
+                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-sm sm:text-base shadow-xl shadow-brand-600/25 hover:shadow-brand-600/40 transition-all duration-150 flex items-center justify-center gap-3 select-none tracking-wide min-h-[52px]"
+                  >
+                    <Play className="w-5 h-5 fill-current shrink-0" />
+                    <span>{loc.startAction(localized.name)}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Global In-App Download Complete Modal */}
@@ -329,19 +378,22 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
 
       {/* FAQ & Information Section */}
       {tool.faq && tool.faq.length > 0 && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-4">
-          <div className="flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-100">
-            <HelpCircle className="w-5 h-5 text-brand-500" />
+        <div className="p-6 sm:p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100">
+            <HelpCircle className="w-5 h-5 text-brand-600 dark:text-brand-400" />
             <span>{loc.faqTitle}</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {tool.faq.map((item, idx) => (
-              <div key={idx} className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1.5">
-                <h4 className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">
+              <div
+                key={idx}
+                className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5 shadow-xs"
+              >
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                   {item.question}
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {item.answer}
                 </p>
               </div>
