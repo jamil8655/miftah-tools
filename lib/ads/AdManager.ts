@@ -128,6 +128,38 @@ export class AdManager {
     }
   }
 
+  public isNativeEnvironment(): boolean {
+    return this.isNative;
+  }
+
+  /**
+   * 1. APP OPEN AD: Trigger native app open ad on app start / resume
+   */
+  public async showAppOpenAd(): Promise<boolean> {
+    if (!adConfig.enabled || this.isPremium) return false;
+
+    if (this.isNative && this.isAdMobAvailable) {
+      try {
+        const { AdMob } = await import('@capacitor-community/admob');
+        const adId = process.env.NODE_ENV === 'production' && !adConfig.admob.appOpenId.includes('3940256099942544')
+          ? adConfig.admob.appOpenId
+          : 'ca-app-pub-3940256099942544/9257395921';
+
+        await AdMob.prepareInterstitial({
+          adId,
+          isTesting: process.env.NODE_ENV !== 'production',
+        });
+        await AdMob.showInterstitial();
+        return true;
+      } catch (e) {
+        console.warn('[AdMob] App Open Ad failed natively, continuing gracefully:', e);
+        return false;
+      }
+    }
+
+    return false;
+  }
+
   /**
    * 2. ADAPTIVE BANNER ADS: Show adaptive banner at bottom of suitable browsing screens
    */

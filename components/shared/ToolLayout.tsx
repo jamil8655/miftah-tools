@@ -280,6 +280,9 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
               />
             )}
 
+            {/* In-Tool Contextual Ad Placement */}
+            <AdSlot placement="in-feed" />
+
             {/* Dynamic & Fine-Grained Tool Options with Sliders & Controls */}
             {selectedFiles.length > 0 && (
               <ToolOptionControls
