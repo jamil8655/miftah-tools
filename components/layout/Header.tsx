@@ -134,9 +134,20 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [canInstall, setCanInstall] = useState(false);
+  const [isNativeApp, setIsNativeApp] = useState(false);
   const loc = HEADER_LOCALES[language] || HEADER_LOCALES.en;
 
   useEffect(() => {
+    const isNative =
+      typeof window !== 'undefined' &&
+      (!!(window as any).Capacitor?.isNativePlatform?.() ||
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        window.location.protocol === 'capacitor:');
+    setIsNativeApp(isNative);
+
+    if (isNative) return;
+
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -250,15 +261,17 @@ export function Header() {
           {/* Right Action Bar (Search + Notification + Menu Button / Profile) */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
             {/* Desktop Install App Trigger */}
-            <button
-              type="button"
-              onClick={handleInstallClick}
-              className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all shadow-xs shrink-0"
-              title={loc.installApp}
-            >
-              <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{loc.installApp}</span>
-            </button>
+            {!isNativeApp && (
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all shadow-xs shrink-0"
+                title={loc.installApp}
+              >
+                <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>{loc.installApp}</span>
+              </button>
+            )}
 
             {/* Global Search Button */}
             <button

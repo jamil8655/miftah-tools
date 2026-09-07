@@ -9,8 +9,22 @@ export function PwaInstallBanner() {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
+    // Never show PWA banner inside native Android/iOS app or standalone PWA
+    const isNativeOrInstalled =
+      typeof window !== 'undefined' &&
+      (!!(window as any).Capacitor?.isNativePlatform?.() ||
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        window.location.protocol === 'capacitor:');
+
+    if (isNativeOrInstalled) {
+      setIsDismissed(true);
+      setShowBanner(false);
+      return;
+    }
+
     // Check if dismissed previously
-    const dismissed = localStorage.getItem('nexora_pwa_dismissed');
+    const dismissed = localStorage.getItem('miftah_pwa_dismissed') || localStorage.getItem('nexora_pwa_dismissed');
     if (dismissed) {
       setIsDismissed(true);
       return;
@@ -26,7 +40,7 @@ export function PwaInstallBanner() {
 
     // Also show banner on mobile browsers after 3 seconds for easy homescreen bookmarking
     const timer = setTimeout(() => {
-      if (!dismissed) setShowBanner(true);
+      if (!dismissed && !isNativeOrInstalled) setShowBanner(true);
     }, 3000);
 
     return () => {
