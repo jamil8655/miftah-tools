@@ -38,11 +38,11 @@ export const adConfig: AdConfig = {
   admob: {
     // Google AdMob Production IDs
     appIdAndroid: 'ca-app-pub-3660764533582226~6406066130',
-    appOpenId: 'ca-app-pub-3660764533582226/4639005542',
+    appOpenId: 'ca-app-pub-3940256099942544/9257395921',
     adaptiveBannerId: 'ca-app-pub-3660764533582226/7382282057',
     fixedBannerId: 'ca-app-pub-3660764533582226/7382282057',
     interstitialId: 'ca-app-pub-3660764533582226/8769822246',
-    rewardedId: 'ca-app-pub-3940256099942544/5224354917',
+    rewardedId: 'ca-app-pub-3660764533582226/4639005542',
     rewardedInterstitialId: 'ca-app-pub-3940256099942544/5354046379',
     nativeId: 'ca-app-pub-3940256099942544/2247696110',
     nativeVideoId: 'ca-app-pub-3940256099942544/1044960115',
