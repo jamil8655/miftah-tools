@@ -1,4 +1,5 @@
 import { PDFDocument } from 'pdf-lib';
+import { getPdfJsLib } from '@/lib/utils/formatters';
 
 export interface CompressOptions {
   level?: 'extreme' | 'medium' | 'light' | 'custom';
@@ -16,34 +17,6 @@ export interface CompressResult {
   isReduced: boolean;
   pageCount: number;
   message: string;
-}
-
-/**
- * Loads PDF.js client-side library dynamically without bundling issues.
- */
-async function loadPdfJsLibrary(): Promise<any> {
-  if (typeof window === 'undefined') return null;
-
-  if ((window as any).pdfjsLib) {
-    return (window as any).pdfjsLib;
-  }
-
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.onload = () => {
-      const lib = (window as any).pdfjsLib;
-      if (lib) {
-        lib.GlobalWorkerOptions.workerSrc =
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        resolve(lib);
-      } else {
-        reject(new Error('Failed to initialize pdfjsLib'));
-      }
-    };
-    script.onerror = () => reject(new Error('Failed to load PDF engine'));
-    document.head.appendChild(script);
-  });
 }
 
 /**
@@ -102,7 +75,7 @@ export async function compressPdfAdvanced(
   let pageCount = 0;
 
   try {
-    const pdfjsLib = await loadPdfJsLibrary();
+    const pdfjsLib = await getPdfJsLib();
 
     if (pdfjsLib) {
       onProgress?.(12, 'Inspecting pages and embedded streams...');

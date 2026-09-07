@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { downloadSingleFile, downloadAsZip } from '@/lib/utils/download';
+import { getPdfJsLib } from '@/lib/utils/formatters';
 
 export function PdfToImagesStudio() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -27,8 +28,7 @@ export function PdfToImagesStudio() {
     setSelectedPages([]);
 
     try {
-      const pdfjsLib = await import('pdfjs-dist');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+      const pdfjsLib = await getPdfJsLib();
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

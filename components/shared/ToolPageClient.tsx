@@ -761,6 +761,62 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return [{ name: 'converted-document.pdf', originalSize: files.reduce((a, f) => a + f.size, 0), processedSize: blob.size, blob }];
     }
 
+    // 17. IMAGE FORMAT CONVERSIONS (JPG, PNG, WEBP, BMP, TIFF)
+    if (
+      tool.id.includes('-to-') &&
+      (tool.id.includes('jpg') ||
+        tool.id.includes('jpeg') ||
+        tool.id.includes('png') ||
+        tool.id.includes('webp') ||
+        tool.id.includes('bmp') ||
+        tool.id.includes('tiff') ||
+        tool.id.includes('heic')) &&
+      tool.category === 'image'
+    ) {
+      let targetMime: 'image/jpeg' | 'image/png' | 'image/webp' = 'image/jpeg';
+      let targetExt = 'jpg';
+
+      if (tool.id.endsWith('-to-png') || tool.id.endsWith('-to-webp-png')) {
+        targetMime = 'image/png';
+        targetExt = 'png';
+      } else if (tool.id.endsWith('-to-webp')) {
+        targetMime = 'image/webp';
+        targetExt = 'webp';
+      }
+
+      onProgress(40, `Converting image(s) to ${targetExt.toUpperCase()}...`);
+      const results = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const res = await convertImage(file, targetMime, options.quality ?? 0.92);
+        const baseName = file.name.replace(/\.[^/.]+$/, '');
+        results.push({
+          name: `${baseName}.${targetExt}`,
+          originalSize: file.size,
+          processedSize: res.blob.size,
+          blob: res.blob,
+          dataUrl: res.dataUrl,
+        });
+      }
+      return results;
+    }
+
+    // 18. TEXT TO WORD (DOCX)
+    if (tool.id === 'text-to-docx' || tool.id === 'text-to-docx-alt' || tool.id === 'txt-to-docx') {
+      onProgress(40, 'Converting text into styled Word DOCX...');
+      const text = await files[0].text();
+      const docxBlob = await textToDocx(text, files[0].name.replace(/\.[^/.]+$/, ''));
+      return [
+        {
+          name: `${files[0].name.replace(/\.[^/.]+$/, '')}.docx`,
+          originalSize: files[0].size,
+          processedSize: docxBlob.size,
+          blob: docxBlob,
+        },
+      ];
+    }
+
     // Default Fallback
     return files.map((f) => ({
       name: `processed-${f.name}`,

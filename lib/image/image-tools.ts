@@ -1,29 +1,5 @@
 import JSZip from 'jszip';
-
-/**
- * Loads PDF.js client-side library dynamically without bundling issues.
- */
-async function loadPdfJsLibrary(): Promise<any> {
-  if (typeof window === 'undefined') return null;
-  if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
-
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.onload = () => {
-      const lib = (window as any).pdfjsLib;
-      if (lib) {
-        lib.GlobalWorkerOptions.workerSrc =
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        resolve(lib);
-      } else {
-        reject(new Error('Failed to initialize pdfjsLib'));
-      }
-    };
-    script.onerror = () => reject(new Error('Failed to load PDF engine'));
-    document.head.appendChild(script);
-  });
-}
+import { getPdfJsLib } from '@/lib/utils/formatters';
 
 /**
  * Render all pages of a PDF as high-resolution PNG/JPG image files.
@@ -35,7 +11,7 @@ export async function pdfToImages(
   onProgress?: (percent: number, status: string) => void
 ): Promise<{ name: string; blob: Blob; dataUrl: string }[]> {
   onProgress?.(10, 'Initializing PDF rendering engine...');
-  const pdfjsLib = await loadPdfJsLibrary();
+  const pdfjsLib = await getPdfJsLib();
   if (!pdfjsLib) throw new Error('PDF rendering library is unavailable.');
 
   const arrayBuffer = await file.arrayBuffer();
