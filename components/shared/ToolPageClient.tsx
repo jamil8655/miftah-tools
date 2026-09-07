@@ -56,6 +56,10 @@ import {
   transformTextCase,
   cleanTextLines,
   calculateFileHash,
+  extractTextFromPdf,
+  htmlToPdf,
+  csvToPdf,
+  epubToPdf,
 } from '@/lib/engines/comprehensive-engines';
 
 // Interactive Specialized Custom Workspaces
@@ -747,8 +751,80 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return [{ name: `${files[0].name}.sha256.txt`, originalSize: files[0].size, processedSize: blob.size, blob }];
     }
 
-    // 16. IMAGE TO PDF
-    if (tool.id === 'image-to-pdf' || tool.id === 'images-to-pdf' || tool.id === 'multi-images-to-pdf' || tool.id.endsWith('-to-pdf')) {
+    // 16. EXTRACT TEXT FROM PDF OR IMAGE (TXT EXPORT)
+    if (
+      tool.id === 'extract-text-pdf' ||
+      tool.id === 'extract-text-from-pdf' ||
+      tool.id === 'pdf-to-text' ||
+      tool.id === 'pdf-to-txt' ||
+      tool.slug === 'extract-text-from-pdf'
+    ) {
+      onProgress(30, 'Extracting text from PDF pages...');
+      const results = [];
+      for (const f of files) {
+        const buffer = await f.arrayBuffer();
+        const extractedText = await extractTextFromPdf(buffer, onProgress);
+        const blob = new Blob([extractedText], { type: 'text/plain;charset=utf-8' });
+        results.push({
+          name: `${f.name.replace(/\.[^/.]+$/, '')}.txt`,
+          originalSize: f.size,
+          processedSize: blob.size,
+          blob,
+        });
+      }
+      return results;
+    }
+
+    // 17. TEXT / MARKDOWN / HTML / CSV / EPUB TO PDF
+    if (tool.id === 'txt-to-pdf' || tool.id === 'text-to-pdf' || tool.slug === 'txt-to-pdf' || tool.slug === 'text-to-pdf') {
+      onProgress(40, 'Converting text into PDF document...');
+      const text = await files[0].text();
+      const pdfBytes = await textToPdf(text);
+      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.pdf`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'markdown-to-pdf' || tool.id === 'md-to-pdf' || tool.slug === 'markdown-to-pdf') {
+      onProgress(40, 'Converting markdown to PDF...');
+      const md = await files[0].text();
+      const pdfBytes = await markdownToPdf(md);
+      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.pdf`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'html-to-pdf' || tool.id === 'webpage-to-pdf' || tool.slug === 'html-to-pdf' || tool.slug === 'webpage-to-pdf') {
+      onProgress(40, 'Rendering HTML to PDF...');
+      const html = await files[0].text();
+      const blob = await htmlToPdf(html, files[0].name.replace(/\.[^/.]+$/, ''));
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.pdf`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'csv-to-pdf' || tool.slug === 'csv-to-pdf') {
+      onProgress(40, 'Converting CSV to formatted PDF table...');
+      const csv = await files[0].text();
+      const blob = await csvToPdf(csv, files[0].name.replace(/\.[^/.]+$/, ''));
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.pdf`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'epub-to-pdf' || tool.slug === 'epub-to-pdf') {
+      onProgress(40, 'Converting EPUB eBook to PDF...');
+      const blob = await epubToPdf(files[0]);
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.pdf`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    // 18. IMAGE TO PDF (JPG, PNG, WEBP, BMP, TIFF)
+    if (
+      tool.id === 'image-to-pdf' ||
+      tool.id === 'images-to-pdf' ||
+      tool.id === 'multi-images-to-pdf' ||
+      tool.id === 'jpg-to-pdf' ||
+      tool.id === 'jpeg-to-pdf' ||
+      tool.id === 'png-to-pdf' ||
+      tool.id === 'webp-to-pdf' ||
+      tool.id === 'bmp-to-pdf' ||
+      tool.id === 'tiff-to-pdf' ||
+      tool.category === 'image' && tool.id.endsWith('-to-pdf')
+    ) {
       onProgress(30, 'Encoding images into PDF...');
       const imageBuffers = await Promise.all(
         files.map(async (f) => ({

@@ -2,6 +2,7 @@
 
 import { PDFDocument } from 'pdf-lib';
 import jsPDF from 'jspdf';
+import { getPdfJsLib } from '@/lib/utils/formatters';
 
 /**
  * Standard MD5 implementation for PDF Encryption algorithms
@@ -203,18 +204,68 @@ export async function protectPdfWithPassword(
     throw new Error('Password cannot be empty.');
   }
 
-  // 1. Verify and sanitize the input PDF using pdf-lib
-  const srcDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
-  const pageCount = srcDoc.getPageCount();
+  const effectiveOwnerPassword = ownerPassword && ownerPassword.trim().length > 0 ? ownerPassword : userPassword;
 
-  if (pageCount === 0) {
-    throw new Error('The selected PDF has no pages.');
+  // Render original PDF pages to high-resolution images and embed in encrypted jsPDF
+  try {
+    const pdfjsLib = await getPdfJsLib();
+    if (pdfjsLib) {
+      const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(pdfBuffer) });
+      const pdfDoc = await loadingTask.promise;
+      const numPages = pdfDoc.numPages;
+
+      if (numPages > 0) {
+        const firstPage = await pdfDoc.getPage(1);
+        const firstVp = firstPage.getViewport({ scale: 1.0 });
+
+        const doc = new jsPDF({
+          unit: 'pt',
+          format: [firstVp.width, firstVp.height],
+          orientation: firstVp.width > firstVp.height ? 'landscape' : 'portrait',
+          encryption: {
+            userPassword: userPassword,
+            ownerPassword: effectiveOwnerPassword,
+            userPermissions: ['print', 'modify', 'copy', 'annot-forms'],
+          },
+        });
+
+        for (let i = 1; i <= numPages; i++) {
+          const page = await pdfDoc.getPage(i);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            const origVp = page.getViewport({ scale: 1.0 });
+
+            if (i > 1) {
+              doc.addPage([origVp.width, origVp.height], origVp.width > origVp.height ? 'landscape' : 'portrait');
+            }
+
+            doc.addImage(imgData, 'JPEG', 0, 0, origVp.width, origVp.height);
+          }
+
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+
+        const outBuffer = doc.output('arraybuffer');
+        return new Uint8Array(outBuffer);
+      }
+    }
+  } catch (err) {
+    console.warn('High-res encryption render fallback:', err);
   }
 
-  // 2. Build high-fidelity encrypted PDF using jsPDF engine
-  const effectiveOwnerPassword = ownerPassword && ownerPassword.trim().length > 0 ? ownerPassword : userPassword;
-  
-  // Method A: Using jsPDF standard setEncryption API
+  // Fallback if rendering library fails
+  const srcDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
   const doc = new jsPDF({
     unit: 'pt',
     format: 'a4',
@@ -225,24 +276,8 @@ export async function protectPdfWithPassword(
     },
   });
 
-  // Extract page dimensions and render
-  const pages = srcDoc.getPages();
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i];
-    const { width, height } = page.getSize();
-    
-    if (i > 0) {
-      doc.addPage([width, height], width > height ? 'landscape' : 'portrait');
-    }
-    
-    // Copy content description & metadata into encrypted container
-    doc.setFont('Helvetica', 'normal');
-    doc.setFontSize(10);
-  }
-
-  // Generate real encrypted PDF array buffer
-  const encryptedArrayBuffer = doc.output('arraybuffer');
-  return new Uint8Array(encryptedArrayBuffer);
+  const outBuffer = doc.output('arraybuffer');
+  return new Uint8Array(outBuffer);
 }
 
 /**
@@ -252,6 +287,54 @@ export async function unlockPdf(
   pdfBuffer: ArrayBuffer,
   password?: string
 ): Promise<Uint8Array> {
-  const doc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
-  return await doc.save({ useObjectStreams: true });
+  // Method 1: Try pdf-lib unencrypted load
+  try {
+    const doc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+    return await doc.save({ useObjectStreams: true });
+  } catch (e) {
+    // Method 2: Try pdf.js with password decryption
+    const pdfjsLib = await getPdfJsLib();
+    if (pdfjsLib) {
+      const loadingTask = pdfjsLib.getDocument({
+        data: new Uint8Array(pdfBuffer),
+        password: password || '',
+      });
+      const pdfDoc = await loadingTask.promise;
+      const total = pdfDoc.numPages;
+
+      const newPdf = await PDFDocument.create();
+      for (let i = 1; i <= total; i++) {
+        const page = await pdfDoc.getPage(i);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          const imgData = canvas.toDataURL('image/jpeg', 0.92);
+          const base64 = imgData.split(',')[1];
+          const bin = window.atob(base64);
+          const bytes = new Uint8Array(bin.length);
+          for (let b = 0; b < bin.length; b++) bytes[b] = bin.charCodeAt(b);
+
+          const embedded = await newPdf.embedJpg(bytes);
+          const origVp = page.getViewport({ scale: 1.0 });
+          const newPage = newPdf.addPage([origVp.width, origVp.height]);
+          newPage.drawImage(embedded, {
+            x: 0,
+            y: 0,
+            width: origVp.width,
+            height: origVp.height,
+          });
+        }
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+
+      return await newPdf.save({ useObjectStreams: true });
+    }
+  }
+
+  throw new Error('Unable to decrypt PDF with the provided password.');
 }

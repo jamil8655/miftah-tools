@@ -8,6 +8,7 @@ import mammoth from 'mammoth';
 import JSZip from 'jszip';
 import { Document, Paragraph, TextRun, HeadingLevel, Packer } from 'docx';
 import { runOcr } from '@/lib/ocr/ocr-engine';
+import { getPdfJsLib } from '@/lib/utils/formatters';
 
 /**
  * ----------------------------------------------------
@@ -236,6 +237,141 @@ export async function sanitizePdfMetadata(buffer: ArrayBuffer): Promise<Uint8Arr
   doc.setModificationDate(new Date());
 
   return await doc.save({ useObjectStreams: true });
+}
+
+export async function extractTextFromPdf(
+  buffer: ArrayBuffer,
+  onProgress?: (pct: number, status: string) => void
+): Promise<string> {
+  const pdfjsLib = await getPdfJsLib();
+  if (!pdfjsLib) throw new Error('PDF parsing library unavailable.');
+
+  onProgress?.(15, 'Reading PDF structure...');
+  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
+  const pdfDoc = await loadingTask.promise;
+  const numPages = pdfDoc.numPages;
+
+  let fullText = '';
+
+  for (let i = 1; i <= numPages; i++) {
+    onProgress?.(15 + Math.round((i / numPages) * 75), `Extracting text from page ${i} of ${numPages}...`);
+    const page = await pdfDoc.getPage(i);
+    const textContent = await page.getTextContent();
+    const items = (textContent.items || []) as any[];
+    const pageText = items.map((item) => item.str || '').join(' ').trim();
+
+    if (pageText && pageText.length > 20) {
+      fullText += `--- Page ${i} ---\n${pageText}\n\n`;
+    } else {
+      // Scanned page fallback with OCR
+      try {
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          const dataUrl = canvas.toDataURL('image/png');
+          const ocrResult = await runOcr(dataUrl, 'eng');
+          if (ocrResult.text && ocrResult.text.trim()) {
+            fullText += `--- Page ${i} (OCR Scanned) ---\n${ocrResult.text.trim()}\n\n`;
+          }
+        }
+        canvas.width = 0;
+        canvas.height = 0;
+      } catch (e) {
+        fullText += `--- Page ${i} ---\n[Image/Non-Text Content]\n\n`;
+      }
+    }
+  }
+
+  onProgress?.(100, 'Text extraction complete!');
+  return fullText.trim() || 'No readable text could be extracted from this PDF document.';
+}
+
+export async function htmlToPdf(htmlString: string, title?: string): Promise<Blob> {
+  const cleanText = htmlString.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+  pdf.setFont('Helvetica', 'bold');
+  pdf.setFontSize(14);
+  pdf.text(title || 'Document', 40, 40);
+
+  pdf.setFont('Helvetica', 'normal');
+  pdf.setFontSize(10);
+  const splitLines = pdf.splitTextToSize(cleanText, 515);
+
+  let y = 65;
+  for (let i = 0; i < splitLines.length; i++) {
+    if (y > 780) {
+      pdf.addPage();
+      y = 45;
+    }
+    pdf.text(splitLines[i], 40, y);
+    y += 15;
+  }
+
+  return pdf.output('blob');
+}
+
+export async function csvToPdf(csvString: string, title?: string): Promise<Blob> {
+  const workbook = XLSX.read(csvString, { type: 'string' });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  pdf.setFont('Helvetica', 'bold');
+  pdf.setFontSize(13);
+  pdf.text(title || 'CSV Data Table', 40, 40);
+
+  pdf.setFont('Helvetica', 'normal');
+  pdf.setFontSize(9);
+
+  let y = 60;
+  const rowHeight = 16;
+  const colWidth = 90;
+
+  for (let r = 0; r < Math.min(jsonData.length, 250); r++) {
+    const row = jsonData[r] || [];
+    if (y > 540) {
+      pdf.addPage();
+      y = 40;
+    }
+
+    for (let c = 0; c < Math.min(row.length, 8); c++) {
+      const cellVal = String(row[c] ?? '');
+      pdf.text(cellVal.slice(0, 20), 40 + c * colWidth, y);
+    }
+    y += rowHeight;
+  }
+
+  return pdf.output('blob');
+}
+
+export async function epubToPdf(file: File): Promise<Blob> {
+  const zip = new JSZip();
+  const loadedZip = await zip.loadAsync(file);
+  const htmlFiles = Object.keys(loadedZip.files).filter((path) => path.endsWith('.html') || path.endsWith('.xhtml') || path.endsWith('.htm'));
+
+  let bookText = '';
+  for (const hf of htmlFiles) {
+    const content = await loadedZip.file(hf)?.async('string');
+    if (content) {
+      const plain = content.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      bookText += plain + '\n\n';
+    }
+  }
+
+  return await htmlToPdf(bookText, file.name.replace(/\.epub$/i, ''));
 }
 
 /**

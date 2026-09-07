@@ -234,6 +234,70 @@ export async function editPdfMetadata(
 }
 
 /**
+ * Helper to ensure any image format (WebP, BMP, PNG, JPG, GIF) is converted to a valid embeddable PDF image.
+ */
+async function ensureEmbeddableImage(
+  doc: PDFDocument,
+  buffer: ArrayBuffer,
+  mimeType: string
+): Promise<any> {
+  if (mimeType.includes('png')) {
+    try {
+      return await doc.embedPng(buffer);
+    } catch {
+      // Fallback via canvas
+    }
+  } else if (mimeType.includes('jpg') || mimeType.includes('jpeg')) {
+    try {
+      return await doc.embedJpg(buffer);
+    } catch {
+      // Fallback via canvas
+    }
+  }
+
+  // Universal canvas fallback for WebP, BMP, TIFF, GIF, or corrupted headers
+  if (typeof window !== 'undefined') {
+    const blob = new Blob([buffer], { type: mimeType || 'image/jpeg' });
+    const objectUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    img.src = objectUrl;
+
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Failed to load image format into canvas'));
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || 800;
+    canvas.height = img.naturalHeight || 600;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    }
+
+    const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    canvas.width = 0;
+    canvas.height = 0;
+    URL.revokeObjectURL(objectUrl);
+
+    const base64 = jpegDataUrl.split(',')[1];
+    const bin = window.atob(base64);
+    const len = bin.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = bin.charCodeAt(i);
+    }
+
+    return await doc.embedJpg(bytes);
+  }
+
+  // Fallback try
+  return await doc.embedJpg(buffer);
+}
+
+/**
  * Convert multiple image ArrayBuffers into a single styled PDF.
  */
 export async function imagesToPdf(
@@ -244,12 +308,7 @@ export async function imagesToPdf(
   const marginSize = options?.margin === 'none' ? 0 : options?.margin === 'big' ? 40 : 20;
 
   for (const img of images) {
-    let embeddedImg;
-    if (img.mimeType.includes('png')) {
-      embeddedImg = await doc.embedPng(img.buffer);
-    } else {
-      embeddedImg = await doc.embedJpg(img.buffer);
-    }
+    const embeddedImg = await ensureEmbeddableImage(doc, img.buffer, img.mimeType);
 
     const { width: imgW, height: imgH } = embeddedImg;
     let pageW = imgW + marginSize * 2;
