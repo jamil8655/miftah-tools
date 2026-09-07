@@ -138,22 +138,36 @@ export class AdManager {
   public async showAppOpenAd(): Promise<boolean> {
     if (!adConfig.enabled || this.isPremium) return false;
 
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
     if (this.isNative && this.isAdMobAvailable) {
       try {
         const { AdMob } = await import('@capacitor-community/admob');
-        const adId = process.env.NODE_ENV === 'production' && !adConfig.admob.appOpenId.includes('3940256099942544')
-          ? adConfig.admob.appOpenId
-          : 'ca-app-pub-3940256099942544/9257395921';
+        const adId = adConfig.admob.appOpenId || 'ca-app-pub-3660764533582226/1916156788';
 
         await AdMob.prepareInterstitial({
           adId,
-          isTesting: process.env.NODE_ENV !== 'production',
+          isTesting: false,
         });
         await AdMob.showInterstitial();
         return true;
       } catch (e) {
-        console.warn('[AdMob] App Open Ad failed natively, continuing gracefully:', e);
-        return false;
+        console.warn('[AdMob] App Open Ad failed natively, attempting Interstitial fallback:', e);
+        try {
+          const { AdMob } = await import('@capacitor-community/admob');
+          const fallbackId = adConfig.admob.interstitialId || 'ca-app-pub-3660764533582226/8769822246';
+          await AdMob.prepareInterstitial({
+            adId: fallbackId,
+            isTesting: false,
+          });
+          await AdMob.showInterstitial();
+          return true;
+        } catch (err2) {
+          console.warn('[AdMob] Interstitial fallback also failed natively:', err2);
+          return false;
+        }
       }
     }
 

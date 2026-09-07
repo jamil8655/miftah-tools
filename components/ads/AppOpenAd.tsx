@@ -62,7 +62,7 @@ const APP_OPEN_CREATIVES = [
 
 export function AppOpenAd() {
   const [isOpen, setIsOpen] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5);
   const [creative, setCreative] = useState(APP_OPEN_CREATIVES[0]);
 
   const handleClose = () => {
@@ -75,10 +75,10 @@ export function AppOpenAd() {
   useEffect(() => {
     if (!adConfig.enabled) return;
 
-    // Check 20-second debounce between launches in the same browser session
+    // Check 15-second debounce between launches in the same session
     const lastShown = sessionStorage.getItem('miftah_app_open_last');
     const now = Date.now();
-    if (lastShown && now - parseInt(lastShown, 10) < 20000) {
+    if (lastShown && now - parseInt(lastShown, 10) < 15000) {
       return;
     }
 
@@ -86,7 +86,7 @@ export function AppOpenAd() {
     if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
       adManager.showAppOpenAd().then((shown) => {
         if (!shown) {
-          // Native ad wasn't ready, show clean web-rendered app open ad
+          // If native ad didn't show immediately, show rich full-screen startup ad
           triggerWebOpenAd();
         }
       });
@@ -110,7 +110,15 @@ export function AppOpenAd() {
         });
       }, 1000);
 
-      return () => clearInterval(timer);
+      // Automatic close after 15 seconds if user leaves it running
+      const autoCloseTimer = setTimeout(() => {
+        setIsOpen(false);
+      }, 15000);
+
+      return () => {
+        clearInterval(timer);
+        clearTimeout(autoCloseTimer);
+      };
     }
   }, []);
 
