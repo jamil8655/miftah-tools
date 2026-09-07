@@ -17,28 +17,44 @@ import { getPdfJsLib } from '@/lib/utils/formatters';
 
 export function PdfToImagesStudio() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pages, setPages] = useState<{ pageNum: number; dataUrl: string }[]>([]);
+  const [pages, setPages] = useState<{ pageNum: number; dataUrl: string; blob?: Blob }[]>([]);
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [progressText, setProgressText] = useState<string>('');
   const [format, setFormat] = useState<'png' | 'jpeg'>('png');
 
   const renderPdfPages = async (file: File) => {
     setIsLoading(true);
+    setProgressText('Loading PDF engine...');
     setPages([]);
     setSelectedPages([]);
 
     try {
       const pdfjsLib = await getPdfJsLib();
+      if (!pdfjsLib) throw new Error('PDF rendering library is unavailable.');
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       const totalPages = pdf.numPages;
 
-      const extracted: { pageNum: number; dataUrl: string }[] = [];
+      let scale = 1.5;
+      if (totalPages > 50) {
+        scale = 1.0;
+      } else if (totalPages > 25) {
+        scale = 1.25;
+      }
+
+      const extracted: { pageNum: number; dataUrl: string; blob?: Blob }[] = [];
 
       for (let i = 1; i <= totalPages; i++) {
+        setProgressText(`Rendering page ${i} of ${totalPages}...`);
+
+        if (i % 2 === 0 || totalPages > 15) {
+          await new Promise((resolve) => setTimeout(resolve, 8));
+        }
+
         const page = await pdf.getPage(i);
-        const viewport = page.getViewport({ scale: 1.5 }); // High-Res scale
+        const viewport = page.getViewport({ scale });
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
@@ -46,9 +62,21 @@ export function PdfToImagesStudio() {
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           await page.render({ canvasContext: ctx, viewport }).promise;
+
+          const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+          const blob = await new Promise<Blob>((resolve) => {
+            canvas.toBlob((b) => resolve(b || new Blob()), mimeType, 0.92);
+          });
+
+          // Zero out canvas to free RAM
+          canvas.width = 0;
+          canvas.height = 0;
+
+          const objectUrl = URL.createObjectURL(blob);
           extracted.push({
             pageNum: i,
-            dataUrl: canvas.toDataURL(`image/${format}`, 0.95),
+            dataUrl: objectUrl,
+            blob,
           });
         }
       }
@@ -59,6 +87,7 @@ export function PdfToImagesStudio() {
       console.error('PDF rendering error:', err);
     } finally {
       setIsLoading(false);
+      setProgressText('');
     }
   };
 
@@ -77,6 +106,15 @@ export function PdfToImagesStudio() {
   };
 
   const handleDownloadSingle = (pageNum: number, dataUrl: string) => {
+    const pageObj = pages.find((p) => p.pageNum === pageNum);
+    const baseName = (pdfFile?.name || 'document').replace(/\.pdf$/i, '');
+    const filename = `${baseName}_page_${pageNum}.${format === 'jpeg' ? 'jpg' : 'png'}`;
+
+    if (pageObj?.blob) {
+      downloadSingleFile(pageObj.blob, filename);
+      return;
+    }
+
     const byteString = atob(dataUrl.split(',')[1]);
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
@@ -84,8 +122,7 @@ export function PdfToImagesStudio() {
       ia[i] = byteString.charCodeAt(i);
     }
     const blob = new Blob([ab], { type: `image/${format}` });
-    const baseName = (pdfFile?.name || 'document').replace(/\.pdf$/i, '');
-    downloadSingleFile(blob, `${baseName}_page_${pageNum}.${format === 'jpeg' ? 'jpg' : 'png'}`);
+    downloadSingleFile(blob, filename);
   };
 
   const handleDownloadAllZip = () => {
@@ -95,17 +132,19 @@ export function PdfToImagesStudio() {
     pages
       .filter((p) => selectedPages.includes(p.pageNum))
       .forEach((p) => {
-        const byteString = atob(p.dataUrl.split(',')[1]);
-        const ab = new ArrayBuffer(byteString.length);
-        const ia = new Uint8Array(ab);
-        for (let i = 0; i < byteString.length; i++) {
-          ia[i] = byteString.charCodeAt(i);
+        const filename = `${baseName}_page_${p.pageNum}.${format === 'jpeg' ? 'jpg' : 'png'}`;
+        if (p.blob) {
+          zipFiles.push({ name: filename, blob: p.blob });
+        } else {
+          const byteString = atob(p.dataUrl.split(',')[1]);
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          const blob = new Blob([ab], { type: `image/${format}` });
+          zipFiles.push({ name: filename, blob });
         }
-        const blob = new Blob([ab], { type: `image/${format}` });
-        zipFiles.push({
-          name: `${baseName}_page_${p.pageNum}.${format === 'jpeg' ? 'jpg' : 'png'}`,
-          blob,
-        });
       });
 
     downloadAsZip(zipFiles, `${baseName}_extracted_pages.zip`);
@@ -204,7 +243,9 @@ export function PdfToImagesStudio() {
           {isLoading ? (
             <div className="py-16 text-center space-y-3">
               <RefreshCw className="w-8 h-8 text-brand-600 animate-spin mx-auto" />
-              <p className="text-xs font-bold text-slate-600">Rendering pages in 300 DPI HD...</p>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                {progressText || 'Rendering pages in HD quality...'}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

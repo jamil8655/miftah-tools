@@ -47,152 +47,166 @@ export async function pdfToDocx(
     const pageNextPct = 20 + Math.floor((pageNum / totalPages) * 70);
     updateProgress(pageBasePct, `Processing page ${pageNum} of ${totalPages}...`);
 
-    const page = await pdfDoc.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const items = (textContent.items || []) as any[];
-
-    // Extract existing digital text
-    const digitalText = items.map((i) => i.str || '').join(' ').trim();
-
-    if (items.length > 0 && digitalText.length > 25) {
-      // 1. Digital PDF Vector Layout Reconstruction
-      items.sort((a, b) => {
-        const yDiff = b.transform[5] - a.transform[5];
-        if (Math.abs(yDiff) > 4) return yDiff;
-        return a.transform[4] - b.transform[4];
-      });
-
-      const lines: { y: number; fontSize: number; text: string; isBold: boolean }[] = [];
-      let currentLine = { y: items[0].transform[5], fontSize: items[0].height || 12, text: '', isBold: false };
-
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        const str = item.str || '';
-        const y = item.transform[5];
-        const fontName = (item.fontName || '').toLowerCase();
-        const isBold = fontName.includes('bold') || fontName.includes('black') || fontName.includes('heavy');
-        const fontSize = Math.round(item.height || item.transform[0] || 12);
-
-        if (Math.abs(y - currentLine.y) > 6) {
-          if (currentLine.text.trim()) {
-            lines.push({ ...currentLine, text: currentLine.text.trim() });
-          }
-          currentLine = { y, fontSize, text: str, isBold };
-        } else {
-          currentLine.text += (currentLine.text.length > 0 && !currentLine.text.endsWith(' ') ? ' ' : '') + str;
-          if (isBold) currentLine.isBold = true;
-          if (fontSize > currentLine.fontSize) currentLine.fontSize = fontSize;
-        }
-      }
-      if (currentLine.text.trim()) {
-        lines.push({ ...currentLine, text: currentLine.text.trim() });
-      }
-
-      let paragraphBuffer: { text: string; isBold: boolean; fontSize: number }[] = [];
-
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-
-        if (line.fontSize >= 18) {
-          if (paragraphBuffer.length > 0) {
-            docChildren.push(buildParagraph(paragraphBuffer));
-            paragraphBuffer = [];
-          }
-          docChildren.push(
-            new Paragraph({
-              text: line.text,
-              heading: HeadingLevel.HEADING_1,
-              spacing: { before: 240, after: 120 },
-            })
-          );
-        } else if (line.fontSize >= 14) {
-          if (paragraphBuffer.length > 0) {
-            docChildren.push(buildParagraph(paragraphBuffer));
-            paragraphBuffer = [];
-          }
-          docChildren.push(
-            new Paragraph({
-              text: line.text,
-              heading: HeadingLevel.HEADING_2,
-              spacing: { before: 180, after: 80 },
-            })
-          );
-        } else {
-          paragraphBuffer.push(line);
-          if (line.text.endsWith('.') || line.text.endsWith('!') || line.text.endsWith('?')) {
-            docChildren.push(buildParagraph(paragraphBuffer));
-            paragraphBuffer = [];
-          }
-        }
-      }
-
-      if (paragraphBuffer.length > 0) {
-        docChildren.push(buildParagraph(paragraphBuffer));
-      }
-      updateProgress(pageNextPct, `Finished page ${pageNum} of ${totalPages}`);
-    } else {
-      // 2. SCANNED PAPER / IMAGE PDF -> RUN OPTICAL CHARACTER RECOGNITION (OCR)
-      updateProgress(pageBasePct + 2, `Scanned paper detected (Page ${pageNum}). Scanning text with AI OCR...`);
-
-      const viewport = page.getViewport({ scale: 2.0 });
-      const canvas = document.createElement('canvas');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-      if (ctx) {
-        await page.render({ canvasContext: ctx, viewport }).promise;
-        const pageDataUrl = canvas.toDataURL('image/png');
-
-        try {
-          updateProgress(pageBasePct + 5, `Reading characters from scanned paper (Page ${pageNum})...`);
-          const ocrResult = await runOcr(pageDataUrl, 'eng');
-
-          if (ocrResult.text && ocrResult.text.trim()) {
-            const rawParagraphs = ocrResult.text.split(/\n\s*\n/);
-            for (const pText of rawParagraphs) {
-              const cleanP = pText.trim().replace(/\n/g, ' ');
-              if (cleanP) {
-                docChildren.push(
-                  new Paragraph({
-                    children: [
-                      new TextRun({
-                        text: cleanP,
-                        size: 24, // 12pt standard
-                      }),
-                    ],
-                    spacing: { after: 140 },
-                  })
-                );
-              }
-            }
-          } else {
-            docChildren.push(
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: `[Page ${pageNum} - Graphic / Non-Text Layout]`,
-                    italics: true,
-                    color: '888888',
-                  }),
-                ],
-              })
-            );
-          }
-        } catch (ocrErr) {
-          console.error('OCR Error on page', pageNum, ocrErr);
-        }
-      }
-      updateProgress(pageNextPct, `Finished scanning page ${pageNum} of ${totalPages}`);
+    // Micro-delay between pages to allow UI repaints and garbage collection
+    if (pageNum % 2 === 0 || totalPages > 10) {
+      await new Promise((resolve) => setTimeout(resolve, 8));
     }
 
-    // Page Break between pages
-    if (pageNum < totalPages) {
-      docChildren.push(
-        new Paragraph({
-          children: [new PageBreak()],
-        })
-      );
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const items = (textContent.items || []) as any[];
+
+      // Extract existing digital text
+      const digitalText = items.map((i) => i.str || '').join(' ').trim();
+
+      if (items.length > 0 && digitalText.length > 25) {
+        // 1. Digital PDF Vector Layout Reconstruction
+        items.sort((a, b) => {
+          const yDiff = b.transform[5] - a.transform[5];
+          if (Math.abs(yDiff) > 4) return yDiff;
+          return a.transform[4] - b.transform[4];
+        });
+
+        const lines: { y: number; fontSize: number; text: string; isBold: boolean }[] = [];
+        let currentLine = { y: items[0].transform[5], fontSize: items[0].height || 12, text: '', isBold: false };
+
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          const str = item.str || '';
+          const y = item.transform[5];
+          const fontName = (item.fontName || '').toLowerCase();
+          const isBold = fontName.includes('bold') || fontName.includes('black') || fontName.includes('heavy');
+          const fontSize = Math.round(item.height || item.transform[0] || 12);
+
+          if (Math.abs(y - currentLine.y) > 6) {
+            if (currentLine.text.trim()) {
+              lines.push({ ...currentLine, text: currentLine.text.trim() });
+            }
+            currentLine = { y, fontSize, text: str, isBold };
+          } else {
+            currentLine.text += (currentLine.text.length > 0 && !currentLine.text.endsWith(' ') ? ' ' : '') + str;
+            if (isBold) currentLine.isBold = true;
+            if (fontSize > currentLine.fontSize) currentLine.fontSize = fontSize;
+          }
+        }
+        if (currentLine.text.trim()) {
+          lines.push({ ...currentLine, text: currentLine.text.trim() });
+        }
+
+        let paragraphBuffer: { text: string; isBold: boolean; fontSize: number }[] = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          if (line.fontSize >= 18) {
+            if (paragraphBuffer.length > 0) {
+              docChildren.push(buildParagraph(paragraphBuffer));
+              paragraphBuffer = [];
+            }
+            docChildren.push(
+              new Paragraph({
+                text: line.text,
+                heading: HeadingLevel.HEADING_1,
+                spacing: { before: 240, after: 120 },
+              })
+            );
+          } else if (line.fontSize >= 14) {
+            if (paragraphBuffer.length > 0) {
+              docChildren.push(buildParagraph(paragraphBuffer));
+              paragraphBuffer = [];
+            }
+            docChildren.push(
+              new Paragraph({
+                text: line.text,
+                heading: HeadingLevel.HEADING_2,
+                spacing: { before: 180, after: 80 },
+              })
+            );
+          } else {
+            paragraphBuffer.push(line);
+            if (line.text.endsWith('.') || line.text.endsWith('!') || line.text.endsWith('?')) {
+              docChildren.push(buildParagraph(paragraphBuffer));
+              paragraphBuffer = [];
+            }
+          }
+        }
+
+        if (paragraphBuffer.length > 0) {
+          docChildren.push(buildParagraph(paragraphBuffer));
+        }
+        updateProgress(pageNextPct, `Finished page ${pageNum} of ${totalPages}`);
+      } else {
+        // 2. SCANNED PAPER / IMAGE PDF -> RUN OPTICAL CHARACTER RECOGNITION (OCR)
+        updateProgress(pageBasePct + 2, `Scanned page ${pageNum} detected. Extracting text...`);
+
+        const ocrScale = totalPages > 15 ? 1.25 : totalPages > 6 ? 1.5 : 1.85;
+        const viewport = page.getViewport({ scale: ocrScale });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        if (ctx) {
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          const pageDataUrl = canvas.toDataURL('image/png');
+
+          try {
+            updateProgress(pageBasePct + 4, `Reading characters from page ${pageNum}...`);
+            const ocrResult = await runOcr(pageDataUrl, 'eng');
+
+            if (ocrResult.text && ocrResult.text.trim()) {
+              const rawParagraphs = ocrResult.text.split(/\n\s*\n/);
+              for (const pText of rawParagraphs) {
+                const cleanP = pText.trim().replace(/\n/g, ' ');
+                if (cleanP) {
+                  docChildren.push(
+                    new Paragraph({
+                      children: [
+                        new TextRun({
+                          text: cleanP,
+                          size: 24, // 12pt standard
+                        }),
+                      ],
+                      spacing: { after: 140 },
+                    })
+                  );
+                }
+              }
+            } else {
+              docChildren.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: `[Page ${pageNum} - Graphic / Non-Text Layout]`,
+                      italics: true,
+                      color: '888888',
+                    }),
+                  ],
+                })
+              );
+            }
+          } catch (ocrErr) {
+            console.error('OCR Error on page', pageNum, ocrErr);
+          }
+        }
+
+        // Clean up canvas
+        canvas.width = 0;
+        canvas.height = 0;
+        updateProgress(pageNextPct, `Finished scanning page ${pageNum} of ${totalPages}`);
+      }
+
+      // Page Break between pages
+      if (pageNum < totalPages) {
+        docChildren.push(
+          new Paragraph({
+            children: [new PageBreak()],
+          })
+        );
+      }
+    } catch (pageErr) {
+      console.warn(`Error processing page ${pageNum}:`, pageErr);
     }
   }
 

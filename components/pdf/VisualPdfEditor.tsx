@@ -26,6 +26,7 @@ import {
 import { downloadSingleFile } from '@/lib/utils/download';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { useI18n } from '@/lib/i18n/i18n-context';
+import { getPdfJsLib } from '@/lib/utils/formatters';
 
 const PDF_EDITOR_LOCALES = {
   en: {
@@ -148,7 +149,7 @@ export function VisualPdfEditor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pageImageCache = useRef<Map<number, HTMLImageElement>>(new Map());
 
-  // 1. Load Real PDF and render pages with pdfjs-dist
+  // 1. Load Real PDF and render pages with getPdfJsLib
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -157,8 +158,8 @@ export function VisualPdfEditor() {
       setPdfBytes(buffer);
 
       try {
-        const pdfjsLib = await import('pdfjs-dist');
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        const pdfjsLib = await getPdfJsLib();
+        if (!pdfjsLib) throw new Error('PDF library unavailable');
 
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
         setTotalPages(pdf.numPages);
@@ -188,12 +189,16 @@ export function VisualPdfEditor() {
 
     if (offCtx) {
       await page.render({ canvasContext: offCtx, viewport }).promise;
+      const dataUrl = offCanvas.toDataURL('image/jpeg', 0.85);
+      offCanvas.width = 0;
+      offCanvas.height = 0;
+
       const img = new Image();
       img.onload = () => {
         pageImageCache.current.set(pageNum, img);
         redrawCanvas();
       };
-      img.src = offCanvas.toDataURL();
+      img.src = dataUrl;
     }
   };
 

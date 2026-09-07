@@ -74,6 +74,14 @@ export async function compressPdfAdvanced(
   let bestBytes: Uint8Array | null = null;
   let pageCount = 0;
 
+  // First, for long documents (> 25 pages), run fast structural deduplication first
+  let structuralBytes: Uint8Array | null = null;
+  try {
+    structuralBytes = await compressPdfStructural(pdfBuffer);
+  } catch (e) {
+    // Continue
+  }
+
   try {
     const pdfjsLib = await getPdfJsLib();
 
@@ -90,6 +98,16 @@ export async function compressPdfAdvanced(
       pageCount = pdfDoc.numPages;
 
       if (pageCount > 0) {
+        // Adapt render scale dynamically for long PDFs to prevent memory limits
+        let effectiveScale = renderScale;
+        if (pageCount > 50) {
+          effectiveScale = Math.min(renderScale, 0.95);
+        } else if (pageCount > 25) {
+          effectiveScale = Math.min(renderScale, 1.05);
+        } else if (pageCount > 15) {
+          effectiveScale = Math.min(renderScale, 1.15);
+        }
+
         onProgress?.(15, `Optimizing ${pageCount} pages (${level.toUpperCase()} mode)...`);
 
         const newPdf = await PDFDocument.create();
@@ -98,8 +116,13 @@ export async function compressPdfAdvanced(
           const pct = Math.round(15 + (pageNum / pageCount) * 78);
           onProgress?.(pct, `Compressing page ${pageNum} of ${pageCount}...`);
 
+          // Allow garbage collection and UI update between pages
+          if (pageNum % 2 === 0 || pageCount > 20) {
+            await new Promise((resolve) => setTimeout(resolve, 8));
+          }
+
           const page = await pdfDoc.getPage(pageNum);
-          const viewport = page.getViewport({ scale: renderScale });
+          const viewport = page.getViewport({ scale: effectiveScale });
 
           const canvas = document.createElement('canvas');
           canvas.width = Math.floor(viewport.width);
@@ -136,6 +159,7 @@ export async function compressPdfAdvanced(
             });
           }
 
+          // Clean up canvas memory immediately
           canvas.width = 0;
           canvas.height = 0;
         }
@@ -147,27 +171,27 @@ export async function compressPdfAdvanced(
         bestBytes = await newPdf.save({
           useObjectStreams: true,
           addDefaultPage: false,
+          objectsPerTick: 50,
         });
       }
     }
   } catch (err) {
-    console.warn('Visual raster compression failed or skipped, trying structural optimizer:', err);
+    console.warn('Visual raster compression failed or skipped, using structural optimizer:', err);
   }
 
-  // If visual compression wasn't used or structural optimizer is better:
-  if (!bestBytes) {
+  // If visual compression wasn't used or structural optimizer is available:
+  if (!bestBytes && structuralBytes) {
+    bestBytes = structuralBytes;
+  } else if (!bestBytes) {
     onProgress?.(80, 'Running structural stream deduplication...');
     bestBytes = await compressPdfStructural(pdfBuffer);
   }
 
-  // Also try structural compression on original to compare which is smaller
-  try {
-    const structuralCandidate = await compressPdfStructural(pdfBuffer);
-    if (structuralCandidate.byteLength < bestBytes.byteLength) {
-      bestBytes = structuralCandidate;
+  // Compare visual raster vs structural deduplication and select the smallest valid byte array
+  if (structuralBytes && bestBytes) {
+    if (structuralBytes.byteLength < bestBytes.byteLength && structuralBytes.byteLength < originalSize) {
+      bestBytes = structuralBytes;
     }
-  } catch (e) {
-    // Keep bestBytes
   }
 
   const compressedSize = bestBytes.byteLength;

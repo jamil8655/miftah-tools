@@ -302,10 +302,14 @@ export function AutoCropImagesToPdfStudio() {
           canvasTop.toBlob((blobTop) => {
             blobTop?.arrayBuffer().then((bufTop) => {
               slices.push({ buffer: bufTop, width: canvasTop.width, height: canvasTop.height });
+              canvasTop.width = 0;
+              canvasTop.height = 0;
 
               canvasBottom.toBlob((blobBottom) => {
                 blobBottom?.arrayBuffer().then((bufBottom) => {
                   slices.push({ buffer: bufBottom, width: canvasBottom.width, height: canvasBottom.height });
+                  canvasBottom.width = 0;
+                  canvasBottom.height = 0;
                   resolve(slices);
                 });
               }, 'image/jpeg', 0.95);
@@ -339,10 +343,14 @@ export function AutoCropImagesToPdfStudio() {
           canvasLeft.toBlob((blobLeft) => {
             blobLeft?.arrayBuffer().then((bufLeft) => {
               slices.push({ buffer: bufLeft, width: canvasLeft.width, height: canvasLeft.height });
+              canvasLeft.width = 0;
+              canvasLeft.height = 0;
 
               canvasRight.toBlob((blobRight) => {
                 blobRight?.arrayBuffer().then((bufRight) => {
                   slices.push({ buffer: bufRight, width: canvasRight.width, height: canvasRight.height });
+                  canvasRight.width = 0;
+                  canvasRight.height = 0;
                   resolve(slices);
                 });
               }, 'image/jpeg', 0.95);
@@ -377,6 +385,8 @@ export function AutoCropImagesToPdfStudio() {
           canvas.toBlob((blob) => {
             blob?.arrayBuffer().then((buf) => {
               slices.push({ buffer: buf, width: canvas.width, height: canvas.height });
+              canvas.width = 0;
+              canvas.height = 0;
               resolve(slices);
             });
           }, 'image/jpeg', 0.95);
@@ -401,6 +411,9 @@ export function AutoCropImagesToPdfStudio() {
       // Collect all slices sequentially
       const allSlices: { buffer: ArrayBuffer; width: number; height: number }[] = [];
       for (let i = 0; i < images.length; i++) {
+        if (i % 2 === 0 || images.length > 10) {
+          await new Promise((resolve) => setTimeout(resolve, 6));
+        }
         const itemSlices = await processImageSlices(images[i]);
         allSlices.push(...itemSlices);
         setProgress(10 + Math.round(((i + 1) / images.length) * 50));
@@ -410,6 +423,9 @@ export function AutoCropImagesToPdfStudio() {
 
       // Add pages to PDF document
       for (let p = 0; p < allSlices.length; p++) {
+        if (p % 3 === 0 || totalPages > 15) {
+          await new Promise((resolve) => setTimeout(resolve, 6));
+        }
         const slice = allSlices[p];
         const embeddedImg = await pdfDoc.embedJpg(slice.buffer);
 

@@ -19,36 +19,54 @@ export async function pdfToImages(
   const pdfDoc = await loadingTask.promise;
   const numPages = pdfDoc.numPages;
 
-  const scale = dpi / 72; // Standard PDF DPI is 72
+  let scale = dpi / 72; // Standard PDF DPI is 72
+  if (numPages > 50) {
+    scale = Math.min(scale, 1.25);
+  } else if (numPages > 25) {
+    scale = Math.min(scale, 1.5);
+  }
+
   const results: { name: string; blob: Blob; dataUrl: string }[] = [];
 
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const pct = Math.floor(10 + ((pageNum - 1) / numPages) * 85);
     onProgress?.(pct, `Rendering high-res page ${pageNum} of ${numPages}...`);
 
-    const page = await pdfDoc.getPage(pageNum);
-    const viewport = page.getViewport({ scale });
+    if (pageNum % 2 === 0 || numPages > 15) {
+      await new Promise((resolve) => setTimeout(resolve, 8));
+    }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) continue;
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale });
 
-    await page.render({ canvasContext: ctx, viewport }).promise;
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) continue;
 
-    const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
-    const dataUrl = canvas.toDataURL(mimeType, 0.95);
-    const blob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((b) => resolve(b || new Blob()), mimeType, 0.95);
-    });
+      await page.render({ canvasContext: ctx, viewport }).promise;
 
-    const baseName = file.name.replace(/\.[^/.]+$/, '');
-    results.push({
-      name: `${baseName}_page_${pageNum}.${format === 'jpeg' ? 'jpg' : 'png'}`,
-      blob,
-      dataUrl,
-    });
+      const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((b) => resolve(b || new Blob()), mimeType, 0.92);
+      });
+
+      // Clear canvas memory immediately
+      canvas.width = 0;
+      canvas.height = 0;
+
+      const objectUrl = URL.createObjectURL(blob);
+      const baseName = file.name.replace(/\.[^/.]+$/, '');
+      results.push({
+        name: `${baseName}_page_${pageNum}.${format === 'jpeg' ? 'jpg' : 'png'}`,
+        blob,
+        dataUrl: objectUrl,
+      });
+    } catch (pageErr) {
+      console.warn(`Error rendering page ${pageNum} to image:`, pageErr);
+    }
   }
 
   onProgress?.(100, 'All PDF pages rendered to images!');

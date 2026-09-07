@@ -4,38 +4,19 @@ import React, { useState, useRef } from 'react';
 import { Layers, Upload, Download, Trash2, RotateCw, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { PDFDocument, degrees } from 'pdf-lib';
 
+import { getPdfJsLib } from '@/lib/utils/formatters';
+
 interface PageItem {
   pageIndex: number; // 0-based in original PDF
   dataUrl: string;
   rotation: number; // 0, 90, 180, 270
 }
 
-async function loadPdfJsLibrary(): Promise<any> {
-  if (typeof window === 'undefined') return null;
-  if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
-
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.onload = () => {
-      const lib = (window as any).pdfjsLib;
-      if (lib) {
-        lib.GlobalWorkerOptions.workerSrc =
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        resolve(lib);
-      } else {
-        reject(new Error('Failed to initialize pdfjsLib'));
-      }
-    };
-    script.onerror = () => reject(new Error('Failed to load PDF engine'));
-    document.head.appendChild(script);
-  });
-}
-
 export function PdfOrganizerStudio() {
   const [file, setFile] = useState<File | null>(null);
   const [pages, setPages] = useState<PageItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [progressText, setProgressText] = useState<string>('');
   const [exporting, setExporting] = useState(false);
   const [exportUrl, setExportUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,17 +28,26 @@ export function PdfOrganizerStudio() {
       setPages([]);
       setExportUrl(null);
       setLoading(true);
+      setProgressText('Initializing PDF engine...');
 
       try {
-        const pdfjs = await loadPdfJsLibrary();
+        const pdfjs = await getPdfJsLib();
+        if (!pdfjs) throw new Error('PDF library unavailable');
+
         const arrayBuffer = await f.arrayBuffer();
         const pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
         const total = pdf.numPages;
 
         const renderedPages: PageItem[] = [];
         for (let i = 1; i <= total; i++) {
+          setProgressText(`Rendering thumbnail ${i} of ${total}...`);
+
+          if (i % 2 === 0 || total > 15) {
+            await new Promise((resolve) => setTimeout(resolve, 6));
+          }
+
           const p = await pdf.getPage(i);
-          const viewport = p.getViewport({ scale: 0.5 });
+          const viewport = p.getViewport({ scale: 0.45 });
           const canvas = document.createElement('canvas');
           canvas.width = viewport.width;
           canvas.height = viewport.height;
@@ -70,12 +60,15 @@ export function PdfOrganizerStudio() {
               rotation: 0,
             });
           }
+          canvas.width = 0;
+          canvas.height = 0;
         }
         setPages(renderedPages);
       } catch (err) {
-        console.error(err);
+        console.error('PDF Organizer Load Error:', err);
       } finally {
         setLoading(false);
+        setProgressText('');
       }
     }
   };
@@ -163,7 +156,7 @@ export function PdfOrganizerStudio() {
         {loading && (
           <div className="p-8 text-center space-y-2">
             <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-xs font-bold text-slate-600">Generating page thumbnails...</p>
+            <p className="text-xs font-bold text-slate-600">{progressText || 'Generating page thumbnails...'}</p>
           </div>
         )}
 
