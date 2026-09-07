@@ -24,6 +24,14 @@
 		"Keyboard": {
 			"resize": "body",
 			"resizeOnFullScreen": true
+		},
+		"GoogleAuth": {
+			"scopes": [
+				"profile",
+				"email"
+			],
+			"serverClientId": "701477341899-g0nbe75iskjqsjqat0r5u7ob5escu01v.apps.googleusercontent.com",
+			"forceCodeForRefreshToken": true
 		}
 	},
 	"android": {

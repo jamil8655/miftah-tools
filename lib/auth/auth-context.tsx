@@ -7,6 +7,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
+  signInWithCredential,
   getRedirectResult,
   GoogleAuthProvider,
   signOut,
@@ -15,6 +16,7 @@ import {
   updateProfile,
   deleteUser,
 } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { verifyUserAdminClaims } from '@/lib/firebase/admin-claims';
 
@@ -170,10 +172,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // 3. Real Firebase Google OAuth Sign-In
+  // 3. Real Firebase Google OAuth Sign-In (Native Android Google Sign-In & Web fallback)
   const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
     try {
       if (!auth) throw new Error('Firebase Auth is not initialized');
+
+      // A. If running inside installed Android app (Capacitor Native)
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+          await GoogleAuth.initialize({
+            clientId: '701477341899-g0nbe75iskjqsjqat0r5u7ob5escu01v.apps.googleusercontent.com',
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: true,
+          });
+          const googleUser = await GoogleAuth.signIn();
+          const idToken = googleUser.authentication?.idToken || (googleUser as any).idToken;
+          if (!idToken) {
+            throw new Error('Google ID Token could not be retrieved.');
+          }
+          const credential = GoogleAuthProvider.credential(idToken);
+          const res = await signInWithCredential(auth, credential);
+          await evaluateUser(res.user, true);
+          return { success: true };
+        } catch (nativeErr: any) {
+          console.warn('Native Google Auth flow notice:', nativeErr);
+          if (
+            nativeErr?.message?.includes('cancel') ||
+            nativeErr?.code === '12501' ||
+            nativeErr === 'user_canceled' ||
+            nativeErr?.message?.includes('12501')
+          ) {
+            return { success: false, error: 'Google sign-in was cancelled.' };
+          }
+          // If native threw a specific error, inform user
+          if (nativeErr?.message && !nativeErr.message.includes('missing initial state')) {
+            return { success: false, error: nativeErr.message };
+          }
+        }
+      }
+
+      // B. Web Browser fallback
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
       const res = await signInWithPopup(auth, provider);
@@ -208,6 +247,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 4. Real Firebase Sign-Out
   const logout = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+        await GoogleAuth.signOut();
+      } catch (e) {
+        // ignore
+      }
+    }
     if (auth) {
       try {
         await signOut(auth);

@@ -3,4 +3,5 @@
     <string name="title_activity_main">Miftah Tools</string>
     <string name="package_name">com.miftahtools.app</string>
     <string name="custom_url_scheme">com.miftahtools.app</string>
+    <string name="server_client_id">701477341899-g0nbe75iskjqsjqat0r5u7ob5escu01v.apps.googleusercontent.com</string>
 </resources>
