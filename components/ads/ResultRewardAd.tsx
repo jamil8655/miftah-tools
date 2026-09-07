@@ -32,27 +32,19 @@ const REWARD_PERKS = [
 ];
 
 export function ResultRewardAd() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (!adConfig.enabled) return;
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % REWARD_PERKS.length);
-    }, 8000);
-    return () => clearInterval(timer);
-  }, []);
+  const [index] = useState(0);
 
   if (!adConfig.enabled) return null;
 
   const current = REWARD_PERKS[index];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-linear-to-r from-emerald-500/10 via-brand-500/5 to-purple-500/10 dark:from-emerald-950/30 dark:via-slate-900 dark:to-purple-950/30 p-3.5 sm:p-4 my-3 shadow-xs">
+    <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-brand-500/5 to-purple-500/10 dark:from-emerald-950/30 dark:via-slate-900 dark:to-purple-950/30 p-3.5 sm:p-4 my-3 shadow-xs">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         {/* Left Icon & Text */}
         <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
-          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
-            <Gift className="w-5 h-5 animate-bounce" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
+            <Gift className="w-5 h-5 text-white" />
           </div>
 
           <div className="min-w-0 text-left rtl:text-right flex-1">

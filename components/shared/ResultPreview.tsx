@@ -151,10 +151,10 @@ export function ResultPreview({
     try {
       await onDownloadSingle(index);
       setDownloadedIndices((prev) => new Set(prev).add(index));
-      // Show non-disruptive interstitial after task completion
-      adManager.showInterstitial();
+    } catch (err) {
+      console.error('Download error:', err);
     } finally {
-      setTimeout(() => setDownloadingIndex(null), 400);
+      setTimeout(() => setDownloadingIndex(null), 300);
     }
   };
 

@@ -70,25 +70,16 @@ const AD_CAMPAIGNS = [
 ];
 
 export function AdSlot({ placement = 'tool-bottom', className = '', format = 'auto' }: AdSlotProps) {
-  const [activeAdIndex, setActiveAdIndex] = useState(0);
+  const [activeAdIndex] = useState(() => {
+    return Math.floor(Math.random() * AD_CAMPAIGNS.length);
+  });
   const [isDismissed, setIsDismissed] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const adRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!adConfig.enabled) return;
-
-    // Rotate active ad campaign every 7 seconds
-    const interval = setInterval(() => {
-      setActiveAdIndex((prev) => (prev + 1) % AD_CAMPAIGNS.length);
-    }, 7000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   if (!adConfig.enabled || isDismissed) return null;
 
-  const currentAd = AD_CAMPAIGNS[activeAdIndex];
+  const currentAd = AD_CAMPAIGNS[activeAdIndex] || AD_CAMPAIGNS[0];
 
   return (
     <div
@@ -138,11 +129,11 @@ export function AdSlot({ placement = 'tool-bottom', className = '', format = 'au
       )}
 
       {/* Real Running Ad Banner Creative */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3.5 p-2.5 rounded-xl bg-linear-to-r from-slate-50 to-slate-100/70 dark:from-slate-800/60 dark:to-slate-900/60 border border-slate-200/70 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3.5 p-2.5 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100/70 dark:from-slate-800/60 dark:to-slate-900/60 border border-slate-200/70 dark:border-slate-800">
         {/* Left Icon & Text Content */}
         <div className="flex items-center gap-3.5 min-w-0 w-full sm:w-auto flex-1">
           <div className={`w-12 h-12 rounded-2xl ${currentAd.iconBg} text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/10`}>
-            <Sparkles className="w-6 h-6 animate-pulse" />
+            <Sparkles className="w-6 h-6 text-white" />
           </div>
 
           <div className="min-w-0 flex-1 text-left rtl:text-right">

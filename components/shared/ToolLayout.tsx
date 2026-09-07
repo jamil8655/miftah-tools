@@ -205,7 +205,7 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
 
   if (!isMounted) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8 animate-pulse">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         <div className="h-6 w-36 bg-slate-200 dark:bg-slate-800 rounded-lg" />
         <div className="text-center space-y-3">
           <div className="h-5 w-28 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto" />
@@ -264,7 +264,7 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
               <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-4 border-brand-100 dark:border-brand-950/60" />
                 <div className="w-20 h-20 rounded-full border-4 border-brand-600 border-t-transparent animate-spin" />
-                <Sparkles className="w-6 h-6 text-brand-600 dark:text-brand-400 animate-pulse" />
+                <Sparkles className="w-6 h-6 text-brand-600 dark:text-brand-400" />
               </div>
               <div className="space-y-2.5 max-w-md mx-auto">
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">

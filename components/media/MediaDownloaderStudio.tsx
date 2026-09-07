@@ -162,7 +162,7 @@ export function MediaDownloaderStudio() {
 
   if (!isMounted) {
     return (
-      <div className="max-w-4xl mx-auto p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 animate-pulse">
+      <div className="max-w-4xl mx-auto p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
         <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto" />
         <div className="h-10 w-96 bg-slate-200 dark:bg-slate-800 rounded-2xl mx-auto" />
         <div className="h-14 w-full bg-slate-100 dark:bg-slate-800/60 rounded-2xl" />
@@ -175,7 +175,7 @@ export function MediaDownloaderStudio() {
       {/* Header Banner */}
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-brand-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-purple-500 animate-pulse" />
+          <Sparkles className="w-3.5 h-3.5 text-purple-500" />
           <span>5+ Multi-Engine Auto-Fallback Cluster • Zero Limit Failover</span>
         </div>
 

@@ -177,7 +177,7 @@ export function AppOpenAd() {
         {/* Brand Icon */}
         <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl bg-gradient-to-tr from-brand-500 via-indigo-500 to-purple-600 p-0.5 shadow-xl shadow-brand-500/25 flex items-center justify-center">
           <div className="w-full h-full rounded-[14px] bg-slate-900 flex items-center justify-center text-white">
-            <Sparkles className="w-8 h-8 text-brand-400 animate-pulse" />
+            <Sparkles className="w-8 h-8 text-brand-400" />
           </div>
         </div>
 
