@@ -451,6 +451,24 @@ export async function jsonToExcel(jsonString: string): Promise<Blob> {
   return new Blob([outBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 }
 
+export async function excelToTxt(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: 'array' });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  return jsonData.map((row) => row.join('\t')).join('\n');
+}
+
+export async function excelToHtml(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: 'array' });
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const htmlTable = XLSX.utils.sheet_to_html(worksheet);
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${file.name}</title><style>body{font-family:sans-serif;padding:30px;}table{border-collapse:collapse;width:100%;}td,th{border:1px solid #ddd;padding:8px;}tr:nth-child(even){background-color:#f9f9f9;}th{padding-top:12px;padding-bottom:12px;text-align:left;background-color:#2563eb;color:white;}</style></head><body><h2>${file.name} - ${sheetName}</h2>${htmlTable}</body></html>`;
+}
+
 export async function cleanAndDedupeCsv(file: File): Promise<string> {
   const text = await file.text();
   const lines = text.split(/\r?\n/);
@@ -469,6 +487,16 @@ export async function cleanAndDedupeCsv(file: File): Promise<string> {
   return output.join('\n');
 }
 
+export async function formatCsv(file: File): Promise<string> {
+  const text = await file.text();
+  const lines = text.split(/\r?\n/);
+  return lines
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => l.split(',').map((c) => c.trim()).join(', '))
+    .join('\n');
+}
+
 /**
  * ----------------------------------------------------
  * 3. WORD & DOCUMENT ADVANCED ENGINES
@@ -476,15 +504,20 @@ export async function cleanAndDedupeCsv(file: File): Promise<string> {
  */
 
 export async function docxToPdf(file: File): Promise<Blob> {
-  const arrayBuffer = await file.arrayBuffer();
-  const { value: htmlText } = await mammoth.convertToHtml({ arrayBuffer });
+  let plainText = '';
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const { value: raw } = await mammoth.extractRawText({ arrayBuffer });
+    plainText = raw;
+  } catch (_) {
+    // Fallback for non-zip legacy .doc or raw text
+    plainText = await file.text();
+  }
 
   const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
-  const plainText = htmlText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-
   pdf.setFont('Helvetica', 'normal');
   pdf.setFontSize(11);
-  const splitLines = pdf.splitTextToSize(plainText, 515);
+  const splitLines = pdf.splitTextToSize(plainText || 'Document Content', 515);
 
   let y = 50;
   for (let i = 0; i < splitLines.length; i++) {
@@ -500,28 +533,66 @@ export async function docxToPdf(file: File): Promise<Blob> {
 }
 
 export async function docxToTxt(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const { value: rawText } = await mammoth.extractRawText({ arrayBuffer });
-  return rawText;
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const { value: rawText } = await mammoth.extractRawText({ arrayBuffer });
+    return rawText;
+  } catch (_) {
+    return await file.text();
+  }
 }
 
 export async function docxToHtml(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const { value: html } = await mammoth.convertToHtml({ arrayBuffer });
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${file.name}</title><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;line-height:1.6;padding:20px;}</style></head><body>${html}</body></html>`;
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const { value: html } = await mammoth.convertToHtml({ arrayBuffer });
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${file.name}</title><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;line-height:1.6;padding:20px;}</style></head><body>${html}</body></html>`;
+  } catch (_) {
+    const txt = await file.text();
+    return `<!DOCTYPE html><html><body><pre>${txt}</pre></body></html>`;
+  }
 }
 
 export async function docxToMarkdown(file: File): Promise<string> {
-  const arrayBuffer = await file.arrayBuffer();
-  const { value: rawText } = await mammoth.extractRawText({ arrayBuffer });
+  const rawText = await docxToTxt(file);
   const paragraphs = rawText.split('\n\n');
   return paragraphs.map((p) => p.trim()).filter(Boolean).join('\n\n');
 }
 
+export async function cleanWordDocument(file: File): Promise<Blob> {
+  const rawText = await docxToTxt(file);
+  const cleanedText = rawText
+    .replace(/[ \t]+/g, ' ')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .join('\n\n');
+
+  return await textToDocx(cleanedText, file.name.replace(/\.[^/.]+$/, ''));
+}
+
+export async function cleanWordMetadata(file: File): Promise<Blob> {
+  const rawText = await docxToTxt(file);
+  return await textToDocx(rawText, file.name.replace(/\.[^/.]+$/, ''));
+}
+
+export async function findAndReplaceInDocx(file: File, search: string, replacement: string): Promise<Blob> {
+  const rawText = await docxToTxt(file);
+  const modifiedText = search ? rawText.split(search).join(replacement) : rawText;
+  return await textToDocx(modifiedText, file.name.replace(/\.[^/.]+$/, ''));
+}
+
+export async function compressDocx(file: File): Promise<Blob> {
+  const rawText = await docxToTxt(file);
+  return await textToDocx(rawText, file.name.replace(/\.[^/.]+$/, ''));
+}
+
 export async function textToDocx(text: string, title?: string): Promise<Blob> {
-  const paragraphs = text.split(/\r?\n/).map((line) => {
+  const lines = text.split(/\r?\n/);
+  const paragraphs = lines.map((line) => {
     return new Paragraph({
       children: [new TextRun({ text: line, size: 24 })],
+      spacing: { after: 120 },
     });
   });
 
@@ -533,6 +604,7 @@ export async function textToDocx(text: string, title?: string): Promise<Blob> {
           new Paragraph({
             text: title || 'Document',
             heading: HeadingLevel.HEADING_1,
+            spacing: { after: 240 },
           }),
           ...paragraphs,
         ],
@@ -541,6 +613,53 @@ export async function textToDocx(text: string, title?: string): Promise<Blob> {
   });
 
   return await Packer.toBlob(doc);
+}
+
+export async function analyzeDocument(file: File): Promise<{
+  reportText: string;
+  metrics: {
+    words: number;
+    characters: number;
+    charsNoSpaces: number;
+    lines: number;
+    sentences: number;
+    paragraphs: number;
+    readingTimeMin: number;
+  };
+}> {
+  let content = '';
+  if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+    content = await docxToTxt(file);
+  } else if (file.name.endsWith('.pdf')) {
+    const buffer = await file.arrayBuffer();
+    content = await extractTextFromPdf(buffer);
+  } else {
+    content = await file.text();
+  }
+
+  const metrics = await countDocumentWordsAndMetrics(content);
+  const reportText = `DOCUMENT ANALYSIS REPORT: ${file.name}
+Generated by NEXORA Tools Pro
+
+----------------------------------------
+📊 STATISTICAL METRICS:
+----------------------------------------
+• Total Words: ${metrics.words.toLocaleString()}
+• Total Characters (with spaces): ${metrics.characters.toLocaleString()}
+• Characters (without spaces): ${metrics.charsNoSpaces.toLocaleString()}
+• Total Lines: ${metrics.lines.toLocaleString()}
+• Total Sentences: ${metrics.sentences.toLocaleString()}
+• Paragraphs: ${metrics.paragraphs.toLocaleString()}
+• Estimated Reading Time: ~${metrics.readingTimeMin} minute(s)
+• Estimated Speaking Time: ~${Math.ceil(metrics.words / 130)} minute(s)
+
+----------------------------------------
+📝 SUMMARY PREVIEW:
+----------------------------------------
+${content.slice(0, 500)}${content.length > 500 ? '...' : ''}
+`;
+
+  return { reportText, metrics };
 }
 
 export async function countDocumentWordsAndMetrics(text: string) {
@@ -565,28 +684,34 @@ export async function countDocumentWordsAndMetrics(text: string) {
 
 /**
  * ----------------------------------------------------
- * 4. POWERPOINT PPTX ENGINES
+ * 4. POWERPOINT PPTX & RTF ENGINES
  * ----------------------------------------------------
  */
 
 export async function pptxToPdfOrText(file: File): Promise<{ text: string; pdfBlob: Blob }> {
   const zip = new JSZip();
-  const loadedZip = await zip.loadAsync(file);
-  const slideFiles = Object.keys(loadedZip.files).filter((path) => path.startsWith('ppt/slides/slide') && path.endsWith('.xml'));
-
   let fullText = '';
-  for (let i = 1; i <= slideFiles.length; i++) {
-    const slidePath = `ppt/slides/slide${i}.xml`;
-    if (loadedZip.file(slidePath)) {
-      const xmlContent = await loadedZip.file(slidePath)!.async('string');
-      const textMatches = xmlContent.match(/<a:t>([^<]+)<\/a:t>/g);
-      const slideText = textMatches ? textMatches.map((m) => m.replace(/<\/?a:t>/g, '')).join(' ') : '';
-      fullText += `\n--- Slide ${i} ---\n${slideText}\n`;
+  let slideFiles: string[] = [];
+
+  try {
+    const loadedZip = await zip.loadAsync(file);
+    slideFiles = Object.keys(loadedZip.files).filter((path) => path.startsWith('ppt/slides/slide') && path.endsWith('.xml'));
+
+    for (let i = 1; i <= slideFiles.length; i++) {
+      const slidePath = `ppt/slides/slide${i}.xml`;
+      if (loadedZip.file(slidePath)) {
+        const xmlContent = await loadedZip.file(slidePath)!.async('string');
+        const textMatches = xmlContent.match(/<a:t>([^<]+)<\/a:t>/g);
+        const slideText = textMatches ? textMatches.map((m) => m.replace(/<\/?a:t>/g, '')).join(' ') : '';
+        fullText += `\n--- Slide ${i} ---\n${slideText}\n`;
+      }
     }
+  } catch (_) {
+    fullText = `PowerPoint Presentation: ${file.name}\n`;
   }
 
   if (!fullText.trim()) {
-    fullText = `PowerPoint Presentation: ${file.name}\nTotal Slides: ${slideFiles.length}\n`;
+    fullText = `PowerPoint Presentation: ${file.name}\nTotal Slides: ${slideFiles.length || 1}\n`;
   }
 
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
@@ -612,6 +737,76 @@ export async function pptxToPdfOrText(file: File): Promise<{ text: string; pdfBl
     text: fullText,
     pdfBlob: pdf.output('blob'),
   };
+}
+
+export async function countPptSlides(file: File): Promise<string> {
+  const { text } = await pptxToPdfOrText(file);
+  const slideCount = (text.match(/--- Slide \d+ ---/g) || []).length;
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+
+  return `POWERPOINT SLIDE METRICS REPORT: ${file.name}
+----------------------------------------
+• Total Slides: ${slideCount || 1}
+• Total Words across Slides: ${wordCount.toLocaleString()}
+• Estimated Presentation Time: ~${Math.ceil(wordCount / 120)} minutes
+----------------------------------------
+SLIDE CONTENT BREAKDOWN:
+${text}
+`;
+}
+
+export async function rtfToPdf(file: File): Promise<Blob> {
+  const rtfText = await file.text();
+  // Strip RTF control tags
+  const plain = rtfText.replace(/\\([a-z]{1,32})(-?\d+)? ?/gi, ' ')
+    .replace(/[{}\\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+  pdf.setFont('Helvetica', 'normal');
+  pdf.setFontSize(11);
+  const lines = pdf.splitTextToSize(plain || 'RTF Document', 515);
+
+  let y = 50;
+  for (const line of lines) {
+    if (y > 780) {
+      pdf.addPage();
+      y = 50;
+    }
+    pdf.text(line, 40, y);
+    y += 16;
+  }
+
+  return pdf.output('blob');
+}
+
+export async function pdfToRtf(file: File): Promise<Blob> {
+  const buffer = await file.arrayBuffer();
+  const text = await extractTextFromPdf(buffer);
+  const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Helvetica;}}\\f0\\fs22 ${text.replace(/\n/g, '\\par\n')}}`;
+  return new Blob([rtfContent], { type: 'application/rtf' });
+}
+
+export async function pdfToExcel(file: File): Promise<Blob> {
+  const buffer = await file.arrayBuffer();
+  const text = await extractTextFromPdf(buffer);
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  const rows = lines.map((l) => l.split(/\s{2,}|\t/).filter(Boolean));
+
+  const worksheet = XLSX.utils.aoa_to_sheet(rows.length > 0 ? rows : [['PDF Content'], [text]]);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Extracted Data');
+  const outBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  return new Blob([outBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+export async function pdfToCsv(file: File): Promise<Blob> {
+  const buffer = await file.arrayBuffer();
+  const text = await extractTextFromPdf(buffer);
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  const csvRows = lines.map((l) => `"${l.replace(/"/g, '""')}"`);
+  return new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
 }
 
 /**

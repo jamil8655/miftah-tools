@@ -46,12 +46,25 @@ import {
   excelToJson,
   jsonToExcel,
   cleanAndDedupeCsv,
+  formatCsv,
   docxToPdf,
   docxToTxt,
   docxToHtml,
   docxToMarkdown,
+  cleanWordDocument,
+  cleanWordMetadata,
+  findAndReplaceInDocx,
+  compressDocx,
+  analyzeDocument,
+  excelToTxt,
+  excelToHtml,
   textToDocx,
   pptxToPdfOrText,
+  countPptSlides,
+  rtfToPdf,
+  pdfToRtf,
+  pdfToExcel,
+  pdfToCsv,
   applyImageFilter,
   createImagesZip,
   extractZipArchive,
@@ -559,8 +572,8 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return results;
     }
 
-    // 10. PDF TO WORD (DOCX)
-    if (tool.id === 'pdf-to-docx' || tool.id === 'pdf-to-doc' || tool.id === 'pdf-to-word') {
+    // 10. PDF TO WORD / EXCEL / CSV / RTF / PPTX
+    if (tool.id === 'pdf-to-docx' || tool.id === 'pdf-to-doc' || tool.id === 'pdf-to-word' || tool.slug === 'pdf-to-word') {
       const results = [];
       for (let i = 0; i < files.length; i++) {
         const f = files[i];
@@ -574,6 +587,36 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
         });
       }
       onProgress(100, 'Word conversion completed!');
+      return results;
+    }
+
+    if (tool.id === 'pdf-to-rtf' || tool.slug === 'pdf-to-rtf') {
+      onProgress(40, 'Extracting formatted RTF text from PDF...');
+      const results = [];
+      for (const f of files) {
+        const rtfBlob = await pdfToRtf(f);
+        results.push({ name: `${f.name.replace(/\.[^/.]+$/, '')}.rtf`, originalSize: f.size, processedSize: rtfBlob.size, blob: rtfBlob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'pdf-to-excel' || tool.id === 'pdf-to-xlsx' || tool.slug === 'pdf-to-excel') {
+      onProgress(40, 'Extracting tables from PDF to Excel XLSX...');
+      const results = [];
+      for (const f of files) {
+        const xlsxBlob = await pdfToExcel(f);
+        results.push({ name: `${f.name.replace(/\.[^/.]+$/, '')}.xlsx`, originalSize: f.size, processedSize: xlsxBlob.size, blob: xlsxBlob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'pdf-to-csv' || tool.slug === 'pdf-to-csv') {
+      onProgress(40, 'Extracting tables from PDF to CSV...');
+      const results = [];
+      for (const f of files) {
+        const csvBlob = await pdfToCsv(f);
+        results.push({ name: `${f.name.replace(/\.[^/.]+$/, '')}.csv`, originalSize: f.size, processedSize: csvBlob.size, blob: csvBlob });
+      }
       return results;
     }
 
@@ -619,6 +662,20 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.xlsx`, originalSize: files[0].size, processedSize: blob.size, blob }];
     }
 
+    if (tool.id === 'excel-to-txt' || tool.slug === 'excel-to-txt') {
+      onProgress(40, 'Converting Excel rows to TXT...');
+      const text = await excelToTxt(files[0]);
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.txt`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'excel-to-html' || tool.slug === 'excel-to-html') {
+      onProgress(40, 'Converting Excel to HTML table...');
+      const html = await excelToHtml(files[0]);
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.html`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
     if (tool.id === 'csv-cleaner' || tool.id === 'csv-deduplicator') {
       onProgress(40, 'Cleaning CSV rows and duplicates...');
       const cleaned = await cleanAndDedupeCsv(files[0]);
@@ -626,8 +683,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return [{ name: `cleaned-${files[0].name}`, originalSize: files[0].size, processedSize: blob.size, blob }];
     }
 
-    // 12. WORD & DOCUMENT TOOLS
-    if (tool.id === 'docx-to-pdf' || tool.id === 'doc-to-pdf' || tool.id === 'docx-direct-pdf') {
+    if (tool.id === 'csv-formatter' || tool.slug === 'csv-formatter') {
+      onProgress(40, 'Standardizing CSV format and column spacing...');
+      const formatted = await formatCsv(files[0]);
+      const blob = new Blob([formatted], { type: 'text/csv' });
+      return [{ name: `formatted-${files[0].name}`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    // 12. WORD & DOCUMENT ADVANCED TOOLS
+    if (tool.id === 'docx-to-pdf' || tool.id === 'doc-to-pdf' || tool.id === 'docx-direct-pdf' || tool.slug === 'word-to-pdf') {
       onProgress(40, 'Converting Word document to PDF...');
       const results = [];
       for (const f of files) {
@@ -663,8 +727,51 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.md`, originalSize: files[0].size, processedSize: blob.size, blob }];
     }
 
-    // 13. POWERPOINT PPTX
-    if (tool.id === 'pptx-to-pdf' || tool.id === 'ppt-to-pdf' || tool.id === 'pptx-direct-pdf' || tool.id === 'pptx-to-txt') {
+    if (tool.id === 'word-cleanup' || tool.id === 'word-document-cleanup' || tool.id === 'remove-word-formatting') {
+      onProgress(40, 'Cleaning formatting, double spaces, and bad tags...');
+      const results = [];
+      for (const f of files) {
+        const cleanedBlob = await cleanWordDocument(f);
+        results.push({ name: `cleaned-${f.name.replace(/\.[^/.]+$/, '')}.docx`, originalSize: f.size, processedSize: cleanedBlob.size, blob: cleanedBlob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'word-meta-cleaner' || tool.id === 'word-metadata-cleaner') {
+      onProgress(40, 'Removing revisions, author tags, and hidden metadata...');
+      const results = [];
+      for (const f of files) {
+        const cleanBlob = await cleanWordMetadata(f);
+        results.push({ name: `clean-meta-${f.name.replace(/\.[^/.]+$/, '')}.docx`, originalSize: f.size, processedSize: cleanBlob.size, blob: cleanBlob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'word-compressor') {
+      onProgress(40, 'Compressing Word DOCX package...');
+      const results = [];
+      for (const f of files) {
+        const compBlob = await compressDocx(f);
+        results.push({ name: `compressed-${f.name.replace(/\.[^/.]+$/, '')}.docx`, originalSize: f.size, processedSize: compBlob.size, blob: compBlob });
+      }
+      return results;
+    }
+
+    if (tool.id === 'word-counter-doc' || tool.id === 'word-file-analyzer' || tool.slug === 'word-file-analyzer') {
+      onProgress(40, 'Analyzing document statistics and metrics...');
+      const { reportText } = await analyzeDocument(files[0]);
+      const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}_analysis.txt`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'find-replace-word' || tool.id === 'find-replace-in-word') {
+      onProgress(40, 'Executing find and replace across document...');
+      const resBlob = await findAndReplaceInDocx(files[0], options.find || options.search || '', options.replace || '');
+      return [{ name: `updated-${files[0].name.replace(/\.[^/.]+$/, '')}.docx`, originalSize: files[0].size, processedSize: resBlob.size, blob: resBlob }];
+    }
+
+    // 13. POWERPOINT PPTX & RTF
+    if (tool.id === 'pptx-to-pdf' || tool.id === 'ppt-to-pdf' || tool.id === 'pptx-direct-pdf' || tool.id === 'pptx-to-txt' || tool.slug === 'powerpoint-to-pdf') {
       onProgress(40, 'Parsing PowerPoint presentation slides...');
       const { text, pdfBlob } = await pptxToPdfOrText(files[0]);
       if (tool.id === 'pptx-to-txt') {
@@ -672,6 +779,19 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
         return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.txt`, originalSize: files[0].size, processedSize: blob.size, blob }];
       }
       return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.pdf`, originalSize: files[0].size, processedSize: pdfBlob.size, blob: pdfBlob }];
+    }
+
+    if (tool.id === 'ppt-slide-counter' || tool.slug === 'ppt-slide-counter' || tool.id === 'ppt-to-images') {
+      onProgress(40, 'Analyzing PowerPoint slides and metrics...');
+      const report = await countPptSlides(files[0]);
+      const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}_slides_report.txt`, originalSize: files[0].size, processedSize: blob.size, blob }];
+    }
+
+    if (tool.id === 'rtf-to-pdf' || tool.slug === 'rtf-to-pdf') {
+      onProgress(40, 'Converting RTF to styled PDF...');
+      const blob = await rtfToPdf(files[0]);
+      return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.pdf`, originalSize: files[0].size, processedSize: blob.size, blob }];
     }
 
     // 14. IMAGE FILTERS & COMPRESSION
