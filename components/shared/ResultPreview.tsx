@@ -17,6 +17,7 @@ import { formatBytes, formatBytesDual, calculatePercentageSaved } from '@/lib/ut
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { ResultRewardAd } from '@/components/ads/ResultRewardAd';
+import { adManager } from '@/lib/ads/AdManager';
 import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { openDownloadedFile } from '@/lib/utils/download';
@@ -150,6 +151,8 @@ export function ResultPreview({
     try {
       await onDownloadSingle(index);
       setDownloadedIndices((prev) => new Set(prev).add(index));
+      // Show non-disruptive interstitial after task completion
+      adManager.showInterstitial();
     } finally {
       setTimeout(() => setDownloadingIndex(null), 400);
     }

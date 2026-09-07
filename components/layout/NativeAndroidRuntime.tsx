@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { initNativeAndroidBridge, syncAndroidStatusBarTheme } from '@/lib/native/android-bridge';
+import { adManager } from '@/lib/ads/AdManager';
 import { useTheme } from './ThemeContext';
 import { WifiOff, CheckCircle2 } from 'lucide-react';
 
@@ -16,6 +17,9 @@ export function NativeAndroidRuntime() {
     initNativeAndroidBridge(() => {
       router.back();
     });
+
+    // Initialize official Google Mobile Ads SDK & UMP
+    adManager.initialize();
 
     const handleOnline = () => {
       setIsOffline(false);

@@ -9,8 +9,10 @@ import { formatBytes } from '@/lib/utils/formatters';
 import { downloadAsZip, downloadSingleFile } from '@/lib/utils/download';
 import { convertImage, compressImage } from '@/lib/image/image-manipulator';
 import { mergePdfs, imagesToPdf } from '@/lib/pdf/pdf-manipulator';
-import { Layers, Play, Download, Trash2, CheckCircle, File, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Layers, Play, Download, Trash2, CheckCircle, File, Image as ImageIcon, Sparkles, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { adManager } from '@/lib/ads/AdManager';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 interface BatchItem {
   id: string;
@@ -277,6 +279,8 @@ export default function BatchPage() {
           </div>
         )}
       </div>
+
+      <AdSlot placement="tool-bottom" />
     </div>
   );
 }
