@@ -92,19 +92,19 @@ export default function PrivacyPage() {
             </ul>
           </section>
 
-          {/* Section 3: Information Collected for Account Features */}
+          {/* Section 3: 100% Login-Free & Registration-Free */}
           <section className="space-y-3">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <FolderLock className="w-4 h-4 text-brand-600" />
-              3. यूजर अकाउंट और प्रोफाइल फीचर्स (Optional User Account &amp; Sync)
+              3. 100% लॉगिन-मुक्त और बिना रजिस्ट्रेशन (100% Login-Free &amp; Registration-Free)
             </h2>
             <p>
-              Miftah Tools के सभी 220+ टूल्स बिना किसी लॉगिन या अकाउंट बनाए 100% फ्री में इस्तेमाल किए जा सकते हैं। यदि आप अपनी प्रोफाइल और कोर्स प्रोग्रेस को सिंक करने के लिए लॉगिन करते हैं, तो हम केवल निम्नलिखित बुनियादी जानकारी रखते हैं:
+              <strong>Miftah Tools</strong> पूरी तरह से खुला, मुफ़्त और बिना किसी अकाउंट या लॉगिन के काम करता है। आपको ऐप के किसी भी टूल (220+ टूल्स) का इस्तेमाल करने के लिए:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
-              <li><strong>Account Credentials:</strong> आपका ईमेल एड्रेस, नाम और Google Firebase यूजर आईडी (UID)।</li>
-              <li><strong>Profile Photo (वैकल्पिक):</strong> यदि आप अपनी फोटो लगाते हैं, तो वह केवल ऐप में आपका अवतार दिखाने के लिए सुरक्षित रूप से इस्तेमाल होती है।</li>
-              <li><strong>Bookmarked Tools & Courses:</strong> आपके पसंदीदा टूल्स और कोर्स की प्रगति केवल आपके डिवाइस पर सिंक करने के लिए रखी जाती है।</li>
+              <li><strong>No Account Required:</strong> किसी भी प्रकार का अकाउंट या ईमेल पासवर्ड बनाने की ज़रूरत नहीं है।</li>
+              <li><strong>No Profile Photo:</strong> ऐप में कोई फोटो अपलोड या प्रोफाइल बनाने की आवश्यकता नहीं है।</li>
+              <li><strong>100% Local Device Storage:</strong> आपके हालिया टूल्स, पसंदीदा टूल्स और डाउनलोड हिस्ट्री केवल आपके अपने फोन के लोकल स्टोरेज (Local Cache) में सुरक्षित रहते हैं और कभी किसी सर्वर पर नहीं जाते।</li>
             </ul>
           </section>
 
@@ -134,7 +134,7 @@ export default function PrivacyPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
                 <span className="font-bold text-slate-900 dark:text-white text-xs">📷 Camera Permission</span>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Used strictly when you scan QR codes/Barcodes or capture a profile photo. Camera frames are analyzed in real-time memory and never uploaded.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Used strictly when you use the in-app QR code &amp; Barcode scanner tools. Camera frames are processed in real-time memory and never uploaded.</p>
               </div>
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
                 <span className="font-bold text-slate-900 dark:text-white text-xs">📁 Storage / Media Access</span>
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
               </div>
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
                 <span className="font-bold text-slate-900 dark:text-white text-xs">🌐 Internet &amp; Network State</span>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">Required for Firebase user sign-in, profile synchronization, and displaying AdMob advertisements.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Required for serving AdMob advertisements and loading tool documentation.</p>
               </div>
               <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
                 <span className="font-bold text-slate-900 dark:text-white text-xs">🔒 Scoped Storage Compliance</span>

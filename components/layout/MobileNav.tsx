@@ -3,13 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Sparkles, Workflow, Download, User } from 'lucide-react';
+import { Home, Sparkles, Workflow, Download, Settings } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 
 /**
  * Standard Production Android Bottom Navigation Bar
- * 5 Canonical Tabs: Home | Tools | Workflows | Downloads | Profile
+ * 5 Canonical Tabs: Home | Tools | Workflows | Downloads | Settings
  */
 export function MobileNav() {
   const pathname = usePathname();
@@ -20,7 +20,7 @@ export function MobileNav() {
     { label: t.nav.allTools || 'Tools', href: '/tools', icon: Sparkles },
     { label: t.nav.workflows || 'Workflows', href: '/workflows', icon: Workflow },
     { label: t.userDashboard.downloadsTitle || 'Downloads', href: '/downloads', icon: Download },
-    { label: t.nav.myProfile || 'Profile', href: '/account', icon: User },
+    { label: t.nav.settings || 'Settings', href: '/settings', icon: Settings },
   ];
 
   return (

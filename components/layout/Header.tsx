@@ -295,22 +295,6 @@ export function Header() {
               )}
             </Link>
 
-            {/* Desktop User Menu Dropdown */}
-            {isAuthenticated ? (
-              <div className="hidden lg:block shrink-0">
-                <UserMenuDropdown />
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsAuthModalOpen(true)}
-                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs transition-all shadow-md shadow-brand-600/20 active:scale-95 shrink-0"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span className="text-xs">{t.nav.login || 'Log In'}</span>
-              </button>
-            )}
-
             {/* Mobile & Android Menu (☰) Drawer Trigger */}
             <button
               type="button"
@@ -366,38 +350,6 @@ export function Header() {
                 </button>
               </div>
 
-              {/* User Status Card */}
-              {isAuthenticated ? (
-                <Link
-                  href="/account"
-                  onClick={() => setIsMenuDrawerOpen(false)}
-                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                      {user?.name?.charAt(0) || 'U'}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user?.name || loc.account}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
-                    </div>
-                  </div>
-                  <ChevronRight className={`w-4 h-4 text-slate-400 ${isRTL ? 'rotate-180' : ''}`} />
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuDrawerOpen(false);
-                    setIsAuthModalOpen(true);
-                  }}
-                  className="w-full p-3.5 rounded-2xl bg-brand-600 text-white text-xs font-bold shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 active:scale-95"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>{loc.signInCreate}</span>
-                </button>
-              )}
-
               {/* Navigation Links Group */}
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">{loc.navigationSection}</p>
@@ -406,8 +358,8 @@ export function Header() {
                   { label: loc.workflows, href: '/workflows', icon: Workflow },
                   { label: loc.downloads, href: '/downloads', icon: Download },
                   { label: loc.history, href: '/history', icon: History },
+                  { label: 'Saved & Favorites', href: '/favorites', icon: Star },
                   { label: loc.settings, href: '/settings', icon: SettingsIcon },
-                  { label: loc.account, href: '/account', icon: User },
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
@@ -482,19 +434,6 @@ export function Header() {
                   ))}
                 </div>
               </div>
-
-              {isAuthenticated && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuDrawerOpen(false);
-                    logout();
-                  }}
-                  className="w-full py-2 text-rose-500 text-xs font-bold text-center hover:underline"
-                >
-                  {loc.logout}
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -504,12 +443,6 @@ export function Header() {
       <UnifiedSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-      />
-
-      {/* Authentication Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
       />
     </>
   );
