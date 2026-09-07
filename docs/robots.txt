@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jamil8655.github.io/nexora-tools/sitemap.xml
