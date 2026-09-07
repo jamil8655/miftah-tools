@@ -16,6 +16,7 @@ import confetti from 'canvas-confetti';
 import { formatBytes, formatBytesDual, calculatePercentageSaved } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { ResultRewardAd } from '@/components/ads/ResultRewardAd';
 import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { openDownloadedFile } from '@/lib/utils/download';
@@ -200,8 +201,11 @@ export function ResultPreview({
   return (
     <div
       dir={isRTL ? 'rtl' : 'ltr'}
-      className="w-full space-y-5 sm:space-y-6 animate-in fade-in zoom-in-95 duration-200"
+      className="w-full space-y-4 sm:space-y-5 animate-in fade-in zoom-in-95 duration-200"
     >
+      {/* Reward Ad Perk */}
+      <ResultRewardAd />
+
       {/* Success Banner */}
       <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 text-white border border-slate-800 shadow-xl text-center space-y-2.5">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-1">

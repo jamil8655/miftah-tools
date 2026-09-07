@@ -11,6 +11,7 @@ import { PwaInstallBanner } from '@/components/shared/PwaInstallBanner';
 import { ServiceWorkerRegister } from '@/components/layout/ServiceWorkerRegister';
 import { NativeAndroidRuntime } from '@/components/layout/NativeAndroidRuntime';
 import { StickyBottomAd } from '@/components/ads/StickyBottomAd';
+import { AppOpenAd } from '@/components/ads/AppOpenAd';
 import { siteConfig } from '@/config/site';
 import { adConfig } from '@/config/ads';
 
@@ -141,6 +142,7 @@ export default function RootLayout({
                 <PwaInstallBanner />
                 <ServiceWorkerRegister />
                 <StickyBottomAd />
+                <AppOpenAd />
               </UserStoreProvider>
             </I18nProvider>
           </AuthProvider>

@@ -7,6 +7,8 @@ import { Search, Wrench, Filter } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ToolCard } from '@/components/shared/ToolCard';
+import { NativeFeedAd } from '@/components/ads/NativeFeedAd';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { getLocalizedCategory, getLocalizedTool } from '@/lib/i18n/catalog-translations';
 
@@ -152,11 +154,18 @@ function ToolsDirectory() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
-          {filteredTools.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
+            {filteredTools.map((tool, idx) => (
+              <React.Fragment key={tool.id}>
+                <ToolCard tool={tool} />
+                {(idx + 1) % 12 === 0 && <NativeFeedAd />}
+              </React.Fragment>
+            ))}
+          </div>
+
+          <AdSlot placement="in-feed" />
+        </>
       )}
     </div>
   );

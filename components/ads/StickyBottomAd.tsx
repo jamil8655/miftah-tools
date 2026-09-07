@@ -57,7 +57,7 @@ export function StickyBottomAd() {
               onClick={() => setIsMinimized(false)}
               className="px-3 py-1 rounded-t-xl bg-slate-900/90 text-white text-[10px] font-bold flex items-center gap-1 shadow-lg hover:bg-slate-800 transition-all border border-slate-700 border-b-0"
             >
-              <span>AdMob Banner</span>
+              <span>Ad • Sponsored</span>
               <ChevronUp className="w-3 h-3" />
             </button>
           </div>

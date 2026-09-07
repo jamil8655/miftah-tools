@@ -31,6 +31,8 @@ import {
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { ToolCard } from '@/components/shared/ToolCard';
 import { HorizontalRecentToolsCarousel } from '@/components/shared/HorizontalRecentToolsCarousel';
+import { NativeFeedAd } from '@/components/ads/NativeFeedAd';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
 
@@ -274,6 +276,11 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Middle Banner Ad Slot */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdSlot placement="in-feed" />
+      </section>
+
       {/* 5. TOOL DIRECTORY GRID */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
         <div className="flex items-center justify-between px-1">
@@ -284,8 +291,12 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredTools.slice(0, 32).map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
+          {filteredTools.slice(0, 32).map((tool, idx) => (
+            <React.Fragment key={tool.id}>
+              <ToolCard tool={tool} />
+              {idx === 7 && <NativeFeedAd />}
+              {idx === 19 && <NativeFeedAd />}
+            </React.Fragment>
           ))}
         </div>
 
