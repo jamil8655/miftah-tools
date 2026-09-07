@@ -59,7 +59,7 @@ export function AdMobTestModal({ type, unitId, onClose, onReward }: AdMobModalPr
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsMuted(!isMuted)}
             className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all text-white/80 hover:text-white"
@@ -68,19 +68,20 @@ export function AdMobTestModal({ type, unitId, onClose, onReward }: AdMobModalPr
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
 
-          {canClose ? (
-            <button
-              onClick={onClose}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-slate-900 font-bold text-xs hover:bg-slate-200 transition-all shadow-lg active:scale-95"
-            >
-              <X className="w-4 h-4" />
-              <span>Close Ad</span>
-            </button>
-          ) : (
+          {countdown > 0 && !canClose && (
             <div className="px-3 py-1.5 rounded-full bg-black/60 border border-white/20 text-xs font-semibold text-white/90">
               Reward in <span className="font-bold text-amber-400">{countdown}s</span>
             </div>
           )}
+
+          <button
+            onClick={onClose}
+            aria-label="Close Ad"
+            className="w-8 h-8 rounded-full bg-white text-slate-900 font-bold flex items-center justify-center shadow-lg hover:bg-slate-200 active:scale-90 transition-all"
+            title="Close Ad (✕)"
+          >
+            <X className="w-5 h-5 stroke-[2.5]" />
+          </button>
         </div>
       </div>
 
