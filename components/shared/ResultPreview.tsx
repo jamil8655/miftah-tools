@@ -13,7 +13,7 @@ import {
   FileCheck2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { formatBytes, calculatePercentageSaved } from '@/lib/utils/formatters';
+import { formatBytes, formatBytesDual, calculatePercentageSaved } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';
@@ -214,13 +214,13 @@ export function ResultPreview({
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold font-mono">
             <Sparkles className="w-3.5 h-3.5" />
             <span>
-              {loc.reducedBadge(totalSavedPercent, formatBytes(totalOriginal), formatBytes(totalProcessed))}
+              {loc.reducedBadge(totalSavedPercent, formatBytesDual(totalOriginal), formatBytesDual(totalProcessed))}
             </span>
           </div>
         ) : totalOriginal > 0 && totalProcessed > 0 ? (
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-xs font-medium font-mono">
             <span>
-              {loc.optimalBadge(formatBytes(totalOriginal), formatBytes(totalProcessed))}
+              {loc.optimalBadge(formatBytesDual(totalOriginal), formatBytesDual(totalProcessed))}
             </span>
           </div>
         ) : null}
@@ -244,15 +244,15 @@ export function ResultPreview({
                   <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                     {file.name}
                   </h4>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                     {file.originalSize > 0 && (
-                      <span>{loc.original} {formatBytes(file.originalSize)}</span>
+                      <span>{loc.original} <strong className="text-slate-700 dark:text-slate-300">{formatBytesDual(file.originalSize)}</strong></span>
                     )}
                     {processedBytes !== undefined && (
                       <>
                         <span>•</span>
                         <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                          {loc.final} {formatBytes(processedBytes)}
+                          {loc.final} {formatBytesDual(processedBytes)}
                         </span>
                       </>
                     )}

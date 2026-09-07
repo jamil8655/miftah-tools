@@ -7,6 +7,20 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
+/**
+ * Formats byte values displaying BOTH KB and MB simultaneously
+ * e.g., "2.45 MB (2,508 KB)" or "350 KB (0.34 MB)"
+ */
+export function formatBytesDual(bytes: number): string {
+  if (!bytes || bytes <= 0) return '0 KB (0 MB)';
+  const kb = bytes / 1024;
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 1) {
+    return `${mb.toFixed(2)} MB (${Math.round(kb).toLocaleString()} KB)`;
+  }
+  return `${Math.round(kb).toLocaleString()} KB (${mb.toFixed(2)} MB)`;
+}
+
 export function formatTimeSeconds(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)} seconds`;
   if (seconds < 3600) {

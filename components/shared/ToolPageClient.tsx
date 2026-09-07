@@ -502,15 +502,28 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     }
 
     if (tool.id === 'pdf-add-header' || tool.id === 'pdf-add-footer') {
-      onProgress(40, 'Adding header/footer text...');
-      const buffer = await files[0].arrayBuffer();
-      const bytes = await addPdfHeaderFooter(
-        buffer,
-        options.headerText || (tool.id === 'pdf-add-header' ? 'OFFICIAL DOCUMENT' : ''),
-        options.footerText || (tool.id === 'pdf-add-footer' ? 'Page {page} of {total}' : '')
-      );
-      const blob = new Blob([bytes as any], { type: 'application/pdf' });
-      return [{ name: `header-footer-${files[0].name}`, originalSize: files[0].size, processedSize: blob.size, blob }];
+      onProgress(40, 'Adding header/footer text & logo...');
+      const results = [];
+      for (const f of files) {
+        const buffer = await f.arrayBuffer();
+        const bytes = await addPdfHeaderFooter(buffer, {
+          headerText: options.headerText || (tool.id === 'pdf-add-header' ? 'OFFICIAL DOCUMENT' : ''),
+          footerText: options.footerText || (tool.id === 'pdf-add-footer' ? 'Page {page} of {total}' : ''),
+          headerAlign: options.headerAlign || 'center',
+          footerAlign: options.footerAlign || 'center',
+          fontSize: options.fontSize ? parseInt(options.fontSize) : 10,
+          fontColor: options.fontColor || '#334155',
+          opacity: options.opacity ? parseFloat(options.opacity) : 0.9,
+          headerImage: options.headerImage || '',
+          footerImage: options.footerImage || '',
+          headerImageWidth: options.headerImageWidth ? parseInt(options.headerImageWidth) : 60,
+          footerImageWidth: options.footerImageWidth ? parseInt(options.footerImageWidth) : 60,
+          pageRange: options.pageRange || 'all',
+        });
+        const blob = new Blob([bytes as any], { type: 'application/pdf' });
+        results.push({ name: `header-footer-${f.name}`, originalSize: f.size, processedSize: blob.size, blob });
+      }
+      return results;
     }
 
     if (tool.id === 'pdf-redact') {
@@ -558,8 +571,9 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
         const stampedBytes = await watermarkPdf(
           buffer,
           options.text || 'CONFIDENTIAL',
-          options.opacity || 0.3,
-          options.color || '#ff0000'
+          options.opacity ? parseFloat(options.opacity) : 0.3,
+          options.color || '#ff0000',
+          options.watermarkImage || options.image || options.headerImage
         );
         const blob = new Blob([stampedBytes as any], { type: 'application/pdf' });
         results.push({

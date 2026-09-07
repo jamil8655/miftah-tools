@@ -158,36 +158,182 @@ export async function resizePdfPageDimensions(buffer: ArrayBuffer, size: 'A4' | 
   return await newDoc.save({ useObjectStreams: true });
 }
 
+export interface PdfHeaderFooterOptions {
+  headerText?: string;
+  footerText?: string;
+  headerAlign?: 'left' | 'center' | 'right';
+  footerAlign?: 'left' | 'center' | 'right';
+  fontSize?: number;
+  fontColor?: string;
+  opacity?: number;
+  headerImage?: string; // Data URL (png/jpeg)
+  footerImage?: string; // Data URL (png/jpeg)
+  headerImageWidth?: number;
+  headerImageHeight?: number;
+  footerImageWidth?: number;
+  footerImageHeight?: number;
+  pageRange?: 'all' | 'first' | 'except-first' | 'odd' | 'even';
+}
+
+function base64ToUint8(base64: string): Uint8Array {
+  const clean = base64.includes(',') ? base64.split(',')[1] : base64;
+  const binary = typeof window !== 'undefined' ? atob(clean) : Buffer.from(clean, 'base64').toString('binary');
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function hexToRgbPdf(hex?: string): { r: number; g: number; b: number } {
+  if (!hex || !hex.startsWith('#') || hex.length < 7) return { r: 0.2, g: 0.2, b: 0.2 };
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  return { r, g, b };
+}
+
 export async function addPdfHeaderFooter(
   buffer: ArrayBuffer,
-  headerText: string,
-  footerText: string
+  headerOrOptions: string | PdfHeaderFooterOptions,
+  footerTextParam?: string
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.load(buffer, { ignoreEncryption: true });
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const pages = doc.getPages();
 
+  const opts: PdfHeaderFooterOptions =
+    typeof headerOrOptions === 'object'
+      ? headerOrOptions
+      : { headerText: headerOrOptions, footerText: footerTextParam };
+
+  const fontSize = opts.fontSize || 10;
+  const opacity = opts.opacity ?? 0.9;
+  const color = hexToRgbPdf(opts.fontColor);
+  const headerAlign = opts.headerAlign || 'center';
+  const footerAlign = opts.footerAlign || 'center';
+  const pageRange = opts.pageRange || 'all';
+
+  // Embed Header Image if provided
+  let embeddedHeaderImg: any = null;
+  if (opts.headerImage) {
+    try {
+      const bytes = base64ToUint8(opts.headerImage);
+      if (opts.headerImage.includes('png') || opts.headerImage.startsWith('data:image/png')) {
+        embeddedHeaderImg = await doc.embedPng(bytes);
+      } else {
+        embeddedHeaderImg = await doc.embedJpg(bytes);
+      }
+    } catch (e) {
+      console.warn('Failed to embed header image in PDF:', e);
+    }
+  }
+
+  // Embed Footer Image if provided
+  let embeddedFooterImg: any = null;
+  if (opts.footerImage) {
+    try {
+      const bytes = base64ToUint8(opts.footerImage);
+      if (opts.footerImage.includes('png') || opts.footerImage.startsWith('data:image/png')) {
+        embeddedFooterImg = await doc.embedPng(bytes);
+      } else {
+        embeddedFooterImg = await doc.embedJpg(bytes);
+      }
+    } catch (e) {
+      console.warn('Failed to embed footer image in PDF:', e);
+    }
+  }
+
   pages.forEach((page, idx) => {
+    const pageNum = idx + 1;
+    const isEven = pageNum % 2 === 0;
+
+    // Filter by page range
+    if (pageRange === 'first' && pageNum !== 1) return;
+    if (pageRange === 'except-first' && pageNum === 1) return;
+    if (pageRange === 'odd' && isEven) return;
+    if (pageRange === 'even' && !isEven) return;
+
     const { width, height } = page.getSize();
-    if (headerText) {
-      const hStr = headerText.replace('{page}', String(idx + 1)).replace('{total}', String(pages.length));
+    const margin = 30;
+
+    // 1. Render Header Text
+    if (opts.headerText) {
+      const todayStr = new Date().toLocaleDateString();
+      const hStr = opts.headerText
+        .replace('{page}', String(pageNum))
+        .replace('{total}', String(pages.length))
+        .replace('{date}', todayStr);
+      const textWidth = font.widthOfTextAtSize(hStr, fontSize);
+
+      let x = width / 2 - textWidth / 2;
+      if (headerAlign === 'left') x = margin;
+      if (headerAlign === 'right') x = width - margin - textWidth;
+
       page.drawText(hStr, {
-        x: width / 2 - (font.widthOfTextAtSize(hStr, 10)) / 2,
+        x,
         y: height - 25,
-        size: 10,
+        size: fontSize,
         font,
-        color: rgb(0.3, 0.3, 0.3),
+        color: rgb(color.r, color.g, color.b),
+        opacity,
       });
     }
 
-    if (footerText) {
-      const fStr = footerText.replace('{page}', String(idx + 1)).replace('{total}', String(pages.length));
+    // 2. Render Header Image Logo
+    if (embeddedHeaderImg) {
+      const imgW = opts.headerImageWidth || 60;
+      const imgH = opts.headerImageHeight || (embeddedHeaderImg.height / embeddedHeaderImg.width) * imgW;
+      let imgX = width / 2 - imgW / 2;
+      if (headerAlign === 'left') imgX = margin;
+      if (headerAlign === 'right') imgX = width - margin - imgW;
+
+      page.drawImage(embeddedHeaderImg, {
+        x: imgX,
+        y: height - imgH - 15,
+        width: imgW,
+        height: imgH,
+        opacity,
+      });
+    }
+
+    // 3. Render Footer Text
+    if (opts.footerText) {
+      const todayStr = new Date().toLocaleDateString();
+      const fStr = opts.footerText
+        .replace('{page}', String(pageNum))
+        .replace('{total}', String(pages.length))
+        .replace('{date}', todayStr);
+      const textWidth = font.widthOfTextAtSize(fStr, fontSize);
+
+      let x = width / 2 - textWidth / 2;
+      if (footerAlign === 'left') x = margin;
+      if (footerAlign === 'right') x = width - margin - textWidth;
+
       page.drawText(fStr, {
-        x: width / 2 - (font.widthOfTextAtSize(fStr, 10)) / 2,
-        y: 18,
-        size: 10,
+        x,
+        y: 20,
+        size: fontSize,
         font,
-        color: rgb(0.3, 0.3, 0.3),
+        color: rgb(color.r, color.g, color.b),
+        opacity,
+      });
+    }
+
+    // 4. Render Footer Image / Stamp / Signature
+    if (embeddedFooterImg) {
+      const imgW = opts.footerImageWidth || 60;
+      const imgH = opts.footerImageHeight || (embeddedFooterImg.height / embeddedFooterImg.width) * imgW;
+      let imgX = width / 2 - imgW / 2;
+      if (footerAlign === 'left') imgX = margin;
+      if (footerAlign === 'right') imgX = width - margin - imgW;
+
+      page.drawImage(embeddedFooterImg, {
+        x: imgX,
+        y: 15,
+        width: imgW,
+        height: imgH,
+        opacity,
       });
     }
   });

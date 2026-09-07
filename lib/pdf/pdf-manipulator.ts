@@ -144,9 +144,10 @@ export async function reversePdfPages(pdfBuffer: ArrayBuffer): Promise<Uint8Arra
  */
 export async function watermarkPdf(
   pdfBuffer: ArrayBuffer,
-  watermarkText: string,
+  watermarkText: string = 'CONFIDENTIAL',
   opacity: number = 0.3,
-  colorHex: string = '#ff0000'
+  colorHex: string = '#ff0000',
+  watermarkImage?: string
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -156,19 +157,54 @@ export async function watermarkPdf(
   const g = parseInt(colorHex.slice(3, 5), 16) / 255 || 0.1;
   const b = parseInt(colorHex.slice(5, 7), 16) / 255 || 0.1;
 
+  let embeddedImg: any = null;
+  if (watermarkImage) {
+    try {
+      const base64Data = watermarkImage.includes(',') ? watermarkImage.split(',')[1] : watermarkImage;
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      if (watermarkImage.includes('png') || watermarkImage.startsWith('data:image/png')) {
+        embeddedImg = await doc.embedPng(bytes);
+      } else {
+        embeddedImg = await doc.embedJpg(bytes);
+      }
+    } catch (e) {
+      console.warn('Failed to embed watermark image:', e);
+    }
+  }
+
   pages.forEach((page) => {
     const { width, height } = page.getSize();
-    const textSize = Math.min(width, height) / 10;
 
-    page.drawText(watermarkText, {
-      x: width / 4,
-      y: height / 2,
-      size: textSize,
-      font,
-      color: rgb(r, g, b),
-      opacity,
-      rotate: degrees(45),
-    });
+    if (embeddedImg) {
+      const maxW = width * 0.5;
+      const aspect = embeddedImg.height / embeddedImg.width;
+      const imgW = maxW;
+      const imgH = maxW * aspect;
+      page.drawImage(embeddedImg, {
+        x: (width - imgW) / 2,
+        y: (height - imgH) / 2,
+        width: imgW,
+        height: imgH,
+        opacity,
+      });
+    }
+
+    if (watermarkText) {
+      const textSize = Math.min(width, height) / 10;
+      page.drawText(watermarkText, {
+        x: width / 4,
+        y: height / 2,
+        size: textSize,
+        font,
+        color: rgb(r, g, b),
+        opacity,
+        rotate: degrees(45),
+      });
+    }
   });
 
   return await doc.save({ useObjectStreams: true });

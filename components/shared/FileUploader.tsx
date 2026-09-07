@@ -11,7 +11,7 @@ import {
   FolderArchive,
   Image as ImageIcon,
 } from 'lucide-react';
-import { formatBytes } from '@/lib/utils/formatters';
+import { formatBytes, formatBytesDual } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 
@@ -331,8 +331,8 @@ export function FileUploader({
                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate max-w-[180px] sm:max-w-[220px]">
                       {file.name}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-mono">
-                      {formatBytes(file.size)}
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-semibold">
+                      {formatBytesDual(file.size)}
                     </p>
                   </div>
                 </div>
