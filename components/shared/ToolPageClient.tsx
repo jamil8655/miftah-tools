@@ -1269,18 +1269,30 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     }
 
     // 18. TEXT TO WORD (DOCX)
-    if (tool.id === 'text-to-docx' || tool.id === 'text-to-docx-alt' || tool.id === 'txt-to-docx') {
+    if (
+      tool.id === 'text-to-docx' ||
+      tool.id === 'text-to-docx-alt' ||
+      tool.id === 'txt-to-docx' ||
+      tool.id === 'text-to-word' ||
+      tool.slug === 'text-to-word' ||
+      tool.slug === 'text-to-docx' ||
+      tool.slug === 'txt-to-docx' ||
+      tool.slug === 'txt-to-word'
+    ) {
       onProgress(40, 'Converting text into styled Word DOCX...');
-      const text = await files[0].text();
-      const docxBlob = await textToDocx(text, files[0].name.replace(/\.[^/.]+$/, ''));
-      return [
-        {
-          name: `${files[0].name.replace(/\.[^/.]+$/, '')}.docx`,
-          originalSize: files[0].size,
+      const results = [];
+      for (const f of files) {
+        const text = await f.text();
+        const docxBlob = await textToDocx(text, f.name.replace(/\.[^/.]+$/, ''));
+        results.push({
+          name: `${f.name.replace(/\.[^/.]+$/, '')}.docx`,
+          originalSize: f.size,
           processedSize: docxBlob.size,
           blob: docxBlob,
-        },
-      ];
+        });
+      }
+      onProgress(100, 'Word conversion completed!');
+      return results;
     }
 
     // 19. PDF TO HTML & MARKDOWN

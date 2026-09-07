@@ -26,11 +26,8 @@ import {
   Globe2,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
-import { useAuth } from '@/lib/auth/auth-context';
 import { useUserStore } from '@/lib/user/user-store';
 import { UnifiedSearchModal } from '@/components/search/UnifiedSearchModal';
-import { UserMenuDropdown } from './UserMenuDropdown';
-import { AuthModal } from '@/components/auth/AuthModal';
 
 const HEADER_LOCALES = {
   en: {
@@ -126,10 +123,8 @@ const HEADER_LOCALES = {
 export function Header() {
   const pathname = usePathname();
   const { t, language, setLanguage, isRTL } = useI18n();
-  const { isAuthenticated, user, logout } = useAuth();
   const { unreadCount } = useUserStore();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMenuDrawerOpen, setIsMenuDrawerOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
