@@ -60,10 +60,10 @@ export default function PrivacyPage() {
           <div className="p-5 sm:p-6 rounded-2xl bg-linear-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border border-emerald-200/80 dark:border-emerald-800/80 space-y-2.5">
             <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-sm sm:text-base">
               <Lock className="w-5 h-5 shrink-0" />
-              <span>Core Privacy Architecture: 100% In-Device Memory Processing</span>
+              <span>मिफ्ताह टूल्स की बुनियादी प्राइवेसी नीति: 100% ऑन-डिवाइस प्रोसेसिंग (100% In-Device Memory Processing)</span>
             </div>
             <p className="text-xs sm:text-sm text-emerald-900/90 dark:text-emerald-300/90 leading-normal">
-              At <strong>Miftah Tools</strong>, your privacy is our foundational commitment. When you convert a PDF, merge documents, compress images, generate QR codes, or format code, the operations execute <strong>100% locally on your device</strong> using sandboxed WebAssembly and client-side JavaScript. <strong>Your documents, images, and files never leave your device and are never uploaded or stored on any remote servers.</strong>
+              <strong>Miftah Tools (مفتاح ٹولز / मिफ्ताह टूल्स)</strong> में आपकी प्राइवेसी और सुरक्षा हमारी सबसे पहली प्राथमिकता है। जब आप PDF कन्वर्ट करते हैं, फाइल मर्ज करते हैं, फोटो कंप्रेस करते हैं, QR कोड बनाते हैं, या कोड फॉर्मेट करते हैं, तो यह सारा काम <strong>100% आपके अपने फोन/कंप्यूटर के ब्राउज़र में ही होता है</strong>। <strong>आपकी कोई भी फाइल, फोटो या डॉक्यूमेंट किसी भी सर्वर पर अपलोड या सेव नहीं होती है।</strong>
             </p>
           </div>
 
@@ -71,10 +71,10 @@ export default function PrivacyPage() {
           <section className="space-y-2">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-brand-600" />
-              1. Overview of Miftah Tools
+              1. Miftah Tools का परिचय (About Miftah Tools)
             </h2>
             <p>
-              Miftah Tools is an all-in-one productivity suite offering high-performance offline document utilities, media converters, code formatters, and educational digital courses. This Privacy Policy governs your use of the Miftah Tools mobile application (Android Package: <code className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">com.miftahtools.app</code>) and web application.
+              <strong>Miftah Tools</strong> एक संपूर्ण ऑल-इन-वन यूटिलिटी और डिजिटल लर्निंग प्लेटफॉर्म है जिसमें 220 से अधिक टूल्स (PDF टूल्स, इमेज टूल्स, वर्ड/एक्सेल कन्वर्टर्स, ऑडियो/वीडियो टूल्स, कोडिंग टूल्स, और डिजिटल स्किल्स कोर्सेज) शामिल हैं। यह प्राइवेसी पॉलिसी Miftah Tools के एंड्रॉइड ऐप (Package: <code className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">com.miftahtools.app</code>) और वेब ऐप दोनों पर लागू होती है।
             </p>
           </section>
 
@@ -82,13 +82,13 @@ export default function PrivacyPage() {
           <section className="space-y-3">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <EyeOff className="w-4 h-4 text-emerald-600" />
-              2. Information We Do NOT Collect (डेटा जो हम कभी एकत्र नहीं करते)
+              2. डेटा जो हम कभी भी एकत्र या स्टोर नहीं करते (Information We NEVER Collect)
             </h2>
             <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
-              <li><strong>Zero Document Tracking:</strong> We do NOT inspect, read, transmit, or retain your uploaded PDFs, images, videos, audio, or text files.</li>
-              <li><strong>Zero Location Tracking:</strong> We do NOT collect GPS coordinates or fine location data.</li>
-              <li><strong>Zero Contact Scraping:</strong> We do NOT access or upload your address book, contacts, or call logs.</li>
-              <li><strong>Zero Data Selling:</strong> We never sell, rent, monetize, or trade your personal information with data brokers, advertisers, or any third party.</li>
+              <li><strong>Zero Document Tracking:</strong> आपकी किसी भी PDF, फोटो, वीडियो, ऑडियो या टेक्स्ट फाइल को हम न तो पढ़ते हैं, न ही किसी बाहरी सर्वर पर भेजते हैं।</li>
+              <li><strong>Zero Location Tracking:</strong> हम आपकी GPS लोकेशन या व्यक्तिगत स्थान की जानकारी कभी नहीं लेते।</li>
+              <li><strong>Zero Contact / Media Scraping:</strong> हम आपकी कांटेक्ट लिस्ट, फोन कॉल्स या निजी मैसेज को कभी एक्सेस नहीं करते।</li>
+              <li><strong>Zero Data Selling:</strong> हम यूजर का कोई भी डेटा किसी भी थर्ड-पार्टी, विज्ञापन कंपनी या डेटा ब्रोकर को कभी नहीं बेचते।</li>
             </ul>
           </section>
 
@@ -96,30 +96,32 @@ export default function PrivacyPage() {
           <section className="space-y-3">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <FolderLock className="w-4 h-4 text-brand-600" />
-              3. Information Collected for Optional User Accounts
+              3. यूजर अकाउंट और प्रोफाइल फीचर्स (Optional User Account &amp; Sync)
             </h2>
             <p>
-              Most tools in Miftah Tools can be used completely anonymously without registration. If you choose to create an account, we use <strong>Google Firebase Authentication</strong> to securely manage your profile:
+              Miftah Tools के सभी 220+ टूल्स बिना किसी लॉगिन या अकाउंट बनाए 100% फ्री में इस्तेमाल किए जा सकते हैं। यदि आप अपनी प्रोफाइल और कोर्स प्रोग्रेस को सिंक करने के लिए लॉगिन करते हैं, तो हम केवल निम्नलिखित बुनियादी जानकारी रखते हैं:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
-              <li><strong>Account Credentials:</strong> Your Email Address, Display Name, and Firebase User ID (UID).</li>
-              <li><strong>Profile Photo (Optional):</strong> If you choose to set a profile photo, it is stored in secure <strong>Firebase Cloud Storage</strong> (<code className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">users/&#123;uid&#125;/profile/</code>) solely to display your avatar across app navigation.</li>
-              <li><strong>Preferences &amp; Progress:</strong> Your bookmarked favorite tools, course progress, and theme selection are synced via <strong>Google Cloud Firestore</strong> for a seamless cross-device experience.</li>
+              <li><strong>Account Credentials:</strong> आपका ईमेल एड्रेस, नाम और Google Firebase यूजर आईडी (UID)।</li>
+              <li><strong>Profile Photo (वैकल्पिक):</strong> यदि आप अपनी फोटो लगाते हैं, तो वह केवल ऐप में आपका अवतार दिखाने के लिए सुरक्षित रूप से इस्तेमाल होती है।</li>
+              <li><strong>Bookmarked Tools & Courses:</strong> आपके पसंदीदा टूल्स और कोर्स की प्रगति केवल आपके डिवाइस पर सिंक करने के लिए रखी जाती है।</li>
             </ul>
           </section>
 
-          {/* Section 4: Advertising & Analytics */}
+          {/* Section 4: Advertising Policy */}
           <section className="space-y-3">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Server className="w-4 h-4 text-purple-600" />
-              4. Advertising &amp; Third-Party SDKs (Google AdMob &amp; Firebase)
+              4. विज्ञापन नीति (Google AdMob Advertising &amp; Policy Compliance)
             </h2>
             <p>
-              To keep our core productivity tools 100% free for all users worldwide, Miftah Tools displays non-intrusive advertisements served through <strong>Google AdMob</strong>. Google AdMob and Firebase may collect certain standard non-personal telemetry:
+              Miftah Tools के सभी 220+ प्रीमियम टूल्स को सभी यूज़र्स के लिए हमेशा मुफ़्त रखने हेतु ऐप में Google AdMob द्वारा विज्ञापन दिखाए जाते हैं:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-slate-600 dark:text-slate-400">
-              <li><strong>Google Mobile Ads SDK (AdMob):</strong> Collects device identifiers (such as the Google Advertising ID), network provider info, and coarse performance diagnostics to serve relevant ads, prevent ad fraud, and adhere to Google AdMob publisher policies.</li>
-              <li><strong>Google Firebase Services:</strong> Provides secure authentication, crash diagnostics, and encrypted cloud storage. Review the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 font-bold underline inline-flex items-center gap-1">Google Privacy Policy <ExternalLink className="w-3 h-3" /></a> for more details.</li>
+              <li><strong>App Open Ad (शुरुआती विज्ञापन):</strong> ऐप खुलते समय 5 सेकंड का टाइमर और स्किप बटन के साथ फुल स्क्रीन विज्ञापन।</li>
+              <li><strong>Bottom Banner Ad (नीचे का बैनर):</strong> स्क्रीन के नीचे गैर-बाधक और सुरक्षित बैनर ऐड।</li>
+              <li><strong>Interstitial & Rewarded Ads:</strong> कार्य पूरा होने पर सुरक्षित अंतराल के साथ दिखने वाले विज्ञापन।</li>
+              <li><strong>AdMob Compliance:</strong> सभी विज्ञापन Google की नीतियों के पूर्ण अनुकूल हैं और किसी भी संवेदनशील दस्तावेज़ संपादन स्क्रीन पर विज्ञापन नहीं दिखाए जाते।</li>
             </ul>
           </section>
 

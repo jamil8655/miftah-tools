@@ -203,6 +203,45 @@ export default function SettingsPage() {
           )}
         </div>
 
+        {/* Legal, Privacy Policy & Disclosures */}
+        <div className="md:col-span-2 p-5 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Miftah Tools Official Privacy Policy & Safety</h3>
+              <p className="text-xs text-slate-500">
+                100% Client-Side In-Memory Engine Policy, Data Protection, AdMob Disclosures & Compliance.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <Link
+              href="/privacy"
+              className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-brand-500 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200 transition-all active:scale-95"
+            >
+              <span>Privacy Policy</span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+            <Link
+              href="/terms"
+              className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-brand-500 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200 transition-all active:scale-95"
+            >
+              <span>Terms of Service</span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+            <Link
+              href="/disclaimer"
+              className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:border-brand-500 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200 transition-all active:scale-95"
+            >
+              <span>Legal Disclaimer</span>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </Link>
+          </div>
+        </div>
+
         {/* Google Play Account & Data Deletion */}
         <div className="md:col-span-2 p-5 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
