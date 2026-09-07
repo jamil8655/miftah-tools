@@ -199,24 +199,28 @@ export function UserStoreProvider({ children }: { children: React.ReactNode }) {
     return () => unsubNotifs();
   }, [user?.uid, user?.photoURL]);
 
-  // Update Profile Photo
+  // Update Profile Photo & Sync with Firebase Cloud
   const updateProfilePhoto = async (dataUrlOrFile: string | File | Blob | null): Promise<boolean> => {
     if (!dataUrlOrFile) {
       setProfilePhoto(null);
+      localStorage.removeItem('miftah_user_avatar');
       localStorage.removeItem('nexora_user_avatar');
+      if (user?.uid) {
+        await uploadUserProfilePhoto(user.uid, '');
+      }
       return true;
     }
 
     if (typeof dataUrlOrFile === 'string') {
       setProfilePhoto(dataUrlOrFile);
-      localStorage.setItem('nexora_user_avatar', dataUrlOrFile);
+      localStorage.setItem('miftah_user_avatar', dataUrlOrFile);
     }
 
-    if (user?.uid && typeof dataUrlOrFile !== 'string') {
+    if (user?.uid) {
       const res = await uploadUserProfilePhoto(user.uid, dataUrlOrFile);
       if (res.success && res.url) {
         setProfilePhoto(res.url);
-        localStorage.setItem('nexora_user_avatar', res.url);
+        localStorage.setItem('miftah_user_avatar', res.url);
         return true;
       }
     }

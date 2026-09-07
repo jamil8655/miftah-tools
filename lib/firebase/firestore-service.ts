@@ -123,24 +123,58 @@ export interface FirestoreNotification {
 
 // ==================== REAL DATA METHODS ====================
 
-// --- 1. USER PROFILE PHOTO UPLOAD (FIREBASE STORAGE) ---
-export async function uploadUserProfilePhoto(uid: string, fileOrBlob: Blob | File): Promise<{ success: boolean; url?: string; error?: string }> {
+// --- 1. USER PROFILE PHOTO UPLOAD (FIREBASE STORAGE & FIRESTORE) ---
+export async function uploadUserProfilePhoto(
+  uid: string,
+  fileOrBlobOrDataUrl: Blob | File | string
+): Promise<{ success: boolean; url?: string; error?: string }> {
   if (!uid) return { success: false, error: 'User not authenticated' };
 
   try {
+    let uploadBlob: Blob;
+
+    if (typeof fileOrBlobOrDataUrl === 'string') {
+      if (fileOrBlobOrDataUrl.startsWith('data:')) {
+        const parts = fileOrBlobOrDataUrl.split(',');
+        const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+        const byteString = atob(parts[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        uploadBlob = new Blob([ab], { type: mime });
+      } else {
+        // Direct URL already
+        if (db) {
+          try {
+            await setDoc(doc(db, 'users', uid), { photoURL: fileOrBlobOrDataUrl, updatedAt: Date.now() }, { merge: true });
+          } catch (e) {}
+        }
+        if (auth?.currentUser) {
+          try {
+            await updateProfile(auth.currentUser, { photoURL: fileOrBlobOrDataUrl });
+          } catch (e) {}
+        }
+        return { success: true, url: fileOrBlobOrDataUrl };
+      }
+    } else {
+      uploadBlob = fileOrBlobOrDataUrl;
+    }
+
     if (storage) {
       const avatarRef = storageRef(storage, `users/${uid}/profile/avatar_${Date.now()}.jpg`);
-      const snapshot = await uploadBytes(avatarRef, fileOrBlob, {
+      const snapshot = await uploadBytes(avatarRef, uploadBlob, {
         contentType: 'image/jpeg',
       });
       const downloadUrl = await getDownloadURL(snapshot.ref);
 
-      // Update Firebase Auth profile
+      // 1. Update Firebase Auth user profile photoURL
       if (auth?.currentUser) {
         await updateProfile(auth.currentUser, { photoURL: downloadUrl });
       }
 
-      // Merge into Firestore users document
+      // 2. Merge into Firestore users collection document
       if (db) {
         const userDoc = doc(db, 'users', uid);
         await setDoc(userDoc, { photoURL: downloadUrl, updatedAt: Date.now() }, { merge: true });
@@ -149,10 +183,20 @@ export async function uploadUserProfilePhoto(uid: string, fileOrBlob: Blob | Fil
       return { success: true, url: downloadUrl };
     }
   } catch (err: any) {
-    console.warn('Firebase Storage upload notice, falling back to local storage:', err);
+    console.warn('Firebase Storage upload warning, using local/firestore fallback:', err);
   }
 
-  // Fallback to data URL
+  // Fallback if storage fails: store in Firestore doc directly
+  if (typeof fileOrBlobOrDataUrl === 'string') {
+    if (db) {
+      try {
+        const userDoc = doc(db, 'users', uid);
+        await setDoc(userDoc, { photoURL: fileOrBlobOrDataUrl, updatedAt: Date.now() }, { merge: true });
+      } catch (e) {}
+    }
+    return { success: true, url: fileOrBlobOrDataUrl };
+  }
+
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -166,7 +210,7 @@ export async function uploadUserProfilePhoto(uid: string, fileOrBlob: Blob | Fil
       resolve({ success: true, url: dataUrl });
     };
     reader.onerror = () => resolve({ success: false, error: 'Failed to read image file' });
-    reader.readAsDataURL(fileOrBlob);
+    reader.readAsDataURL(fileOrBlobOrDataUrl as Blob);
   });
 }
 
