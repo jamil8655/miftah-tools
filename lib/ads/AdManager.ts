@@ -28,7 +28,7 @@ export class AdManager {
   private isNative = false;
   private isAdMobAvailable = false;
   private lastInterstitialTime = 0;
-  private readonly INTERSTITIAL_COOLDOWN_MS = 60000; // Strict 60s cooldown between interstitials
+  private readonly INTERSTITIAL_COOLDOWN_MS = 30000; // 30s cooldown between interstitials
   private isInterstitialLoading = false;
   private isRewardedLoading = false;
   private isRewardedInterstitialLoading = false;

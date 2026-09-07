@@ -151,10 +151,27 @@ export function ResultPreview({
     try {
       await onDownloadSingle(index);
       setDownloadedIndices((prev) => new Set(prev).add(index));
+      // Seamless interstitial ad presentation
+      setTimeout(() => {
+        adManager.showInterstitial();
+      }, 400);
     } catch (err) {
       console.error('Download error:', err);
     } finally {
       setTimeout(() => setDownloadingIndex(null), 300);
+    }
+  };
+
+  const handleDownloadAllZipWithAd = async () => {
+    if (!onDownloadAllZip) return;
+    triggerHaptic('medium');
+    try {
+      await onDownloadAllZip();
+      setTimeout(() => {
+        adManager.showInterstitial();
+      }, 400);
+    } catch (err) {
+      console.error('Download all error:', err);
     }
   };
 
@@ -396,7 +413,7 @@ export function ResultPreview({
         {files.length > 1 && onDownloadAllZip && (
           <button
             type="button"
-            onClick={onDownloadAllZip}
+            onClick={handleDownloadAllZipWithAd}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold shadow-lg shadow-emerald-600/25 inline-flex items-center justify-center gap-1.5 transition-all"
           >
             <Download className="w-3.5 h-3.5" />

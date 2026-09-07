@@ -21,6 +21,7 @@ import { formatBytes } from '@/lib/utils/formatters';
 import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { useI18n } from '@/lib/i18n/i18n-context';
+import { AdSlot } from '@/components/ads/AdSlot';
 
 const DOWNLOAD_MODAL_LOCALES = {
   en: {
@@ -203,6 +204,9 @@ export function DownloadSuccessModal({ fileInfo, onClose }: DownloadSuccessModal
             {loc.savedTo} <strong className="font-bold font-mono">{fileInfo.savedPath}</strong>
           </span>
         </div>
+
+        {/* Sponsor Banner Slot in Success Modal */}
+        <AdSlot placement="result-page" className="my-1 p-2.5" />
 
         {/* Action Buttons */}
         <div className="space-y-2 pt-1">
