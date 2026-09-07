@@ -64,8 +64,9 @@ html.lang-ur, html[lang="ur"] {
 }
 
 html.lang-ar, html[lang="ar"] {
-  font-family: 'Noto Kufi Arabic', 'Amiri', 'Segoe UI', Tahoma, sans-serif;
+  font-family: 'Tajawal', 'Cairo', 'Almarai', 'Noto Sans Arabic', 'Noto Kufi Arabic', 'Segoe UI', Tahoma, sans-serif;
   line-height: 1.7;
+  letter-spacing: 0;
 }
 
 html.lang-hi, html[lang="hi"] {
@@ -75,6 +76,11 @@ html.lang-hi, html[lang="hi"] {
 
 [dir="rtl"] {
   text-align: right;
+  direction: rtl;
+}
+
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
 }
 
 /* Crisp Clean Light Dot & Grid Patterns */
