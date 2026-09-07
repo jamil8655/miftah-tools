@@ -10,6 +10,7 @@ import { MobileNav } from '@/components/layout/MobileNav';
 import { PwaInstallBanner } from '@/components/shared/PwaInstallBanner';
 import { ServiceWorkerRegister } from '@/components/layout/ServiceWorkerRegister';
 import { NativeAndroidRuntime } from '@/components/layout/NativeAndroidRuntime';
+import { StickyBottomAd } from '@/components/ads/StickyBottomAd';
 import { siteConfig } from '@/config/site';
 import { adConfig } from '@/config/ads';
 
@@ -139,6 +140,7 @@ export default function RootLayout({
                 <MobileNav />
                 <PwaInstallBanner />
                 <ServiceWorkerRegister />
+                <StickyBottomAd />
               </UserStoreProvider>
             </I18nProvider>
           </AuthProvider>
