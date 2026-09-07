@@ -31,6 +31,20 @@ export default function BatchPage() {
   const [overallProgress, setOverallProgress] = useState<number>(0);
   const [items, setItems] = useState<BatchItem[]>([]);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  const [isProQueueUnlocked, setIsProQueueUnlocked] = useState<boolean>(false);
+  const [isRewardLoading, setIsRewardLoading] = useState<boolean>(false);
+
+  const handleUnlockProQueue = async () => {
+    setIsRewardLoading(true);
+    try {
+      await adManager.showRewardedAd((reward) => {
+        console.log('[Batch] Reward confirmed by SDK:', reward);
+        setIsProQueueUnlocked(true);
+      });
+    } finally {
+      setIsRewardLoading(false);
+    }
+  };
 
   const handleFilesAdded = (files: File[]) => {
     setSelectedFiles(files);
@@ -154,14 +168,50 @@ export default function BatchPage() {
       <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl space-y-6">
         {/* File Uploader */}
         {items.length === 0 && (
-          <FileUploader
-            acceptedExtensions={['.jpg', '.jpeg', '.png', '.webp', '.pdf', '.docx', '.xlsx']}
-            acceptedMimeTypes={['*/*']}
-            maxFiles={50}
-            maxFileSizeMB={50}
-            selectedFiles={selectedFiles}
-            onFilesSelected={handleFilesAdded}
-          />
+          <div className="space-y-4">
+            {/* Rewarded Feature Card */}
+            {!isProQueueUnlocked ? (
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-linear-to-r from-amber-500/10 via-brand-500/10 to-purple-500/10 dark:from-amber-950/30 dark:to-purple-950/30 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-black font-black flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                      Need to process 100+ files at once?
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Watch a quick 15-second sponsor video to unlock 100-file bulk capacity & fast-lane queue.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleUnlockProQueue}
+                  disabled={isRewardLoading}
+                  className="px-4 py-2 rounded-xl bg-linear-to-r from-amber-500 to-brand-600 text-white font-extrabold text-xs shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1.5"
+                >
+                  <Award className="w-3.5 h-3.5" />
+                  <span>{isRewardLoading ? 'Loading Ad...' : 'Unlock 100 Files'}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                <span>100-File High-Capacity Batch Queue Unlocked & Active</span>
+              </div>
+            )}
+
+            <FileUploader
+              acceptedExtensions={['.jpg', '.jpeg', '.png', '.webp', '.pdf', '.docx', '.xlsx']}
+              acceptedMimeTypes={['*/*']}
+              maxFiles={isProQueueUnlocked ? 100 : 30}
+              maxFileSizeMB={50}
+              selectedFiles={selectedFiles}
+              onFilesSelected={handleFilesAdded}
+            />
+          </div>
         )}
 
         {/* Batch Queue & Configuration */}

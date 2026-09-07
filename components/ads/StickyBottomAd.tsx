@@ -1,8 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sparkles, X, ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
 import { adConfig } from '@/config/ads';
+
+const EXCLUDED_ROUTES = [
+  '/pdf-editor',
+  '/pdf-workspace',
+  '/quiz',
+  '/account',
+  '/settings',
+  '/privacy',
+  '/terms',
+  '/disclaimer',
+];
 
 const BOTTOM_CREATIVES = [
   {
@@ -32,6 +44,7 @@ const BOTTOM_CREATIVES = [
 ];
 
 export function StickyBottomAd() {
+  const pathname = usePathname();
   const [index, setIndex] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
@@ -44,7 +57,9 @@ export function StickyBottomAd() {
     return () => clearInterval(timer);
   }, []);
 
-  if (!adConfig.enabled || isClosed) return null;
+  const isExcluded = pathname ? EXCLUDED_ROUTES.some((route) => pathname.startsWith(route)) : false;
+
+  if (!adConfig.enabled || isClosed || isExcluded) return null;
 
   const current = BOTTOM_CREATIVES[index];
 

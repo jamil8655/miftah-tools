@@ -8,6 +8,7 @@ import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ToolCard } from '@/components/shared/ToolCard';
 import { NativeFeedAd } from '@/components/ads/NativeFeedAd';
+import { NativeVideoAd } from '@/components/ads/NativeVideoAd';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { getLocalizedCategory, getLocalizedTool } from '@/lib/i18n/catalog-translations';
@@ -159,7 +160,8 @@ function ToolsDirectory() {
             {filteredTools.map((tool, idx) => (
               <React.Fragment key={tool.id}>
                 <ToolCard tool={tool} />
-                {(idx + 1) % 12 === 0 && <NativeFeedAd />}
+                {(idx + 1) % 24 === 12 && <NativeFeedAd />}
+                {(idx + 1) % 24 === 0 && <NativeVideoAd />}
               </React.Fragment>
             ))}
           </div>
