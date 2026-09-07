@@ -72,7 +72,7 @@ async function makeAdmin(email) {
     console.log("Claim : admin = true");
     console.log("====================================\n");
 
-    console.log("⚠️ NEXORA سے Logout کریں۔");
+    console.log("⚠️ Miftah Tools سے Logout کریں۔");
     console.log("⚠️ Browser Refresh کریں۔");
     console.log("⚠️ پھر دوبارہ Login کریں۔\n");
 

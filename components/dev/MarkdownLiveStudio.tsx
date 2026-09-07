@@ -8,7 +8,7 @@ import { markdownToPdf } from '@/lib/pdf/pdf-manipulator';
 export function MarkdownLiveStudio() {
   const [markdown, setMarkdown] = useState<string>(`# Project Documentation & Notes
 
-Welcome to **NEXORA Live Markdown Studio**! Write clean documentation with live real-time preview and export to PDF instantly.
+Welcome to **Miftah Tools Live Markdown Studio**! Write clean documentation with live real-time preview and export to PDF instantly.
 
 ## ✨ Features
 - **Real-Time Live Rendering** side-by-side
@@ -17,7 +17,7 @@ Welcome to **NEXORA Live Markdown Studio**! Write clean documentation with live 
 
 ### Code Example
 \`\`\`typescript
-const greeting: string = "Hello World with NEXORA Tools!";
+const greeting: string = "Hello World with Miftah Tools!";
 console.log(greeting);
 \`\`\`
 

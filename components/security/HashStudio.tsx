@@ -8,7 +8,7 @@ import { formatBytes } from '@/lib/utils/formatters';
 export function HashStudio() {
   const [mode, setMode] = useState<'text' | 'file'>('text');
   const [algorithm, setAlgorithm] = useState<HashAlgorithm>('SHA-256');
-  const [inputText, setInputText] = useState<string>('NEXORA TOOLS');
+  const [inputText, setInputText] = useState<string>('Miftah Tools');
   const [hashResult, setHashResult] = useState<string>('');
   const [isHashing, setIsHashing] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);

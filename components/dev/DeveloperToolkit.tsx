@@ -23,7 +23,7 @@ export function DeveloperToolkit() {
   // Regex Tester State
   const [regexPattern, setRegexPattern] = useState('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
   const [regexFlags, setRegexFlags] = useState('g');
-  const [regexTestText, setRegexTestText] = useState('user@example.com\ninvalid-email@\ntest.dev@nexora.pro');
+  const [regexTestText, setRegexTestText] = useState('user@example.com\ninvalid-email@\ntest.dev@miftahtools.app');
   const [regexMatches, setRegexMatches] = useState<string[]>([]);
   const [regexValid, setRegexValid] = useState<boolean>(true);
 
@@ -32,7 +32,7 @@ export function DeveloperToolkit() {
   const [sqlFormatted, setSqlFormatted] = useState('');
 
   // CSV <-> JSON State
-  const [csvInput, setCsvInput] = useState('name,role,email\nAlex,Engineer,alex@nexora.pro\nSarah,Designer,sarah@nexora.pro\nRahm,Architect,jrahm@google.dev');
+  const [csvInput, setCsvInput] = useState('name,role,email\nAlex,Engineer,alex@miftahtools.app\nSarah,Designer,sarah@miftahtools.app\nRahm,Architect,jrahm@google.dev');
   const [jsonOutput, setJsonOutput] = useState('');
 
   // URL Encoder/Decoder State

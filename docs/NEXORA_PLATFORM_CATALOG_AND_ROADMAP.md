@@ -1,4 +1,4 @@
-# NEXORA Tools Pro — Complete Platform Catalog & Feature Roadmap
+# Miftah Tools Pro — Complete Platform Catalog & Feature Roadmap
 
 **Live Website**: [https://jamil8655.github.io/nexora-tools/](https://jamil8655.github.io/nexora-tools/)  
 **GitHub Repository**: [https://github.com/jamil8655/nexora-tools](https://github.com/jamil8655/nexora-tools)  

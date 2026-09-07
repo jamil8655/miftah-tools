@@ -19,7 +19,7 @@ export default function AdminPage() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors shadow-xs self-start sm:self-auto"
           >
             <ArrowLeft className="w-4 h-4 text-brand-600" />
-            <span>← Back to NEXORA Workspace</span>
+            <span>← Back to Miftah Tools Workspace</span>
           </Link>
 
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-semibold self-start sm:self-auto">

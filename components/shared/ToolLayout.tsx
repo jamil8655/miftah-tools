@@ -111,9 +111,9 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
       }
     };
 
-    window.addEventListener('nexora:file-downloaded' as any, handleGlobalDownload as any);
+    window.addEventListener('miftah:file-downloaded' as any, handleGlobalDownload as any);
     return () => {
-      window.removeEventListener('nexora:file-downloaded' as any, handleGlobalDownload as any);
+      window.removeEventListener('miftah:file-downloaded' as any, handleGlobalDownload as any);
     };
   }, []);
 

@@ -29,11 +29,10 @@ function makeChunk(type, data) {
   return Buffer.concat([len, body, crc]);
 }
 
-function generatePng(size, isRound = false) {
+function generateMiftahPng(size, isRound = false) {
   const width = size;
   const height = size;
 
-  // Raw RGBA scanlines
   const rowSize = 1 + width * 4;
   const rawData = Buffer.alloc(rowSize * height);
 
@@ -57,38 +56,78 @@ function generatePng(size, isRound = false) {
         continue;
       }
 
-      // Premium Indigo/Blue/Violet gradient
+      // Premium Deep Midnight Sapphire gradient background
       const t = (x + y) / (width + height);
-      let r = Math.floor(15 * (1 - t) + 99 * t);
-      let g = Math.floor(23 * (1 - t) + 102 * t);
-      let b = Math.floor(42 * (1 - t) + 241 * t);
+      let bgR = Math.floor(7 * (1 - t) + 11 * t);
+      let bgG = Math.floor(13 * (1 - t) + 25 * t);
+      let bgB = Math.floor(30 * (1 - t) + 54 * t);
 
-      // Draw stylized NEXORA "N" symbol
       const nx = x / size;
       const ny = y / size;
-      const inLeftBar = nx >= 0.24 && nx <= 0.36 && ny >= 0.22 && ny <= 0.78;
-      const inRightBar = nx >= 0.64 && nx <= 0.76 && ny >= 0.22 && ny <= 0.78;
-      const inDiag = ny >= 0.22 && ny <= 0.78 && Math.abs(ny - (0.22 + (nx - 0.24) * 1.08)) < 0.08;
 
-      if (inLeftBar || inRightBar || inDiag) {
-        r = 255;
-        g = 255;
-        b = 255;
+      // Mathematical definition of the Miftah (Key + M) Emblem
+      // 1. Key Bow Head (Upper 'M' Arches)
+      const dLeftBow = Math.sqrt((nx - 0.38) ** 2 + (ny - 0.32) ** 2);
+      const dRightBow = Math.sqrt((nx - 0.62) ** 2 + (ny - 0.32) ** 2);
+      const inMHeadOuter = (dLeftBow < 0.16 || dRightBow < 0.16 || (nx >= 0.34 && nx <= 0.66 && ny >= 0.28 && ny <= 0.44));
+
+      // Inner 'M' Cutouts
+      const dLeftInner = Math.sqrt((nx - 0.38) ** 2 + (ny - 0.32) ** 2);
+      const dRightInner = Math.sqrt((nx - 0.62) ** 2 + (ny - 0.32) ** 2);
+      const inLeftHole = dLeftInner < 0.075;
+      const inRightHole = dRightInner < 0.075;
+
+      // Central Keyhole Spark
+      const dCenterSpark = Math.sqrt((nx - 0.50) ** 2 + (ny - 0.34) ** 2);
+      const inCenterSpark = dCenterSpark < 0.035;
+
+      // 2. Key Stem (Vertical Shaft)
+      const inStem = nx >= 0.44 && nx <= 0.56 && ny >= 0.42 && ny <= 0.80;
+      const inStemBottomRound = Math.sqrt((nx - 0.50) ** 2 + (ny - 0.80) ** 2) < 0.06;
+
+      // 3. Key Teeth / Digital Tool Notches (Right Side)
+      const inUpperTooth = nx >= 0.56 && nx <= 0.72 && ny >= 0.62 && ny <= 0.68;
+      const inLowerTooth = nx >= 0.56 && nx <= 0.67 && ny >= 0.72 && ny <= 0.78;
+
+      let isKeyBody = (inMHeadOuter && !inLeftHole && !inRightHole) || inStem || inStemBottomRound || inUpperTooth || inLowerTooth;
+
+      let r = bgR;
+      let g = bgG;
+      let b = bgB;
+      let a = 255;
+
+      if (isKeyBody) {
+        // Radiant Cyan to Royal Indigo Key gradient
+        const keyT = (ny - 0.2) / 0.65;
+        r = Math.floor(56 * (1 - keyT) + 99 * keyT);
+        g = Math.floor(189 * (1 - keyT) + 102 * keyT);
+        b = Math.floor(248 * (1 - keyT) + 241 * keyT);
+
+        // Highlight bevel edge
+        if (nx < 0.46 || (inMHeadOuter && ny < 0.25)) {
+          r = Math.min(255, r + 40);
+          g = Math.min(255, g + 40);
+          b = Math.min(255, b + 20);
+        }
+      }
+
+      if (inCenterSpark) {
+        // Luminous Golden Core Spark
+        r = 252;
+        g = 211;
+        b = 77;
       }
 
       rawData[pxOffset] = r;
       rawData[pxOffset + 1] = g;
       rawData[pxOffset + 2] = b;
-      rawData[pxOffset + 3] = 255; // fully opaque
+      rawData[pxOffset + 3] = a;
     }
   }
 
   const compressedData = zlib.deflateSync(rawData);
 
-  // PNG Header
   const signature = Buffer.from([137, 80, 78, 72, 13, 10, 26, 10]);
-
-  // IHDR chunk
   const ihdrData = Buffer.alloc(13);
   ihdrData.writeUInt32BE(width, 0);
   ihdrData.writeUInt32BE(height, 4);
@@ -98,11 +137,7 @@ function generatePng(size, isRound = false) {
   ihdrData[11] = 0;
   ihdrData[12] = 0;
   const ihdr = makeChunk('IHDR', ihdrData);
-
-  // IDAT chunk
   const idat = makeChunk('IDAT', compressedData);
-
-  // IEND chunk
   const iend = makeChunk('IEND', Buffer.alloc(0));
 
   return Buffer.concat([signature, ihdr, idat, iend]);
@@ -110,9 +145,11 @@ function generatePng(size, isRound = false) {
 
 // 1. Web PWA Icons
 if (!fs.existsSync('public')) fs.mkdirSync('public', { recursive: true });
-fs.writeFileSync('public/icon-192.png', generatePng(192));
-fs.writeFileSync('public/icon-512.png', generatePng(512));
-console.log('✅ Generated Web Icons in public/');
+fs.writeFileSync('public/icon-192.png', generateMiftahPng(192));
+fs.writeFileSync('public/icon-512.png', generateMiftahPng(512));
+fs.writeFileSync('public/apple-touch-icon.png', generateMiftahPng(180));
+fs.writeFileSync('public/favicon.ico', generateMiftahPng(64));
+console.log('✅ Generated Miftah Web Icons in public/');
 
 // 2. Android Mipmap Icons
 const mipmaps = [
@@ -129,10 +166,10 @@ mipmaps.forEach(({ dir, size }) => {
   const targetDir = path.join(resDir, dir);
   if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
 
-  fs.writeFileSync(path.join(targetDir, 'ic_launcher.png'), generatePng(size, false));
-  fs.writeFileSync(path.join(targetDir, 'ic_launcher_round.png'), generatePng(size, true));
-  fs.writeFileSync(path.join(targetDir, 'ic_launcher_foreground.png'), generatePng(size, false));
-  console.log(`✅ Generated ${dir} (${size}x${size})`);
+  fs.writeFileSync(path.join(targetDir, 'ic_launcher.png'), generateMiftahPng(size, false));
+  fs.writeFileSync(path.join(targetDir, 'ic_launcher_round.png'), generateMiftahPng(size, true));
+  fs.writeFileSync(path.join(targetDir, 'ic_launcher_foreground.png'), generateMiftahPng(size, false));
+  console.log(`✅ Generated Android ${dir} (${size}x${size})`);
 });
 
-console.log('🎉 All Android Launcher & Adaptive Icons Generated Successfully!');
+console.log('🎉 All Miftah Tools Android Launcher & Web Icons Generated Successfully!');

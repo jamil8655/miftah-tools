@@ -333,12 +333,12 @@ export default function CourseDetailClient({ course: rawCourse }: { course: Cour
                   Interactive Practice & Code Walkthrough:
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  This lesson covers the core architecture of the concept. You can test your code live inside NEXORA Developer Tools, or process test datasets with our WebAssembly engine.
+                  This lesson covers the core architecture of the concept. You can test your code live inside Miftah Tools Developer Tools, or process test datasets with our WebAssembly engine.
                 </p>
 
                 <div className="p-4 rounded-2xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto">
                   <code>
-                    {`// Example Code Sample for ${activeLesson.title}\nimport { initEngine } from '@nexora/core';\n\nconst engine = await initEngine({\n  wasmWorker: true,\n  clientSideOnly: true,\n});\nconsole.log('Engine ready:', engine.status);`}
+                    {`// Example Code Sample for ${activeLesson.title}\nimport { initEngine } from '@miftah/core';\n\nconst engine = await initEngine({\n  wasmWorker: true,\n  clientSideOnly: true,\n});\nconsole.log('Engine ready:', engine.status);`}
                   </code>
                 </div>
               </div>

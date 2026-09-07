@@ -72,7 +72,7 @@ export function TextCipherStudio() {
   const loc = CIPHER_LOCALES[language as keyof typeof CIPHER_LOCALES] || CIPHER_LOCALES.en;
 
   const [mode, setMode] = useState<'encrypt' | 'decrypt'>('encrypt');
-  const [inputText, setInputText] = useState('Top Secret NEXORA Document Payload');
+  const [inputText, setInputText] = useState('Top Secret Miftah Tools Document Payload');
   const [passphrase, setPassphrase] = useState('MyStrongP@ssw0rd!2026');
   const [outputResult, setOutputResult] = useState('');
   const [errorMessage, setErrorMessage] = useState('');

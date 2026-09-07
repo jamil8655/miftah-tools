@@ -18,9 +18,10 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { validateFile, ValidationResult, MAX_FILE_SIZE_BYTES } from '@/lib/core/file-validator';
-import { normalizeError, NexoraErrorDetail } from '@/lib/core/error-system';
+import { normalizeError, MiftahErrorDetail } from '@/lib/core/error-system';
 import { formatBytes } from '@/lib/utils/formatters';
 import { downloadSingleFile } from '@/lib/utils/download';
+import { useI18n } from '@/lib/i18n/i18n-context';
 
 export interface ProcessedResultFile {
   name: string;
@@ -51,11 +52,12 @@ export function UniversalFileProcessor({
   onProcess,
   optionsComponent,
 }: UniversalFileProcessorProps) {
+  const { t } = useI18n();
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [errorDetail, setErrorDetail] = useState<NexoraErrorDetail | null>(null);
+  const [errorDetail, setErrorDetail] = useState<MiftahErrorDetail | null>(null);
   const [results, setResults] = useState<ProcessedResultFile[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -249,7 +251,7 @@ export function UniversalFileProcessor({
           {isProcessing && (
             <div className="space-y-2 pt-2 animate-in fade-in">
               <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
-                <span>Processing with NEXORA Engine...</span>
+                <span>Processing with Miftah Tools Engine...</span>
                 <span>{progress}%</span>
               </div>
               <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">

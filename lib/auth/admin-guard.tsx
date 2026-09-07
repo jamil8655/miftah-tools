@@ -56,7 +56,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
             Admin Access Restricted
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            You are signed in as <span className="font-bold text-slate-800 dark:text-slate-200">{user?.email}</span>. Only verified Administrator accounts have access to the NEXORA Control Center.
+            You are signed in as <span className="font-bold text-slate-800 dark:text-slate-200">{user?.email}</span>. Only verified Administrator accounts have access to the Miftah Tools Control Center.
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
             className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 py-2 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to NEXORA Workspace</span>
+            <span>Return to Miftah Tools Workspace</span>
           </Link>
         </div>
       </div>
@@ -120,7 +120,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
 
       <div className="space-y-1.5">
         <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
-          NEXORA Admin Control Center
+          Miftah Tools Admin Control Center
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
           Official Administrator: <span className="text-brand-600 dark:text-brand-400 font-bold">jamil8655@gmail.com</span>. Please sign in via Firebase to access internal telemetry and tool switches.
@@ -221,7 +221,7 @@ export function AdminGuard({ children }: AdminGuardProps) {
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Return to NEXORA Workspace</span>
+          <span>Return to Miftah Tools Workspace</span>
         </Link>
       </div>
     </div>

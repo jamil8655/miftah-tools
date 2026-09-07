@@ -82,7 +82,7 @@ export function PrivacyCenter() {
           <span>100% In-Browser Privacy Architecture • Zero Cloud Storage</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          NEXORA Privacy & Security Center
+          Miftah Tools Privacy & Security Center
         </h1>
         <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           We believe your files belong only to you. Learn about our client-side processing architecture, clean private metadata, or instantly purge local offline storage.

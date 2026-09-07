@@ -164,7 +164,7 @@ const ADMIN_LOCALES: Record<Language, {
       audit: 'Audit Trail',
       danger: 'Danger Zone',
     },
-    overviewTitle: 'NEXORA Live Telemetry Overview',
+    overviewTitle: 'Miftah Tools Live Telemetry Overview',
     overviewSubtitle: 'Real-time client telemetry, Firestore active listeners, and device storage footprint.',
     usersTitle: 'Real Firestore Users',
     usersSubtitle: 'Live authenticated user accounts from Firebase Firestore.',
@@ -286,7 +286,7 @@ const ADMIN_LOCALES: Record<Language, {
       audit: 'سجل العمليات والتدقيق',
       danger: 'منطقة الحظر والخطر',
     },
-    overviewTitle: 'نظرة عامة على تشغيل NEXORA المباشر',
+    overviewTitle: 'نظرة عامة على تشغيل Miftah Tools المباشر',
     overviewSubtitle: 'بيانات الأداء المباشرة، اتصالات Firebase، وسعة التخزين المستهلكة محلياً.',
     usersTitle: 'دليل المستخدمين والصلاحيات',
     usersSubtitle: 'حسابات المستخدمين المعتمدة مباشرة من Firebase Firestore.',
@@ -347,7 +347,7 @@ const ADMIN_LOCALES: Record<Language, {
       audit: 'ऑडिट ट्रेल',
       danger: 'डेंजर ज़ोन',
     },
-    overviewTitle: 'NEXORA लाइव टेलीमेट्री अवलोकन',
+    overviewTitle: 'Miftah Tools लाइव टेलीमेट्री अवलोकन',
     overviewSubtitle: 'रीयल-टाइम क्लाइंट टेलीमेट्री, सक्रिय Firebase कनेक्शन और स्टोरेज मेट्रिक्स।',
     usersTitle: 'उपयोगकर्ता सूची व अनुमतियाँ',
     usersSubtitle: 'Firebase Firestore से लाइव प्रमाणित उपयोगकर्ताओं के खाते।',
@@ -641,7 +641,7 @@ export function AdminAnalytics() {
                 <div className="w-7 h-7 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
-                <span className="font-black text-sm text-white">NEXORA Admin</span>
+                <span className="font-black text-sm text-white">Miftah Tools Admin</span>
               </div>
               <button
                 type="button"
@@ -887,7 +887,7 @@ export function AdminAnalytics() {
                   <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
                     <div className="text-slate-400 font-bold">{adminLoc.tabs.users}</div>
                     <div className="text-sm font-black text-white truncate">{user?.name || 'Hafiz Jamilurrahman'}</div>
-                    <div className="text-[11px] text-slate-500 font-mono truncate">{user?.email || 'admin@nexoratools.internal'}</div>
+                    <div className="text-[11px] text-slate-500 font-mono truncate">{user?.email || 'admin@miftahtools.internal'}</div>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">

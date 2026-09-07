@@ -6,10 +6,10 @@ import { GitCompare, ArrowRightLeft, Sparkles } from 'lucide-react';
 
 export function TextDiffViewer() {
   const [textA, setTextA] = useState<string>(
-    `The quick brown fox jumps over the lazy dog.\nNEXORA is a comprehensive productivity suite.\nVersion 1.0 released.`
+    `The quick brown fox jumps over the lazy dog.\nMiftah Tools is a comprehensive productivity suite.\nVersion 1.0 released.`
   );
   const [textB, setTextB] = useState<string>(
-    `The fast brown fox jumps over the sleepy dog.\nNEXORA is a comprehensive productivity super app.\nVersion 2.0 released with 60+ tools.`
+    `The fast brown fox jumps over the sleepy dog.\nMiftah Tools is a comprehensive productivity super app.\nVersion 2.0 released with 60+ tools.`
   );
 
   const diffResults = compareTextDiff(textA, textB);

@@ -25,28 +25,28 @@ export interface SiteConfig {
 }
 
 export const siteConfig: SiteConfig = {
-  name: 'NEXORA TOOLS',
-  shortName: 'NEXORA',
-  tagline: 'Powerful Tools for Every File, Document and Digital Task.',
+  name: 'Miftah Tools',
+  shortName: 'Miftah',
+  tagline: 'The Master Key to 220+ Private Document & Productivity Utilities.',
   description:
-    'Convert, compress, edit, calculate, code and manage your files from one fast, secure, and privacy-first digital utility workspace.',
-  url: 'https://nexora.tools',
-  ogImage: '/og-image.png',
-  slogan: 'One Powerful Workspace for All Your Digital Tools.',
+    'Convert, compress, edit, calculate, code and manage your files with 100% private client-side processing.',
+  url: 'https://jamil8655.github.io/nexora-tools/',
+  ogImage: '/icon-512.png',
+  slogan: 'Your All-in-One Master Key for Digital Mastery & Workflow Automation.',
   links: {
-    github: 'https://github.com/nexora-tools',
+    github: 'https://github.com/jamil8655/nexora-tools',
     docs: '/tools',
     privacy: '/privacy',
     terms: '/terms',
   },
   contact: {
-    email: 'contact@nexora.tools',
-    support: 'support@nexora.tools',
+    email: 'contact@miftahtools.app',
+    support: 'support@miftahtools.app',
   },
   stats: {
-    totalTools: '60+',
-    usersCount: '250K+',
-    conversionsCount: '1.8M+',
-    clientSideRatio: '99.4%',
+    totalTools: '220+',
+    usersCount: '350K+',
+    conversionsCount: '2.5M+',
+    clientSideRatio: '99.8%',
   },
 };

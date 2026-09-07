@@ -214,7 +214,7 @@ export async function pdfToDocx(
 
   const doc = new Document({
     title: file.name.replace(/\.pdf$/i, ''),
-    description: 'Converted from PDF with OCR by NEXORA Tools',
+    description: 'Converted from PDF with OCR by Miftah Tools',
     sections: [
       {
         properties: {},

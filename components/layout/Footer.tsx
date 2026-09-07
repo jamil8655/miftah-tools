@@ -131,7 +131,7 @@ export function Footer() {
                 <Sparkles className="w-4 h-4 fill-current" />
               </div>
               <span className="text-lg font-black text-slate-900 dark:text-white">
-                NEXORA<span className="text-brand-600 text-xs ml-1 font-mono uppercase font-black">PRO</span>
+                MIFTAH <span className="text-brand-600 text-xs ml-0.5 font-mono uppercase font-black">TOOLS</span>
               </span>
             </Link>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
@@ -292,7 +292,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <p>© 2026 NEXORA PRO. {t.footer.rights}</p>
+          <p>© 2026 Miftah Tools. {t.footer.rights}</p>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
               <ShieldCheck className="w-3.5 h-3.5" />

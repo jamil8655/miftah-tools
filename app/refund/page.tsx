@@ -26,7 +26,7 @@ export default function RefundPage() {
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">1. Free Core Platform Access</h3>
             <p>
-              All 220+ core digital utility tools and educational course materials on NEXORA PRO are provided 100% free of charge. No payment details or credit cards are required to access full-featured PDF editing, image processing, OCR, or course preview modules.
+              All 220+ core digital utility tools and educational course materials on Miftah Tools are provided 100% free of charge. No payment details or credit cards are required to access full-featured PDF editing, image processing, OCR, or course preview modules.
             </p>
           </section>
 
@@ -40,7 +40,7 @@ export default function RefundPage() {
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">3. How to Request Billing Support</h3>
             <p>
-              For any billing inquiries, invoice requests, or payment concerns regarding future premium services, please contact our support team at <strong>support@nexora.tools</strong> with your registered email and account UID.
+              For any billing inquiries, invoice requests, or payment concerns regarding future premium services, please contact our support team at <strong>support@miftahtools.app</strong> with your registered email and account UID.
             </p>
           </section>
 

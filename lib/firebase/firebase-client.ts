@@ -1,7 +1,7 @@
 'use client';
 
-// NEXORA Official Production Firebase Client SDK Initialization
-// Dedicated Project: studio-3108342384-2960a (NEXORA Tools Pro)
+// Miftah Tools Official Production Firebase Client SDK Initialization
+// Dedicated Project: studio-3108342384-2960a (Miftah Tools Pro)
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';

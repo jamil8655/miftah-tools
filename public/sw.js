@@ -1,12 +1,12 @@
-// NEXORA Tools Pro Service Worker for Full Native PWA Installation & Offline Support
-const CACHE_NAME = 'nexora-pwa-v1';
+// Miftah Tools Service Worker for Full Native PWA Installation & Offline Support
+const CACHE_NAME = 'miftah-pwa-v1';
 
 const STATIC_ASSETS = [
-  '/nexora-tools/',
-  '/nexora-tools/manifest.json',
-  '/nexora-tools/icon-192.png',
-  '/nexora-tools/icon-512.png',
-  '/nexora-tools/icon.svg',
+  '/',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon.svg',
 ];
 
 self.addEventListener('install', (event) => {
@@ -57,7 +57,7 @@ self.addEventListener('fetch', (event) => {
 
       return fetch(event.request).catch(() => {
         // Offline fallback
-        return caches.match('/nexora-tools/');
+        return caches.match('/');
       });
     })
   );

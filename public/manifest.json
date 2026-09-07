@@ -1,14 +1,14 @@
 {
   "id": "/nexora-tools/",
-  "name": "NEXORA Tools Pro - All-in-One Utility Suite",
-  "short_name": "NEXORA Tools",
-  "description": "75+ Free High-Performance Online Tools: PDF to Word, Audio Booster, 4K Video Downloader & Converters.",
+  "name": "Miftah Tools - 220+ High-Performance Digital Utilities",
+  "short_name": "Miftah Tools",
+  "description": "220+ Free High-Performance Online Tools: PDF to Word, Audio Booster, Video Tools, Developer Utilities & Converters.",
   "start_url": "/nexora-tools/",
   "scope": "/nexora-tools/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#ffffff",
-  "theme_color": "#026fc7",
+  "background_color": "#020617",
+  "theme_color": "#0284c7",
   "icons": [
     {
       "src": "/nexora-tools/icon-192.png",
@@ -29,7 +29,7 @@
       "purpose": "any"
     }
   ],
-  "categories": ["utilities", "productivity", "multimedia"],
+  "categories": ["utilities", "productivity", "multimedia", "education"],
   "shortcuts": [
     {
       "name": "PDF to Word (OCR)",
@@ -39,17 +39,17 @@
     {
       "name": "Audio Volume Booster",
       "url": "/nexora-tools/tools/audio-booster",
-      "description": "Boost audio volume by up to 300%"
+      "description": "Boost volume up to 500%"
     },
     {
-      "name": "4K Video Downloader",
-      "url": "/nexora-tools/tools/media-downloader",
-      "description": "Download 4K Videos & Audio"
+      "name": "Image Studio",
+      "url": "/nexora-tools/image-studio",
+      "description": "Compress, resize, and convert images"
     },
     {
-      "name": "Audio Cutter",
-      "url": "/nexora-tools/tools/audio-cutter",
-      "description": "Trim and cut audio tracks"
+      "name": "Developer Courses",
+      "url": "/nexora-tools/courses",
+      "description": "Master digital skills and engineering"
     }
   ]
 }

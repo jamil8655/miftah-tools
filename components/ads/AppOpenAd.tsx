@@ -173,7 +173,7 @@ export function AppOpenAd() {
           onClick={handleClose}
           className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 active:scale-98 text-xs font-bold text-slate-200 transition-all flex items-center justify-center gap-2 border border-white/10"
         >
-          <span>Continue to Nexora Tools</span>
+          <span>Continue to Miftah Tools</span>
           <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">✕</span>
         </button>
       </div>

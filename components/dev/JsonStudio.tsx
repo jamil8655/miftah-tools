@@ -9,7 +9,7 @@ export function JsonStudio() {
   const [jsonInput, setJsonInput] = useState<string>(
     JSON.stringify(
       {
-        platform: 'NEXORA TOOLS',
+        platform: 'Miftah Tools',
         version: '2.0.0',
         privacyFirst: true,
         stats: { toolsCount: 60, speed: 'high-speed WASM' },

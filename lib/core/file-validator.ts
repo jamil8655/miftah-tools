@@ -1,6 +1,6 @@
 'use client';
 
-// NEXORA Central File Validator & Security Guard
+// Miftah Tools Central File Validator & Security Guard
 // Validates file signatures (magic bytes), MIME types, extensions, size limits, and sanitizes filenames.
 
 export interface ValidationResult {

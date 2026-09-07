@@ -9,7 +9,7 @@ export function AiStudio() {
   const [task, setTask] = useState<AiTaskType>('summarize');
   const [tone, setTone] = useState<'professional' | 'casual' | 'concise' | 'academic'>('professional');
   const [content, setContent] = useState<string>(
-    `NEXORA TOOLS is an all-in-one productivity super app providing 60+ utilities for PDF editing, image conversion, multi-language OCR, cryptographic security tools, and developer utilities. Built with a privacy-first architecture, it performs all processing locally inside browser memory using WebAssembly.`
+    `Miftah Tools is an all-in-one productivity super app providing 60+ utilities for PDF editing, image conversion, multi-language OCR, cryptographic security tools, and developer utilities. Built with a privacy-first architecture, it performs all processing locally inside browser memory using WebAssembly.`
   );
   const [customQuestion, setCustomQuestion] = useState<string>('');
   const [apiKey, setApiKey] = useState<string>('');

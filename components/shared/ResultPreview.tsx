@@ -179,8 +179,8 @@ export function ResultPreview({
 
     if (typeof window !== 'undefined') {
       const shareData = {
-        title: 'NEXORA Tools Pro',
-        text: 'Processed my files with NEXORA Tools Pro - Fast, private and free!',
+        title: 'Miftah Tools',
+        text: 'Processed my files with Miftah Tools - Fast, private and free!',
         url: window.location.href,
       };
       if (navigator.share) {

@@ -1,6 +1,6 @@
 'use client';
 
-// NEXORA Enterprise Admin Custom Claims & Cryptographic Role Validator
+// Miftah Tools Enterprise Admin Custom Claims & Cryptographic Role Validator
 import { User, getIdTokenResult, IdTokenResult } from 'firebase/auth';
 import { db } from './firebase-client';
 import { doc, getDoc } from 'firebase/firestore';

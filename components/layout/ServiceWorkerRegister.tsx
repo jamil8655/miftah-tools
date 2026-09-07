@@ -6,10 +6,12 @@ export function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {
+        const swPath = window.location.pathname.startsWith('/nexora-tools') ? '/nexora-tools/sw.js' : '/sw.js';
+        const swScope = window.location.pathname.startsWith('/nexora-tools') ? '/nexora-tools/' : '/';
         navigator.serviceWorker
-          .register('/nexora-tools/sw.js', { scope: '/nexora-tools/' })
+          .register(swPath, { scope: swScope })
           .then((reg) => {
-            console.log('NEXORA PWA ServiceWorker registered with scope:', reg.scope);
+            console.log('Miftah Tools PWA ServiceWorker registered with scope:', reg.scope);
           })
           .catch((err) => {
             console.warn('PWA ServiceWorker registration failed:', err);

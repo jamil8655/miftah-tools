@@ -1,6 +1,6 @@
 'use client';
 
-// NEXORA Dynamic Feature Flags & Maintenance Mode Architecture
+// Miftah Tools Dynamic Feature Flags & Maintenance Mode Architecture
 // Allows remote and local control over tool availability, maintenance notices, and experimental features with safe fallbacks.
 
 export interface FeatureFlagsState {

@@ -44,7 +44,7 @@ export function PwaInstallBanner() {
       }
       setDeferredPrompt(null);
     } else {
-      alert('To install NEXORA on iOS/Android: Tap "Share" or "Menu (⋮)" in your browser and select "Add to Home Screen" or "Install App".');
+      alert('To install Miftah Tools on iOS/Android: Tap "Share" or "Menu (⋮)" in your browser and select "Add to Home Screen" or "Install App".');
     }
   };
 
@@ -52,7 +52,7 @@ export function PwaInstallBanner() {
     setShowBanner(false);
     setIsDismissed(true);
     try {
-      localStorage.setItem('nexora_pwa_dismissed', 'true');
+      localStorage.setItem('miftah_pwa_dismissed', 'true');
     } catch (e) {}
   };
 
@@ -70,7 +70,7 @@ export function PwaInstallBanner() {
 
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center gap-1.5">
-            <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight">Install NEXORA App</h4>
+            <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 tracking-tight">Install Miftah Tools App</h4>
             <span className="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold">100% Offline</span>
           </div>
           <p className="text-[11px] text-slate-500 line-clamp-2">

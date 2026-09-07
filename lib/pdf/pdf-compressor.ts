@@ -165,8 +165,8 @@ export async function compressPdfAdvanced(
         }
 
         onProgress?.(95, 'Writing and optimizing final streams...');
-        newPdf.setProducer('NEXORA Pro Compression Engine');
-        newPdf.setCreator('NEXORA Tools');
+        newPdf.setProducer('Miftah Pro Compression Engine');
+        newPdf.setCreator('Miftah Tools');
 
         bestBytes = await newPdf.save({
           useObjectStreams: true,
@@ -232,8 +232,8 @@ export async function compressPdfStructural(pdfBuffer: ArrayBuffer): Promise<Uin
   const copiedPages = await compressedDoc.copyPages(srcDoc, pageIndices);
   copiedPages.forEach((page) => compressedDoc.addPage(page));
 
-  compressedDoc.setProducer('NEXORA Structural Engine');
-  compressedDoc.setCreator('NEXORA PDF Compressor');
+  compressedDoc.setProducer('Miftah Structural Engine');
+  compressedDoc.setCreator('Miftah PDF Compressor');
 
   return await compressedDoc.save({
     useObjectStreams: true,

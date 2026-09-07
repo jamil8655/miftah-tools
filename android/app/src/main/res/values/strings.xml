@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">NEXORA Tools Pro</string>
-    <string name="title_activity_main">NEXORA Tools Pro</string>
+    <string name="app_name">Miftah Tools</string>
+    <string name="title_activity_main">Miftah Tools</string>
     <string name="package_name">com.nexoratools.app</string>
     <string name="custom_url_scheme">com.nexoratools.app</string>
 </resources>

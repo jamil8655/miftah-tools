@@ -1,6 +1,6 @@
 'use client';
 
-// NEXORA Production Firebase Service & Telemetry Sync
+// Miftah Tools Production Firebase Service & Telemetry Sync
 // Integrates with Firebase Auth, Firestore, and Realtime Database
 
 import { firebaseConfig } from './firebase-client';

@@ -13,7 +13,7 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({
     status: 'online',
-    service: 'NEXORA High-Speed Media Downloader API',
+    service: 'Miftah Tools High-Speed Media Downloader API',
     version: '3.0.0 (play-dl + yt-dlp dual engine)',
   });
 });
@@ -194,5 +194,5 @@ app.get('/api/video/download', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`⚡ NEXORA Video Downloader Server v3.0 running on port ${PORT}`);
+  console.log(`⚡ Miftah Tools Video Downloader Server v3.0 running on port ${PORT}`);
 });

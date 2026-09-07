@@ -1,9 +1,9 @@
 'use client';
 
-// NEXORA Centralized Standardized Error System
+// Miftah Tools Centralized Standardized Error System
 // Safely transforms technical errors into clean, user-friendly messages while keeping internal diagnostics secure.
 
-export type NexoraErrorCode =
+export type MiftahErrorCode =
   | 'INVALID_FILE'
   | 'INVALID_PDF'
   | 'FILE_TOO_LARGE'
@@ -16,15 +16,15 @@ export type NexoraErrorCode =
   | 'API_UNAVAILABLE'
   | 'STORAGE_ERROR';
 
-export interface NexoraErrorDetail {
-  code: NexoraErrorCode;
+export interface MiftahErrorDetail {
+  code: MiftahErrorCode;
   message: string;
   actionableHint: string;
   technicalInfo?: string;
   timestamp: number;
 }
 
-export const ERROR_MESSAGES: Record<NexoraErrorCode, { message: string; hint: string }> = {
+export const ERROR_MESSAGES: Record<MiftahErrorCode, { message: string; hint: string }> = {
   INVALID_FILE: {
     message: 'The selected file is corrupted or cannot be read.',
     hint: 'Please check that the file opens correctly on your device and try uploading again.',
@@ -72,12 +72,12 @@ export const ERROR_MESSAGES: Record<NexoraErrorCode, { message: string; hint: st
 };
 
 /**
- * Normalizes any caught exception into a standardized NexoraErrorDetail.
+ * Normalizes any caught exception into a standardized MiftahErrorDetail.
  */
-export function normalizeError(err: any, fallbackCode: NexoraErrorCode = 'PROCESSING_ERROR'): NexoraErrorDetail {
+export function normalizeError(err: any, fallbackCode: MiftahErrorCode = 'PROCESSING_ERROR'): MiftahErrorDetail {
   const errString = (err?.message || String(err || '')).toLowerCase();
 
-  let code: NexoraErrorCode = fallbackCode;
+  let code: MiftahErrorCode = fallbackCode;
 
   if (errString.includes('size') || errString.includes('too large') || errString.includes('413')) {
     code = 'FILE_TOO_LARGE';

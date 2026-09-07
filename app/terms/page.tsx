@@ -26,35 +26,35 @@ export default function TermsPage() {
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">1. Acceptance of Terms</h3>
             <p>
-              By accessing, browsing, or using NEXORA PRO (including all 220+ client-side digital utility tools, courses, workflows, and developer APIs), you agree to be bound by these Terms of Service. If you do not agree, please do not use the services.
+              By accessing, browsing, or using Miftah Tools (including all 220+ client-side digital utility tools, courses, workflows, and developer APIs), you agree to be bound by these Terms of Service. If you do not agree, please do not use the services.
             </p>
           </section>
 
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">2. 100% Free Core Tools & Learning Usage</h3>
             <p>
-              All core utility tools and open learning materials provided on NEXORA PRO are free for both personal and commercial use. You may convert, compress, edit, calculate, and download your files without subscription requirements.
+              All core utility tools and open learning materials provided on Miftah Tools are free for both personal and commercial use. You may convert, compress, edit, calculate, and download your files without subscription requirements.
             </p>
           </section>
 
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">3. Client-Side WebAssembly Processing & Ownership</h3>
             <p>
-              All file transformations take place locally on your client device using in-browser WebAssembly. You retain 100% full ownership and intellectual property rights over all files, documents, images, and content you process. NEXORA PRO does not claim any rights, access, or custody over your data.
+              All file transformations take place locally on your client device using in-browser WebAssembly. You retain 100% full ownership and intellectual property rights over all files, documents, images, and content you process. Miftah Tools does not claim any rights, access, or custody over your data.
             </p>
           </section>
 
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">4. Acceptable Use Policy</h3>
             <p>
-              You agree not to use NEXORA PRO tools for any illegal, malicious, or abusive activities, including the creation or dissemination of malware, unlawful copyright infringement, or attempting to compromise platform infrastructure.
+              You agree not to use Miftah Tools for any illegal, malicious, or abusive activities, including the creation or dissemination of malware, unlawful copyright infringement, or attempting to compromise platform infrastructure.
             </p>
           </section>
 
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">5. Limitation of Liability</h3>
             <p>
-              NEXORA PRO is provided "as is" without warranty of any kind. While our tools undergo rigorous testing for precision and performance, we are not liable for any data loss, transformation inaccuracies, or service interruptions resulting from local device limitations.
+              Miftah Tools is provided "as is" without warranty of any kind. While our tools undergo rigorous testing for precision and performance, we are not liable for any data loss, transformation inaccuracies, or service interruptions resulting from local device limitations.
             </p>
           </section>
 

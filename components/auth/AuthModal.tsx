@@ -210,7 +210,7 @@ export function AuthModal({
                   ? t.auth.signUp
                   : t.auth.resetPassword}
               </h2>
-              <p className="text-[11px] text-slate-400">NEXORA PRO Pure Firebase Auth</p>
+              <p className="text-[11px] text-slate-400">Miftah Tools Firebase Auth</p>
             </div>
           </div>
           <button

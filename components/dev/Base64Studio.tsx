@@ -6,8 +6,8 @@ import { FileCode, ArrowRightLeft, Copy, Check, UploadCloud } from 'lucide-react
 
 export function Base64Studio() {
   const [mode, setMode] = useState<'encode' | 'decode' | 'file'>('encode');
-  const [inputText, setInputText] = useState<string>('Hello NEXORA TOOLS!');
-  const [outputText, setOutputText] = useState<string>(encodeBase64('Hello NEXORA TOOLS!'));
+  const [inputText, setInputText] = useState<string>('Hello Miftah Tools!');
+  const [outputText, setOutputText] = useState<string>(encodeBase64('Hello Miftah Tools!'));
   const [copied, setCopied] = useState<boolean>(false);
   const [fileDataUrl, setFileDataUrl] = useState<string | null>(null);
 

@@ -89,8 +89,8 @@ export async function compressPdf(
   const copiedPages = await compressedDoc.copyPages(srcDoc, pageIndices);
   copiedPages.forEach((page) => compressedDoc.addPage(page));
 
-  compressedDoc.setProducer('NEXORA Optimized Engine');
-  compressedDoc.setCreator('NEXORA PDF Compressor');
+  compressedDoc.setProducer('Miftah Optimized Engine');
+  compressedDoc.setCreator('Miftah PDF Compressor');
 
   const compressedBytes = await compressedDoc.save({
     useObjectStreams: true,
@@ -265,7 +265,7 @@ export async function editPdfMetadata(
   if (meta.author) doc.setAuthor(meta.author);
   if (meta.subject) doc.setSubject(meta.subject);
   if (meta.keywords) doc.setKeywords(meta.keywords.split(',').map((k) => k.trim()));
-  doc.setProducer('NEXORA Pro Engine');
+  doc.setProducer('Miftah Pro Engine');
   return await doc.save({ useObjectStreams: true });
 }
 

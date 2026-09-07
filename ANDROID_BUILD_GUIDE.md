@@ -1,11 +1,11 @@
-# 📱 NEXORA Tools Pro — Android App & Google Play Build Guide
+# 📱 Miftah Tools — Android App & Google Play Build Guide
 
 This project is a hybrid **Production-Grade Web & Native Android Application** powered by Next.js 14 and Capacitor 6 with native device bridge integration.
 
 ---
 
 ## 🚀 Quick Summary
-- **App Name**: NEXORA Tools Pro
+- **App Name**: Miftah Tools
 - **Application ID / Package**: `com.nexoratools.app`
 - **Minimum Android SDK**: 22 (Android 5.1 Lollipop)
 - **Target Android SDK**: 34 (Android 14 Ready)

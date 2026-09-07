@@ -18,7 +18,7 @@ export default function FaqPage() {
     },
     {
       q: 'How does client-side WebAssembly (WASM) protect my privacy?',
-      a: 'Unlike traditional web converters that upload your PDFs and photos to unknown third-party cloud servers, NEXORA PRO compiles transformation binaries directly into your web browser. Your data never leaves your computer.',
+      a: 'Unlike traditional web converters that upload your PDFs and photos to unknown third-party cloud servers, Miftah Tools compiles transformation binaries directly into your web browser. Your data never leaves your computer.',
       category: 'Privacy & Security',
     },
     {
@@ -27,13 +27,13 @@ export default function FaqPage() {
       category: 'Courses & Learning',
     },
     {
-      q: 'Can I install NEXORA PRO as an offline desktop or mobile app?',
-      a: 'Yes! NEXORA PRO is an offline-ready Progressive Web App (PWA). Click the "Install App" button or tap "Add to Home Screen" in your browser menu on Android, iOS, Windows, or macOS.',
+      q: 'Can I install Miftah Tools as an offline desktop or mobile app?',
+      a: 'Yes! Miftah Tools is an offline-ready Progressive Web App (PWA). Click the "Install App" button or tap "Add to Home Screen" in your browser menu on Android, iOS, Windows, or macOS.',
       category: 'PWA & Offline',
     },
     {
-      q: 'What is the maximum file size supported by NEXORA tools?',
-      a: 'NEXORA client-side engine supports large files up to 500 MB directly inside your browser memory without crashing.',
+      q: 'What is the maximum file size supported by Miftah Tools?',
+      a: 'Miftah Tools client-side engine supports large files up to 500 MB directly inside your browser memory without crashing.',
       category: 'Tools & Processing',
     },
     {
@@ -67,7 +67,7 @@ export default function FaqPage() {
             Frequently Asked Questions
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-            Everything you need to know about NEXORA PRO tools, privacy guarantees, courses, and offline capabilities.
+            Everything you need to know about Miftah Tools, privacy guarantees, courses, and offline capabilities.
           </p>
         </div>
 

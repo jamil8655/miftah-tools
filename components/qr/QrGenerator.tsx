@@ -38,7 +38,7 @@ export function QrGenerator() {
   const [ownerTag, setOwnerTag] = useState<string>('Vehicle / Resident');
 
   // Generator & Owner WebRTC Node
-  const [channelRoomId, setChannelRoomId] = useState<string>('NEXORA-ROOM-' + Math.floor(1000 + Math.random() * 9000));
+  const [channelRoomId, setChannelRoomId] = useState<string>('MIFTAH-ROOM-' + Math.floor(1000 + Math.random() * 9000));
   const [displayName, setDisplayName] = useState<string>('Vehicle Owner / Resident');
   const [vehicleNo, setVehicleNo] = useState<string>('DL 01 AB 9988');
   const [type, setType] = useState<'zero-number-call' | 'car-parking-tag' | 'pin-encrypted' | 'url' | 'wifi' | 'text'>('zero-number-call');
@@ -48,7 +48,7 @@ export function QrGenerator() {
   const [wifiSsid, setWifiSsid] = useState<string>('HighSpeed_5G');
   const [wifiPass, setWifiPass] = useState<string>('SecretPassword');
   const [wifiSec, setWifiSec] = useState<string>('WPA');
-  const [stdText, setStdText] = useState<string>('NEXORA Privacy QR Code');
+  const [stdText, setStdText] = useState<string>('Miftah Tools Privacy QR Code');
   const [secretMsg, setSecretMsg] = useState<string>('Confidential Password / Secret Key');
   const [secretPin, setSecretPin] = useState<string>('4321');
 
@@ -655,7 +655,7 @@ export function QrGenerator() {
                   />
                   <button
                     type="button"
-                    onClick={() => setChannelRoomId('NEXORA-ROOM-' + Math.floor(1000 + Math.random() * 9000))}
+                    onClick={() => setChannelRoomId('MIFTAH-ROOM-' + Math.floor(1000 + Math.random() * 9000))}
                     className="px-3 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300"
                   >
                     Generate New Room

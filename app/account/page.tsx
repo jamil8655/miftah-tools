@@ -163,7 +163,7 @@ export default function AccountPage() {
           <div className="space-y-1 min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-black text-slate-900 dark:text-white truncate">
-                {isAuthenticated ? user?.name || 'Valued User' : 'Nizura Guest'}
+                {isAuthenticated ? user?.name || 'Valued User' : 'Miftah Tools Guest'}
               </h1>
               <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 text-[10px] font-extrabold border border-brand-200 dark:border-brand-800">
                 {isAdmin ? 'ADMIN PRO' : isAuthenticated ? 'PRO USER' : 'FREE PLAN'}
@@ -420,7 +420,7 @@ export default function AccountPage() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Nizura Pro</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Miftah Tools Pro</h3>
               <p className="text-[11px] text-slate-500">Document & Productivity Engine</p>
             </div>
           </div>
@@ -523,7 +523,7 @@ export default function AccountPage() {
             <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950 text-rose-600 mx-auto flex items-center justify-center">
               <LogOut className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Log out of Nizura?</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Log out of Miftah Tools?</h3>
             <p className="text-xs text-slate-500">You will need to sign back in to access your cloud-synced files.</p>
             <div className="grid grid-cols-2 gap-2 pt-2">
               <button

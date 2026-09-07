@@ -1,6 +1,6 @@
 'use client';
 
-// NEXORA Production Firestore & Firebase Storage Data Service
+// Miftah Tools Production Firestore & Firebase Storage Data Service
 // Dedicated Project: studio-3108342384-2960a
 // 100% Real Firebase Integration — No Mock or Demo Data
 

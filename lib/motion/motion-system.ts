@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * NIZURA MOTION SYSTEM
+ * Miftah Tools MOTION SYSTEM
  * Standardized, performance-focused, Android-native motion tokens & microinteraction utilities.
  */
 

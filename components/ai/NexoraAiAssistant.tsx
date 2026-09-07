@@ -45,7 +45,7 @@ export function NexoraAiAssistant() {
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                NEXORA AI Intent & Workflow Assistant
+                Miftah Tools AI Assistant
               </h2>
               <p className="text-xs text-brand-100">
                 Tap any goal below or use Smart Search to launch instant in-browser workflows.

@@ -204,7 +204,7 @@ export function Header() {
             <Link
               href="/"
               className="flex items-center gap-2 sm:gap-2.5 group transition-transform active:scale-95 shrink-0"
-              aria-label="NIZURA Tools Pro Home"
+              aria-label="Miftah Tools Home"
             >
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-linear-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-brand-500/25 group-hover:scale-105 transition-transform shrink-0 border border-white/20">
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
@@ -212,10 +212,10 @@ export function Header() {
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="font-black text-base sm:text-xl tracking-tight text-slate-900 dark:text-white">
-                    NIZURA
+                    MIFTAH
                   </span>
                   <span className="px-1.5 py-0.5 rounded-md bg-brand-600 text-white text-[8px] sm:text-[9px] font-black tracking-wider uppercase shadow-xs">
-                    PRO
+                    TOOLS
                   </span>
                 </div>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold hidden md:inline leading-none truncate">
@@ -339,7 +339,7 @@ export function Header() {
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white">NIZURA PRO</h3>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">Miftah Tools</h3>
                     <p className="text-[10px] text-slate-400 font-semibold">{loc.versionLabel}</p>
                   </div>
                 </div>

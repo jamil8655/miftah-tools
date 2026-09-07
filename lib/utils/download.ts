@@ -165,7 +165,7 @@ export async function downloadSingleFile(blob: Blob, filename: string): Promise<
 
   // Dispatch global event for in-app real-time notification
   if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('nexora:file-downloaded', { detail: fileInfo }));
+    window.dispatchEvent(new CustomEvent('miftah:file-downloaded', { detail: fileInfo }));
   }
 
   return fileInfo;
@@ -176,7 +176,7 @@ export async function downloadSingleFile(blob: Blob, filename: string): Promise<
  */
 export async function downloadAsZip(
   files: { name: string; blob: Blob }[],
-  zipFilename: string = 'nexora-processed-files.zip'
+  zipFilename: string = 'miftah-processed-files.zip'
 ): Promise<SavedFileInfo | null> {
   if (!files || files.length === 0) return null;
 

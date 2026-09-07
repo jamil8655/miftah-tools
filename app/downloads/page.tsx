@@ -44,7 +44,7 @@ export default function DownloadsPage() {
             {t.userDashboard.noDownloads}
           </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            When you compress, convert, or generate files using NEXORA tools, your download records will appear here.
+            When you compress, convert, or generate files using Miftah Tools, your download records will appear here.
           </p>
           <div className="pt-2">
             <Link

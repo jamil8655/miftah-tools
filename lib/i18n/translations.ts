@@ -305,7 +305,7 @@ export interface Translations {
 export const TRANSLATIONS: Record<Language, Translations> = {
   // ==================== ENGLISH ====================
   en: {
-    appName: 'NEXORA PRO',
+    appName: 'Miftah Tools Pro',
     tagline: 'Powerful Tools & Learning Platform for Every File and Digital Skill.',
     heroTitle: 'Master Digital Skills & Transform Files in One Workspace',
     heroSubtitle: 'Learn modern web, AI, document mastery, and execute 220+ lightning-fast, privacy-first client-side file tools with zero server tracking.',
@@ -419,7 +419,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       resendVerification: 'Resend Verification Email',
       verificationSent: 'Verification email sent! Please check your inbox.',
       invalidCredentials: 'Invalid email or password. Please try again.',
-      accountCreatedSuccess: 'Account created successfully! Welcome to NEXORA PRO.',
+      accountCreatedSuccess: 'Account created successfully! Welcome to Miftah Tools Pro.',
       loginSuccess: 'Signed in successfully!',
       logoutSuccess: 'Signed out safely.',
       passwordMinLength: 'Password must be at least 6 characters.',
@@ -485,12 +485,12 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       securityAlerts: 'Account & Security Alerts',
       marketingAnnouncements: 'Product News & Helpful Tips',
       dataStorage: 'Local Data & Cache Storage',
-      localStorageNotice: 'NEXORA PRO stores your preferences and history securely on your device only.',
+      localStorageNotice: 'Miftah Tools Pro stores your preferences and history securely on your device only.',
       clearCache: 'Clear Local Cache',
       cacheCleared: 'Local cache cleared successfully.',
     },
     admin: {
-      controlCenter: 'NEXORA Admin Control Center',
+      controlCenter: 'Miftah Tools Admin Control Center',
       analytics: 'Analytics & Real-time Telemetry',
       userManagement: 'User Management',
       courseManagement: 'Course Management',
@@ -518,7 +518,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       allowRegistration: 'Allow New User Registrations',
     },
     footer: {
-      desc: 'NEXORA PRO is the premier all-in-one digital toolkit and mastery platform, delivering 220+ lightning-fast client-side tools and comprehensive courses.',
+      desc: 'Miftah Tools Pro is the premier all-in-one digital toolkit and mastery platform, delivering 220+ lightning-fast client-side tools and comprehensive courses.',
       quickLinks: 'Quick Links',
       aboutPlatform: 'About Platform',
       courses: 'Explore Courses',

@@ -76,7 +76,7 @@ with open('compressed.pdf', 'wb') as f:
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20">
           <Terminal className="w-3.5 h-3.5 text-brand-600" />
-          <span>NEXORA Developer Platform • v1 REST API & SDKs</span>
+          <span>Miftah Tools Developer Platform • v1 REST API & SDKs</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           High-Performance Developer API

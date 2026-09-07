@@ -361,7 +361,7 @@ export async function rotateAndFlipImage(
  */
 export async function watermarkImage(
   file: File,
-  text: string = 'NEXORA TOOLS',
+  text: string = 'Miftah Tools',
   opacity: number = 0.5,
   color: string = '#ffffff',
   position: 'bottom-right' | 'center' | 'bottom-left' | 'top-right' | 'top-left' = 'bottom-right'

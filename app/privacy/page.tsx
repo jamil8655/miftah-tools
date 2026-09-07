@@ -30,7 +30,7 @@ export default function PrivacyPage() {
               <span>Core Policy: 100% In-Device Memory Processing</span>
             </div>
             <p className="text-xs text-emerald-700 dark:text-emerald-400">
-              When you convert a PDF, compress an image, or format code on NIZURA PRO, the processing executes 100% locally in your device&apos;s sandboxed memory using client-side WebAssembly and JavaScript engines. Your documents never leave your phone and are never stored on external servers.
+              When you convert a PDF, compress an image, or format code on Miftah Tools, the processing executes 100% locally in your device&apos;s sandboxed memory using client-side WebAssembly and JavaScript engines. Your documents never leave your phone and are never stored on external servers.
             </p>
           </div>
 
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc pl-5 space-y-1 text-xs text-slate-500 dark:text-slate-400">
               <li><strong>In-App Deletion:</strong> Go to <strong>Profile ➔ Clear Device Local Cache &amp; Reset</strong> or tap <strong>Delete Account</strong> in Account Settings.</li>
-              <li><strong>Web Deletion Request:</strong> If you have uninstalled the application, you can submit an instant deletion request by contacting our Data Protection Officer at <span className="font-mono text-brand-600 dark:text-brand-400">privacy@nexora.app</span> or via our <Link href="/contact" className="underline font-bold text-brand-600">Contact Form</Link>.</li>
+              <li><strong>Web Deletion Request:</strong> If you have uninstalled the application, you can submit an instant deletion request by contacting our Data Protection Officer at <span className="font-mono text-brand-600 dark:text-brand-400">privacy@miftahtools.app</span> or via our <Link href="/contact" className="underline font-bold text-brand-600">Contact Form</Link>.</li>
               <li><strong>What is Purged:</strong> Your Firebase profile, authentication tokens, course enrollment records, pinned favorites, notification history, and all locally cached metadata are permanently deleted immediately upon confirmation.</li>
             </ul>
           </section>

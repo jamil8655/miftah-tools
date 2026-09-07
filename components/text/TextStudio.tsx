@@ -26,7 +26,7 @@ import {
 
 export function TextStudio() {
   const [text, setText] = useState<string>(
-    `Welcome to NEXORA TOOLS Text Studio!\n\nNEXORA is a high-performance, privacy-first digital utility super app. You can analyze word count, convert cases, deduplicate lines, format text, and export your writing to PDF or TXT directly in your browser.`
+    `Welcome to Miftah Tools Text Studio!\n\nMiftah Tools is a high-performance, privacy-first digital utility suite. You can analyze word count, convert cases, deduplicate lines, format text, and export your writing to PDF or TXT directly in your browser.`
   );
   const [copied, setCopied] = useState<boolean>(false);
 
@@ -56,13 +56,13 @@ export function TextStudio() {
 
   const handleExportTxt = () => {
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    downloadSingleFile(blob, 'nexora-text-export.txt');
+    downloadSingleFile(blob, 'miftah-text-export.txt');
   };
 
   const handleExportPdf = async () => {
     const pdfBytes = await textToPdf(text, { fontSize: 11 });
     const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
-    downloadSingleFile(blob, 'nexora-text-export.pdf');
+    downloadSingleFile(blob, 'miftah-text-export.pdf');
   };
 
   return (

@@ -33,7 +33,7 @@ export default function AboutPage() {
             The Privacy-First Digital Utility & Learning Ecosystem
           </h1>
           <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            NEXORA PRO bridges the gap between high-performance client-side digital tools and practical engineering education. Transform files instantly with 100% local privacy and master real digital skills.
+            Miftah Tools bridges the gap between high-performance client-side digital tools and practical engineering education. Transform files instantly with 100% local privacy and master real digital skills.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link
@@ -90,7 +90,7 @@ export default function AboutPage() {
         <div className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-8">
           <div className="space-y-2">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              What Powers NEXORA PRO?
+              What Powers Miftah Tools?
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               A modern technology stack designed for privacy, resilience, and speed.
@@ -102,7 +102,7 @@ export default function AboutPage() {
               { title: '220+ Client-Side Tools', desc: 'PDF, Image Studio, OCR, QR/Barcode, Dev Toolkit, and Calculators.' },
               { title: 'WebAssembly (WASM) Engine', desc: 'Native binary execution inside the browser sandbox.' },
               { title: 'Tesseract OCR Vision', desc: 'Multilingual text extraction directly on your GPU/CPU.' },
-              { title: 'Offline-Ready PWA', desc: 'Install NEXORA as an app on Windows, macOS, Android, and iOS.' },
+              { title: 'Offline-Ready PWA', desc: 'Install Miftah Tools as an app on Windows, macOS, Android, and iOS.' },
               { title: 'Firebase Authentication & Claims', desc: 'Enterprise cryptographic role verification and secure state.' },
               { title: 'Full 4-Language Localization', desc: 'Seamless instant switching between English, Urdu, Arabic, and Hindi with RTL.' },
             ].map((item, idx) => (

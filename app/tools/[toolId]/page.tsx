@@ -15,11 +15,11 @@ export async function generateMetadata({ params }: { params: { toolId: string } 
   const tool = TOOLS_LIST.find((t) => t.id === params.toolId || t.slug === params.toolId);
   if (!tool) {
     return {
-      title: 'Tool Not Found — NEXORA Tools',
+      title: 'Tool Not Found — Miftah Tools',
     };
   }
 
-  const title = `${tool.name} — Free Online Tool | NEXORA Tools`;
+  const title = `${tool.name} — Free Online Tool | Miftah Tools`;
   const description = tool.fullDesc || tool.shortDesc;
 
   return {
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: { toolId: string } 
       description,
       type: 'website',
       url: `https://jamil8655.github.io/nexora-tools/tools/${tool.slug}`,
-      siteName: 'NEXORA Tools Pro',
+      siteName: 'Miftah Tools',
     },
     twitter: {
       card: 'summary_large_image',

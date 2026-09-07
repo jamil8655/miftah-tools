@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import { WorkflowBuilder } from '@/components/workflows/WorkflowBuilder';
 
 export const metadata: Metadata = {
-  title: 'Smart Workflow Pipelines — NEXORA Tools Pro',
+  title: 'Smart Workflow Pipelines — Miftah Tools',
   description: 'Automate multi-step file processing pipelines: remove backgrounds, resize, compress, stamp watermarks, and export in 1 click.',
 };
 

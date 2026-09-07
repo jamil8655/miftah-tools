@@ -1,6 +1,6 @@
 'use client';
 
-// NEXORA Central Asynchronous Job Queue Engine
+// Miftah Tools Central Asynchronous Job Queue Engine
 // Handles single and multi-file processing pipelines with progress tracking, pause/resume, retry, and cancellation.
 
 export type JobStatus = 'QUEUED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'PAUSED';

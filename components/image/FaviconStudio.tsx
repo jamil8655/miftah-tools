@@ -158,7 +158,7 @@ export function FaviconStudio() {
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <a
                 href={resultUrl}
-                download="nexora_favicon_pack.zip"
+                download="miftah_favicon_pack.zip"
                 className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
               >
                 <Download className="w-5 h-5" />

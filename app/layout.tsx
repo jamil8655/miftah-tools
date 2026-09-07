@@ -16,20 +16,19 @@ import { siteConfig } from '@/config/site';
 import { adConfig } from '@/config/ads';
 
 export const metadata: Metadata = {
-  title: `${siteConfig.name} - Free Online Tools & Digital Skills Learning Platform`,
-  description: 'NEXORA PRO provides 220+ free high-performance client-side digital utilities and modern developer & digital skill courses with zero server tracking.',
-  manifest: '/nexora-tools/manifest.json',
+  title: `${siteConfig.name} - Free Online Tools & Digital Skills Platform`,
+  description: 'Miftah Tools provides 220+ free high-performance client-side digital utilities and modern developer skill courses with zero server tracking.',
+  manifest: '/manifest.json',
   keywords: [
-    'nexora pro',
-    'online courses',
+    'miftah tools',
+    'online tools',
     'developer courses',
     'all in one utility',
     'pdf tools',
     'pdf to word ocr',
     'image compression',
-    '4k video downloader',
     'audio volume booster',
-    'video to mp3',
+    'video converter',
     'developer tools',
     'json formatter',
     'password generator',
@@ -63,7 +62,7 @@ export default function RootLayout({
     '@graph': [
       {
         '@type': 'WebApplication',
-        name: 'NEXORA PRO',
+        name: 'Miftah Tools',
         url: 'https://jamil8655.github.io/nexora-tools/',
         description: '220+ free high-performance online utilities and developer master courses.',
         applicationCategory: 'ProductivityApplication',
@@ -83,7 +82,7 @@ export default function RootLayout({
       },
       {
         '@type': 'WebSite',
-        name: 'NEXORA PRO',
+        name: 'Miftah Tools',
         url: 'https://jamil8655.github.io/nexora-tools/',
         potentialAction: {
           '@type': 'SearchAction',
@@ -102,11 +101,11 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
-        <meta name="theme-color" content="#026fc7" />
+        <meta name="theme-color" content="#0284c7" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="NEXORA PRO" />
+        <meta name="apple-mobile-web-app-title" content="Miftah Tools" />
 
         {/* Global Multi-script Typography (Arabic, Nastaliq Urdu, Devanagari Hindi, Inter) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -1,6 +1,6 @@
 'use client';
 
-// NEXORA In-Browser High-Capacity Storage Manager (IndexedDB + LocalStorage Hybrid)
+// Miftah Tools In-Browser High-Capacity Storage Manager (IndexedDB + LocalStorage Hybrid)
 // Compliant with Zero-Data-Loss, TTL Auto-Expiration, and Zero Stale Cache Architecture.
 
 export interface StoredFileItem {

@@ -26,7 +26,7 @@ export default function DisclaimerPage() {
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">1. Educational & General Purpose Use</h3>
             <p>
-              The digital utility tools, code generators, calculations, and course lessons provided by NEXORA PRO are intended for educational, technical, and general utility purposes only. While our engines use state-of-the-art WebAssembly algorithms, outputs should be independently validated.
+              The digital utility tools, code generators, calculations, and course lessons provided by Miftah Tools are intended for educational, technical, and general utility purposes only. While our engines use state-of-the-art WebAssembly algorithms, outputs should be independently validated.
             </p>
           </section>
 
@@ -40,7 +40,7 @@ export default function DisclaimerPage() {
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">3. Third-Party Media & Trademarks</h3>
             <p>
-              All trademarks, product names, and company logos cited within course materials or tool documentation are the property of their respective owners. NEXORA PRO is an independent platform.
+              All trademarks, product names, and company logos cited within course materials or tool documentation are the property of their respective owners. Miftah Tools is an independent platform.
             </p>
           </section>
 

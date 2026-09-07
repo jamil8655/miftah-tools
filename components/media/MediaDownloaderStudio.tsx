@@ -292,7 +292,7 @@ export function MediaDownloaderStudio() {
           </div>
 
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            NEXORA operates an active pool of 5+ fallback providers. If you have your own RapidAPI Key, enter it below to receive dedicated priority bandwidth:
+            Miftah Tools operates an active pool of 5+ fallback providers. If you have your own RapidAPI Key, enter it below to receive dedicated priority bandwidth:
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

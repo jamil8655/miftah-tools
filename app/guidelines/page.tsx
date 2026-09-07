@@ -26,7 +26,7 @@ export default function GuidelinesPage() {
           <section className="space-y-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-white">1. Respectful Learning Environment</h3>
             <p>
-              NEXORA PRO courses and developer tools are built to empower students, engineers, and digital creators globally. Users must engage respectfully in all forum interactions, feedback comments, and code sharing.
+              Miftah Tools courses and developer tools are built to empower students, engineers, and digital creators globally. Users must engage respectfully in all forum interactions, feedback comments, and code sharing.
             </p>
           </section>
 

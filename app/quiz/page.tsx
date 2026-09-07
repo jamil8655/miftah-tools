@@ -117,7 +117,7 @@ const QUIZ_TOPICS: QuizTopic[] = [
     questions: [
       {
         id: 's1',
-        question: 'How does NEXORA PRO achieve 100% in-browser document privacy?',
+        question: 'How does Miftah Tools achieve 100% in-browser document privacy?',
         options: [
           'By uploading all PDFs to an unencrypted public cloud server',
           'By utilizing WebAssembly (WASM) and client-side JavaScript APIs to process files inside the browser sandbox without server uploads',
@@ -125,7 +125,7 @@ const QUIZ_TOPICS: QuizTopic[] = [
           'By converting all files into plain text emails',
         ],
         correctIndex: 1,
-        explanation: 'NEXORA PRO processes documents locally in the user browser using WASM sandboxes, ensuring zero document data ever touches external servers.',
+        explanation: 'Miftah Tools processes documents locally in the user browser using WASM sandboxes, ensuring zero document data ever touches external servers.',
       },
       {
         id: 's2',

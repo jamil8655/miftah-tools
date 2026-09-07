@@ -56,7 +56,7 @@ import { runOcr } from '@/lib/ocr/ocr-engine';
 
 const WORKFLOW_LOCALES = {
   en: {
-    badge: 'NEXORA Smart Pipeline Automation • Instant Multi-Step Engine',
+    badge: 'Miftah Tools Smart Pipeline Automation • Instant Multi-Step Engine',
     title: 'Smart Workflow Automation Studio',
     subtitle: 'Chain multiple editing, compression, OCR, and document conversions into one-click automated pipelines with real-time multi-stage previews and instant device storage.',
     selectActiveWf: 'Choose Pipeline Workflow',
@@ -530,8 +530,8 @@ export function WorkflowBuilder() {
     // 6. Watermark Image
     if (step.toolId === 'watermark-image') {
       const file = new File([blob], origName, { type: blob.type || 'image/png' });
-      const res = await watermarkImage(file, step.options.text || 'NEXORA', step.options.opacity || 0.4);
-      return { outputBlob: res.blob, details: `Stamped watermark "${step.options.text || 'NEXORA'}"` };
+      const res = await watermarkImage(file, step.options.text || 'Miftah Tools', step.options.opacity || 0.4);
+      return { outputBlob: res.blob, details: `Stamped watermark "${step.options.text || 'Miftah Tools'}"` };
     }
 
     // 7. PDF Compression

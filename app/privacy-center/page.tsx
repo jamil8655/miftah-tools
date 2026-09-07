@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import { PrivacyCenter } from '@/components/privacy/PrivacyCenter';
 
 export const metadata: Metadata = {
-  title: 'Privacy & Security Center — NEXORA Tools Pro',
+  title: 'Privacy & Security Center — Miftah Tools',
   description: 'Learn about our 100% in-browser client-side privacy architecture, clean photo EXIF & GPS metadata, and manage offline data storage.',
 };
 
