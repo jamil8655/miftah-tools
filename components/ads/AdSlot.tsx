@@ -40,13 +40,18 @@ export function AdSlot({ placement, className = '', format = 'auto' }: AdSlotPro
       </div>
 
       {isTest ? (
-        // Clean visual placeholder when API key / Client ID is in setup mode
-        <div className="flex flex-col items-center justify-center min-h-[90px] py-4 px-3 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 space-y-1">
-          <div className="text-xs font-bold text-slate-700 dark:text-slate-200">
-            Ad Space ({placement.replace('-', ' ').toUpperCase()})
+        // Clean visual placeholder with AdMob Test Badges
+        <div className="flex flex-col items-center justify-center min-h-[90px] py-3.5 px-4 rounded-xl bg-slate-200/60 dark:bg-slate-800/60 border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded-md bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider border border-amber-500/20">
+              Google AdMob Test Unit
+            </span>
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+              {placement.replace('-', ' ').toUpperCase()}
+            </span>
           </div>
-          <p className="text-[10px] text-slate-400 max-w-sm">
-            Google AdMob & AdSense ready. Ads will display automatically here once configured.
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-md font-mono">
+            Unit ID: {placement === 'in-feed' ? adConfig.admob.nativeId : adConfig.admob.adaptiveBannerId}
           </p>
         </div>
       ) : (

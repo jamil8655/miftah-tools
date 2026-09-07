@@ -50,6 +50,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Google AdMob Application ID (Test ID: ca-app-pub-3940256099942544~3347511713) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
     </application>
 
     <!-- Permissions strictly scoped for Google Play Store & Android 16 (API 36) compliance -->

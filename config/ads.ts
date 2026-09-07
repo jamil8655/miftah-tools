@@ -1,6 +1,6 @@
 export interface AdConfig {
   enabled: boolean;
-  provider: 'adsense' | 'admob' | 'custom';
+  provider: 'adsense' | 'admob' | 'hybrid';
   adsense: {
     client: string; // e.g. ca-pub-XXXXXXXXXXXXXXXX
     slots: {
@@ -11,16 +11,21 @@ export interface AdConfig {
     };
   };
   admob: {
-    appIdAndroid?: string; // e.g. ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
-    bannerUnitIdAndroid?: string; // e.g. ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ
-    interstitialUnitIdAndroid?: string;
-    rewardedUnitIdAndroid?: string;
+    appIdAndroid: string;
+    appOpenId: string;
+    adaptiveBannerId: string;
+    fixedBannerId: string;
+    interstitialId: string;
+    rewardedId: string;
+    rewardedInterstitialId: string;
+    nativeId: string;
+    nativeVideoId: string;
   };
 }
 
 export const adConfig: AdConfig = {
-  enabled: true, // Set to true to display responsive ad slots
-  provider: 'adsense',
+  enabled: true, // Set to true to display responsive ad slots & test banners
+  provider: 'hybrid',
   adsense: {
     client: process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-XXXXXXXXXXXXX',
     slots: {
@@ -31,8 +36,16 @@ export const adConfig: AdConfig = {
     },
   },
   admob: {
-    appIdAndroid: 'ca-app-pub-3940256099942544~3347511713', // Google AdMob Test App ID
-    bannerUnitIdAndroid: 'ca-app-pub-3940256099942544/6300978111', // Test Banner ID
-    interstitialUnitIdAndroid: 'ca-app-pub-3940256099942544/1033173712', // Test Interstitial ID
+    // Official Google AdMob Testing IDs
+    appIdAndroid: 'ca-app-pub-3940256099942544~3347511713',
+    appOpenId: 'ca-app-pub-3940256099942544/9257395921',
+    adaptiveBannerId: 'ca-app-pub-3940256099942544/9214589741',
+    fixedBannerId: 'ca-app-pub-3940256099942544/6300978111',
+    interstitialId: 'ca-app-pub-3940256099942544/1033173712',
+    rewardedId: 'ca-app-pub-3940256099942544/5224354917',
+    rewardedInterstitialId: 'ca-app-pub-3940256099942544/5354046379',
+    nativeId: 'ca-app-pub-3940256099942544/2247696110',
+    nativeVideoId: 'ca-app-pub-3940256099942544/1044960115',
   },
 };
+
