@@ -20,24 +20,28 @@ const RECENT_LOCALES = {
     viewHistory: 'View History',
     noRecents: 'No recent tools yet. Try any utility below!',
     open: 'Open',
+    ready: 'Ready',
   },
   ur: {
     recentTitle: 'حال ہی میں استعمال شدہ',
     viewHistory: 'تمام ہسٹری دیکھیں',
     noRecents: 'ابھی تک کوئی ٹول استعمال نہیں کیا گیا۔ نیچے سے منتخب کریں!',
     open: 'کھولیں',
+    ready: 'تیار',
   },
   ar: {
     recentTitle: 'الأدوات المستخدمة مؤخراً',
     viewHistory: 'عرض السجل',
     noRecents: 'لم يتم استخدام أي أداة بعد. جرب إحدى الأدوات أدناه!',
     open: 'فتح',
+    ready: 'جاهز',
   },
   hi: {
     recentTitle: 'हाल ही में उपयोग किए गए',
     viewHistory: 'इतिहास देखें',
     noRecents: 'अभी तक कोई टूल उपयोग नहीं किया गया। नीचे दिए टूल्स आज़माएं!',
     open: 'खोलें',
+    ready: 'तैयार',
   },
 };
 
@@ -137,7 +141,7 @@ export function HorizontalRecentToolsCarousel({ className = '' }: HorizontalRece
                 <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-400">
                   <span className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Ready</span>
+                    <span>{loc.ready}</span>
                   </span>
 
                   <div className="flex items-center gap-0.5 text-brand-600 dark:text-brand-400 group-hover:underline">

@@ -10,9 +10,17 @@ interface BreadcrumbsProps {
   items: { label: string; href?: string }[];
 }
 
+const BREADCRUMB_LOCALES = {
+  en: { back: 'Back', backAria: 'Go back' },
+  ur: { back: 'واپس', backAria: 'پیچھے جائیں' },
+  ar: { back: 'رجوع', backAria: 'الرجوع للخلف' },
+  hi: { back: 'वापस', backAria: 'पीछे जाएं' },
+};
+
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language, isRTL } = useI18n();
+  const loc = BREADCRUMB_LOCALES[language] || BREADCRUMB_LOCALES.en;
 
   return (
     <div className="flex items-center justify-between gap-3 mb-4">
@@ -21,10 +29,10 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
           type="button"
           onClick={() => router.back()}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold shadow-xs active:scale-95 transition-all"
-          aria-label="Back"
+          aria-label={loc.backAria}
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back</span>
+          <ArrowLeft className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+          <span>{loc.back}</span>
         </button>
 
         <nav className="flex items-center space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400 rtl:space-x-reverse" aria-label="Breadcrumb">
