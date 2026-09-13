@@ -14,9 +14,11 @@ import { triggerHaptic } from '@/lib/motion/motion-system';
 export function MobileNav() {
   const pathname = usePathname();
   const { t, isRTL } = useI18n();
+  const [mounted, setMounted] = React.useState(false);
   const [isNativeApp, setIsNativeApp] = React.useState(false);
 
   React.useEffect(() => {
+    setMounted(true);
     const isNative =
       typeof window !== 'undefined' &&
       (!!(window as any).Capacitor?.isNativePlatform?.() ||
@@ -24,9 +26,9 @@ export function MobileNav() {
     setIsNativeApp(isNative);
   }, []);
 
-  // Web users on mobile/desktop browsers will NOT see the bottom tab bar.
-  // It is exclusively reserved for the Native Android APK experience.
-  if (!isNativeApp) {
+  // Web users on mobile/desktop browsers will NEVER see the bottom tab bar.
+  // It is 100% exclusive to the Android Native APK app.
+  if (!mounted || !isNativeApp) {
     return null;
   }
 
