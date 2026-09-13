@@ -163,7 +163,7 @@ export default function RootLayout({
               <UserStoreProvider>
                 <Header />
                 <NativeAndroidRuntime />
-                <main className="flex-1 w-full max-w-full overflow-x-hidden pb-20 lg:pb-0">{children}</main>
+                <main className="flex-1 w-full max-w-full overflow-x-hidden">{children}</main>
                 <Footer />
                 <MobileNav />
                 <PwaInstallBanner />
