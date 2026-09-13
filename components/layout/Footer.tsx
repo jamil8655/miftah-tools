@@ -111,7 +111,7 @@ export function Footer() {
   return (
     <footer
       dir={isRTL ? 'rtl' : 'ltr'}
-      className="hidden lg:block w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 mt-20 transition-colors"
+      className="w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 mt-10 sm:mt-20 transition-colors"
     >
       {/* 3 Core Trust Badges */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
