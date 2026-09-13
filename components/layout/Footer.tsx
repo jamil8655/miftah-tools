@@ -232,11 +232,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/quiz" className="hover:text-brand-600 transition-colors font-bold text-brand-600 dark:text-brand-400">
-                  ⚡ {t.quiz?.title || 'Knowledge Quizzes'}
-                </Link>
-              </li>
-              <li>
                 <Link href="/courses" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
                   {loc.viewAllCourses}
                 </Link>
