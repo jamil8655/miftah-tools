@@ -11,7 +11,8 @@ export function ServiceWorkerRegister() {
         navigator.serviceWorker
           .register(swPath, { scope: swScope })
           .then((reg) => {
-            console.log('Miftah Tools PWA ServiceWorker registered with scope:', reg.scope);
+            reg.update();
+            console.log('Miftah Tools PWA ServiceWorker registered & checked for update with scope:', reg.scope);
           })
           .catch((err) => {
             console.warn('PWA ServiceWorker registration failed:', err);

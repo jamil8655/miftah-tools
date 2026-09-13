@@ -1,8 +1,7 @@
 // Miftah Tools Service Worker for Full Native PWA Installation & Offline Support
-const CACHE_NAME = 'miftah-pwa-v1';
+const CACHE_NAME = 'miftah-pwa-v3';
 
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
@@ -36,29 +35,42 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass through fetch requests for seamless online and offline experience
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+
+  // Network-First for HTML navigation requests to always display the latest live website
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => cached || caches.match('/'));
+        })
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for static assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Fetch fresh copy in background
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, networkResponse.clone());
-              });
-            }
-          })
-          .catch(() => {});
-        return cachedResponse;
-      }
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && url.origin === self.location.origin) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
 
-      return fetch(event.request).catch(() => {
-        // Offline fallback
-        return caches.match('/');
-      });
+      return cachedResponse || fetchPromise;
     })
   );
 });
