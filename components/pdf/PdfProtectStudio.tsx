@@ -17,7 +17,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { protectPdfWithPassword, unlockPdf } from '@/lib/pdf/pdf-encryptor';
-import { downloadSingleFile } from '@/lib/utils/download';
+import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { shareFileNative } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { formatBytes } from '@/lib/utils/formatters';
@@ -124,7 +124,11 @@ export function PdfProtectStudio({ mode = 'protect' }: PdfProtectStudioProps) {
   const handleShare = async () => {
     if (!processedResult) return;
     triggerHaptic('selection');
-    await shareFileNative(processedResult.name, 'Protected PDF Document');
+    await shareDownloadedFile({
+      name: processedResult.name,
+      blob: processedResult.blob,
+      mimeType: 'application/pdf',
+    });
   };
 
   return (

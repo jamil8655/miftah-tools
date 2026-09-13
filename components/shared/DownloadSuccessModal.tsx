@@ -16,7 +16,7 @@ import {
   Sparkles,
   Eye,
 } from 'lucide-react';
-import { SavedFileInfo, openDownloadedFile } from '@/lib/utils/download';
+import { SavedFileInfo, openDownloadedFile, shareDownloadedFile } from '@/lib/utils/download';
 import { formatBytes } from '@/lib/utils/formatters';
 import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -121,36 +121,13 @@ export function DownloadSuccessModal({ fileInfo, onClose }: DownloadSuccessModal
 
   const handleShare = async () => {
     triggerHaptic('light');
-    if (isNativeAndroid() && fileInfo.name) {
-      await shareFileNative(
-        fileInfo.name,
-        `${loc.processedFile} ${fileInfo.name}`,
-        typeof window !== 'undefined' ? window.location.href : undefined
-      );
-    } else if (navigator.share) {
-      try {
-        if (fileInfo.blob) {
-          const file = new File([fileInfo.blob], fileInfo.name, { type: fileInfo.mimeType });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: fileInfo.name,
-            });
-            return;
-          }
-        }
-        await navigator.share({
-          title: fileInfo.name,
-          text: `${loc.processedFile} ${fileInfo.name}`,
-          url: window.location.href,
-        });
-      } catch (e) {
-        // user cancelled share
+    const shared = await shareDownloadedFile(fileInfo);
+    if (!shared) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(fileInfo.name);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
       }
-    } else {
-      await navigator.clipboard.writeText(fileInfo.name);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 

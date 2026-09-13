@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Upload,
   Download,
+  Share2,
   FileText,
   Image as ImageIcon,
   Check,
@@ -12,7 +13,7 @@ import {
   Archive,
   RefreshCw,
 } from 'lucide-react';
-import { downloadSingleFile, downloadAsZip } from '@/lib/utils/download';
+import { downloadSingleFile, downloadAsZip, shareDownloadedFile } from '@/lib/utils/download';
 import { getPdfJsLib } from '@/lib/utils/formatters';
 
 export function PdfToImagesStudio() {
@@ -123,6 +124,27 @@ export function PdfToImagesStudio() {
     }
     const blob = new Blob([ab], { type: `image/${format}` });
     downloadSingleFile(blob, filename);
+  };
+
+  const handleShareSingle = async (pageNum: number, dataUrl: string) => {
+    const pageObj = pages.find((p) => p.pageNum === pageNum);
+    const baseName = (pdfFile?.name || 'document').replace(/\.pdf$/i, '');
+    const filename = `${baseName}_page_${pageNum}.${format === 'jpeg' ? 'jpg' : 'png'}`;
+    const mimeType = `image/${format === 'jpeg' ? 'jpeg' : 'png'}`;
+
+    if (pageObj?.blob) {
+      await shareDownloadedFile({ name: filename, blob: pageObj.blob, mimeType });
+      return;
+    }
+
+    const byteString = atob(dataUrl.split(',')[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: mimeType });
+    await shareDownloadedFile({ name: filename, blob, mimeType });
   };
 
   const handleDownloadAllZip = () => {
@@ -272,13 +294,23 @@ export function PdfToImagesStudio() {
 
                     <div className="flex items-center justify-between text-xs pt-1">
                       <span className="font-extrabold text-slate-700 dark:text-slate-300">Page {p.pageNum}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadSingle(p.pageNum, p.dataUrl)}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-brand-600 text-[11px] font-bold flex items-center gap-1"
-                      >
-                        <Download className="w-3 h-3" /> Save
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadSingle(p.pageNum, p.dataUrl)}
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-brand-600 text-[11px] font-bold flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" /> Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleShareSingle(p.pageNum, p.dataUrl)}
+                          className="p-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold flex items-center justify-center"
+                          title="Share Page Image"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

@@ -20,6 +20,7 @@ android/.gradle/
 android/app/build/
 android/build/
 android/captures/
+android/app/src/main/assets/public/
 *.apk
 *.aab
 *.keystore

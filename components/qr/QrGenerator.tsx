@@ -20,7 +20,8 @@ import {
   Eye,
   Smartphone,
 } from 'lucide-react';
-import { downloadSingleFile } from '@/lib/utils/download';
+import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
+import { base64ToUint8Array } from '@/lib/utils/formatters';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -37,7 +38,7 @@ export function QrGenerator() {
   const [phoneNumber, setPhoneNumber] = useState<string>('+91 98765 43210');
   const [whatsappNumber, setWhatsappNumber] = useState<string>('+91 98765 43210');
   const [whatsappMsg, setWhatsappMsg] = useState<string>('Hello! I scanned your QR code.');
-  const [url, setUrl] = useState<string>('https://jamil8655.github.io/nexora-tools');
+  const [url, setUrl] = useState<string>('https://miftahtools.com');
   const [text, setText] = useState<string>('Miftah Tools — 220+ Client-Side Digital Utilities');
   const [wifiSsid, setWifiSsid] = useState<string>('MyHome_WiFi');
   const [wifiPass, setWifiPass] = useState<string>('SecurePassword123');
@@ -133,12 +134,18 @@ export function QrGenerator() {
     qrSize,
   ]);
 
+  // Helper to get Blob without fetch
+  const getQrBlob = () => {
+    if (!qrDataUrl) return null;
+    const bytes = base64ToUint8Array(qrDataUrl);
+    return new Blob([bytes.buffer as ArrayBuffer], { type: 'image/png' });
+  };
+
   // Actions
   const handleDownloadPng = async () => {
-    if (!qrDataUrl) return;
+    const blob = getQrBlob();
+    if (!blob) return;
     triggerHaptic('medium');
-    const res = await fetch(qrDataUrl);
-    const blob = await res.blob();
     downloadSingleFile(blob, `miftah-qr-${type}.png`);
   };
 
@@ -162,11 +169,10 @@ export function QrGenerator() {
   };
 
   const handleCopyImage = async () => {
-    if (!qrDataUrl) return;
+    const blob = getQrBlob();
+    if (!blob) return;
     triggerHaptic('light');
     try {
-      const res = await fetch(qrDataUrl);
-      const blob = await res.blob();
       await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -179,26 +185,14 @@ export function QrGenerator() {
   };
 
   const handleShareQr = async () => {
-    if (!qrDataUrl) return;
+    const blob = getQrBlob();
+    if (!blob) return;
     triggerHaptic('medium');
-    try {
-      const res = await fetch(qrDataUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `qr-${type}.png`, { type: 'image/png' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Miftah Tools QR Code',
-          text: `QR Code for ${type.toUpperCase()}: ${getPayload()}`,
-        });
-      } else {
-        handleDownloadPng();
-      }
-    } catch (e) {
-      console.warn('Share not supported, falling back to download:', e);
-      handleDownloadPng();
-    }
+    await shareDownloadedFile({
+      name: `miftah-qr-${type}.png`,
+      blob,
+      mimeType: 'image/png',
+    });
   };
 
   return (

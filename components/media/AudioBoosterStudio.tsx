@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { Volume2, Upload, Download, CheckCircle, AlertCircle, RefreshCw, FileAudio, Sparkles, VolumeX } from 'lucide-react';
 import { boostAudioVolume } from '@/lib/media/audio-engine';
+import { downloadSingleFile } from '@/lib/utils/download';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 export function AudioBoosterStudio() {
   const [file, setFile] = useState<File | null>(null);
@@ -163,14 +165,20 @@ export function AudioBoosterStudio() {
             <audio controls src={resultUrl} className="w-full rounded-lg" />
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <a
-                href={resultUrl}
-                download={`boosted_${Math.round(gainLevel * 100)}pct_${file?.name.replace(/\.[^/.]+$/, '')}.wav`}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
+              <button
+                type="button"
+                onClick={() => {
+                  if (resultBlob) {
+                    triggerHaptic('medium');
+                    const outName = `boosted_${Math.round(gainLevel * 100)}pct_${file?.name.replace(/\.[^/.]+$/, '') || 'audio'}.wav`;
+                    downloadSingleFile(resultBlob, outName);
+                  }
+                }}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all"
               >
                 <Download className="w-5 h-5" />
                 Download Louder Audio (WAV)
-              </a>
+              </button>
               <button
                 onClick={() => {
                   setFile(null);

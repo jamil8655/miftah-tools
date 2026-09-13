@@ -8,6 +8,7 @@ import {
   HeadingLevel,
   Packer,
   PageBreak,
+  ImageRun,
 } from 'docx';
 import { runOcr } from '@/lib/ocr/ocr-engine';
 import { getPdfJsLib } from '@/lib/utils/formatters';
@@ -255,7 +256,72 @@ export async function pdfToDocx(
 }
 
 /**
- * High-Fidelity Image to Word (DOCX) Converter using OCR.
+ * Helper to extract image Uint8Array and calculate scaled dimensions for DOCX embedding
+ */
+async function extractImageForDocx(
+  file: File | Blob
+): Promise<{ data: Uint8Array; width: number; height: number; type: 'png' | 'jpg' } | null> {
+  try {
+    const mime = file.type || '';
+    const imgType: 'png' | 'jpg' = mime.includes('png') ? 'png' : 'jpg';
+
+    if (typeof window !== 'undefined' && typeof Image !== 'undefined') {
+      const url = URL.createObjectURL(file);
+      try {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const el = new Image();
+          el.onload = () => resolve(el);
+          el.onerror = reject;
+          el.src = url;
+        });
+        URL.revokeObjectURL(url);
+
+        const width = img.naturalWidth || 600;
+        const height = img.naturalHeight || 800;
+
+        // Render to canvas to get guaranteed valid PNG/JPG bytes compatible with DOCX
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const outMime = imgType === 'png' ? 'image/png' : 'image/jpeg';
+          const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, outMime, 0.95));
+          if (blob) {
+            const arr = await blob.arrayBuffer();
+            const maxWidth = 500;
+            const maxHeight = 650;
+            const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+            return {
+              data: new Uint8Array(arr),
+              width: Math.max(100, Math.round(width * scale)),
+              height: Math.max(100, Math.round(height * scale)),
+              type: imgType,
+            };
+          }
+        }
+      } catch {
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    // Fallback if canvas is not available
+    const arrayBuffer = await file.arrayBuffer();
+    return {
+      data: new Uint8Array(arrayBuffer),
+      width: 480,
+      height: 640,
+      type: imgType,
+    };
+  } catch (e) {
+    console.warn('Failed to extract image for DOCX:', e);
+    return null;
+  }
+}
+
+/**
+ * High-Fidelity Image to Word (DOCX) Converter using embedded images & deep OCR.
  */
 export async function imageToDocx(
   file: File | Blob,
@@ -265,8 +331,11 @@ export async function imageToDocx(
   const fileName = (file as File).name || 'image-document';
   const cleanTitle = fileName.replace(/\.[^/.]+$/, '');
 
-  onProgress?.(15, 'Loading image for text recognition...');
-  
+  onProgress?.(15, 'Loading image for document synthesis...');
+
+  // 1. Extract and scale image for embedding in Word DOCX
+  const imgInfo = await extractImageForDocx(file);
+
   let ocrText = '';
   try {
     onProgress?.(30, 'Extracting text and structure from image...');
@@ -282,60 +351,73 @@ export async function imageToDocx(
 
   const paragraphs: Paragraph[] = [];
 
-  if (ocrText.trim()) {
-    const rawParagraphs = ocrText.split(/\n\s*\n/);
-    let isFirst = true;
+  // Title
+  paragraphs.push(
+    new Paragraph({
+      text: cleanTitle,
+      heading: HeadingLevel.HEADING_1,
+      spacing: { before: 100, after: 140 },
+    })
+  );
 
+  // Embed original image
+  if (imgInfo) {
+    try {
+      paragraphs.push(
+        new Paragraph({
+          children: [
+            new ImageRun({
+              data: imgInfo.data,
+              type: imgInfo.type,
+              transformation: {
+                width: imgInfo.width,
+                height: imgInfo.height,
+              },
+            }),
+          ],
+          spacing: { after: 200 },
+        })
+      );
+    } catch (imgErr) {
+      console.warn('Could not embed ImageRun in DOCX:', imgErr);
+    }
+  }
+
+  // Embed OCR Text
+  if (ocrText.trim()) {
+    paragraphs.push(
+      new Paragraph({
+        text: 'Extracted Editable Text (OCR)',
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 120 },
+      })
+    );
+
+    const rawParagraphs = ocrText.split(/\n\s*\n/);
     for (const p of rawParagraphs) {
       const clean = p.trim();
       if (!clean) continue;
 
-      if (isFirst && clean.length < 80 && !clean.includes('\n')) {
-        // First short line as Title / Heading 1
-        paragraphs.push(
-          new Paragraph({
-            text: clean,
-            heading: HeadingLevel.HEADING_1,
-            spacing: { before: 200, after: 120 },
-          })
-        );
-        isFirst = false;
-      } else {
-        isFirst = false;
-        // Split internal single linebreaks into text runs
-        const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean);
-        paragraphs.push(
-          new Paragraph({
-            children: lines.map(
-              (line, idx) =>
-                new TextRun({
-                  text: line + (idx < lines.length - 1 ? ' ' : ''),
-                  size: 24, // 12pt standard
-                })
-            ),
-            spacing: { after: 140 },
-          })
-        );
-      }
+      const lines = clean.split('\n').map((l) => l.trim()).filter(Boolean);
+      paragraphs.push(
+        new Paragraph({
+          children: lines.map(
+            (line, idx) =>
+              new TextRun({
+                text: line + (idx < lines.length - 1 ? ' ' : ''),
+                size: 24, // 12pt standard
+              })
+          ),
+          spacing: { after: 140 },
+        })
+      );
     }
-  }
-
-  if (paragraphs.length === 0) {
+  } else if (!imgInfo) {
     paragraphs.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: `Document extracted from ${fileName}`,
-            bold: true,
-            size: 28,
-          }),
-        ],
-        spacing: { after: 160 },
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'No clear text was recognized from the uploaded image. Please ensure the image contains clear, high-contrast text.',
+            text: 'No clear text was recognized from the uploaded image.',
             italics: true,
             color: '666666',
           }),
@@ -363,7 +445,7 @@ export async function imageToDocx(
 }
 
 /**
- * Convert Multiple Images to a single multi-page Word DOCX document.
+ * Convert Multiple Images to a single multi-page Word DOCX document with embedded images & OCR.
  */
 export async function imagesToDocx(
   files: (File | Blob)[],
@@ -379,6 +461,40 @@ export async function imagesToDocx(
     const basePct = Math.round((i / total) * 90);
     onProgress?.(basePct, `Processing image ${i + 1} of ${total} (${name})...`);
 
+    // Add Section Header
+    allParagraphs.push(
+      new Paragraph({
+        text: `Page ${i + 1}: ${name.replace(/\.[^/.]+$/, '')}`,
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 120, after: 120 },
+      })
+    );
+
+    // Embed Image
+    const imgInfo = await extractImageForDocx(f);
+    if (imgInfo) {
+      try {
+        allParagraphs.push(
+          new Paragraph({
+            children: [
+              new ImageRun({
+                data: imgInfo.data,
+                type: imgInfo.type,
+                transformation: {
+                  width: imgInfo.width,
+                  height: imgInfo.height,
+                },
+              }),
+            ],
+            spacing: { after: 160 },
+          })
+        );
+      } catch (imgErr) {
+        console.warn('Image embedding error on image', i + 1, imgErr);
+      }
+    }
+
+    // Run OCR
     try {
       const result = await runOcr(f, language);
       const text = (result.text || '').trim();
@@ -401,26 +517,13 @@ export async function imagesToDocx(
             );
           }
         }
-      } else {
-        allParagraphs.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `[Image ${i + 1}: ${name} - No text detected]`,
-                italics: true,
-                color: '888888',
-              }),
-            ],
-            spacing: { after: 120 },
-          })
-        );
-      }
-
-      if (i < total - 1) {
-        allParagraphs.push(new Paragraph({ children: [new PageBreak()] }));
       }
     } catch (err) {
-      console.warn(`Error processing image ${i + 1}:`, err);
+      console.warn(`Error processing image OCR for ${i + 1}:`, err);
+    }
+
+    if (i < total - 1) {
+      allParagraphs.push(new Paragraph({ children: [new PageBreak()] }));
     }
   }
 

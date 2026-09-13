@@ -16,11 +16,12 @@ import {
   Layers,
   FileArchive,
   RefreshCw,
+  Share2,
 } from 'lucide-react';
 import { validateFile, ValidationResult, MAX_FILE_SIZE_BYTES } from '@/lib/core/file-validator';
 import { normalizeError, MiftahErrorDetail } from '@/lib/core/error-system';
 import { formatBytes } from '@/lib/utils/formatters';
-import { downloadSingleFile } from '@/lib/utils/download';
+import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
 export interface ProcessedResultFile {
@@ -46,7 +47,7 @@ export function UniversalFileProcessor({
   toolId,
   toolName,
   allowedMimes = ['*/*'],
-  maxFiles = 10,
+  maxFiles = 100,
   isClientSide = true,
   acceptLabel = 'PDF, Images, or Documents',
   onProcess,
@@ -355,14 +356,26 @@ export function UniversalFileProcessor({
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => downloadSingleFile(res.blob, res.name)}
-                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => downloadSingleFile(res.blob, res.name)}
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 transition-all active:scale-95"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => shareDownloadedFile({ name: res.name, blob: res.blob, mimeType: res.blob.type })}
+                      className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
+                      title="Share File"
+                    >
+                      <Share2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <span className="hidden sm:inline">Share</span>
+                    </button>
+                  </div>
                 </div>
               );
             })}

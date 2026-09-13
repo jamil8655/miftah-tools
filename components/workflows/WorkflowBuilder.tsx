@@ -33,6 +33,7 @@ import {
   ChevronRight,
   ChevronDown,
   ArrowDown,
+  ArrowUp,
 } from 'lucide-react';
 import {
   SavedWorkflow,
@@ -53,159 +54,208 @@ import { compressPdfAdvanced } from '@/lib/pdf/pdf-compressor';
 import { watermarkPdf, addPageNumbers, rotatePdfPages, reversePdfPages } from '@/lib/pdf/pdf-manipulator';
 import { convertImage, resizeImage, compressImageToTargetKB, watermarkImage, rotateAndFlipImage, stripExifAndMetadata } from '@/lib/image/image-manipulator';
 import { runOcr } from '@/lib/ocr/ocr-engine';
+import { universalMarkItDown } from '@/lib/engines/markitdown-engine';
 
 const WORKFLOW_LOCALES = {
   en: {
-    badge: 'Miftah Tools Smart Pipeline Automation • Instant Multi-Step Engine',
-    title: 'Smart Workflow Automation Studio',
-    subtitle: 'Chain multiple editing, compression, OCR, and document conversions into one-click automated pipelines with real-time multi-stage previews and instant device storage.',
-    selectActiveWf: 'Choose Pipeline Workflow',
+    badge: 'Workflows',
+    title: 'Workflows & Automation',
+    subtitle: 'Chain tools into automated pipelines with instant device export.',
+    selectActiveWf: 'Pipeline Templates',
     available: 'Ready',
-    templateBadge: 'PRO TEMPLATE',
+    allTab: 'All',
+    imageTab: 'Images',
+    pdfTab: 'PDF',
+    ocrTab: 'OCR & Docs',
+    customTab: 'Custom',
+    templateBadge: 'TEMPLATE',
     customBadge: 'CUSTOM',
-    stepsCount: (count: number) => `${count} Steps Chain`,
-    sequentialSteps: 'Sequential Pipeline Architecture',
+    stepsCount: (count: number) => `${count} Stages`,
+    sequentialSteps: 'Pipeline Stages',
     toolIdLabel: (id: string) => `Module: ${id}`,
-    processingStatus: 'Executing...',
+    processingStatus: 'Processing...',
     waitingStatus: 'Queued',
     completedStatus: 'Passed ✓',
     failedStatus: 'Failed',
-    executionHub: 'Live Pipeline Hub',
+    executionHub: 'Pipeline Execution',
     uploadPrompt: 'Drop File to Run Pipeline',
-    uploadSub: 'Supports Photos (PNG, JPG, WebP), PDFs & Documents with automatic format chaining',
+    uploadSub: 'Supports Photos, PDFs & Documents with automatic format chaining',
     changeFile: 'Change File',
-    runningSteps: 'Executing Automated Pipeline...',
-    runFullWorkflow: (count: number) => `Execute All ${count} Stages Now`,
-    completedTitle: 'Pipeline Completed Successfully!',
-    completedSub: (count: number) => `All ${count} automated operations executed with 100% data integrity. Saved directly to your device.`,
-    downloadFinal: 'Download Final Output',
-    openFile: 'Open & View Result',
+    runningSteps: 'Executing Pipeline Stages...',
+    runFullWorkflow: (count: number) => `Execute ${count} Stages`,
+    completedTitle: 'Pipeline Completed!',
+    completedSub: (count: number) => `All ${count} operations executed and saved directly to your device.`,
+    downloadFinal: 'Download Output',
+    openFile: 'Open & View',
     runAgain: 'Run Again',
-    createNewPipeline: '+ Create Custom Pipeline',
-    pipelineNamePlaceholder: 'e.g. Photo ID & Compression Suite',
-    pipelineDescPlaceholder: 'Describe your multi-step pipeline...',
-    addStepButton: 'Add Next Processing Stage',
-    savePipeline: 'Save & Activate Pipeline',
+    createNewPipeline: 'New Pipeline',
+    pipelineNamePlaceholder: 'e.g. Photo ID Suite',
+    pipelineDescPlaceholder: 'Describe your pipeline...',
+    addStepButton: 'Add Stage',
+    savePipeline: 'Save & Deploy',
     cancel: 'Cancel',
-    categorySelect: 'Pipeline Category',
-    stepPreviewTitle: 'Live Step Outputs & Intermediate Previews',
+    categorySelect: 'Category',
+    stepPreviewTitle: 'Intermediate Outputs',
     originalInput: 'Original Input',
     finalOutput: 'Final Result',
-    savedBadge: 'Saved to Device Downloads',
+    savedBadge: 'Saved to Device',
+    statsOffline: 'Offline',
+    statsStorage: 'Private',
+    statsSpeed: 'Instant',
+    moveUp: 'Move Up',
+    moveDown: 'Move Down',
+    deleteStep: 'Delete Stage',
+    stageOptions: 'Stage Settings',
   },
   ur: {
-    badge: 'نکسورا اسمارٹ پائپ لائن آٹومیشن • فوری ملٹی اسٹیپ انجن',
-    title: 'اسمارٹ ورک فلو آٹومیشن اسٹوڈیو',
-    subtitle: 'متعدد ایڈیٹنگ، کمپریشن، OCR، اور دستاویزی کنورژنز کو 1-کلک میں خودکار چلائیں۔ ریئل ٹائم لائیو پیش نظارہ اور تصدیق شدہ تیز ترین پروسیسنگ۔',
-    selectActiveWf: 'پائپ لائن ورک فلو منتخب کریں',
-    available: 'تیار',
-    templateBadge: 'پرو ٹیمپلیٹ',
+    badge: 'ورک فلو',
+    title: 'ورک فلو اور آٹومیشن',
+    subtitle: 'ٹولز کو ملا کر خودکار پائپ لائن چلائیں اور محفوظ کریں۔',
+    selectActiveWf: 'پائپ لائن ٹیمپلیٹس',
+    available: 'دستیاب',
+    allTab: 'تمام',
+    imageTab: 'تصاویر',
+    pdfTab: 'پی ڈی ایف',
+    ocrTab: 'او سی آر',
+    customTab: 'کسٹم',
+    templateBadge: 'ٹیمپلیٹ',
     customBadge: 'کسٹم',
-    stepsCount: (count: number) => `${count} مراحل کا سلسلہ`,
-    sequentialSteps: 'ترتیبی پائپ لائن کا ڈھانچہ',
+    stepsCount: (count: number) => `${count} مراحل`,
+    sequentialSteps: 'پائپ لائن کے مراحل',
     toolIdLabel: (id: string) => `ماڈیول: ${id}`,
     processingStatus: 'جاری ہے...',
     waitingStatus: 'انتظار',
     completedStatus: 'مکمل ✓',
     failedStatus: 'ناکام',
-    executionHub: 'لائیو پائپ لائن ایگزیکیوشن ہب',
-    uploadPrompt: 'پائپ لائن چلانے کے لیے فائل یہاں رکھیں',
-    uploadSub: 'تصاویر (PNG, JPG, WebP)، پی ڈی ایف اور دستاویزات کو خودکار فارمیٹ چیننگ کے ساتھ سپورٹ کرتا ہے',
+    executionHub: 'پائپ لائن ایگزیکیوشن',
+    uploadPrompt: 'فائل یہاں رکھیں یا منتخب کریں',
+    uploadSub: 'تصاویر، پی ڈی ایف اور دستاویزات کی خودکار پروسیسنگ',
     changeFile: 'فائل تبدیل کریں',
-    runningSteps: 'خودکار پائپ لائن چلائی جا رہی ہے...',
-    runFullWorkflow: (count: number) => `تمام ${count} مراحل ابھی چلائیں`,
-    completedTitle: 'پائپ لائن کامیابی سے مکمل ہو گئی!',
-    completedSub: (count: number) => `تمام ${count} خودکار مراحل 100% درستگی کے ساتھ مکمل ہو گئے۔ آپ کے ڈیوائس اسٹوریج میں محفوظ۔`,
-    downloadFinal: 'حتمی فائل ڈاؤن لوڈ کریں',
-    openFile: 'فائل کھولیں اور دیکھیں',
+    runningSteps: 'پائپ لائن چلائی جا رہی ہے...',
+    runFullWorkflow: (count: number) => `تمام ${count} مراحل چلائیں`,
+    completedTitle: 'پائپ لائن مکمل ہو گئی!',
+    completedSub: (count: number) => `تمام ${count} مراحل مکمل ہو کر ڈیوائس میں محفوظ ہو گئے۔`,
+    downloadFinal: 'فائل ڈاؤن لوڈ کریں',
+    openFile: 'فائل کھولیں',
     runAgain: 'دوبارہ چلائیں',
-    createNewPipeline: '+ نیا کسٹم ورک فلو بنائیں',
-    pipelineNamePlaceholder: 'مثال: پاسپورٹ فوٹو اور کمپریشن سوٹ',
-    pipelineDescPlaceholder: 'اپنے پائپ لائن کے مراحل بیان کریں...',
-    addStepButton: 'اگلا پروسیسنگ مرحلہ شامل کریں',
-    savePipeline: 'پائپ لائن محفوظ کریں',
+    createNewPipeline: 'نیا ورک فلو',
+    pipelineNamePlaceholder: 'مثال: پاسپورٹ فوٹو سوٹ',
+    pipelineDescPlaceholder: 'ورک فلو کی تفصیل...',
+    addStepButton: 'اگلا مرحلہ شامل کریں',
+    savePipeline: 'ورک فلو محفوظ کریں',
     cancel: 'منسوخ',
-    categorySelect: 'ورک فلو زمرہ',
-    stepPreviewTitle: 'مراحل کے لائیو نتائج اور درمیانی پیش نظارہ',
-    originalInput: 'اصل ان پٹ',
-    finalOutput: 'حتمی نتیجہ',
-    savedBadge: 'ڈیوائس اسٹوریج میں محفوظ',
+    categorySelect: 'قسم',
+    stepPreviewTitle: 'مراحل کے نتائج',
+    originalInput: 'اصل فائل',
+    finalOutput: 'حتمی فائل',
+    savedBadge: 'ڈیوائس میں محفوظ',
+    statsOffline: 'آف لائن',
+    statsStorage: 'محفوظ',
+    statsSpeed: 'تیز ترین',
+    moveUp: 'اوپر',
+    moveDown: 'نیچے',
+    deleteStep: 'ہٹائیں',
+    stageOptions: 'سیٹنگز',
   },
   ar: {
-    badge: 'أتمتة سير العمل الذكي من نكسورا • معالجة متسلسلة فورية',
-    title: 'استوديو أتمتة خطوط المعالجة الذكية',
-    subtitle: 'ادمج أدوات التحرير والضغط والـ OCR وتحويل المستندات في خطوط معالجة آلية بنقرة واحدة مع معاينة مباشرة وحفظ فوري على جهازك.',
-    selectActiveWf: 'اختر سير العمل النشط',
+    badge: 'سير العمل',
+    title: 'سير العمل والأتمتة',
+    subtitle: 'دمج الأدوات في خطوط معالجة تلقائية مع حفظ فوري على جهازك.',
+    selectActiveWf: 'قوالب خطوط المعالجة',
     available: 'جاهز',
-    templateBadge: 'قالب احترافي',
+    allTab: 'الكل',
+    imageTab: 'الصور',
+    pdfTab: 'PDF',
+    ocrTab: 'المستندات',
+    customTab: 'مخصص',
+    templateBadge: 'قالب',
     customBadge: 'مخصص',
-    stepsCount: (count: number) => `سلسلة من ${count} خطوات`,
-    sequentialSteps: 'هيكلية مراحل المعالجة المتسلسلة',
+    stepsCount: (count: number) => `${count} مراحل`,
+    sequentialSteps: 'مراحل المعالجة',
     toolIdLabel: (id: string) => `الوحدة: ${id}`,
     processingStatus: 'جاري التنفيذ...',
     waitingStatus: 'في الانتظار',
     completedStatus: 'ناجح ✓',
     failedStatus: 'فشل',
-    executionHub: 'مركز تنفيذ سير العمل المباشر',
+    executionHub: 'تنفيذ سير العمل',
     uploadPrompt: 'أفلت الملف لتشغيل خط المعالجة',
-    uploadSub: 'يدعم الصور وملفات PDF والمستندات مع ربط تلقائي فائق الدقة بين المراحل',
+    uploadSub: 'يدعم الصور وملفات PDF والمستندات',
     changeFile: 'تغيير الملف',
-    runningSteps: 'جاري تنفيذ سير العمل الآلي...',
-    runFullWorkflow: (count: number) => `تشغيل جميع الـ ${count} مراحل الآن`,
-    completedTitle: 'اكتمل سير العمل بنجاح تام!',
-    completedSub: (count: number) => `تم تنفيذ جميع العمليات الـ ${count} بدقة 100%. تم الحفظ مباشرة في وحدة تخزين جهازك.`,
-    downloadFinal: 'تنزيل النتيجة النهائية',
-    openFile: 'فتح وعرض الملف',
+    runningSteps: 'جاري تنفيذ المراحل...',
+    runFullWorkflow: (count: number) => `تشغيل ${count} مراحل`,
+    completedTitle: 'اكتمل سير العمل بنجاح!',
+    completedSub: (count: number) => `تم تنفيذ ${count} عمليات وحفظها في جهازك.`,
+    downloadFinal: 'تنزيل النتيجة',
+    openFile: 'فتح وعرض',
     runAgain: 'إعادة التشغيل',
-    createNewPipeline: '+ إنشاء سير عمل مخصص',
-    pipelineNamePlaceholder: 'مثال: حزمة صور الجواز والضغط',
-    pipelineDescPlaceholder: 'صف خطوات سير العمل الخاص بك...',
-    addStepButton: 'إضافة مرحلة معالجة جديدة',
-    savePipeline: 'حفظ وتفعيل سير العمل',
+    createNewPipeline: 'خط معالجة مخصص',
+    pipelineNamePlaceholder: 'مثال: حزمة صور الجواز',
+    pipelineDescPlaceholder: 'وصف سير العمل...',
+    addStepButton: 'إضافة مرحلة',
+    savePipeline: 'حفظ سير العمل',
     cancel: 'إلغاء',
-    categorySelect: 'تصنيف سير العمل',
-    stepPreviewTitle: 'مخرجات الخطوات المباشرة والمعاينة البينية',
+    categorySelect: 'التصنيف',
+    stepPreviewTitle: 'مخرجات المراحل',
     originalInput: 'الملف الأصلي',
     finalOutput: 'النتيجة النهائية',
-    savedBadge: 'تم الحفظ في تنزيلات الجهاز',
+    savedBadge: 'تم الحفظ بالجهاز',
+    statsOffline: 'محلي',
+    statsStorage: 'خصوصية',
+    statsSpeed: 'فوري',
+    moveUp: 'للأعلى',
+    moveDown: 'للأسفل',
+    deleteStep: 'حذف',
+    stageOptions: 'الإعدادات',
   },
   hi: {
-    badge: 'नेक्सोरा स्मार्ट पाइपलाइन ऑटोमेशन • त्वरित मल्टी-स्टेप इंजन',
-    title: 'स्मार्ट वर्कफ़्लो ऑटोमेशन स्टूडियो',
-    subtitle: 'संपादन, संपीड़न, OCR और दस्तावेज़ रूपांतरण को 1-क्लिक स्वचालित पाइपलाइनों में जोड़ें। रीयल-टाइम पूर्वावलोकन और त्वरित डिवाइस स्टोरेज समर्थन के साथ।',
-    selectActiveWf: 'सक्रिय वर्कफ़्लो चुनें',
+    badge: 'वर्कफ़्लो',
+    title: 'वर्कफ़्लो और ऑटोमेशन',
+    subtitle: 'टूल्स को स्वचालित पाइपलाइन में जोड़ें और त्वरित सेव करें।',
+    selectActiveWf: 'पाइपलाइन टेम्पलेट्स',
     available: 'तैयार',
-    templateBadge: 'प्रो टेम्पलेट',
+    allTab: 'सभी',
+    imageTab: 'फ़ोटो',
+    pdfTab: 'पीडीएफ',
+    ocrTab: 'दस्तावेज़',
+    customTab: 'कस्टम',
+    templateBadge: 'टेम्पलेट',
     customBadge: 'कस्टम',
-    stepsCount: (count: number) => `${count} चरणों की श्रृंखला`,
-    sequentialSteps: 'क्रमिक पाइपलाइन संरचना',
+    stepsCount: (count: number) => `${count} चरण`,
+    sequentialSteps: 'पाइपलाइन चरण',
     toolIdLabel: (id: string) => `मॉड्यूल: ${id}`,
     processingStatus: 'प्रगति पर...',
     waitingStatus: 'प्रतीक्षारत',
     completedStatus: 'सफल ✓',
     failedStatus: 'विफल',
-    executionHub: 'लाइव पाइपलाइन निष्पादन केंद्र',
-    uploadPrompt: 'पाइपलाइन चलाने के लिए फ़ाइल यहाँ छोड़ें',
-    uploadSub: 'फ़ोटो (PNG, JPG, WebP), पीडीएफ और दस्तावेज़ों का निर्बाध स्वचालित प्रसंस्करण',
+    executionHub: 'पाइपलाइन निष्पादन',
+    uploadPrompt: 'फ़ाइल यहाँ छोड़ें या चुनें',
+    uploadSub: 'फ़ोटो, पीडीएफ और दस्तावेज़ों का स्वचालित प्रसंस्करण',
     changeFile: 'फ़ाइल बदलें',
-    runningSteps: 'स्वचालित पाइपलाइन निष्पादित हो रही है...',
-    runFullWorkflow: (count: number) => `सभी ${count} चरण अभी निष्पादित करें`,
-    completedTitle: 'पाइपलाइन सफलतापूर्वक पूरी हुई!',
-    completedSub: (count: number) => `सभी ${count} कार्य 100% शुद्धता के साथ निष्पादित हुए। सीधे आपके डिवाइस में सहेजा गया।`,
-    downloadFinal: 'अंतिम फ़ाइल डाउनलोड करें',
-    openFile: 'फ़ाइल खोलें और देखें',
+    runningSteps: 'पाइपलाइन चरण निष्पादित हो रहे हैं...',
+    runFullWorkflow: (count: number) => `${count} चरण चलाएं`,
+    completedTitle: 'पाइपलाइन पूरी हुई!',
+    completedSub: (count: number) => `सभी ${count} कार्य पूरे हुए और डिवाइस में सहेजे गए।`,
+    downloadFinal: 'डाउनलोड करें',
+    openFile: 'खोलें और देखें',
     runAgain: 'पुनः चलाएं',
-    createNewPipeline: '+ नया कस्टम वर्कफ़्लो बनाएं',
-    pipelineNamePlaceholder: 'उदा. पासपोर्ट फ़ोटो व संपीड़न सूट',
-    pipelineDescPlaceholder: 'अपनी पाइपलाइन के चरणों का विवरण दें...',
-    addStepButton: 'अगला प्रसंस्करण चरण जोड़ें',
-    savePipeline: 'पाइपलाइन सहेजें और सक्रिय करें',
+    createNewPipeline: 'नया वर्कफ़्लो',
+    pipelineNamePlaceholder: 'उदा. पासपोर्ट फ़ोटो सूट',
+    pipelineDescPlaceholder: 'पाइपलाइन का विवरण...',
+    addStepButton: 'चरण जोड़ें',
+    savePipeline: 'वर्कफ़्लो सहेजें',
     cancel: 'रद्द करें',
-    categorySelect: 'वर्कफ़्लो श्रेणी',
-    stepPreviewTitle: 'लाइव चरण आउटपुट व मध्यवर्ती पूर्वावलोकन',
+    categorySelect: 'श्रेणी',
+    stepPreviewTitle: 'चरण आउटपुट',
     originalInput: 'मूल इनपुट',
     finalOutput: 'अंतिम परिणाम',
-    savedBadge: 'डिवाइस स्टोरेज में सहेजा गया',
+    savedBadge: 'डिवाइस में सहेजा गया',
+    statsOffline: 'ऑफ़लाइन',
+    statsStorage: 'सुरक्षित',
+    statsSpeed: 'त्वरित',
+    moveUp: 'ऊपर',
+    moveDown: 'नीचे',
+    deleteStep: 'हटाएं',
+    stageOptions: 'सेटिंग्स',
   },
 };
 
@@ -268,11 +318,27 @@ const EXTENDED_PRESET_WORKFLOWS: SavedWorkflow[] = [
   },
 ];
 
+const AVAILABLE_MODULES = [
+  { id: 'background-remover', name: 'Background Cutout & White Fill', category: 'image', defaultOptions: { tolerance: 30, fillColor: '#ffffff' } },
+  { id: 'passport-photo-maker', name: 'Passport 3.5x4.5cm Crop', category: 'image', defaultOptions: { width: 413, height: 531 } },
+  { id: 'image-resizer', name: 'Image Resizer (1200px)', category: 'image', defaultOptions: { width: 1200, height: 1200, maintainAspect: true } },
+  { id: 'image-compressor', name: 'Target Compressor (50 KB)', category: 'image', defaultOptions: { targetKB: 50 } },
+  { id: 'image-converter', name: 'Convert to Lossless WebP', category: 'image', defaultOptions: { targetFormat: 'image/webp' } },
+  { id: 'strip-metadata', name: 'Strip EXIF & Privacy Tags', category: 'image', defaultOptions: {} },
+  { id: 'watermark-image', name: 'Image Watermark Stamp', category: 'image', defaultOptions: { text: 'Miftah Tools', opacity: 0.3 } },
+  { id: 'compress-pdf', name: 'Smart PDF Stream Optimizer', category: 'pdf', defaultOptions: { level: 'medium' } },
+  { id: 'pdf-page-numbers', name: 'Add Header/Footer Page Numbers', category: 'pdf', defaultOptions: { format: 'Page X of Y' } },
+  { id: 'watermark-pdf', name: 'Official PDF Watermark Stamp', category: 'pdf', defaultOptions: { text: 'CONFIDENTIAL', opacity: 0.25 } },
+  { id: 'ocr-image-to-text', name: 'Neural OCR Character Extraction', category: 'ocr', defaultOptions: { language: 'eng' } },
+  { id: 'universal-markdown', name: 'Universal Document to Markdown', category: 'document', defaultOptions: {} },
+];
+
 export function WorkflowBuilder() {
   const { language, isRTL } = useI18n();
   const loc = WORKFLOW_LOCALES[language] || WORKFLOW_LOCALES.en;
 
   const [workflows, setWorkflows] = useState<SavedWorkflow[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'image' | 'pdf' | 'ocr' | 'custom'>('all');
   const [activeWorkflow, setActiveWorkflow] = useState<SavedWorkflow | null>(null);
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [inputPreview, setInputPreview] = useState<string | null>(null);
@@ -292,6 +358,34 @@ export function WorkflowBuilder() {
     { toolId: 'image-resizer', toolName: 'Image Resizer (1200px)', options: { width: 1200, height: 1200 } },
     { toolId: 'image-compressor', toolName: 'Target Compressor (100KB)', options: { targetKB: 100 } },
   ]);
+
+  const handleAddCustomStep = (moduleId: string) => {
+    const mod = AVAILABLE_MODULES.find((m) => m.id === moduleId);
+    if (!mod) return;
+    setCustomSteps((prev) => [
+      ...prev,
+      { toolId: mod.id, toolName: mod.name, options: { ...mod.defaultOptions } },
+    ]);
+    triggerHaptic('light');
+  };
+
+  const handleRemoveCustomStep = (index: number) => {
+    setCustomSteps((prev) => prev.filter((_, i) => i !== index));
+    triggerHaptic('light');
+  };
+
+  const handleMoveCustomStep = (index: number, direction: 'up' | 'down') => {
+    setCustomSteps((prev) => {
+      const next = [...prev];
+      const targetIdx = direction === 'up' ? index - 1 : index + 1;
+      if (targetIdx < 0 || targetIdx >= next.length) return prev;
+      const temp = next[index];
+      next[index] = next[targetIdx];
+      next[targetIdx] = temp;
+      return next;
+    });
+    triggerHaptic('light');
+  };
 
   useEffect(() => {
     loadWorkflows();
@@ -402,6 +496,7 @@ export function WorkflowBuilder() {
     // Compute extension based on final mime and workflow category
     let ext = 'png';
     if (currentBlob.type === 'application/pdf' || activeWorkflow.category === 'pdf') ext = 'pdf';
+    else if (currentBlob.type === 'text/markdown' || activeWorkflow.category === 'document') ext = 'md';
     else if (currentBlob.type === 'image/webp') ext = 'webp';
     else if (currentBlob.type === 'image/jpeg') ext = 'jpg';
     else if (currentBlob.type === 'text/plain') ext = 'txt';
@@ -565,6 +660,14 @@ export function WorkflowBuilder() {
       return { outputBlob: txtBlob, details: `Extracted ${res.text.length} chars (Confidence: ${res.confidence}%)` };
     }
 
+    // 11. Universal Offline Document to Structured Markdown
+    if (step.toolId === 'doc-to-markdown' || step.toolId === 'universal-markdown') {
+      const file = new File([blob], origName, { type: blob.type });
+      const res = await universalMarkItDown(file, { includeMetadata: true });
+      const mdBlob = new Blob([res.markdown], { type: 'text/markdown;charset=utf-8' });
+      return { outputBlob: mdBlob, details: `Extracted ${res.wordCount} words (${res.charCount} chars, ${res.lineCount} lines)` };
+    }
+
     // Default Pass-through
     return { outputBlob: blob, details: 'Stage verified' };
   };
@@ -608,20 +711,53 @@ export function WorkflowBuilder() {
     triggerHaptic('success');
   };
 
+  const filteredWorkflows = workflows.filter((wf) => {
+    if (selectedCategory === 'all') return true;
+    if (selectedCategory === 'custom') return !wf.isTemplate;
+    return wf.category === selectedCategory;
+  });
+
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-300 pb-20">
-      {/* Top Banner & Header */}
-      <div className="text-center space-y-3.5 relative">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-indigo-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/25 shadow-xs">
-          <Workflow className="w-4 h-4 text-brand-600 dark:text-brand-400 animate-pulse" />
-          <span>{loc.badge}</span>
-        </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-          {loc.title}
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="max-w-6xl mx-auto space-y-5 animate-in fade-in duration-300 pb-20">
+      {/* Sleek Compact Header */}
+      <div className="text-center space-y-1.5 relative">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-2">
+          <Workflow className="w-5 h-5 text-brand-600 dark:text-brand-400 shrink-0" />
+          <span>{loc.title}</span>
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
           {loc.subtitle}
         </p>
+
+        {/* Category Filter Tabs */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          {[
+            { id: 'all', label: loc.allTab },
+            { id: 'image', label: loc.imageTab },
+            { id: 'pdf', label: loc.pdfTab },
+            { id: 'ocr', label: loc.ocrTab },
+            { id: 'custom', label: loc.customTab },
+          ].map((tab) => {
+            const isActive = selectedCategory === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(tab.id as any);
+                  triggerHaptic('light');
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all active:scale-95 ${
+                  isActive
+                    ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-brand-500/30'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Main Grid: Pipeline Selection & Execution Studio */}
@@ -636,12 +772,12 @@ export function WorkflowBuilder() {
                 <span>{loc.selectActiveWf}</span>
               </h3>
               <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 text-[10px] font-bold">
-                {workflows.length} {loc.available}
+                {filteredWorkflows.length} {loc.available}
               </span>
             </div>
 
-            <div className="space-y-2.5">
-              {workflows.map((wf) => {
+            <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+              {filteredWorkflows.map((wf) => {
                 const isSelected = activeWorkflow?.id === wf.id;
                 return (
                   <div
@@ -649,7 +785,7 @@ export function WorkflowBuilder() {
                     onClick={() => handleSelectWorkflow(wf)}
                     className={`p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
                       isSelected
-                        ? 'border-brand-500 bg-gradient-to-br from-brand-50/70 to-indigo-50/40 dark:from-brand-950/50 dark:to-indigo-950/30 ring-2 ring-brand-500/25 shadow-md'
+                        ? 'border-brand-500 bg-gradient-to-br from-brand-50/80 to-indigo-50/50 dark:from-brand-950/60 dark:to-indigo-950/40 ring-2 ring-brand-500/25 shadow-md'
                         : 'border-slate-200/80 dark:border-slate-800 hover:border-brand-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/40'
                     }`}
                   >
@@ -657,11 +793,11 @@ export function WorkflowBuilder() {
                       <div className="font-black text-xs sm:text-sm text-slate-900 dark:text-white flex items-center justify-between gap-2">
                         <span className="truncate">{wf.name}</span>
                         {wf.isTemplate ? (
-                          <span className="px-2 py-0.5 rounded text-[9px] font-black bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 shrink-0">
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 shrink-0">
                             {loc.templateBadge}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded text-[9px] font-black bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 shrink-0">
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 shrink-0">
                             {loc.customBadge}
                           </span>
                         )}
@@ -671,9 +807,9 @@ export function WorkflowBuilder() {
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 text-[10px] font-mono text-slate-400">
-                      <span>{loc.stepsCount(wf.steps.length)}</span>
-                      <span className="font-bold text-brand-600 dark:text-brand-400 uppercase">{wf.category}</span>
+                    <div className="flex items-center justify-between pt-2.5 text-[10px] font-mono text-slate-400 border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                      <span className="font-bold text-slate-600 dark:text-slate-300">{loc.stepsCount(wf.steps.length)}</span>
+                      <span className="font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">{wf.category}</span>
                     </div>
                   </div>
                 );
@@ -684,51 +820,171 @@ export function WorkflowBuilder() {
             <button
               type="button"
               onClick={() => setIsCreatingCustom(!isCreatingCustom)}
-              className="w-full py-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 text-brand-600 dark:text-brand-400 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+              className="w-full py-3.5 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 text-brand-600 dark:text-brand-400 font-extrabold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-brand-50/30 dark:bg-brand-950/20"
             >
               <Plus className="w-4 h-4" />
               <span>{loc.createNewPipeline}</span>
             </button>
           </div>
 
-          {/* Custom Pipeline Creator Modal/Dropdown */}
+          {/* Custom Pipeline Creator Drawer */}
           {isCreatingCustom && (
-            <div className="p-5 rounded-3xl bg-slate-50 dark:bg-slate-950 border border-brand-200 dark:border-brand-900/60 space-y-4 animate-in slide-in-from-top duration-200 shadow-lg">
-              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                {loc.createNewPipeline}
-              </h4>
-
-              <input
-                type="text"
-                placeholder={loc.pipelineNamePlaceholder}
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100"
-              />
-
-              <input
-                type="text"
-                placeholder={loc.pipelineDescPlaceholder}
-                value={customDesc}
-                onChange={(e) => setCustomDesc(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100"
-              />
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleSaveCustomWorkflow}
-                  className="flex-1 py-2.5 rounded-xl bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-500/25 active:scale-95"
-                >
-                  {loc.savePipeline}
-                </button>
+            <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-950 border border-brand-300 dark:border-brand-800 space-y-4 animate-in slide-in-from-top duration-200 shadow-xl">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Wand2 className="w-3.5 h-3.5 text-brand-600" />
+                  <span>{loc.createNewPipeline}</span>
+                </h4>
                 <button
                   type="button"
                   onClick={() => setIsCreatingCustom(false)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 >
-                  {loc.cancel}
+                  <X className="w-4 h-4" />
                 </button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    {loc.pipelineNamePlaceholder}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={loc.pipelineNamePlaceholder}
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                    {loc.pipelineDescPlaceholder}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={loc.pipelineDescPlaceholder}
+                    value={customDesc}
+                    onChange={(e) => setCustomDesc(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-hidden"
+                  />
+                </div>
+
+                {/* Category Selector */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                    Category
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['image', 'pdf', 'ocr'] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCustomCategory(cat)}
+                        className={`py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+                          customCategory === cat
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Steps List */}
+                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <span>{loc.sequentialSteps} ({customSteps.length})</span>
+                  </div>
+
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {customSteps.map((step, sIdx) => (
+                      <div
+                        key={sIdx}
+                        className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shadow-2xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-5 h-5 rounded-md bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {sIdx + 1}
+                          </span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                            {step.toolName}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveCustomStep(sIdx, 'up')}
+                            disabled={sIdx === 0}
+                            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30"
+                            title={loc.moveUp}
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleMoveCustomStep(sIdx, 'down')}
+                            disabled={sIdx === customSteps.length - 1}
+                            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30"
+                            title={loc.moveDown}
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCustomStep(sIdx)}
+                            className="p-1 rounded-md text-rose-500 hover:text-rose-700"
+                            title={loc.deleteStep}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Stage Selector */}
+                  <div className="pt-2">
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleAddCustomStep(e.target.value);
+                          e.target.value = '';
+                        }
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-brand-600 dark:text-brand-400 cursor-pointer focus:ring-2 focus:ring-brand-500 outline-hidden"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>+ {loc.createNewPipeline} (Add Module)</option>
+                      {AVAILABLE_MODULES.map((mod) => (
+                        <option key={mod.id} value={mod.id}>
+                          + {mod.name} ({mod.category.toUpperCase()})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveCustomWorkflow}
+                    className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-500/25 active:scale-95 transition-all"
+                  >
+                    {loc.savePipeline}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatingCustom(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    {loc.cancel}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -741,7 +997,7 @@ export function WorkflowBuilder() {
                   <Workflow className="w-4 h-4 text-brand-600" />
                   <span>{loc.sequentialSteps}</span>
                 </span>
-                <span className="text-xs font-mono font-bold text-brand-600">
+                <span className="text-xs font-mono font-bold text-brand-600 px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950">
                   {activeWorkflow.steps.length} Stages
                 </span>
               </h3>
@@ -754,23 +1010,23 @@ export function WorkflowBuilder() {
                       <div
                         className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
                           isCurrent
-                            ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/40 ring-2 ring-amber-500/20'
+                            ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/50 ring-2 ring-amber-500/25 shadow-md'
                             : step.status === 'Completed'
-                            ? 'border-emerald-500/80 bg-emerald-50/40 dark:bg-emerald-950/30'
-                            : 'border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40'
+                            ? 'border-emerald-500/80 bg-emerald-50/50 dark:bg-emerald-950/40 shadow-xs'
+                            : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-8 h-8 rounded-xl flex items-center justify-center font-mono font-black text-xs shrink-0 shadow-xs ${
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono font-black text-xs shrink-0 shadow-xs transition-all ${
                               step.status === 'Completed'
-                                ? 'bg-emerald-600 text-white'
+                                ? 'bg-emerald-600 text-white shadow-emerald-500/30'
                                 : isCurrent
-                                ? 'bg-amber-500 text-white animate-pulse'
+                                ? 'bg-amber-500 text-white animate-pulse shadow-amber-500/30'
                                 : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                             }`}
                           >
-                            {step.status === 'Completed' ? <Check className="w-4 h-4" /> : idx + 1}
+                            {step.status === 'Completed' ? <Check className="w-4 h-4 stroke-[3]" /> : idx + 1}
                           </div>
                           <div>
                             <div className="font-extrabold text-xs text-slate-900 dark:text-white">

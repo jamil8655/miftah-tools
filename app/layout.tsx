@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/layout/ThemeContext';
 import { I18nProvider } from '@/lib/i18n/i18n-context';
@@ -14,6 +14,15 @@ import { StickyBottomAd } from '@/components/ads/StickyBottomAd';
 import { AppOpenAd } from '@/components/ads/AppOpenAd';
 import { siteConfig } from '@/config/site';
 import { adConfig } from '@/config/ads';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover',
+  themeColor: '#0284c7',
+};
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} - Free Online Tools & Digital Skills Platform`,
@@ -63,7 +72,7 @@ export default function RootLayout({
       {
         '@type': 'WebApplication',
         name: 'Miftah Tools',
-        url: 'https://jamil8655.github.io/nexora-tools/',
+        url: 'https://miftahtools.com/',
         description: '220+ free high-performance online utilities and developer master courses.',
         applicationCategory: 'ProductivityApplication',
         operatingSystem: 'All (Web, Android, iOS, Windows, macOS, Linux)',
@@ -83,12 +92,12 @@ export default function RootLayout({
       {
         '@type': 'WebSite',
         name: 'Miftah Tools',
-        url: 'https://jamil8655.github.io/nexora-tools/',
+        url: 'https://miftahtools.com/',
         potentialAction: {
           '@type': 'SearchAction',
           target: {
             '@type': 'EntryPoint',
-            urlTemplate: 'https://jamil8655.github.io/nexora-tools/tools?search={search_term_string}',
+            urlTemplate: 'https://miftahtools.com/tools?search={search_term_string}',
           },
           'query-input': 'required name=search_term_string',
         },
@@ -107,11 +116,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Miftah Tools" />
 
-        {/* Global Multi-script Typography (Arabic, Nastaliq Urdu, Devanagari Hindi, Inter) */}
+        {/* Global Multi-script Typography (Noto Sans Arabic for Urdu/Arabic, Devanagari Hindi, Inter/Plus Jakarta Sans) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Noto+Kufi+Arabic:wght@400;600;700;800;900&family=Noto+Nastaliq+Urdu:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Noto+Kufi+Arabic:wght@400;600;700;800;900&family=Noto+Sans+Arabic:wght@400;500;600;700;800;900&family=Noto+Naskh+Arabic:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
           rel="stylesheet"
         />
 

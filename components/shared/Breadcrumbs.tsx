@@ -22,13 +22,25 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
   const { t, language, isRTL } = useI18n();
   const loc = BREADCRUMB_LOCALES[language] || BREADCRUMB_LOCALES.en;
 
+  const handleBack = () => {
+    try {
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back();
+      } else {
+        router.push('/tools');
+      }
+    } catch (_) {
+      router.push('/tools');
+    }
+  };
+
   return (
     <div className="flex items-center justify-between gap-3 mb-4">
       <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold shadow-xs active:scale-95 transition-all"
+          onClick={handleBack}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
           aria-label={loc.backAria}
         >
           <ArrowLeft className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />

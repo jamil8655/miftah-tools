@@ -4,6 +4,10 @@
 
 @layer base {
   :root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -57,21 +61,40 @@
   }
 }
 
-/* Multilingual Typography & Nastaliq / Arabic / Devanagari support */
+/* Safe Area Inset Support for Notch, Dynamic Island, and Android 14/15/16 Edge-to-Edge */
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+
+.safe-pt-header {
+  padding-top: max(0px, env(safe-area-inset-top, 0px));
+}
+
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+.safe-pb-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Multilingual Typography: Modern Compact Naskh for Urdu & Arabic, Devanagari for Hindi */
 html.lang-ur, html[lang="ur"] {
-  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', 'Segoe UI', Tahoma, sans-serif;
-  line-height: 1.8;
+  font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  line-height: 1.55;
+  letter-spacing: 0;
 }
 
 html.lang-ar, html[lang="ar"] {
-  font-family: 'Tajawal', 'Cairo', 'Almarai', 'Noto Sans Arabic', 'Noto Kufi Arabic', 'Segoe UI', Tahoma, sans-serif;
-  line-height: 1.7;
+  font-family: 'Noto Sans Arabic', 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, system-ui, sans-serif;
+  line-height: 1.55;
   letter-spacing: 0;
 }
 
 html.lang-hi, html[lang="hi"] {
-  font-family: 'Noto Sans Devanagari', 'Mangal', 'Segoe UI', sans-serif;
+  font-family: 'Noto Sans Devanagari', 'Mangal', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
   line-height: 1.6;
+  letter-spacing: 0.01em;
 }
 
 [dir="rtl"] {

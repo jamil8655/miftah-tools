@@ -21,6 +21,8 @@ import {
   Workflow,
   Star,
   ShieldCheck,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { getLocalizedTool, getLocalizedCategory } from '@/lib/i18n/catalog-translations';
@@ -403,7 +405,45 @@ export function UnifiedSearchModal({
   const loc = SEARCH_LOCALES[language] || SEARCH_LOCALES.en;
   const [query, setQuery] = useState(initialQuery);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const startVoiceSearch = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice search is not supported in this browser.');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      const langMap: Record<Language, string> = {
+        ur: 'ur-PK',
+        ar: 'ar-SA',
+        hi: 'hi-IN',
+        en: 'en-US',
+      };
+      recognition.lang = langMap[language] || 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setQuery(transcript);
+        }
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (_) {
+      setIsListening(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -497,6 +537,18 @@ export function UnifiedSearchModal({
           />
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={startVoiceSearch}
+              className={`p-2 rounded-xl transition-all ${
+                isListening
+                  ? 'bg-rose-600 text-white animate-pulse shadow-md'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}
+              title="Voice Search (Speak in Urdu, Arabic, Hindi, or English)"
+            >
+              <Mic className="w-4 h-4" />
+            </button>
             {query && (
               <button
                 type="button"

@@ -15,11 +15,15 @@ import {
   AlertCircle,
   BookOpen,
   Globe2,
+  Share2,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
+import { shareAppNative } from '@/lib/native/android-bridge';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 const FOOTER_LOCALES = {
   en: {
+    shareApp: 'Share App with Friends',
     engineTitle: '500 MB Client-Side Engine',
     engineDesc: 'Transform massive documents & media smoothly in-browser.',
     privacyTitle: '100% In-Browser Privacy',
@@ -32,8 +36,14 @@ const FOOTER_LOCALES = {
     cyberSec: 'Cyber Security & Encryption',
     viewAllCourses: 'Explore All Courses →',
     viewAllTools: 'Explore All 220+ Tools →',
+    pdfToWord: 'PDF to Word (OCR)',
+    pdfEditor: 'PDF Editor Studio',
+    imageStudio: 'Image Studio Suite',
+    ocrText: 'OCR Image to Text',
+    markItDown: 'MarkItDown AI Studio',
   },
   ur: {
+    shareApp: 'دوستوں کے ساتھ ایپ شیئر کریں',
     engineTitle: '500 ایم بی کلائنٹ سائیڈ انجن',
     engineDesc: 'بڑی دستاویزات اور میڈیا کو براؤزر کے اندر آسانی سے پروسیس کریں۔',
     privacyTitle: '100% مکمل رازداری کی ضمانت',
@@ -46,8 +56,14 @@ const FOOTER_LOCALES = {
     cyberSec: 'سائبر سیکیورٹی اور انکرپشن',
     viewAllCourses: 'تمام کورسز دیکھیں ←',
     viewAllTools: 'تمام 220+ ٹولز دیکھیں ←',
+    pdfToWord: 'پی ڈی ایف سے ورڈ (OCR)',
+    pdfEditor: 'پی ڈی ایف ایڈیٹر اسٹوڈیو',
+    imageStudio: 'امیج اسٹوڈیو سویٹ',
+    ocrText: 'تصویر سے ٹیکسٹ نکالیں (OCR)',
+    markItDown: 'مارک اِٹ ڈاؤن اے آئی اسٹوڈیو',
   },
   ar: {
+    shareApp: 'مشاركة التطبيق مع الأصدقاء',
     engineTitle: 'محرك محلي فائق بسعة 500 ميجابايت',
     engineDesc: 'معالجة المستندات والوسائط الضخمة مباشرة وبسلاسة في المتصفح.',
     privacyTitle: 'خصوصية وأمان محلي بنسبة 100%',
@@ -60,8 +76,14 @@ const FOOTER_LOCALES = {
     cyberSec: 'الأمن السيبراني والتشفير',
     viewAllCourses: 'استكشف جميع الكورسات ←',
     viewAllTools: 'استكشف جميع الأدوات 220+ ←',
+    pdfToWord: 'تحويل PDF إلى Word (OCR)',
+    pdfEditor: 'استوديو محرر PDF التفاعلي',
+    imageStudio: 'استوديو معالجة وتحسين الصور',
+    ocrText: 'استخراج النصوص من الصور (OCR)',
+    markItDown: 'استوديو MarkItDown للذكاء الاصطناعي',
   },
   hi: {
+    shareApp: 'दोस्तों के साथ ऐप शेयर करें',
     engineTitle: '500 MB क्लाइंट-साइड इंजन',
     engineDesc: 'ब्राउज़र में सीधे भारी दस्तावेज़ और मीडिया फ़ाइलें प्रोसेस करें।',
     privacyTitle: '100% इन-ब्राउज़र गोपनीयता',
@@ -74,6 +96,11 @@ const FOOTER_LOCALES = {
     cyberSec: 'साइबर सुरक्षा व एन्क्रिप्शन',
     viewAllCourses: 'सभी कोर्सेज देखें →',
     viewAllTools: 'सभी 220+ टूल्स देखें →',
+    pdfToWord: 'PDF से Word (OCR)',
+    pdfEditor: 'PDF एडिटर स्टूडियो',
+    imageStudio: 'इमेज स्टूडियो सूट',
+    ocrText: 'इमेज से टेक्स्ट निकालें (OCR)',
+    markItDown: 'MarkItDown AI स्टूडियो',
   },
 };
 
@@ -86,7 +113,7 @@ export function Footer() {
       dir={isRTL ? 'rtl' : 'ltr'}
       className="hidden lg:block w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 mt-20 transition-colors"
     >
-      {/* Top Banner Guarantees */}
+      {/* 3 Core Trust Badges */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center sm:text-left rtl:sm:text-right">
           <div className="flex items-center justify-center sm:justify-start gap-3">
@@ -135,28 +162,44 @@ export function Footer() {
               {t.footer.desc}
             </p>
 
-            {/* Language Quick Switcher */}
-            <div className="flex items-center gap-2 pt-2">
-              <Globe2 className="w-4 h-4 text-slate-400" />
-              <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-                {[
-                  { id: 'en', label: 'English' },
-                  { id: 'ur', label: 'اردو' },
-                  { id: 'ar', label: 'العربية' },
-                  { id: 'hi', label: 'हिन्दी' },
-                ].map((l) => (
-                  <button
-                    key={l.id}
-                    onClick={() => setLanguage(l.id as any)}
-                    className={`px-2 py-0.5 rounded-md text-[11px] transition-all ${
-                      language === l.id
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
-                    }`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
+            {/* Language Quick Switcher & Share App Trigger */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-2">
+                <Globe2 className="w-4 h-4 text-slate-400" />
+                <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+                  {[
+                    { id: 'en', label: 'English' },
+                    { id: 'ur', label: 'اردو' },
+                    { id: 'ar', label: 'العربية' },
+                    { id: 'hi', label: 'हिन्दी' },
+                  ].map((l) => (
+                    <button
+                      key={l.id}
+                      onClick={() => setLanguage(l.id as any)}
+                      className={`px-2 py-0.5 rounded-md text-[11px] transition-all ${
+                        language === l.id
+                          ? 'bg-brand-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                      }`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    shareAppNative(language);
+                  }}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-brand-50 dark:bg-slate-800 dark:hover:bg-brand-950/50 text-slate-700 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all active:scale-95 shadow-xs"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                  <span>{loc.shareApp}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -210,22 +253,27 @@ export function Footer() {
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
                 <Link href="/tools/pdf-to-docx" className="hover:text-brand-600 transition-colors">
-                  PDF to Word (OCR)
+                  {loc.pdfToWord}
                 </Link>
               </li>
               <li>
                 <Link href="/pdf-editor" className="hover:text-brand-600 transition-colors">
-                  PDF Editor Studio
+                  {loc.pdfEditor}
                 </Link>
               </li>
               <li>
                 <Link href="/image-studio" className="hover:text-brand-600 transition-colors">
-                  Image Studio Suite
+                  {loc.imageStudio}
                 </Link>
               </li>
               <li>
                 <Link href="/ocr" className="hover:text-brand-600 transition-colors">
-                  OCR Image to Text
+                  {loc.ocrText}
+                </Link>
+              </li>
+              <li>
+                <Link href="/markitdown" className="hover:text-brand-600 transition-colors font-bold text-brand-600 dark:text-brand-400">
+                  🤖 {loc.markItDown}
                 </Link>
               </li>
               <li>

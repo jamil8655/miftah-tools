@@ -136,7 +136,7 @@ const ADMIN_LOCALES: Record<Language, {
 }> = {
   en: {
     controlCenter: 'Control Center',
-    version: 'v2.5.0 • Master',
+    version: 'Master Control Console',
     deviceStorage: 'Device Storage',
     clientSidePrivacy: '100% Client-Side Privacy',
     back: 'Back',
@@ -197,7 +197,7 @@ const ADMIN_LOCALES: Record<Language, {
   },
   ur: {
     controlCenter: 'ایڈمن کنٹرول سینٹر',
-    version: 'v2.5.0 • ماسٹر ایڈمن',
+    version: 'ماسٹر کنٹرول کنسول',
     deviceStorage: 'ڈیوائس اسٹوریج',
     clientSidePrivacy: '100% کلائنٹ سائیڈ رازداری',
     back: 'واپس',
@@ -258,7 +258,7 @@ const ADMIN_LOCALES: Record<Language, {
   },
   ar: {
     controlCenter: 'مركز التحكم والإدارة',
-    version: 'v2.5.0 • النظام الأساسي',
+    version: 'لوحة التحكم الرئيسية',
     deviceStorage: 'مساحة تخزين الجهاز',
     clientSidePrivacy: 'خصوصية تامة 100% داخل جهازك',
     back: 'رجوع',
@@ -319,7 +319,7 @@ const ADMIN_LOCALES: Record<Language, {
   },
   hi: {
     controlCenter: 'कंट्रोल सेंटर',
-    version: 'v2.5.0 • मास्टर',
+    version: 'मास्टर कंट्रोल कंसोल',
     deviceStorage: 'डिवाइस स्टोरेज',
     clientSidePrivacy: '100% डिवाइस गोपनीयता',
     back: 'वापस',

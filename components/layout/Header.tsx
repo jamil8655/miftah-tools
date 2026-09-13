@@ -24,15 +24,19 @@ import {
   Star,
   ChevronRight,
   Globe2,
+  Share2,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
 import { UnifiedSearchModal } from '@/components/search/UnifiedSearchModal';
+import { shareAppNative } from '@/lib/native/android-bridge';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 const HEADER_LOCALES = {
   en: {
     tagline: '220+ Client-Side Document & Productivity Tools',
     installApp: 'Install App',
+    shareApp: 'Share App',
     search: 'Search',
     searchTooltip: 'Quick Search (⌘K)',
     navigationSection: 'Navigation',
@@ -50,11 +54,12 @@ const HEADER_LOCALES = {
     terms: 'Terms & Conditions',
     language: 'Language',
     logout: 'Log Out',
-    versionLabel: 'v2.4.0 Native Edition',
+    versionLabel: '220+ Client-Side Tools',
   },
   ur: {
     tagline: '220+ کلائنٹ سائیڈ دستاویز اور پیداواری ٹولز',
     installApp: 'ایپ انسٹال کریں',
+    shareApp: 'ایپ شیئر کریں',
     search: 'تلاش کریں',
     searchTooltip: 'فوری تلاش (⌘K)',
     navigationSection: 'نیویگیشن',
@@ -72,11 +77,12 @@ const HEADER_LOCALES = {
     terms: 'شرائط و ضوابط',
     language: 'زبان منتخب کریں',
     logout: 'لاگ آؤٹ',
-    versionLabel: 'v2.4.0 نیٹو ایڈیشن',
+    versionLabel: '220+ آف لائن ٹولز',
   },
   ar: {
     tagline: '220+ أداة محلية متطورة للمستندات والإنتاجية',
     installApp: 'تثبيت التطبيق',
+    shareApp: 'مشاركة التطبيق',
     search: 'بحث',
     searchTooltip: 'بحث سريع (⌘K)',
     navigationSection: 'التنقل',
@@ -94,11 +100,12 @@ const HEADER_LOCALES = {
     terms: 'الشروط والأحكام',
     language: 'اللغة',
     logout: 'تسجيل الخروج',
-    versionLabel: 'v2.4.0 الإصدار الأصلي',
+    versionLabel: '220+ أداة محلية',
   },
   hi: {
     tagline: '220+ क्लाइंट-साइड दस्तावेज़ व उत्पादकता टूल्स',
     installApp: 'ऐप इंस्टॉल करें',
+    shareApp: 'ऐप शेयर करें',
     search: 'खोजें',
     searchTooltip: 'त्वरित खोज (⌘K)',
     navigationSection: 'नेविगेशन',
@@ -116,7 +123,7 @@ const HEADER_LOCALES = {
     terms: 'नियम व शर्तें',
     language: 'भाषा चुनें',
     logout: 'लॉग आउट',
-    versionLabel: 'v2.4.0 नेटिव संस्करण',
+    versionLabel: '220+ ऑफ़लाइन टूल्स',
   },
 };
 
@@ -198,7 +205,7 @@ export function Header() {
     <>
       <header
         dir={isRTL ? 'rtl' : 'ltr'}
-        className={`sticky top-0 z-40 w-full max-w-full transition-all duration-200 ${
+        className={`sticky top-0 z-40 w-full max-w-full transition-all duration-200 safe-pt-header ${
           isScrolled
             ? 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-md'
             : 'bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs'
@@ -277,6 +284,21 @@ export function Header() {
               <span className="hidden md:inline font-bold">{loc.search}</span>
             </button>
 
+            {/* Quick Share App Button */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                shareAppNative(language);
+              }}
+              className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 text-xs font-medium shrink-0 shadow-xs active:scale-95"
+              title={loc.shareApp}
+              aria-label={loc.shareApp}
+            >
+              <Share2 className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+              <span className="hidden xl:inline font-bold">{loc.shareApp}</span>
+            </button>
+
             {/* Notification Bell */}
             <Link
               href="/notifications"
@@ -316,7 +338,7 @@ export function Header() {
           <div
             dir={isRTL ? 'rtl' : 'ltr'}
             onClick={(e) => e.stopPropagation()}
-            className={`relative z-10 w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col justify-between p-5 overflow-y-auto animate-in duration-200 ${
+            className={`relative z-10 w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col justify-between p-5 pt-[max(1.25rem,env(safe-area-inset-top,1.25rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] overflow-y-auto animate-in duration-200 ${
               isRTL ? 'slide-in-from-left' : 'slide-in-from-right'
             }`}
           >
@@ -344,6 +366,25 @@ export function Header() {
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
+
+              {/* Share App Action Card in Drawer */}
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setIsMenuDrawerOpen(false);
+                  shareAppNative(language);
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-brand-500/10 via-indigo-500/10 to-purple-500/10 dark:from-brand-950/50 dark:to-indigo-950/50 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs font-bold active:scale-98 transition-all shadow-xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-xl bg-brand-600 text-white shadow-xs">
+                    <Share2 className="w-4 h-4" />
+                  </div>
+                  <span className="font-black">{loc.shareApp}</span>
+                </div>
+                <ChevronRight className={`w-4 h-4 text-brand-500 ${isRTL ? 'rotate-180' : ''}`} />
+              </button>
 
               {/* Navigation Links Group */}
               <div className="space-y-1">

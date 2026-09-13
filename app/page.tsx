@@ -31,10 +31,12 @@ import {
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { ToolCard } from '@/components/shared/ToolCard';
 import { HorizontalRecentToolsCarousel } from '@/components/shared/HorizontalRecentToolsCarousel';
+import { CategoryToolsModal } from '@/components/shared/CategoryToolsModal';
 import { NativeFeedAd } from '@/components/ads/NativeFeedAd';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 import { getLocalizedTool, getLocalizedCategory } from '@/lib/i18n/catalog-translations';
 
@@ -73,68 +75,111 @@ const HOME_LOCALES = {
     bookmarked: (count: number) => `Bookmarked Tools (${count})`,
     manageBookmarks: 'Manage Bookmarks →',
     frequentUtilities: 'Frequent Utilities',
-    allToolsLink: 'All 220+ Tools →',
+    allToolsLink: 'All Tools →',
     categories: 'Tool Categories',
     showAllCategories: 'Show All Categories',
     toolsCount: (count: number) => `${count} tools`,
     popularTools: 'Popular Tools',
     selectedTools: (catLabel: string) => `${catLabel} Tools`,
-    exploreDirectory: (count: number) => `Explore All ${count} Tools in Directory`,
+    exploreDirectory: (count: number) => `Explore All Tools in Directory`,
   },
   ur: {
     bookmarked: (count: number) => `محفوظ شدہ ٹولز (${count})`,
     manageBookmarks: 'بک مارکس کا انتظام کریں ←',
     frequentUtilities: 'اکثر استعمال ہونے والے ٹولز',
-    allToolsLink: 'تمام 220+ ٹولز دیکھیں ←',
+    allToolsLink: 'تمام ٹولز دیکھیں ←',
     categories: 'اقسام کی فہرست',
     showAllCategories: 'تمام اقسام دیکھیں',
     toolsCount: (count: number) => `${count} ٹولز`,
     popularTools: 'مقبول ترین ٹولز',
     selectedTools: (catLabel: string) => `${catLabel} کے ٹولز`,
-    exploreDirectory: (count: number) => `ڈائرکٹری کے تمام ${count} ٹولز دیکھیں`,
+    exploreDirectory: (count: number) => `ڈائرکٹری کے تمام ٹولز دیکھیں`,
   },
   ar: {
     bookmarked: (count: number) => `الأدوات المحفوظة (${count})`,
     manageBookmarks: 'إدارة الإشارات المرجعية ←',
     frequentUtilities: 'الأدوات الشائعة',
-    allToolsLink: 'جميع الأدوات 220+ ←',
+    allToolsLink: 'جميع الأدوات ←',
     categories: 'تصنيفات الأدوات',
     showAllCategories: 'عرض جميع التصنيفات',
     toolsCount: (count: number) => `${count} أداة`,
     popularTools: 'الأدوات الشائعة',
     selectedTools: (catLabel: string) => `أدوات ${catLabel}`,
-    exploreDirectory: (count: number) => `استكشف جميع الأدوات (${count}) في الدليل`,
+    exploreDirectory: (count: number) => `استكشف جميع الأدوات في الدليل`,
   },
   hi: {
     bookmarked: (count: number) => `बुकमार्क किए गए टूल्स (${count})`,
     manageBookmarks: 'बुकमार्क प्रबंधित करें →',
     frequentUtilities: 'अक्सर उपयोग किए जाने वाले टूल्स',
-    allToolsLink: 'सभी 220+ टूल्स देखें →',
+    allToolsLink: 'सभी टूल्स देखें →',
     categories: 'टूल श्रेणियां',
     showAllCategories: 'सभी श्रेणियां दिखाएं',
     toolsCount: (count: number) => `${count} टूल्स`,
     popularTools: 'लोकप्रिय टूल्स',
     selectedTools: (catLabel: string) => `${catLabel} टूल्स`,
-    exploreDirectory: (count: number) => `निर्देशिका में सभी ${count} टूल्स देखें`,
+    exploreDirectory: (count: number) => `निर्देशिका में सभी टूल्स देखें`,
   },
 };
 
 const QUICK_ACTION_DEFINITIONS = [
   { id: 'compress-pdf', color: 'bg-rose-500', fallbackIcon: Minimize2 },
   { id: 'merge-pdf', color: 'bg-blue-500', fallbackIcon: Combine },
-  { id: 'pdf-to-word', color: 'bg-indigo-500', fallbackIcon: FileText },
-  { id: 'word-to-pdf', color: 'bg-teal-500', fallbackIcon: FileText },
+  { id: 'pdf-to-docx', color: 'bg-indigo-500', fallbackIcon: FileText },
+  { id: 'docx-to-pdf', color: 'bg-teal-500', fallbackIcon: FileText },
   { id: 'images-to-pdf', color: 'bg-amber-500', fallbackIcon: ImageIcon },
   { id: 'image-resizer', color: 'bg-emerald-500', fallbackIcon: Camera },
-  { id: 'ocr-image-to-text', color: 'bg-purple-500', fallbackIcon: ScanText },
-  { id: 'qr-code-generator', color: 'bg-cyan-500', fallbackIcon: QrCode },
+  { id: 'ocr-image', color: 'bg-purple-500', fallbackIcon: ScanText },
+  { id: 'qr-generator', color: 'bg-cyan-500', fallbackIcon: QrCode },
 ];
 
 export default function HomePage() {
   const { language, isRTL } = useI18n();
   const { favorites, pinnedTools } = useUserStore();
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [modalCategory, setModalCategory] = useState<string | null>(null);
   const loc = HOME_LOCALES[language] || HOME_LOCALES.en;
+
+  // Restore category & scroll position when returning back from a tool
+  React.useEffect(() => {
+    try {
+      const savedCat = sessionStorage.getItem('miftah_home_category');
+      if (savedCat && (savedCat === 'all' || CATEGORIES_CONFIG.some((c) => c.id === savedCat))) {
+        setActiveCategory(savedCat);
+      }
+
+      const lastToolId = sessionStorage.getItem('miftah_last_clicked_tool');
+      const savedScroll = sessionStorage.getItem('miftah_home_scroll');
+
+      if (lastToolId) {
+        // Allow DOM to render then scroll to exact tool
+        const timer = setTimeout(() => {
+          const el = document.getElementById(`tool-card-${lastToolId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.02]');
+            setTimeout(() => {
+              el.classList.remove('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.02]');
+            }, 2500);
+          } else if (savedScroll) {
+            window.scrollTo({ top: parseInt(savedScroll, 10) || 0, behavior: 'smooth' });
+          }
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    } catch (_) {}
+  }, []);
+
+  // Save scroll position before unmounting / navigating
+  React.useEffect(() => {
+    const handleScroll = () => {
+      try {
+        sessionStorage.setItem('miftah_home_scroll', window.scrollY.toString());
+      } catch (_) {}
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // User's bookmarked favorite tools
   const favoriteTools = TOOLS_LIST.filter(
@@ -151,11 +196,28 @@ export default function HomePage() {
     ? loc.popularTools
     : loc.selectedTools(getLocalizedCategory(activeCategory, language));
 
+  const handleCategoryClick = (catId: string) => {
+    triggerHaptic('selection');
+    setModalCategory(catId);
+    setActiveCategory(catId);
+    try {
+      sessionStorage.setItem('miftah_home_category', catId);
+    } catch (_) {}
+  };
+
+  const handleResetCategory = () => {
+    triggerHaptic('selection');
+    setActiveCategory('all');
+    try {
+      sessionStorage.setItem('miftah_home_category', 'all');
+    } catch (_) {}
+  };
+
   return (
-    <div className="space-y-6 sm:space-y-8 pb-24 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
+    <div className="space-y-6 sm:space-y-8 pt-2 sm:pt-4 pb-24 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
       {/* 1. BOOKMARKED FAVORITES (Conditional on real user saving) */}
       {favoriteTools.length > 0 && (
-        <section className="px-4 sm:px-6 lg:px-8 pt-4 max-w-7xl mx-auto space-y-3">
+        <section className="px-4 sm:px-6 lg:px-8 pt-2 max-w-7xl mx-auto space-y-3">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
               <Bookmark className="w-3.5 h-3.5 fill-current" />
@@ -230,8 +292,8 @@ export default function HomePage() {
           {activeCategory !== 'all' && (
             <button
               type="button"
-              onClick={() => setActiveCategory('all')}
-              className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline"
+              onClick={handleResetCategory}
+              className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
             >
               {loc.showAllCategories}
             </button>
@@ -250,11 +312,11 @@ export default function HomePage() {
               <button
                 key={cat.id}
                 type="button"
-                onClick={() => setActiveCategory(activeCategory === cat.id ? 'all' : cat.id)}
+                onClick={() => handleCategoryClick(cat.id)}
                 className={`p-3 rounded-2xl border text-left rtl:text-right transition-all duration-150 active:scale-95 flex items-center gap-3 min-h-[64px] ${
                   isSelected
                     ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/20'
-                    : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
+                    : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-brand-400 dark:hover:border-brand-600'
                 }`}
               >
                 <div
@@ -282,7 +344,7 @@ export default function HomePage() {
       </section>
 
       {/* 5. TOOL DIRECTORY GRID */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
+      <section id="tools-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
             {activeCategoryLabel}
@@ -316,6 +378,12 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Interactive Category Tools Instant Pop-up Sheet */}
+      <CategoryToolsModal
+        categoryId={modalCategory}
+        onClose={() => setModalCategory(null)}
+      />
     </div>
   );
 }

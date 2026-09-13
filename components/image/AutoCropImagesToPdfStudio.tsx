@@ -279,14 +279,18 @@ export function AutoCropImagesToPdfStudio() {
           const canvasTop = document.createElement('canvas');
           canvasTop.width = natW;
           canvasTop.height = Math.floor(natH / 2);
-          const ctxTop = canvasTop.getContext('2d')!;
+          const ctxTop = canvasTop.getContext('2d', { willReadFrequently: true })!;
+          ctxTop.imageSmoothingEnabled = true;
+          ctxTop.imageSmoothingQuality = 'high';
           ctxTop.drawImage(img, 0, 0, natW, Math.floor(natH / 2), 0, 0, natW, Math.floor(natH / 2));
 
           // Slice 2: Bottom Half
           const canvasBottom = document.createElement('canvas');
           canvasBottom.width = natW;
           canvasBottom.height = Math.ceil(natH / 2);
-          const ctxBottom = canvasBottom.getContext('2d')!;
+          const ctxBottom = canvasBottom.getContext('2d', { willReadFrequently: true })!;
+          ctxBottom.imageSmoothingEnabled = true;
+          ctxBottom.imageSmoothingQuality = 'high';
           ctxBottom.drawImage(
             img,
             0,
@@ -312,22 +316,26 @@ export function AutoCropImagesToPdfStudio() {
                   canvasBottom.height = 0;
                   resolve(slices);
                 });
-              }, 'image/jpeg', 0.95);
+              }, 'image/jpeg', 0.98);
             });
-          }, 'image/jpeg', 0.95);
+          }, 'image/jpeg', 0.98);
         } else if (cutMode === 'split-vertical') {
           // Slice 1: Left Half
           const canvasLeft = document.createElement('canvas');
           canvasLeft.width = Math.floor(natW / 2);
           canvasLeft.height = natH;
-          const ctxLeft = canvasLeft.getContext('2d')!;
+          const ctxLeft = canvasLeft.getContext('2d', { willReadFrequently: true })!;
+          ctxLeft.imageSmoothingEnabled = true;
+          ctxLeft.imageSmoothingQuality = 'high';
           ctxLeft.drawImage(img, 0, 0, Math.floor(natW / 2), natH, 0, 0, Math.floor(natW / 2), natH);
 
           // Slice 2: Right Half
           const canvasRight = document.createElement('canvas');
           canvasRight.width = Math.ceil(natW / 2);
           canvasRight.height = natH;
-          const ctxRight = canvasRight.getContext('2d')!;
+          const ctxRight = canvasRight.getContext('2d', { willReadFrequently: true })!;
+          ctxRight.imageSmoothingEnabled = true;
+          ctxRight.imageSmoothingQuality = 'high';
           ctxRight.drawImage(
             img,
             Math.floor(natW / 2),
@@ -353,43 +361,37 @@ export function AutoCropImagesToPdfStudio() {
                   canvasRight.height = 0;
                   resolve(slices);
                 });
-              }, 'image/jpeg', 0.95);
+              }, 'image/jpeg', 0.98);
             });
-          }, 'image/jpeg', 0.95);
+          }, 'image/jpeg', 0.98);
         } else {
           // Custom Margins or Auto-trim
-          let sX = 0;
-          let sY = 0;
-          let sW = natW;
-          let sH = natH;
+          const topMarginPct = topCrop / 100;
+          const bottomMarginPct = bottomCrop / 100;
+          const leftMarginPct = leftCrop / 100;
+          const rightMarginPct = rightCrop / 100;
 
-          if (cutMode === 'custom-margins') {
-            sX = (leftCrop / 100) * natW;
-            sY = (topCrop / 100) * natH;
-            sW = Math.max(10, natW - sX - (rightCrop / 100) * natW);
-            sH = Math.max(10, natH - sY - (bottomCrop / 100) * natH);
-          } else if (cutMode === 'auto-trim') {
-            // Trim standard 5% scan edge borders
-            sX = 0.04 * natW;
-            sY = 0.04 * natH;
-            sW = natW * 0.92;
-            sH = natH * 0.92;
-          }
+          const cropX = Math.round(natW * leftMarginPct);
+          const cropY = Math.round(natH * topMarginPct);
+          const cropW = Math.max(10, Math.round(natW * (1 - leftMarginPct - rightMarginPct)));
+          const cropH = Math.max(10, Math.round(natH * (1 - topMarginPct - bottomMarginPct)));
 
           const canvas = document.createElement('canvas');
-          canvas.width = Math.floor(sW);
-          canvas.height = Math.floor(sH);
-          const ctx = canvas.getContext('2d')!;
-          ctx.drawImage(img, sX, sY, sW, sH, 0, 0, canvas.width, canvas.height);
+          canvas.width = cropW;
+          canvas.height = cropH;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
 
           canvas.toBlob((blob) => {
             blob?.arrayBuffer().then((buf) => {
-              slices.push({ buffer: buf, width: canvas.width, height: canvas.height });
+              slices.push({ buffer: buf, width: cropW, height: cropH });
               canvas.width = 0;
               canvas.height = 0;
               resolve(slices);
             });
-          }, 'image/jpeg', 0.95);
+          }, 'image/jpeg', 0.98);
         }
       };
       img.src = item.previewUrl;

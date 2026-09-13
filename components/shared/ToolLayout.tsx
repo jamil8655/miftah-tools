@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { ToolDefinition } from '@/lib/types';
 import { Breadcrumbs } from './Breadcrumbs';
-import { PrivacyBadge } from './PrivacyBadge';
 import { FileUploader } from './FileUploader';
 import { ProgressBar } from './ProgressBar';
 import { ResultPreview } from './ResultPreview';
@@ -105,6 +104,11 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
   useEffect(() => {
     setIsMounted(true);
 
+    try {
+      sessionStorage.setItem('miftah_last_clicked_tool', tool.id);
+      recordToolUsage(tool.id, localized.name, tool.category, tool.icon);
+    } catch (_) {}
+
     const handleGlobalDownload = (e: CustomEvent<SavedFileInfo>) => {
       if (e.detail) {
         setDownloadedModalFile(e.detail);
@@ -115,7 +119,7 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
     return () => {
       window.removeEventListener('miftah:file-downloaded' as any, handleGlobalDownload as any);
     };
-  }, []);
+  }, [tool.id]);
 
   const handleStartProcess = async () => {
     if (selectedFiles.length === 0 && tool.maxFiles > 0) return;
@@ -205,14 +209,13 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
 
   if (!isMounted) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        <div className="h-6 w-36 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-        <div className="text-center space-y-3">
-          <div className="h-5 w-28 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto" />
-          <div className="h-8 w-64 bg-slate-200 dark:bg-slate-800 rounded-xl mx-auto" />
-          <div className="h-4 w-96 bg-slate-100 dark:bg-slate-800/60 rounded-lg mx-auto" />
+      <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+        <div className="text-center space-y-1.5">
+          <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-xl mx-auto" />
+          <div className="h-3.5 w-64 bg-slate-100 dark:bg-slate-800/60 rounded-lg mx-auto" />
         </div>
-        <div className="h-64 rounded-3xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800" />
+        <div className="h-60 rounded-3xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800" />
       </div>
     );
   }
@@ -220,7 +223,7 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
   return (
     <div
       dir={isRTL ? 'rtl' : 'ltr'}
-      className="max-w-4xl mx-auto px-4 py-8 space-y-8 animate-in fade-in duration-300"
+      className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-5 animate-in fade-in duration-200 pb-20"
     >
       {/* Breadcrumbs */}
       <Breadcrumbs
@@ -230,15 +233,12 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
         ]}
       />
 
-      {/* Tool Header */}
-      <div className="text-center space-y-3">
-        <div className="flex justify-center">
-          <PrivacyBadge isClientSide={tool.isClientSide} />
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight">
+      {/* Compact Tool Header */}
+      <div className="text-center space-y-1">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
           {localized.name}
         </h1>
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
           {localized.shortDesc}
         </p>
       </div>

@@ -9,6 +9,25 @@ import JSZip from 'jszip';
 import { Document, Paragraph, TextRun, HeadingLevel, Packer } from 'docx';
 import { runOcr } from '@/lib/ocr/ocr-engine';
 import { getPdfJsLib } from '@/lib/utils/formatters';
+import {
+  docxToStructuredMarkdown,
+  pdfToStructuredMarkdown,
+  pptxToStructuredMarkdown,
+  excelToStructuredMarkdown,
+  imageToStructuredMarkdown,
+  zipToStructuredMarkdown,
+  universalMarkItDown,
+} from './markitdown-engine';
+
+export {
+  docxToStructuredMarkdown,
+  pdfToStructuredMarkdown,
+  pptxToStructuredMarkdown,
+  excelToStructuredMarkdown,
+  imageToStructuredMarkdown,
+  zipToStructuredMarkdown,
+  universalMarkItDown,
+};
 
 /**
  * ----------------------------------------------------
@@ -700,9 +719,7 @@ export async function docxToHtml(file: File): Promise<string> {
 }
 
 export async function docxToMarkdown(file: File): Promise<string> {
-  const rawText = await docxToTxt(file);
-  const paragraphs = rawText.split('\n\n');
-  return paragraphs.map((p) => p.trim()).filter(Boolean).join('\n\n');
+  return await docxToStructuredMarkdown(file);
 }
 
 export async function cleanWordDocument(file: File): Promise<Blob> {
@@ -968,37 +985,93 @@ export async function applyImageFilter(
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return reject(new Error('Canvas context unavailable'));
-
-      if (filterType === 'grayscale') {
-        ctx.filter = `grayscale(${Math.min(100, intensity * 100)}%)`;
-      } else if (filterType === 'bw') {
-        ctx.filter = 'grayscale(100%) contrast(200%)';
-      } else if (filterType === 'blur') {
-        ctx.filter = `blur(${intensity * 4}px)`;
-      } else if (filterType === 'brightness') {
-        ctx.filter = `brightness(${intensity * 100}%)`;
-      } else if (filterType === 'contrast') {
-        ctx.filter = `contrast(${intensity * 100}%)`;
-      }
-
-      ctx.drawImage(img, 0, 0);
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Image filtering failed'));
-        },
-        file.type.includes('png') ? 'image/png' : 'image/jpeg',
-        0.92
-      );
+    const url = URL.createObjectURL(file);
+    const cleanup = () => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (_) {}
     };
-    img.onerror = () => reject(new Error('Failed to load image for filtering'));
-    img.src = URL.createObjectURL(file);
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) {
+          cleanup();
+          return reject(new Error('Canvas context unavailable'));
+        }
+
+        if (filterType === 'grayscale') {
+          ctx.filter = `grayscale(${Math.min(100, intensity * 100)}%)`;
+        } else if (filterType === 'bw') {
+          ctx.filter = 'grayscale(100%) contrast(200%)';
+        } else if (filterType === 'blur') {
+          ctx.filter = `blur(${Math.max(1, intensity * 4)}px)`;
+        } else if (filterType === 'brightness') {
+          ctx.filter = `brightness(${intensity * 100}%)`;
+        } else if (filterType === 'contrast') {
+          ctx.filter = `contrast(${intensity * 100}%)`;
+        }
+
+        ctx.drawImage(img, 0, 0);
+
+        // Apply Convolution Kernel for Sharpening
+        if (filterType === 'sharpen') {
+          const w = canvas.width;
+          const h = canvas.height;
+          const imgData = ctx.getImageData(0, 0, w, h);
+          const src = imgData.data;
+          const output = ctx.createImageData(w, h);
+          const dst = output.data;
+
+          // 3x3 Sharpen Kernel
+          const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+          const kWeight = 1;
+
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              let r = 0, g = 0, b = 0;
+              for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                  const pos = ((y + ky) * w + (x + kx)) * 4;
+                  const weight = kernel[(ky + 1) * 3 + (kx + 1)];
+                  r += src[pos] * weight;
+                  g += src[pos + 1] * weight;
+                  b += src[pos + 2] * weight;
+                }
+              }
+              const dstPos = (y * w + x) * 4;
+              dst[dstPos] = Math.min(255, Math.max(0, r / kWeight));
+              dst[dstPos + 1] = Math.min(255, Math.max(0, g / kWeight));
+              dst[dstPos + 2] = Math.min(255, Math.max(0, b / kWeight));
+              dst[dstPos + 3] = src[dstPos + 3];
+            }
+          }
+          ctx.putImageData(output, 0, 0);
+        }
+
+        canvas.toBlob(
+          (blob) => {
+            cleanup();
+            if (blob) resolve(blob);
+            else reject(new Error('Image filtering failed'));
+          },
+          file.type.includes('png') ? 'image/png' : 'image/jpeg',
+          0.92
+        );
+      } catch (err) {
+        cleanup();
+        reject(err);
+      }
+    };
+
+    img.onerror = () => {
+      cleanup();
+      reject(new Error('Failed to load image for filtering'));
+    };
+    img.src = url;
   });
 }
 
@@ -1153,10 +1226,7 @@ export async function pdfToHtml(file: File): Promise<string> {
 }
 
 export async function pdfToMarkdown(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const text = await extractTextFromPdf(buffer);
-  const title = file.name.replace(/\.[^/.]+$/, '');
-  return `# ${title}\n\n${text}\n`;
+  return await pdfToStructuredMarkdown(file);
 }
 
 export async function markdownToHtml(mdText: string, title: string = 'Document'): Promise<string> {

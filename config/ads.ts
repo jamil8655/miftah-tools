@@ -2,7 +2,7 @@ export interface AdConfig {
   enabled: boolean;
   provider: 'adsense' | 'admob' | 'hybrid';
   adsense: {
-    client: string; // e.g. ca-pub-XXXXXXXXXXXXXXXX
+    client: string;
     slots: {
       headerBanner?: string;
       inFeedCard?: string;
@@ -24,10 +24,10 @@ export interface AdConfig {
 }
 
 export const adConfig: AdConfig = {
-  enabled: true, // Set to true to display responsive ad slots & test banners
+  enabled: true,
   provider: 'hybrid',
   adsense: {
-    client: process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-XXXXXXXXXXXXX',
+    client: process.env.NEXT_PUBLIC_ADSENSE_CLIENT || 'ca-pub-3660764533582226',
     slots: {
       headerBanner: '1234567890',
       inFeedCard: '2345678901',
@@ -36,16 +36,17 @@ export const adConfig: AdConfig = {
     },
   },
   admob: {
-    // Google AdMob Production IDs
+    // Official AdMob IDs for Miftah Tools
     appIdAndroid: 'ca-app-pub-3660764533582226~6406066130',
     appOpenId: 'ca-app-pub-3660764533582226/1916156788',
     adaptiveBannerId: 'ca-app-pub-3660764533582226/7382282057',
     fixedBannerId: 'ca-app-pub-3660764533582226/7382282057',
     interstitialId: 'ca-app-pub-3660764533582226/8769822246',
     rewardedId: 'ca-app-pub-3660764533582226/4639005542',
-    rewardedInterstitialId: 'ca-app-pub-3940256099942544/5354046379',
-    nativeId: 'ca-app-pub-3940256099942544/2247696110',
-    nativeVideoId: 'ca-app-pub-3940256099942544/1044960115',
+    rewardedInterstitialId: 'ca-app-pub-3660764533582226/4639005542',
+    nativeId: 'ca-app-pub-3660764533582226/7382282057',
+    nativeVideoId: 'ca-app-pub-3660764533582226/8769822246',
   },
 };
+
 

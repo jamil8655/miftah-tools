@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
+import { CertificateGenerator } from '@/components/quiz/CertificateGenerator';
 import {
   HelpCircle,
   CheckCircle2,
@@ -31,8 +32,8 @@ interface QuizQuestion {
 
 interface QuizTopic {
   id: string;
-  title: string;
-  category: string;
+  title: Record<string, string>;
+  category: Record<string, string>;
   icon: any;
   questions: QuizQuestion[];
 }
@@ -40,8 +41,18 @@ interface QuizTopic {
 const QUIZ_TOPICS: QuizTopic[] = [
   {
     id: 'web-dev',
-    title: 'Full-Stack Web Development',
-    category: 'Development',
+    title: {
+      en: 'Full-Stack Web Development',
+      ur: 'فل اسٹیک ویب ڈویلپمنٹ',
+      ar: 'تطوير الويب المتكامل',
+      hi: 'फुल-स्टैक वेब डेवलपमेंट',
+    },
+    category: {
+      en: 'Development',
+      ur: 'ڈویلپمنٹ',
+      ar: 'برمجة وتطوير',
+      hi: 'डेवलपमेंट',
+    },
     icon: Code,
     questions: [
       {
@@ -79,8 +90,18 @@ const QUIZ_TOPICS: QuizTopic[] = [
   },
   {
     id: 'ai-prompt',
-    title: 'Python & AI Prompt Engineering',
-    category: 'AI & Data',
+    title: {
+      en: 'Python & AI Prompt Engineering',
+      ur: 'پائتھون اور AI پرامپٹ انجینئرنگ',
+      ar: 'بايثون وهندسة أوامر الذكاء الاصطناعي',
+      hi: 'पायथन व AI प्रॉम्प्ट इंजीनियरिंग',
+    },
+    category: {
+      en: 'AI & Data',
+      ur: 'AI اور ڈیٹا',
+      ar: 'الذكاء الاصطناعي والبيانات',
+      hi: 'AI व डेटा',
+    },
     icon: Terminal,
     questions: [
       {
@@ -111,8 +132,18 @@ const QUIZ_TOPICS: QuizTopic[] = [
   },
   {
     id: 'security-privacy',
-    title: 'Cyber Security & Zero-Trust Privacy',
-    category: 'Security',
+    title: {
+      en: 'Cyber Security & Zero-Trust Privacy',
+      ur: 'سائبر سیکیورٹی اور زیرو ٹرسٹ پرائیویسی',
+      ar: 'الأمن السيبراني والخصوصية الموثوقة',
+      hi: 'साइबर सुरक्षा व ज़ीरो-ट्रस्ट गोपनीयता',
+    },
+    category: {
+      en: 'Security',
+      ur: 'سیکیورٹی',
+      ar: 'الأمان والحماية',
+      hi: 'सुरक्षा',
+    },
     icon: ShieldCheck,
     questions: [
       {
@@ -144,7 +175,7 @@ const QUIZ_TOPICS: QuizTopic[] = [
 ];
 
 export default function QuizPage() {
-  const { t, isRtl } = useI18n();
+  const { t, language, isRtl } = useI18n();
   const { addHistory } = useUserStore();
 
   const [selectedTopicId, setSelectedTopicId] = useState<string>('web-dev');
@@ -187,7 +218,7 @@ export default function QuizPage() {
 
     addHistory({
       type: 'course',
-      title: `Quiz: ${currentTopic.title} (Score: ${correctCount}/${questions.length})`,
+      title: `Quiz: ${currentTopic.title[language] || currentTopic.title.en} (Score: ${correctCount}/${questions.length})`,
       url: '/quiz',
       meta: 'Knowledge Check Assessment',
     });
@@ -195,8 +226,8 @@ export default function QuizPage() {
 
   const handleRetake = () => {
     setSelectedAnswers({});
-    setCurrentQuestionIdx(0);
     setIsSubmitted(false);
+    setCurrentQuestionIdx(0);
   };
 
   const calculateScore = () => {
@@ -222,7 +253,7 @@ export default function QuizPage() {
       <div className="p-6 sm:p-8 rounded-3xl bg-linear-to-r from-brand-600 via-indigo-600 to-purple-600 text-white shadow-xl shadow-brand-500/10 space-y-2">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20">
           <HelpCircle className="w-3.5 h-3.5" />
-          <span>Interactive Skill Checks</span>
+          <span>{t.quiz.title}</span>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black">{t.quiz.title}</h1>
         <p className="text-xs sm:text-sm text-brand-100 max-w-xl leading-relaxed">
@@ -237,6 +268,7 @@ export default function QuizPage() {
           {QUIZ_TOPICS.map((topic) => {
             const Icon = topic.icon;
             const isSelected = topic.id === selectedTopicId;
+            const topicTitle = topic.title[language] || topic.title.en;
 
             return (
               <button
@@ -245,7 +277,7 @@ export default function QuizPage() {
                   setSelectedTopicId(topic.id);
                   handleRetake();
                 }}
-                className={`p-4 rounded-2xl border text-left transition-all flex items-center gap-3 ${
+                className={`p-4 rounded-2xl border text-left transition-all flex items-center gap-3 cursor-pointer ${
                   isSelected
                     ? 'bg-white dark:bg-slate-900 border-brand-600 shadow-md ring-2 ring-brand-500/20'
                     : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300'
@@ -257,8 +289,10 @@ export default function QuizPage() {
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-white truncate">{topic.title}</h3>
-                  <p className="text-[10px] text-slate-400 font-mono">{topic.questions.length} Questions</p>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-white truncate">{topicTitle}</h3>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    {topic.questions.length} {language === 'ur' ? 'سوالات' : language === 'ar' ? 'أسئلة' : language === 'hi' ? 'प्रश्न' : 'Questions'}
+                  </p>
                 </div>
               </button>
             );
@@ -276,7 +310,7 @@ export default function QuizPage() {
                 {t.quiz.question} {currentQuestionIdx + 1} {t.quiz.of} {questions.length}
               </span>
               <span className="px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950 text-brand-600 text-[10px]">
-                {currentTopic.category}
+                {currentTopic.category[language] || currentTopic.category.en}
               </span>
             </div>
 
@@ -372,6 +406,15 @@ export default function QuizPage() {
                 <span className="text-xs font-mono text-slate-400">({scoreResult?.percentage}%)</span>
               </div>
             </div>
+
+            {/* Official PDF Certificate Generator (v2.0) */}
+            {scoreResult?.passed && (
+              <CertificateGenerator
+                courseOrQuizTitle={currentTopic.title[language] || currentTopic.title.en}
+                scorePercentage={scoreResult.percentage}
+                category={currentTopic.category[language] || currentTopic.category.en}
+              />
+            )}
 
             {/* Answer Breakdown & Explanations */}
             <div className="space-y-4">

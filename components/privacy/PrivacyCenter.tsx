@@ -16,10 +16,107 @@ import {
   HardDrive,
   Info,
 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/i18n-context';
 import { purgeAllLocalData } from '@/lib/storage/indexeddb-store';
-import { downloadSingleFile } from '@/lib/utils/download';
+
+const PRIVACY_CENTER_LOCALES = {
+  en: {
+    badge: '100% In-Browser Privacy Architecture • Zero Cloud Storage',
+    title: 'Miftah Tools Privacy & Security Center',
+    subtitle: 'We believe your files belong only to you. Learn about our client-side processing architecture, clean private metadata, or instantly purge local offline storage.',
+    g1Title: '100% Local In-Browser Processing',
+    g1Desc: 'All PDF conversions, image editing, audio cutting, and barcode generations execute entirely on your device using WebAssembly and HTML5 Canvas. Your documents never touch any server.',
+    g2Title: 'Zero Tracking & No User Logging',
+    g2Desc: 'We do not log file contents, filenames, or personally identifiable data. Everything stored in your local storage is encrypted inside your browser’s IndexedDB.',
+    g3Title: 'Automatic 24-Hour TTL Expiration',
+    g3Desc: 'Temporary cached blobs and conversion items automatically expire and are purged after 24 hours to prevent memory buildup and protect your offline privacy.',
+    cleanerTitle: 'Instant Photo EXIF & GPS Metadata Cleaner',
+    cleanerDesc: 'Strip GPS locations, device serials, camera settings, and hidden timestamps before sharing photos online.',
+    dropPrompt: 'Select any photo to strip EXIF & GPS location metadata',
+    strippedBadge: (name: string) => `Metadata Stripped: ${name}`,
+    strippedSuccess: '✓ GPS Removed • ✓ Camera Model Cleared • ✓ Timestamps Neutralized',
+    saveCleanBtn: 'Save Clean Photo',
+    cleanAnotherBtn: 'Clean Another Photo',
+    purgeTitle: 'Purge All Offline Storage & History',
+    purgeDesc: 'Instantly clears all IndexedDB cached files, local conversion history, and favorites from this browser.',
+    purgeConfirm: 'Are you sure you want to purge all local offline files, processing history, and cached data?',
+    purgeBtn: 'Purge All Local Data',
+    purgeSuccess: '✓ Storage Cleared!',
+  },
+  ur: {
+    badge: '100٪ براؤزر پرائیویسی • زیرو کلاؤڈ اسٹوریج',
+    title: 'مفتاح ٹولز پرائیویسی اور سیکیورٹی سینٹر',
+    subtitle: 'آپ کی فائلیں صرف آپ کی ملکیت ہیں۔ کلائنٹ سائیڈ پروسیسنگ کو سمجھیں، تصاویر سے پرائیویٹ میٹا ڈیٹا صاف کریں، یا فوری طور پر لوکل ڈیٹا ختم کریں۔',
+    g1Title: '100٪ لوکل ان-براؤزر پروسیسنگ',
+    g1Desc: 'تمام پی ڈی ایف کنورژن، امیج ایڈیٹنگ، آڈیو کٹنگ اور کیو آر کوڈ جنریشن براہ راست آپ کے ڈیوائس پر ویب اسمبلی کے ذریعے ہوتی ہے۔ فائلز کبھی کسی سرور کو نہیں چھوتیں۔',
+    g2Title: 'زیرو ٹریکنگ اور بغیر لاگ ان',
+    g2Desc: 'ہم فائل کا مواد، نام یا کوئی ذاتی ڈیٹا لاگ نہیں کرتے۔ لوکل اسٹوریج میں رکھی گئی فائلز محفوظ IndexedDB میں رہتی ہیں۔',
+    g3Title: 'خودکار 24 گھنٹے میں ڈیٹا صفائی',
+    g3Desc: 'عارضی میموری اور پروسیسنگ فائلز 24 گھنٹے بعد خود بخود ختم ہو جاتی ہیں تاکہ فون کی میموری محفوظ رہے۔',
+    cleanerTitle: 'تصاویر سے EXIF اور GPS لوکیشن ہٹانے کا ٹول',
+    cleanerDesc: 'انٹرنیٹ پر تصویر شیئر کرنے سے قبل پوشیدہ GPS لوکیشن، کیمرہ ماڈل اور ٹائم اسٹیمپ مکمل ختم کریں۔',
+    dropPrompt: 'تصویر منتخب کریں تاکہ GPS لوکیشن اور میٹا ڈیٹا صاف کیا جا سکے',
+    strippedBadge: (name: string) => `میٹا ڈیٹا کامیابی سے صاف ہو گیا: ${name}`,
+    strippedSuccess: '✓ جی پی ایس لوکیشن ختم • ✓ کیمرہ ماڈل صاف • ✓ ٹائم اسٹیمپ محفوظ',
+    saveCleanBtn: 'محفوظ تصویر ڈاؤن لوڈ کریں',
+    cleanAnotherBtn: 'دوسری تصویر صاف کریں',
+    purgeTitle: 'تمام لوکل اسٹوریج اور ہسٹری ختم کریں',
+    purgeDesc: 'براؤزر میں موجود تمام محفوظ کردہ کیش فائلز، ہسٹری اور پسندیدہ ٹولز کو فوری صاف کریں۔',
+    purgeConfirm: 'کیا آپ واقعی تمام آف لائن ہسٹری اور محفوظ ڈیٹا ختم کرنا چاہتے ہیں؟',
+    purgeBtn: 'تمام لوکل ڈیٹا ڈیلیٹ کریں',
+    purgeSuccess: '✓ ڈیٹا مکمل صاف ہو گیا!',
+  },
+  ar: {
+    badge: 'معمارية خصوصية محلية 100٪ داخل المتصفح • بدون تخزين سحابي',
+    title: 'مركز الأمان والخصوصية في مفتاح تولز',
+    subtitle: 'نؤمن بأن ملفاتك ملك لك وحدك. تعرف على تقنية المعالجة المحلية، وقم بتنظيف بيانات EXIF، أو امسح الذاكرة المؤقتة فوراً.',
+    g1Title: 'معالجة محلية 100٪ داخل المتصفح',
+    g1Desc: 'تتم كافة عمليات تحويل PDF وتحرير الصور وقص الصوت وتوليد الباركود محلياً على جهازك باستخدام WebAssembly و HTML5 Canvas دون أن تلمس ملفاتك أي خادم.',
+    g2Title: 'انعدام التتبع وسجلات المستخدمين',
+    g2Desc: 'لا نسجل أي محتوى للملفات أو الأسماء أو البيانات الشخصية. كل ما يتم تخزينه محلياً مشفر داخل IndexedDB لمتصفحك.',
+    g3Title: 'حذف تلقائي للملفات المؤقتة بعد 24 ساعة',
+    g3Desc: 'تنتهي صلاحية الملفات المؤقتة والذاكرة المخبأة تلقائياً بعد 24 ساعة لحماية خصوصيتك وتوفير مساحة جهازك.',
+    cleanerTitle: 'أداة تنظيف بيانات EXIF ومواقع GPS من الصور',
+    cleanerDesc: 'احذف إحداثيات GPS وسيريال الجهاز وتفاصيل الكاميرا والطوابع الزمنية قبل مشاركة صورك على الإنترنت.',
+    dropPrompt: 'اختر أي صورة لإزالة بيانات الموقع GPS وبيانات EXIF الخفية فوراً',
+    strippedBadge: (name: string) => `تم تنظيف البيانات بنجاح: ${name}`,
+    strippedSuccess: '✓ تم حذف موقع GPS • ✓ تم مسح طراز الكاميرا • ✓ تمت حماية الخصوصية',
+    saveCleanBtn: 'حفظ الصورة النظيفة',
+    cleanAnotherBtn: 'تنظيف صورة أخرى',
+    purgeTitle: 'مسح كافة البيانات المحلية والسجل بالكامل',
+    purgeDesc: 'يمسح فوراً كافة الملفات المؤقتة وسجل العمليات والمفضلات من ذاكرة هذا المتصفح.',
+    purgeConfirm: 'هل أنت متأكد من رغبتك في حذف كافة الملفات والبيانات المؤقتة المحفوظة محلياً؟',
+    purgeBtn: 'حذف كافة البيانات المحلية',
+    purgeSuccess: '✓ تم مسح الذاكرة بنجاح!',
+  },
+  hi: {
+    badge: '100% इन-ब्राउज़र गोपनीयता आर्किटेक्चर • शून्य क्लाउड स्टोरेज',
+    title: 'मिफ्ताह टूल्स प्राइवेसी व सिक्योरिटी सेंटर',
+    subtitle: 'आपकी फाइलें केवल आपकी संपत्ति हैं। हमारी ऑन-डिवाइस प्रोसेसिंग समझें, फोटो से GPS मेटाडेटा हटाएं या लोकल स्टोरेज साफ़ करें।',
+    g1Title: '100% ऑन-डिवाइस लोकल प्रोसेसिंग',
+    g1Desc: 'सभी PDF कन्वर्जन, फोटो एडिटिंग, ऑडियो कटिंग और बारकोड जनरेशन WebAssembly द्वारा सीधे आपके डिवाइस में प्रोसेस होते हैं। फाइलें कभी सर्वर पर नहीं जातीं।',
+    g2Title: 'शून्य ट्रैकिंग व कोई लॉगिंग नहीं',
+    g2Desc: 'हम फ़ाइल सामग्री, नाम या कोई व्यक्तिगत डेटा लॉग नहीं करते। लोकल स्टोरेज में सुरक्षित डेटा केवल आपके ब्राउज़र के IndexedDB में रहता है।',
+    g3Title: '24 घंटे में स्वतः डेटा समाप्ति',
+    g3Desc: 'मेमोरी सुरक्षित रखने के लिए अस्थायी कैश और कन्वर्जन फाइलें 24 घंटे बाद स्वतः साफ़ हो जाती हैं।',
+    cleanerTitle: 'फोटो से EXIF व GPS लोकेशन हटाने का टूल',
+    cleanerDesc: 'फोटो ऑनलाइन शेयर करने से पहले गुप्त GPS लोकेशन, कैमरा मॉडल व टाइमस्टैम्प पूरी तरह साफ़ करें।',
+    dropPrompt: 'EXIF व GPS लोकेशन मेटाडेटा हटाने के लिए कोई भी फोटो चुनें',
+    strippedBadge: (name: string) => `मेटाडेटा साफ़ किया गया: ${name}`,
+    strippedSuccess: '✓ GPS हटाया गया • ✓ कैमरा विवरण साफ़ • ✓ गोपनीयता सुरक्षित',
+    saveCleanBtn: 'साफ़ फोटो डाउनलोड करें',
+    cleanAnotherBtn: 'अन्य फोटो साफ़ करें',
+    purgeTitle: 'सभी ऑफलाइन स्टोरेज व हिस्ट्री साफ़ करें',
+    purgeDesc: 'ब्राउज़र में मौजूद सभी IndexedDB कैश फाइलों, हालिया हिस्ट्री और पसंदीदा टूल्स को तुरंत मिटाएं।',
+    purgeConfirm: 'क्या आप वाकई सभी ऑफलाइन फाइलें, प्रोसेसिंग हिस्ट्री और कैश डेटा हटाना चाहते हैं?',
+    purgeBtn: 'सभी लोकल डेटा साफ़ करें',
+    purgeSuccess: '✓ स्टोरेज सफलतापूर्वक साफ़ किया गया!',
+  },
+};
 
 export function PrivacyCenter() {
+  const { language } = useI18n();
+  const loc = PRIVACY_CENTER_LOCALES[language] || PRIVACY_CENTER_LOCALES.en;
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [cleanedPhotoUrl, setCleanedPhotoUrl] = useState<string | null>(null);
   const [isCleaning, setIsCleaning] = useState(false);
@@ -38,7 +135,6 @@ export function PrivacyCenter() {
     setIsCleaning(true);
     const img = new Image();
     img.onload = () => {
-      // Drawing onto a clean HTML5 canvas strips all EXIF, GPS, camera, and device metadata completely!
       const canvas = document.createElement('canvas');
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
@@ -66,7 +162,7 @@ export function PrivacyCenter() {
 
   // 2. Complete Local Storage & Cache Purge
   const handlePurgeStorage = async () => {
-    if (confirm('Are you sure you want to purge all local offline files, processing history, and cached data?')) {
+    if (confirm(loc.purgeConfirm)) {
       await purgeAllLocalData();
       setPurgedSuccess(true);
       setTimeout(() => setPurgedSuccess(false), 4000);
@@ -79,13 +175,13 @@ export function PrivacyCenter() {
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shadow-xs">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>100% In-Browser Privacy Architecture • Zero Cloud Storage</span>
+          <span>{loc.badge}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Miftah Tools Privacy & Security Center
+          {loc.title}
         </h1>
         <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          We believe your files belong only to you. Learn about our client-side processing architecture, clean private metadata, or instantly purge local offline storage.
+          {loc.subtitle}
         </p>
       </div>
 
@@ -96,10 +192,10 @@ export function PrivacyCenter() {
             <Cpu className="w-6 h-6" />
           </div>
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
-            100% Local In-Browser Processing
+            {loc.g1Title}
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            All PDF conversions, image editing, audio cutting, and barcode generations execute entirely on your device using WebAssembly and HTML5 Canvas. Your documents never touch any server.
+            {loc.g1Desc}
           </p>
         </div>
 
@@ -108,10 +204,10 @@ export function PrivacyCenter() {
             <EyeOff className="w-6 h-6" />
           </div>
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
-            Zero Tracking & No User Logging
+            {loc.g2Title}
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            We do not log file contents, filenames, or personally identifiable data. Everything stored in your &quot;My Files&quot; hub is encrypted inside your browser&apos;s local IndexedDB.
+            {loc.g2Desc}
           </p>
         </div>
 
@@ -120,10 +216,10 @@ export function PrivacyCenter() {
             <Lock className="w-6 h-6" />
           </div>
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
-            Automatic 24-Hour TTL Expiration
+            {loc.g3Title}
           </h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Temporary cached blobs and conversion items automatically expire and are purged after 24 hours to prevent memory buildup and protect your offline privacy.
+            {loc.g3Desc}
           </p>
         </div>
       </div>
@@ -134,10 +230,10 @@ export function PrivacyCenter() {
           <div className="space-y-1">
             <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
               <EyeOff className="w-5 h-5 text-brand-600" />
-              <span>Instant Photo EXIF & GPS Metadata Cleaner</span>
+              <span>{loc.cleanerTitle}</span>
             </h3>
             <p className="text-xs text-slate-500">
-              Strip GPS locations, device serials, camera settings, and hidden timestamps before sharing photos online.
+              {loc.cleanerDesc}
             </p>
           </div>
         </div>
@@ -156,7 +252,7 @@ export function PrivacyCenter() {
             />
             <Upload className="w-8 h-8 text-brand-600 mx-auto" />
             <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Select any photo to strip EXIF & GPS location metadata
+              {loc.dropPrompt}
             </div>
           </div>
         ) : (
@@ -165,10 +261,10 @@ export function PrivacyCenter() {
               <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
               <div>
                 <div className="font-extrabold text-xs text-slate-900 dark:text-white">
-                  Metadata Stripped: {photoFile.name}
+                  {loc.strippedBadge(photoFile.name)}
                 </div>
                 <div className="text-[11px] text-emerald-600 font-bold">
-                  ✓ GPS Removed • ✓ Camera Model Cleared • ✓ Timestamps Neutralized
+                  {loc.strippedSuccess}
                 </div>
               </div>
             </div>
@@ -177,18 +273,18 @@ export function PrivacyCenter() {
               <button
                 type="button"
                 onClick={handleDownloadCleaned}
-                className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold rounded-xl shadow-md flex items-center gap-1.5"
+                className="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Save Clean Photo</span>
+                <span>{loc.saveCleanBtn}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setPhotoFile(null)}
-                className="px-3 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl"
+                className="px-3 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl cursor-pointer"
               >
-                Clean Another
+                {loc.cleanAnotherBtn}
               </button>
             </div>
           </div>
@@ -200,19 +296,19 @@ export function PrivacyCenter() {
         <div className="space-y-1">
           <h4 className="font-extrabold text-sm text-rose-900 dark:text-rose-200 flex items-center gap-2">
             <Trash2 className="w-4 h-4 text-rose-600" />
-            <span>Purge All Offline Storage & History</span>
+            <span>{loc.purgeTitle}</span>
           </h4>
           <p className="text-xs text-rose-700 dark:text-rose-300">
-            Instantly clears all IndexedDB cached files, local conversion history, and favorites from this browser.
+            {loc.purgeDesc}
           </p>
         </div>
 
         <button
           type="button"
           onClick={handlePurgeStorage}
-          className="px-5 py-3 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs rounded-xl shadow-md shadow-rose-600/25 active:scale-95 transition-all shrink-0"
+          className="px-5 py-3 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs rounded-xl shadow-md shadow-rose-600/25 active:scale-95 transition-all shrink-0 cursor-pointer"
         >
-          {purgedSuccess ? '✓ Storage Cleared!' : 'Purge All Local Data'}
+          {purgedSuccess ? loc.purgeSuccess : loc.purgeBtn}
         </button>
       </div>
     </div>

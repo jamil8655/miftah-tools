@@ -30,7 +30,7 @@ export const siteConfig: SiteConfig = {
   tagline: 'The Master Key to 220+ Private Document & Productivity Utilities.',
   description:
     'Convert, compress, edit, calculate, code and manage your files with 100% private client-side processing.',
-  url: 'https://jamil8655.github.io/miftah-tools/',
+  url: 'https://miftahtools.com',
   ogImage: '/icon-512.png',
   slogan: 'Your All-in-One Master Key for Digital Mastery & Workflow Automation.',
   links: {

@@ -16,9 +16,11 @@ import {
   Sun,
   Contrast,
   Layers,
+  Share2,
 } from 'lucide-react';
-import { downloadSingleFile } from '@/lib/utils/download';
+import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { formatBytes } from '@/lib/utils/formatters';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 export function UnifiedImageStudio() {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -99,12 +101,30 @@ export function UnifiedImageStudio() {
     const canvas = canvasRef.current;
     if (!canvas || !imageFile) return;
 
+    triggerHaptic('medium');
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
         const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
         const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_studio.${ext}`;
         downloadSingleFile(blob, outName);
+      },
+      targetFormat,
+      0.92
+    );
+  };
+
+  const handleShareOutput = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !imageFile) return;
+
+    triggerHaptic('light');
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
+        const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_studio.${ext}`;
+        shareDownloadedFile({ name: outName, blob, mimeType: targetFormat });
       },
       targetFormat,
       0.92
@@ -327,15 +347,26 @@ export function UnifiedImageStudio() {
               </div>
             )}
 
-            {/* Download Button */}
-            <button
-              type="button"
-              onClick={handleDownloadOutput}
-              className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 active:scale-95 transition-all"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download Studio Image</span>
-            </button>
+            {/* Download & Share Actions */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleDownloadOutput}
+                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Image</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShareOutput}
+                className="w-full py-3 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold text-xs sm:text-sm rounded-2xl shadow-xs flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                <Share2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>Share Image</span>
+              </button>
+            </div>
           </div>
 
           {/* Canvas Live Preview */}

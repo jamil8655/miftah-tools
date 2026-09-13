@@ -130,6 +130,12 @@ import { FaviconStudio } from '@/components/image/FaviconStudio';
 import { AutoCropImagesToPdfStudio } from '@/components/image/AutoCropImagesToPdfStudio';
 import { UnifiedImageStudio } from '@/components/image/UnifiedImageStudio';
 import { OcrStudio } from '@/components/ocr/OcrStudio';
+import { CameraScannerStudio } from '@/components/camera/CameraScannerStudio';
+import { PdfSignatureStudio } from '@/components/pdf/PdfSignatureStudio';
+import { MarkItDownStudio } from '@/components/tools/MarkItDownStudio';
+import { WorkflowBuilder } from '@/components/workflows/WorkflowBuilder';
+import { TextCipherStudio } from '@/components/security/TextCipherStudio';
+import { AiStudio } from '@/components/ai/AiStudio';
 
 interface ToolPageClientProps {
   tool: ToolDefinition;
@@ -141,15 +147,19 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
   if (
     tool.id === 'pdf-editor' ||
     tool.slug === 'edit-pdf' ||
-    tool.id === 'pdf-sign' ||
     tool.id === 'pdf-add-text' ||
+    tool.slug === 'add-text-to-pdf' ||
     tool.id === 'pdf-crop' ||
     tool.slug === 'crop-pdf' ||
     tool.id === 'pdf-add-image' ||
+    tool.slug === 'add-image-to-pdf' ||
     tool.id === 'pdf-add-shape' ||
+    tool.slug === 'add-shape-to-pdf' ||
     tool.id === 'pdf-draw' ||
+    tool.slug === 'draw-on-pdf' ||
+    tool.slug === 'draw-pdf' ||
     tool.id === 'pdf-highlight' ||
-    tool.id === 'pdf-add-stamp'
+    tool.slug === 'highlight-pdf'
   ) {
     customWorkspace = <VisualPdfEditor />;
   } else if (
@@ -275,10 +285,27 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'organize-pdf' ||
     tool.id === 'pdf-reorder-pages' ||
     tool.slug === 'reorder-pdf-pages' ||
+    tool.slug === 'reorder-pages' ||
+    tool.id === 'pdf-delete-pages' ||
+    tool.slug === 'delete-pdf-pages' ||
+    tool.slug === 'delete-pages' ||
+    tool.id === 'pdf-reverse-pages' ||
+    tool.slug === 'reverse-pdf-pages' ||
+    tool.slug === 'reverse-pages' ||
+    tool.id === 'pdf-duplicate-pages' ||
+    tool.slug === 'duplicate-pdf-pages' ||
+    tool.slug === 'duplicate-pages' ||
     tool.id === 'pdf-replace-pages' ||
     tool.slug === 'replace-pdf-pages' ||
+    tool.slug === 'replace-pages' ||
     tool.id === 'pdf-sort-pages' ||
-    tool.slug === 'sort-pdf-pages'
+    tool.slug === 'sort-pdf-pages' ||
+    tool.id === 'pdf-extract-odd-even' ||
+    tool.slug === 'extract-odd-even-pages' ||
+    tool.id === 'pdf-insert-blank-page' ||
+    tool.slug === 'insert-blank-pdf-page' ||
+    tool.id === 'pdf-extract-pages' ||
+    tool.slug === 'extract-pdf-pages'
   ) {
     customWorkspace = <PdfOrganizerStudio />;
   } else if (
@@ -336,14 +363,85 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
   } else if (
     tool.id === 'pdf-to-image' ||
     tool.id === 'pdf-to-jpg' ||
+    tool.id === 'pdf-to-jpeg' ||
     tool.id === 'pdf-to-png' ||
     tool.id === 'pdf-to-webp' ||
+    tool.id === 'pdf-to-tiff' ||
+    tool.id === 'pdf-to-bmp' ||
+    tool.id === 'pdf-to-svg' ||
     tool.id === 'pdf-to-images' ||
-    tool.slug === 'pdf-to-images-zip'
+    tool.slug === 'pdf-to-images-zip' ||
+    tool.slug === 'pdf-to-jpg' ||
+    tool.slug === 'pdf-to-jpeg' ||
+    tool.slug === 'pdf-to-png' ||
+    tool.slug === 'pdf-to-webp' ||
+    tool.slug === 'pdf-to-image' ||
+    tool.slug === 'pdf-to-tiff' ||
+    tool.slug === 'pdf-to-bmp' ||
+    tool.slug === 'pdf-to-svg'
   ) {
     customWorkspace = <PdfToImagesStudio />;
   } else if (tool.category === 'media' || tool.id.includes('downloader') || tool.id === 'whatsapp-status-saver') {
     customWorkspace = <MediaDownloaderStudio />;
+  } else if (
+    tool.id === 'camera-scanner' ||
+    tool.slug === 'camera-scanner' ||
+    tool.id === 'doc-scanner' ||
+    tool.slug === 'doc-scanner' ||
+    tool.id === 'scanner' ||
+    tool.slug === 'scanner'
+  ) {
+    customWorkspace = <CameraScannerStudio />;
+  } else if (
+    tool.id === 'pdf-signer' ||
+    tool.slug === 'pdf-signer' ||
+    tool.id === 'pdf-sign' ||
+    tool.slug === 'sign-pdf' ||
+    tool.id === 'sign-pdf' ||
+    tool.id === 'digital-signature' ||
+    tool.slug === 'digital-signature' ||
+    tool.id === 'pdf-add-stamp' ||
+    tool.slug === 'add-stamp-to-pdf' ||
+    tool.slug === 'stamp-pdf' ||
+    tool.id === 'stamp-pdf' ||
+    tool.id === 'pdf-stamp' ||
+    tool.slug === 'pdf-stamp'
+  ) {
+    customWorkspace = <PdfSignatureStudio />;
+  } else if (
+    tool.id === 'markitdown' ||
+    tool.slug === 'markitdown' ||
+    tool.id === 'ai-document-converter' ||
+    tool.slug === 'ai-document-converter' ||
+    tool.id === 'document-to-markdown' ||
+    tool.slug === 'document-to-markdown'
+  ) {
+    customWorkspace = <MarkItDownStudio />;
+  } else if (
+    tool.id === 'workflows' ||
+    tool.slug === 'workflows' ||
+    tool.id === 'workflow-builder' ||
+    tool.slug === 'workflow-builder'
+  ) {
+    customWorkspace = <WorkflowBuilder />;
+  } else if (
+    tool.id === 'text-cipher' ||
+    tool.slug === 'text-cipher' ||
+    tool.id === 'text-encryptor' ||
+    tool.slug === 'text-encryptor' ||
+    tool.id === 'aes-encrypt' ||
+    tool.slug === 'aes-encrypt'
+  ) {
+    customWorkspace = <TextCipherStudio />;
+  } else if (
+    tool.id === 'ai-tools' ||
+    tool.slug === 'ai-tools' ||
+    tool.id === 'ai-assistant' ||
+    tool.slug === 'ai-assistant' ||
+    tool.id === 'ai-document-intelligence' ||
+    tool.slug === 'ai-document-intelligence'
+  ) {
+    customWorkspace = <AiStudio />;
   }
 
   // Centralized real processing dispatcher
@@ -894,21 +992,33 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     // 14. IMAGE FILTERS & COMPRESSION
     if (
       tool.id.includes('grayscale') ||
+      tool.slug.includes('grayscale') ||
       tool.id.includes('bw') ||
+      tool.slug.includes('black-and-white') ||
       tool.id.includes('sharpen') ||
+      tool.slug.includes('sharpen') ||
       tool.id.includes('blur') ||
+      tool.slug.includes('blur') ||
       tool.id.includes('brightness') ||
-      tool.id.includes('contrast')
+      tool.slug.includes('brightness') ||
+      tool.id.includes('contrast') ||
+      tool.slug.includes('contrast') ||
+      tool.id === 'image-grayscale' ||
+      tool.id === 'image-bw' ||
+      tool.id === 'image-sharpen' ||
+      tool.id === 'image-blur' ||
+      tool.id === 'image-brightness' ||
+      tool.id === 'image-contrast'
     ) {
-      const filter = tool.id.includes('grayscale')
+      const filter = (tool.id.includes('grayscale') || tool.slug.includes('grayscale'))
         ? 'grayscale'
-        : tool.id.includes('bw')
+        : (tool.id.includes('bw') || tool.slug.includes('black-and-white'))
         ? 'bw'
-        : tool.id.includes('sharpen')
+        : (tool.id.includes('sharpen') || tool.slug.includes('sharpen'))
         ? 'sharpen'
-        : tool.id.includes('blur')
+        : (tool.id.includes('blur') || tool.slug.includes('blur'))
         ? 'blur'
-        : tool.id.includes('brightness')
+        : (tool.id.includes('brightness') || tool.slug.includes('brightness'))
         ? 'brightness'
         : 'contrast';
       onProgress(40, `Applying ${filter} filter...`);
@@ -1055,7 +1165,7 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return [{ name: `${files[0].name.replace(/\.[^/.]+$/, '')}.pdf`, originalSize: files[0].size, processedSize: blob.size, blob }];
     }
 
-    // 18. IMAGE TO PDF (JPG, PNG, WEBP, BMP, TIFF)
+    // 18. IMAGE TO PDF (JPG, PNG, WEBP, BMP, TIFF, SVG, HEIC, SCREENSHOT)
     if (
       tool.id === 'image-to-pdf' ||
       tool.id === 'images-to-pdf' ||
@@ -1066,7 +1176,13 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       tool.id === 'webp-to-pdf' ||
       tool.id === 'bmp-to-pdf' ||
       tool.id === 'tiff-to-pdf' ||
-      tool.category === 'image' && tool.id.endsWith('-to-pdf')
+      tool.id === 'svg-to-pdf' ||
+      tool.id === 'screenshot-to-pdf' ||
+      tool.id === 'heic-to-pdf' ||
+      tool.slug === 'svg-to-pdf' ||
+      tool.slug === 'screenshot-to-pdf' ||
+      tool.slug.endsWith('-to-pdf') ||
+      (tool.category === 'image' && tool.id.endsWith('-to-pdf'))
     ) {
       onProgress(30, 'Encoding images into PDF...');
       const imageBuffers = await Promise.all(
@@ -1221,30 +1337,53 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
 
     // 22. UNIVERSAL IMAGE FORMAT CONVERSIONS (JPG, PNG, WEBP, BMP, TIFF, HEIC, ICO)
     if (
-      (tool.id.includes('-to-') || tool.id === 'image-converter' || tool.slug === 'image-converter') &&
-      (tool.id.includes('jpg') ||
-        tool.id.includes('jpeg') ||
-        tool.id.includes('png') ||
-        tool.id.includes('webp') ||
-        tool.id.includes('bmp') ||
-        tool.id.includes('tiff') ||
-        tool.id.includes('heic') ||
-        tool.id.includes('ico') ||
-        tool.id === 'image-converter' ||
-        tool.category === 'image')
+      tool.id.includes('-to-') ||
+      tool.slug.includes('-to-') ||
+      tool.id === 'image-converter' ||
+      tool.slug === 'image-converter' ||
+      tool.id === 'jpg-to-png' ||
+      tool.id === 'png-to-jpg' ||
+      tool.id === 'jpg-to-webp' ||
+      tool.id === 'png-to-webp' ||
+      tool.id === 'webp-to-jpg' ||
+      tool.id === 'webp-to-png' ||
+      tool.id === 'tiff-to-jpg' ||
+      tool.id === 'bmp-to-jpg' ||
+      tool.id === 'heic-to-jpg' ||
+      tool.id === 'heic-to-png' ||
+      tool.category === 'image'
     ) {
       let targetMime: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/x-icon' = 'image/jpeg';
       let targetExt = 'jpg';
 
-      if (tool.id.endsWith('-to-png') || tool.id.endsWith('-to-webp-png')) {
+      if (
+        tool.id.endsWith('-to-png') ||
+        tool.id.endsWith('-to-webp-png') ||
+        tool.slug.endsWith('-to-png')
+      ) {
         targetMime = 'image/png';
         targetExt = 'png';
-      } else if (tool.id.endsWith('-to-webp')) {
+      } else if (
+        tool.id.endsWith('-to-webp') ||
+        tool.slug.endsWith('-to-webp')
+      ) {
         targetMime = 'image/webp';
         targetExt = 'webp';
-      } else if (tool.id.endsWith('-to-ico') || tool.id.includes('ico')) {
+      } else if (
+        tool.id.endsWith('-to-ico') ||
+        tool.id.includes('ico') ||
+        tool.slug.includes('ico')
+      ) {
         targetMime = 'image/x-icon';
         targetExt = 'ico';
+      } else if (
+        tool.id.endsWith('-to-jpg') ||
+        tool.id.endsWith('-to-jpeg') ||
+        tool.slug.endsWith('-to-jpg') ||
+        tool.slug.endsWith('-to-jpeg')
+      ) {
+        targetMime = 'image/jpeg';
+        targetExt = 'jpg';
       } else if (options.outputFormat) {
         targetMime = options.outputFormat;
         targetExt = targetMime === 'image/png' ? 'png' : targetMime === 'image/webp' ? 'webp' : 'jpg';

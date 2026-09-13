@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { Music, Upload, Download, CheckCircle, AlertCircle, RefreshCw, FileAudio } from 'lucide-react';
 import { extractAudioFromVideo } from '@/lib/media/audio-engine';
+import { downloadSingleFile } from '@/lib/utils/download';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 export function VideoToMp3Studio() {
   const [file, setFile] = useState<File | null>(null);
@@ -140,14 +142,20 @@ export function VideoToMp3Studio() {
             <audio controls src={resultUrl} className="w-full rounded-lg" />
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <a
-                href={resultUrl}
-                download={`${file?.name.replace(/\.[^/.]+$/, '')}_audio.wav`}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
+              <button
+                type="button"
+                onClick={() => {
+                  if (resultBlob) {
+                    triggerHaptic('medium');
+                    const outName = `${file?.name.replace(/\.[^/.]+$/, '') || 'audio'}_audio.wav`;
+                    downloadSingleFile(resultBlob, outName);
+                  }
+                }}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-95 transition-all"
               >
                 <Download className="w-5 h-5" />
                 Download Studio Audio (WAV)
-              </a>
+              </button>
               <button
                 onClick={() => {
                   setFile(null);

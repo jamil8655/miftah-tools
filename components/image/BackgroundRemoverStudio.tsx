@@ -13,8 +13,10 @@ import {
   Zap,
   Layers,
   Palette,
+  Share2,
 } from 'lucide-react';
-import { downloadSingleFile } from '@/lib/utils/download';
+import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 export function BackgroundRemoverStudio() {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -138,6 +140,7 @@ export function BackgroundRemoverStudio() {
 
   const handleDownload = () => {
     if (!resultSrc) return;
+    triggerHaptic('medium');
     const byteString = atob(resultSrc.split(',')[1]);
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
@@ -147,6 +150,20 @@ export function BackgroundRemoverStudio() {
     const blob = new Blob([ab], { type: 'image/png' });
     const name = (imageFile?.name || 'photo').replace(/\.[^/.]+$/, '');
     downloadSingleFile(blob, `${name}_transparent_cutout.png`);
+  };
+
+  const handleShare = () => {
+    if (!resultSrc) return;
+    triggerHaptic('light');
+    const byteString = atob(resultSrc.split(',')[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: 'image/png' });
+    const name = (imageFile?.name || 'photo').replace(/\.[^/.]+$/, '');
+    shareDownloadedFile({ name: `${name}_transparent_cutout.png`, blob, mimeType: 'image/png' });
   };
 
   return (
@@ -265,10 +282,19 @@ export function BackgroundRemoverStudio() {
               <button
                 type="button"
                 onClick={handleDownload}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 active:scale-95 transition-all"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Cutout PNG</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShare}
+                className="w-full py-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xs"
+              >
+                <Share2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>Share Cutout Image</span>
               </button>
 
               <button

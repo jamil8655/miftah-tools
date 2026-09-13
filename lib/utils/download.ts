@@ -47,11 +47,17 @@ export async function blobToBase64(blob: Blob): Promise<string> {
 export async function openDownloadedFile(fileInfo: { name: string; mimeType?: string; blob?: Blob }): Promise<boolean> {
   const mime = fileInfo.mimeType || (fileInfo.blob?.type) || 'application/octet-stream';
   
-  // 1. Try Android Native System Viewer Intent
-  if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.openFileInSystem) {
+  // 1. Try Android Native System Viewer Intent with base64 cache guarantee
+  if (typeof window !== 'undefined' && (window as any).AndroidDownloader) {
     try {
-      const success = (window as any).AndroidDownloader.openFileInSystem(fileInfo.name, mime);
-      if (success) return true;
+      if (fileInfo.blob && (window as any).AndroidDownloader.openBase64FileInSystem) {
+        const base64 = await blobToBase64(fileInfo.blob);
+        const success = (window as any).AndroidDownloader.openBase64FileInSystem(base64, fileInfo.name, mime);
+        if (success) return true;
+      } else if ((window as any).AndroidDownloader.openFileInSystem) {
+        const success = (window as any).AndroidDownloader.openFileInSystem(fileInfo.name, mime);
+        if (success) return true;
+      }
     } catch (e) {
       console.warn('Android native open failed:', e);
     }
@@ -73,6 +79,94 @@ export async function openDownloadedFile(fileInfo: { name: string; mimeType?: st
   }
   return false;
 }
+
+/**
+ * Share a downloaded / processed file natively via Android system sharesheet or Web Share API
+ */
+export async function shareDownloadedFile(fileInfo: {
+  name: string;
+  mimeType?: string;
+  blob?: Blob;
+  dataUrl?: string;
+}): Promise<boolean> {
+  const mime = fileInfo.mimeType || fileInfo.blob?.type || 'application/octet-stream';
+
+  // 1. Android Native Downloader custom interface
+  if (
+    typeof window !== 'undefined' &&
+    (window as any).AndroidDownloader?.shareBase64FileInSystem &&
+    (fileInfo.blob || fileInfo.dataUrl)
+  ) {
+    try {
+      const base64 = fileInfo.dataUrl
+        ? fileInfo.dataUrl.includes(',')
+          ? fileInfo.dataUrl.split(',')[1]
+          : fileInfo.dataUrl
+        : await blobToBase64(fileInfo.blob!);
+      const success = (window as any).AndroidDownloader.shareBase64FileInSystem(base64, fileInfo.name, mime);
+      if (success) return true;
+    } catch (e) {
+      console.warn('Native AndroidDownloader share failed:', e);
+    }
+  }
+
+  // 2. Capacitor Filesystem + Share Plugin (Native Android 10-16 Sharesheet with content:// URI)
+  if (Capacitor.isNativePlatform() && (fileInfo.blob || fileInfo.dataUrl)) {
+    try {
+      const base64 = fileInfo.dataUrl
+        ? fileInfo.dataUrl.includes(',')
+          ? fileInfo.dataUrl.split(',')[1]
+          : fileInfo.dataUrl
+        : await blobToBase64(fileInfo.blob!);
+
+      // Save to Cache directory so Android FileProvider can share it
+      const saved = await Filesystem.writeFile({
+        path: fileInfo.name,
+        data: base64,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+
+      const { Share } = await import('@capacitor/share');
+      await Share.share({
+        title: fileInfo.name,
+        text: `Sharing ${fileInfo.name} from Miftah Tools`,
+        url: saved.uri,
+        dialogTitle: `Share ${fileInfo.name}`,
+      });
+      return true;
+    } catch (err) {
+      console.warn('Capacitor Share plugin failed:', err);
+    }
+  }
+
+  // 3. Web Navigator Share API (supports file sharing in mobile Chrome, Safari, Edge)
+  if (fileInfo.blob && typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      const file = new File([fileInfo.blob], fileInfo.name, { type: mime });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: fileInfo.name,
+          text: `Processed ${fileInfo.name} with Miftah Tools`,
+        });
+        return true;
+      }
+    } catch (e) {
+      // User cancelled share
+      return true;
+    }
+  }
+
+  // 4. Web Fallback: download the file directly if share is unavailable
+  if (fileInfo.blob) {
+    await downloadSingleFile(fileInfo.blob, fileInfo.name);
+    return true;
+  }
+
+  return false;
+}
+
 
 /**
  * Direct File Downloader for Android & Web

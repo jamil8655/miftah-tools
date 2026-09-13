@@ -26,6 +26,8 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        arabic: ['"Noto Sans Arabic"', '"Segoe UI"', 'Tahoma', 'sans-serif'],
+        devanagari: ['"Noto Sans Devanagari"', '"Mangal"', 'sans-serif'],
       },
     },
   },

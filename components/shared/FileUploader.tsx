@@ -10,6 +10,8 @@ import {
   FileSpreadsheet,
   FolderArchive,
   Image as ImageIcon,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { formatBytes, formatBytesDual } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -323,12 +325,17 @@ export function FileUploader({
             {selectedFiles.map((file, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs transition-all"
+                className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs transition-all hover:border-brand-500/40"
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {selectedFiles.length > 1 && (
+                    <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
+                      {idx + 1}
+                    </span>
+                  )}
                   {renderFileIcon(file)}
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate max-w-[180px] sm:max-w-[220px]">
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate max-w-[140px] sm:max-w-[180px]">
                       {file.name}
                     </p>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-semibold">
@@ -337,19 +344,66 @@ export function FileUploader({
                   </div>
                 </div>
 
-                {onRemoveFile && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveFile(idx);
-                    }}
-                    className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    title={loc.removeFile}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+                <div className="flex items-center gap-1 shrink-0">
+                  {selectedFiles.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (idx > 0) {
+                            const updated = [...selectedFiles];
+                            const temp = updated[idx - 1];
+                            updated[idx - 1] = updated[idx];
+                            updated[idx] = temp;
+                            onFilesSelected(updated);
+                            triggerHaptic('light');
+                          }
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                        title="Move Up"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={idx === selectedFiles.length - 1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (idx < selectedFiles.length - 1) {
+                            const updated = [...selectedFiles];
+                            const temp = updated[idx + 1];
+                            updated[idx + 1] = updated[idx];
+                            updated[idx] = temp;
+                            onFilesSelected(updated);
+                            triggerHaptic('light');
+                          }
+                        }}
+                        className="p-1 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 disabled:hover:bg-transparent"
+                        title="Move Down"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+
+                  {onRemoveFile && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFile(idx);
+                        triggerHaptic('light');
+                      }}
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-0.5"
+                      title={loc.removeFile}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

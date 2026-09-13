@@ -22,7 +22,7 @@ export async function mergePdfs(pdfBuffers: ArrayBuffer[]): Promise<Uint8Array> 
  */
 export async function splitPdf(
   pdfBuffer: ArrayBuffer,
-  mode: 'all' | 'range' | 'every',
+  mode: 'all' | 'range' | 'every' | 'odd-even' = 'all',
   rangeStr?: string
 ): Promise<{ name: string; bytes: Uint8Array }[]> {
   const srcDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
@@ -37,9 +37,47 @@ export async function splitPdf(
       const bytes = await newDoc.save({ useObjectStreams: true });
       results.push({ name: `page-${i + 1}.pdf`, bytes });
     }
-  } else if (mode === 'range' && rangeStr) {
+  } else if (mode === 'odd-even') {
+    // Extract Odd Pages
+    const oddIndices: number[] = [];
+    const evenIndices: number[] = [];
+    for (let i = 0; i < totalPages; i++) {
+      if ((i + 1) % 2 !== 0) oddIndices.push(i);
+      else evenIndices.push(i);
+    }
+
+    if (oddIndices.length > 0) {
+      const oddDoc = await PDFDocument.create();
+      const oddPages = await oddDoc.copyPages(srcDoc, oddIndices);
+      oddPages.forEach((p) => oddDoc.addPage(p));
+      const oddBytes = await oddDoc.save({ useObjectStreams: true });
+      results.push({ name: 'odd-pages.pdf', bytes: oddBytes });
+    }
+
+    if (evenIndices.length > 0) {
+      const evenDoc = await PDFDocument.create();
+      const evenPages = await evenDoc.copyPages(srcDoc, evenIndices);
+      evenPages.forEach((p) => evenDoc.addPage(p));
+      const evenBytes = await evenDoc.save({ useObjectStreams: true });
+      results.push({ name: 'even-pages.pdf', bytes: evenBytes });
+    }
+  } else if (mode === 'every') {
+    const chunkSize = rangeStr ? parseInt(rangeStr, 10) || 2 : 2;
+    for (let i = 0; i < totalPages; i += chunkSize) {
+      const chunkIndices: number[] = [];
+      for (let j = i; j < Math.min(totalPages, i + chunkSize); j++) {
+        chunkIndices.push(j);
+      }
+      const newDoc = await PDFDocument.create();
+      const copied = await newDoc.copyPages(srcDoc, chunkIndices);
+      copied.forEach((p) => newDoc.addPage(p));
+      const bytes = await newDoc.save({ useObjectStreams: true });
+      results.push({ name: `split-part-${Math.floor(i / chunkSize) + 1}.pdf`, bytes });
+    }
+  } else if (mode === 'range') {
     const targetIndices = new Set<number>();
-    const parts = rangeStr.split(',').map((p) => p.trim());
+    const effectiveRange = rangeStr && rangeStr.trim() ? rangeStr.trim() : `1-${totalPages}`;
+    const parts = effectiveRange.split(',').map((p) => p.trim());
 
     for (const part of parts) {
       if (part.includes('-')) {
@@ -64,10 +102,17 @@ export async function splitPdf(
       copiedPages.forEach((page) => newDoc.addPage(page));
       const bytes = await newDoc.save({ useObjectStreams: true });
       results.push({ name: `extracted-pages.pdf`, bytes });
+    } else {
+      // Fallback: copy whole doc
+      const newDoc = await PDFDocument.create();
+      const allPages = await newDoc.copyPages(srcDoc, srcDoc.getPageIndices());
+      allPages.forEach((p) => newDoc.addPage(p));
+      const bytes = await newDoc.save({ useObjectStreams: true });
+      results.push({ name: `extracted-pages.pdf`, bytes });
     }
   }
 
-  return results;
+  return results.length > 0 ? results : [{ name: 'extracted.pdf', bytes: new Uint8Array(pdfBuffer) }];
 }
 
 /**
@@ -271,27 +316,30 @@ export async function editPdfMetadata(
 
 /**
  * Helper to ensure any image format (WebP, BMP, PNG, JPG, GIF) is converted to a valid embeddable PDF image.
+ * Preserves high resolution and avoids quality degradation.
  */
 async function ensureEmbeddableImage(
   doc: PDFDocument,
   buffer: ArrayBuffer,
   mimeType: string
 ): Promise<any> {
-  if (mimeType.includes('png')) {
+  const cleanMime = (mimeType || '').toLowerCase();
+
+  if (cleanMime.includes('png')) {
     try {
       return await doc.embedPng(buffer);
     } catch {
-      // Fallback via canvas
+      // Fallback via high-definition canvas
     }
-  } else if (mimeType.includes('jpg') || mimeType.includes('jpeg')) {
+  } else if (cleanMime.includes('jpg') || cleanMime.includes('jpeg')) {
     try {
       return await doc.embedJpg(buffer);
     } catch {
-      // Fallback via canvas
+      // Fallback via high-definition canvas
     }
   }
 
-  // Universal canvas fallback for WebP, BMP, TIFF, GIF, or corrupted headers
+  // Universal high-definition canvas fallback for WebP, BMP, TIFF, GIF, HEIC or non-standard color spaces
   if (typeof window !== 'undefined') {
     const blob = new Blob([buffer], { type: mimeType || 'image/jpeg' });
     const objectUrl = URL.createObjectURL(blob);
@@ -300,20 +348,23 @@ async function ensureEmbeddableImage(
 
     await new Promise<void>((resolve, reject) => {
       img.onload = () => resolve();
-      img.onerror = () => reject(new Error('Failed to load image format into canvas'));
+      img.onerror = () => reject(new Error('Failed to decode image into canvas'));
     });
 
     const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth || 800;
-    canvas.height = img.naturalHeight || 600;
-    const ctx = canvas.getContext('2d');
+    canvas.width = img.naturalWidth || img.width || 1200;
+    canvas.height = img.naturalHeight || img.height || 1600;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (ctx) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     }
 
-    const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    // High definition 98% JPEG quality for ultra-crisp output
+    const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.98);
     canvas.width = 0;
     canvas.height = 0;
     URL.revokeObjectURL(objectUrl);
@@ -329,39 +380,49 @@ async function ensureEmbeddableImage(
     return await doc.embedJpg(bytes);
   }
 
-  // Fallback try
+  // Final fallback attempt
   return await doc.embedJpg(buffer);
 }
 
 /**
- * Convert multiple image ArrayBuffers into a single styled PDF.
+ * Convert multiple image ArrayBuffers into a single styled, high-definition PDF.
  */
 export async function imagesToPdf(
   images: { buffer: ArrayBuffer; mimeType: string }[],
-  options?: { orientation?: 'auto' | 'portrait' | 'landscape'; margin?: 'none' | 'small' | 'big' }
+  options?: {
+    orientation?: 'auto' | 'portrait' | 'landscape';
+    margin?: 'none' | 'small' | 'big';
+    pageSize?: 'a4' | 'fit' | 'letter';
+  }
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  const marginSize = options?.margin === 'none' ? 0 : options?.margin === 'big' ? 40 : 20;
+  const marginSize = options?.margin === 'none' ? 0 : options?.margin === 'big' ? 36 : 18;
 
   for (const img of images) {
     const embeddedImg = await ensureEmbeddableImage(doc, img.buffer, img.mimeType);
 
     const { width: imgW, height: imgH } = embeddedImg;
-    let pageW = imgW + marginSize * 2;
-    let pageH = imgH + marginSize * 2;
+    const isLandscape = imgW > imgH;
 
-    if (options?.orientation === 'portrait') {
-      pageW = 595.28; // A4 standard
-      pageH = 841.89;
-    } else if (options?.orientation === 'landscape') {
+    let pageW = 595.28; // Standard A4 width in pt
+    let pageH = 841.89; // Standard A4 height in pt
+
+    if (options?.pageSize === 'fit') {
+      pageW = imgW + marginSize * 2;
+      pageH = imgH + marginSize * 2;
+    } else if (options?.orientation === 'landscape' || (options?.orientation !== 'portrait' && isLandscape)) {
       pageW = 841.89;
       pageH = 595.28;
+    } else {
+      pageW = 595.28;
+      pageH = 841.89;
     }
 
     const page = doc.addPage([pageW, pageH]);
-    const maxDrawW = pageW - marginSize * 2;
-    const maxDrawH = pageH - marginSize * 2;
-    const scale = Math.min(maxDrawW / imgW, maxDrawH / imgH, 1);
+    const maxDrawW = Math.max(10, pageW - marginSize * 2);
+    const maxDrawH = Math.max(10, pageH - marginSize * 2);
+
+    const scale = Math.min(maxDrawW / imgW, maxDrawH / imgH);
     const drawW = imgW * scale;
     const drawH = imgH * scale;
 

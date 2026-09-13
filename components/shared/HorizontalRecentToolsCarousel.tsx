@@ -111,6 +111,11 @@ export function HorizontalRecentToolsCarousel({ className = '' }: HorizontalRece
               <Link
                 key={`recent-carousel-${tool.id}`}
                 href={`/tools/${tool.slug || tool.id}`}
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem('miftah_last_clicked_tool', tool.id);
+                  } catch (_) {}
+                }}
                 className="snap-start shrink-0 w-[200px] sm:w-[220px] p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)] hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.14)] dark:hover:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.6)] hover:-translate-y-1 active:scale-[0.97] transition-all duration-200 flex flex-col justify-between group overflow-hidden relative"
               >
                 {/* Subtle 3D Top Gradient Lip */}

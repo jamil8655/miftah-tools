@@ -4,15 +4,38 @@ import { notFound } from 'next/navigation';
 import { TOOLS_LIST } from '@/lib/tools-config';
 import { ToolPageClient } from '@/components/shared/ToolPageClient';
 
+const TOOL_ALIASES: Record<string, string> = {
+  'pdf-to-word': 'pdf-to-docx',
+  'word-to-pdf': 'docx-to-pdf',
+  'ocr-image-to-text': 'ocr-image',
+  'qr-code-generator': 'qr-generator',
+  'compress-images': 'compress-image',
+  'resize-images': 'image-resizer',
+  'pdf-to-jpg': 'pdf-to-images',
+  'pdf-to-png': 'pdf-to-images',
+  'pdf-to-image': 'pdf-to-images',
+  'pdf-sign': 'pdf-signer',
+  'sign-pdf': 'pdf-signer',
+  'scanner': 'camera-scanner',
+  'doc-scanner': 'camera-scanner',
+};
+
+function resolveTool(identifier: string) {
+  const resolvedId = TOOL_ALIASES[identifier] || identifier;
+  return TOOLS_LIST.find((t) => t.id === resolvedId || t.slug === resolvedId || t.id === identifier || t.slug === identifier);
+}
+
 export function generateStaticParams() {
-  return TOOLS_LIST.flatMap((tool) => [
+  const directParams = TOOLS_LIST.flatMap((tool) => [
     { toolId: tool.id },
     { toolId: tool.slug },
   ]);
+  const aliasParams = Object.keys(TOOL_ALIASES).map((alias) => ({ toolId: alias }));
+  return [...directParams, ...aliasParams];
 }
 
 export async function generateMetadata({ params }: { params: { toolId: string } }): Promise<Metadata> {
-  const tool = TOOLS_LIST.find((t) => t.id === params.toolId || t.slug === params.toolId);
+  const tool = resolveTool(params.toolId);
   if (!tool) {
     return {
       title: 'Tool Not Found — Miftah Tools',
@@ -30,7 +53,7 @@ export async function generateMetadata({ params }: { params: { toolId: string } 
       title,
       description,
       type: 'website',
-      url: `https://jamil8655.github.io/nexora-tools/tools/${tool.slug}`,
+      url: `https://miftahtools.com/tools/${tool.slug}`,
       siteName: 'Miftah Tools',
     },
     twitter: {
@@ -42,7 +65,7 @@ export async function generateMetadata({ params }: { params: { toolId: string } 
 }
 
 export default function ToolPage({ params }: { params: { toolId: string } }) {
-  const tool = TOOLS_LIST.find((t) => t.id === params.toolId || t.slug === params.toolId);
+  const tool = resolveTool(params.toolId);
   if (!tool) notFound();
 
   const jsonLd = {

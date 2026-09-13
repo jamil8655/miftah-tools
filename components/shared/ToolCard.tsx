@@ -211,17 +211,28 @@ export function ToolCard({ tool }: ToolCardProps) {
   const theme = CATEGORY_THEMES[tool.category] || DEFAULT_THEME;
   const loc = CARD_LOCALES[language] || CARD_LOCALES.en;
 
+  const handleClick = () => {
+    try {
+      sessionStorage.setItem('miftah_last_clicked_tool', tool.id);
+      sessionStorage.setItem('miftah_last_scroll_y', window.scrollY.toString());
+    } catch (_) {}
+  };
+
   return (
-    <div
+    <Link
+      id={`tool-card-${tool.id}`}
+      data-tool-id={tool.id}
+      data-tool-slug={tool.slug}
+      href={`/tools/${tool.slug || tool.id}`}
+      onClick={handleClick}
       dir={isRTL ? 'rtl' : 'ltr'}
-      className={`group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-transparent p-4 sm:p-5 shadow-xs hover:-translate-y-1 transition-all duration-200 active:scale-[0.98] ${theme.hoverBorder} ${theme.hoverShadow} ${theme.bgSubtle} overflow-hidden min-h-[140px] sm:min-h-[160px]`}
+      className={`group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-transparent p-4 sm:p-5 shadow-xs hover:-translate-y-1 transition-all duration-200 active:scale-[0.98] ${theme.hoverBorder} ${theme.hoverShadow} ${theme.bgSubtle} overflow-hidden min-h-[140px] sm:min-h-[160px] block cursor-pointer select-none scroll-mt-24`}
+      aria-label={localized.name}
     >
       {/* Top Accent Line on Hover */}
       <div className={`absolute top-0 left-0 right-0 h-1 sm:h-1.5 ${theme.topAccent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
-      <Link href={`/tools/${tool.slug || tool.id}`} className="absolute inset-0 z-0 rounded-2xl sm:rounded-3xl" aria-label={localized.name} />
-
-      <div className="space-y-3 relative z-10 pointer-events-none">
+      <div className="space-y-3 relative z-10">
         {/* Header: High-Contrast Vibrant Icon, Badges, Bookmark */}
         <div className="flex items-center justify-between gap-2">
           <div
@@ -230,7 +241,7 @@ export function ToolCard({ tool }: ToolCardProps) {
             <ToolIcon name={tool.icon} className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
 
-          <div className="flex items-center gap-1.5 pointer-events-auto">
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
             <span
               className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}`}
             >
@@ -252,7 +263,7 @@ export function ToolCard({ tool }: ToolCardProps) {
       </div>
 
       {/* Footer Meta */}
-      <div className="relative z-10 pointer-events-none flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+      <div className="relative z-10 flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
         <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           {tool.acceptedExtensions && tool.acceptedExtensions.length > 0
@@ -265,6 +276,6 @@ export function ToolCard({ tool }: ToolCardProps) {
           <ArrowUpRight className={`w-4 h-4 ${isRTL ? '-scale-x-100' : ''}`} />
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

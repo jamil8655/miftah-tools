@@ -6,8 +6,9 @@ import { textToWordDocx } from '@/lib/documents/doc-converter';
 import { getPdfJsLib } from '@/lib/utils/formatters';
 import { FileUploader } from '@/components/shared/FileUploader';
 import { ProgressBar } from '@/components/shared/ProgressBar';
-import { ScanText, Copy, Check, Download, Languages, Sparkles, FileText } from 'lucide-react';
-import { downloadSingleFile } from '@/lib/utils/download';
+import { ScanText, Copy, Check, Download, Languages, Sparkles, FileText, Share2 } from 'lucide-react';
+import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 import { addHistoryItem } from '@/lib/storage/file-store';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
@@ -25,6 +26,7 @@ const OCR_LOCALES = {
     copyText: 'Copy Text',
     exportTxt: 'Export .TXT',
     exportDocx: 'Export Word (.DOCX)',
+    shareText: 'Share Text / File',
     scanAnother: 'Scan Another Document',
   },
   ur: {
@@ -40,6 +42,7 @@ const OCR_LOCALES = {
     copyText: 'متن کاپی کریں',
     exportTxt: 'TXT برآمد کریں',
     exportDocx: 'Word DOCX برآمد کریں',
+    shareText: 'متن / فائل شیئر کریں',
     scanAnother: 'دوسری دستاویز اسکین کریں',
   },
   ar: {
@@ -55,6 +58,7 @@ const OCR_LOCALES = {
     copyText: 'نسخ النص',
     exportTxt: 'تصدير TXT',
     exportDocx: 'تصدير Word (.DOCX)',
+    shareText: 'مشاركة النص / الملف',
     scanAnother: 'مسح مستند آخر',
   },
   hi: {
@@ -70,6 +74,7 @@ const OCR_LOCALES = {
     copyText: 'टेक्स्ट कॉपी करें',
     exportTxt: 'TXT निर्यात करें',
     exportDocx: 'Word (.DOCX) निर्यात करें',
+    shareText: 'टेक्स्ट / फ़ाइल शेयर करें',
     scanAnother: 'दूसरा दस्तावेज़ स्कैन करें',
   },
 };
@@ -183,11 +188,29 @@ export function OcrStudio() {
     downloadSingleFile(blob, `${baseName}.txt`);
   };
 
+  const handleShareTxt = async () => {
+    if (!ocrResult?.text) return;
+    const baseName = selectedFiles[0]?.name ? selectedFiles[0].name.replace(/\.[^/.]+$/, '') : 'ocr-extracted';
+    const blob = new Blob([ocrResult.text], { type: 'text/plain;charset=utf-8' });
+    await shareDownloadedFile({ name: `${baseName}.txt`, blob, mimeType: 'text/plain' });
+  };
+
   const handleDownloadDocx = async () => {
     if (!ocrResult?.text) return;
     const baseName = selectedFiles[0]?.name ? selectedFiles[0].name.replace(/\.[^/.]+$/, '') : 'ocr-extracted';
     const blob = await textToWordDocx(ocrResult.text, baseName);
     downloadSingleFile(blob, `${baseName}.docx`);
+  };
+
+  const handleShareDocx = async () => {
+    if (!ocrResult?.text) return;
+    const baseName = selectedFiles[0]?.name ? selectedFiles[0].name.replace(/\.[^/.]+$/, '') : 'ocr-extracted';
+    const blob = await textToWordDocx(ocrResult.text, baseName);
+    await shareDownloadedFile({
+      name: `${baseName}.docx`,
+      blob,
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
   };
 
   return (
@@ -305,6 +328,16 @@ export function OcrStudio() {
               >
                 <Download className="w-4 h-4" />
                 <span>{loc.exportTxt}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShareDocx}
+                className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-semibold flex items-center gap-1.5 shadow-xs"
+                title={loc.shareText}
+              >
+                <Share2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>{loc.shareText}</span>
               </button>
             </div>
           </div>

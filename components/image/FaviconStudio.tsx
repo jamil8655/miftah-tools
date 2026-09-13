@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { Layers, Upload, Download, CheckCircle, AlertCircle, RefreshCw, Copy, Check } from 'lucide-react';
 import { generateFaviconPackage } from '@/lib/image/image-tools';
+import { downloadSingleFile } from '@/lib/utils/download';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 export function FaviconStudio() {
   const [file, setFile] = useState<File | null>(null);
@@ -156,14 +158,19 @@ export function FaviconStudio() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <a
-                href={resultUrl}
-                download="miftah_favicon_pack.zip"
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
+              <button
+                type="button"
+                onClick={() => {
+                  if (resultBlob) {
+                    triggerHaptic('medium');
+                    downloadSingleFile(resultBlob, 'miftah_favicon_pack.zip');
+                  }
+                }}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-95 transition-all"
               >
                 <Download className="w-5 h-5" />
                 Download Favicon Pack (.ZIP)
-              </a>
+              </button>
               <button
                 onClick={() => {
                   setFile(null);

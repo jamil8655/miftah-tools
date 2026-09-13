@@ -270,7 +270,7 @@ export const TOOLS_LIST: ToolDefinition[] = ${JSON.stringify(ALL_TOOLS.map(t => 
   isClientSide: true,
   acceptedMimeTypes: t.ext.includes('pdf') ? ['application/pdf'] : t.ext.includes('docx') ? ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'] : t.ext.includes('xlsx') ? ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'] : t.ext.includes('csv') ? ['text/csv'] : t.ext.includes('jpg') ? ['image/jpeg', 'image/png', 'image/webp'] : t.ext.includes('png') ? ['image/png', 'image/jpeg'] : t.ext.includes('txt') ? ['text/plain'] : t.ext.includes('json') ? ['application/json'] : ['*/*'],
   acceptedExtensions: t.ext.split(',').map(e => e.trim()),
-  maxFiles: t.id.includes('merge') || t.id.includes('zip') || t.id.includes('multi') ? 50 : 10,
+  maxFiles: (t.id.includes('merge') || t.id.includes('zip') || t.id.includes('multi') || t.category === 'image' || t.id.includes('to-pdf') || t.id.includes('batch') || t.id.includes('compress') || t.id.includes('convert')) ? 100 : 50,
   maxFileSizeMB: 500,
   outputExtension: t.outExt,
   outputMimeType: t.outExt === 'pdf' ? 'application/pdf' : t.outExt === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : t.outExt === 'xlsx' ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : t.outExt === 'csv' ? 'text/csv' : t.outExt === 'jpg' ? 'image/jpeg' : t.outExt === 'png' ? 'image/png' : t.outExt === 'zip' ? 'application/zip' : t.outExt === 'json' ? 'application/json' : 'text/plain',

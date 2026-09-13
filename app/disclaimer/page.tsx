@@ -5,8 +5,64 @@ import Link from 'next/link';
 import { AlertCircle, ShieldAlert } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
+const DISCLAIMER_LOCALES = {
+  en: {
+    badge: 'Legal Notice',
+    title: 'Legal & Technical Disclaimer',
+    updated: 'Last updated: September 2026',
+    s1Title: '1. Educational & General Purpose Use',
+    s1Desc: 'The digital utility tools, code generators, calculations, and course lessons provided by Miftah Tools are intended for educational, technical, and general utility purposes only. While our engines use state-of-the-art WebAssembly algorithms, outputs should be independently validated.',
+    s2Title: '2. No Legal or Financial Advice',
+    s2Desc: 'Calculations (including mortgage, tax, timestamp, and unit conversions) provided within our calculation modules do not constitute financial, legal, or investment advice. Always consult a certified professional for binding transactions.',
+    s3Title: '3. Third-Party Media & Trademarks',
+    s3Desc: 'All trademarks, product names, and company logos cited within course materials or tool documentation are the property of their respective owners. Miftah Tools is an independent platform.',
+    footerPrompt: 'Questions?',
+    contactBtn: 'Contact Support',
+  },
+  ur: {
+    badge: 'قانونی نوٹس و وضاحت',
+    title: 'قانونی و تکنیکی ڈسکلیمر (Disclaimer)',
+    updated: 'آخری تجدید: ستمبر 2026',
+    s1Title: '1. تعلیمی اور عمومی افادیت کا مقصد',
+    s1Desc: 'مفتاح ٹولز پر فراہم کردہ تمام ٹولز، کوڈ جنریٹرز، کیلکولیشنز اور کورسز کے اسباق صرف تکنیکی رہنمائی، تعلیم اور عمومی فائدے کے لیے ہیں۔ اگرچہ ہمارے WASM الگورتھمز انتہائی درست ہیں، لیکن حساس فیصلوں میں خود تصدیق کر لیں۔',
+    s2Title: '2. کوئی قانونی یا مالیاتی مشورہ نہیں',
+    s2Desc: 'ایپ کے اندر موجود مختلف کیلکولیٹرز (جیسے ٹیکس، کرنسی یا لون کیلکولیشن) قانونی یا مالیاتی مشورے کا نعم البدل نہیں ہیں۔ اہم قانونی امور میں مستند ماہرین سے رجوع کریں۔',
+    s3Title: '3. تیسرے فریق کے ٹریڈ مارکس کی ملکیت',
+    s3Desc: 'کورسز کے مواد یا دستاویزات میں مذکور تمام پروڈکٹ کے نام، برانڈز اور لوگوز ان کے متعلقہ مالکان کی ملکیت ہیں۔ مفتاح ٹولز ایک خود مختار پلیٹ فارم ہے۔',
+    footerPrompt: 'کوئی سوال ہے؟',
+    contactBtn: 'سپورٹ سے رابطہ کریں',
+  },
+  ar: {
+    badge: 'إشعار قانوني',
+    title: 'إخلاء المسؤولية القانوني والتقني',
+    updated: 'آخر تحديث: سبتمبر 2026',
+    s1Title: '1. الاستخدام التعليمي والعام',
+    s1Desc: 'الأدوات الرقمية ومولدات الأكواد والحاسبات ودروس الدورات المقدمة في مفتاح تولز مخصصة للأغراض التعليمية والتقنية العامة. على الرغم من دقة خوارزميات WebAssembly، يجب التحقق من المخرجات بشكل مستقل.',
+    s2Title: '2. عدم تقديم استشارات مالية أو قانونية',
+    s2Desc: 'الحسابات والمعادلات المقدمة في وحدات الحساب لا تشكل استشارة قانونية أو مالية أو استثمارية ملزمة. يرجى دائماً استشارة المتخصصين المعتمدين.',
+    s3Title: '3. العلامات التجارية وحقوق الأطراف الثالثة',
+    s3Desc: 'جميع العلامات التجارية وأسماء المنتجات وشعارات الشركات المذكورة في المواد التعليمية أو وثائق الأدوات هي ملك لأصحابها المعنيين. مفتاح تولز منصة مستقلة تماماً.',
+    footerPrompt: 'هل لديك أي استفسار؟',
+    contactBtn: 'تواصل مع الدعم الفني',
+  },
+  hi: {
+    badge: 'कानूनी सूचना',
+    title: 'कानूनी व तकनीकी अस्वीकरण (Disclaimer)',
+    updated: 'अंतिम अपडेट: सितंबर 2026',
+    s1Title: '1. शैक्षिक व सामान्य उपयोग का उद्देश्य',
+    s1Desc: 'मिफ्ताह टूल्स पर उपलब्ध सभी यूटिलिटी टूल्स, कोड जनरेटर, कैलकुलेशन और कोर्सेज केवल शैक्षिक, तकनीकी व सामान्य सहायता उद्देश्यों के लिए हैं। यद्यपि हमारे WebAssembly एल्गोरिदम अत्यधिक सटीक हैं, महत्वपूर्ण कार्यों में आउटपुट का सत्यापन करें।',
+    s2Title: '2. कोई कानूनी या वित्तीय सलाह नहीं',
+    s2Desc: 'कैलकुलेशन मॉड्यूल में दी गई गणनाएं (जैसे टैक्स, लोन या यूनिट कन्वर्जन) किसी भी प्रकार की वित्तीय या कानूनी सलाह नहीं हैं। किसी भी बाध्यकारी निर्णय के लिए प्रमाणित पेशेवर से परामर्श लें।',
+    s3Title: '3. तीसरे पक्ष के ट्रेडमार्क व कॉपीराइट',
+    s3Desc: 'कोर्स सामग्री में उल्लिखित सभी ट्रेडमार्क, उत्पाद नाम और कंपनी लोगो उनके संबंधित स्वामियों की संपत्ति हैं। मिफ्ताह टूल्स एक स्वतंत्र प्लेटफॉर्म है।',
+    footerPrompt: 'कोई प्रश्न है?',
+    contactBtn: 'सपोर्ट से संपर्क करें',
+  },
+};
+
 export default function DisclaimerPage() {
-  const { t } = useI18n();
+  const { language } = useI18n();
+  const loc = DISCLAIMER_LOCALES[language] || DISCLAIMER_LOCALES.en;
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
@@ -14,40 +70,34 @@ export default function DisclaimerPage() {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-200 dark:border-amber-800">
             <AlertCircle className="w-3.5 h-3.5" />
-            Legal Notice
+            {loc.badge}
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            Legal & Technical Disclaimer
+            {loc.title}
           </h1>
-          <p className="text-xs text-slate-500">Last updated: September 1, 2026</p>
+          <p className="text-xs text-slate-500">{loc.updated}</p>
         </div>
 
         <div className="p-6 sm:p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-8 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">1. Educational & General Purpose Use</h3>
-            <p>
-              The digital utility tools, code generators, calculations, and course lessons provided by Miftah Tools are intended for educational, technical, and general utility purposes only. While our engines use state-of-the-art WebAssembly algorithms, outputs should be independently validated.
-            </p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">{loc.s1Title}</h3>
+            <p>{loc.s1Desc}</p>
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">2. No Legal or Financial Advice</h3>
-            <p>
-              Calculations (including mortgage, tax, timestamp, and unit conversions) provided within our calculation modules do not constitute financial, legal, or investment advice. Always consult a certified professional for binding transactions.
-            </p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">{loc.s2Title}</h3>
+            <p>{loc.s2Desc}</p>
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">3. Third-Party Media & Trademarks</h3>
-            <p>
-              All trademarks, product names, and company logos cited within course materials or tool documentation are the property of their respective owners. Miftah Tools is an independent platform.
-            </p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">{loc.s3Title}</h3>
+            <p>{loc.s3Desc}</p>
           </section>
 
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-xs text-slate-400">Questions?</span>
-            <Link href="/contact" className="text-xs font-bold text-brand-600 hover:underline">
-              Contact Support
+            <span className="text-xs text-slate-400">{loc.footerPrompt}</span>
+            <Link href="/contact" className="text-xs font-bold text-brand-600 hover:underline cursor-pointer">
+              {loc.contactBtn}
             </Link>
           </div>
         </div>

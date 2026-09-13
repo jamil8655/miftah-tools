@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
-import { PrivacyBadge } from '@/components/shared/PrivacyBadge';
 import { HashStudio } from '@/components/security/HashStudio';
 import { PasswordStudio } from '@/components/security/PasswordStudio';
 import { TextCipherStudio } from '@/components/security/TextCipherStudio';
@@ -11,39 +10,39 @@ import { useI18n } from '@/lib/i18n/i18n-context';
 
 const SEC_PAGE_LOCALES = {
   en: {
-    title: 'Security, Cryptography & Privacy Studio',
-    desc: 'Military-grade cryptographic tools: SHA checksums, AES-256 text encryption, high-entropy password generator, and cryptographic UUIDs.',
+    title: 'Security & Encryption',
+    desc: 'SHA checksums, AES-256 text encryption, and strong password generator.',
     tabs: {
-      hash: 'SHA Hash & Checksums',
-      cipher: 'AES-256 Text Cipher',
-      password: 'Password Generator',
+      hash: 'SHA Hash',
+      cipher: 'AES-256 Cipher',
+      password: 'Passwords',
     },
   },
   ur: {
-    title: 'سیکیورٹی اور کرپٹوگرافی اسٹوڈیو',
-    desc: 'اعلیٰ سیکیورٹی ٹولز: SHA چیک سم، AES-256 ٹیکسٹ انکرپشن، پاس ورڈ جنریٹر، اور سیکیور کیز۔',
+    title: 'سیکیورٹی اور انکرپشن',
+    desc: 'SHA چیک سم، AES-256 ٹیکسٹ انکرپشن اور پاس ورڈ جنریٹر۔',
     tabs: {
-      hash: 'SHA ہیش اور چیک سم',
-      cipher: 'AES-256 ٹیکسٹ انکرپشن',
-      password: 'پاس ورڈ جنریٹر',
+      hash: 'SHA ہیش',
+      cipher: 'AES-256 انکرپشن',
+      password: 'پاس ورڈ',
     },
   },
   ar: {
-    title: 'استوديو الأمان والتشفير والخصوصية',
-    desc: 'أدوات تشفير متقدمة: بصمة الملفات SHA، تشفير النصوص AES-256، ومولد كلمات المرور الآمنة.',
+    title: 'الأمان والتشفير',
+    desc: 'بصمة الملفات SHA، تشفير النصوص AES-256، ومولد كلمات المرور.',
     tabs: {
-      hash: 'تجزئة وبصمة SHA',
-      cipher: 'تشفير النصوص AES-256',
-      password: 'مولد كلمات المرور',
+      hash: 'بصمة SHA',
+      cipher: 'تشفير AES-256',
+      password: 'كلمات المرور',
     },
   },
   hi: {
-    title: 'सुरक्षा, क्रिप्टोग्राफी और गोपनीयता स्टूडियो',
-    desc: 'उन्नत सुरक्षा टूल्स: SHA चेकसम, AES-256 टेक्स्ट एन्क्रिप्शन, मजबूत पासवर्ड जनरेटर और सुरक्षित कीज़।',
+    title: 'सुरक्षा व एन्क्रिप्शन',
+    desc: 'SHA चेकसम, AES-256 टेक्स्ट एन्क्रिप्शन और मजबूत पासवर्ड जनरेटर।',
     tabs: {
-      hash: 'SHA हैश और चेकसम',
-      cipher: 'AES-256 टेक्स्ट सिफर',
-      password: 'पासवर्ड जनरेटर',
+      hash: 'SHA हैश',
+      cipher: 'AES-256 सिफर',
+      password: 'पासवर्ड',
     },
   },
 };
@@ -55,18 +54,15 @@ export default function SecurityToolsPage() {
   const [activeTab, setActiveTab] = useState<'hash' | 'cipher' | 'password'>('hash');
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
       <Breadcrumbs items={[{ label: loc.title }]} />
 
-      <div className="text-center space-y-3">
-        <div className="flex justify-center">
-          <PrivacyBadge isClientSide={true} />
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight flex items-center justify-center gap-2.5">
-          <ShieldCheck className="w-8 h-8 text-brand-600 dark:text-brand-400" />
+      <div className="text-center space-y-1">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight flex items-center justify-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
           <span>{loc.title}</span>
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl mx-auto">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
           {loc.desc}
         </p>
       </div>

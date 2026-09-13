@@ -12,9 +12,11 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">#ffffff</item>
+        <item name="android:fitsSystemWindows">true</item>
     </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
         <item name="android:background">#ffffff</item>
+        <item name="android:fitsSystemWindows">true</item>
     </style>
 </resources>

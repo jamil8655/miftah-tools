@@ -26,7 +26,7 @@ import {
 import { downloadSingleFile } from '@/lib/utils/download';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { useI18n } from '@/lib/i18n/i18n-context';
-import { getPdfJsLib } from '@/lib/utils/formatters';
+import { getPdfJsLib, base64ToUint8Array } from '@/lib/utils/formatters';
 
 const PDF_EDITOR_LOCALES = {
   en: {
@@ -286,12 +286,21 @@ export function VisualPdfEditor() {
   }, [redrawCanvas]);
 
   // 3. Canvas Mouse & Touch Drawing Handlers
-  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    const clientX = 'touches' in e && e.touches.length > 0 ? e.touches[0].clientX : 'clientX' in e ? e.clientX : 0;
+    const clientY = 'touches' in e && e.touches.length > 0 ? e.touches[0].clientY : 'clientY' in e ? e.clientY : 0;
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height),
+    };
+  };
+
+  const handlePointerDown = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const { x, y } = getCanvasCoords(e);
+    if (x === 0 && y === 0) return;
 
     // Save state to undo stack before mutation
     setUndoStack((prev) => [...prev, [...annotations]]);
@@ -338,17 +347,13 @@ export function VisualPdfEditor() {
     }
   };
 
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handlePointerMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    const { x, y } = getCanvasCoords(e);
     setCurrentPath((prev) => [...prev, { x, y }]);
   };
 
-  const handleCanvasMouseUp = () => {
+  const handlePointerUp = () => {
     if (isDrawing && currentPath.length > 1) {
       const newAnn: AnnotationItem = {
         id: 'ann_' + Date.now(),
@@ -383,13 +388,13 @@ export function VisualPdfEditor() {
     setRedoStack((prev) => prev.slice(0, prev.length - 1));
   };
 
-  // 5. Real Export with pdf-lib
+  // 5. Real Export with pdf-lib & High-Resolution Vector/Overlay Baking
   const handleExportPdf = async () => {
     setIsExporting(true);
     try {
       let doc: PDFDocument;
       if (pdfBytes) {
-        doc = await PDFDocument.load(pdfBytes);
+        doc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
       } else {
         doc = await PDFDocument.create();
         doc.addPage([595, 842]);
@@ -397,27 +402,73 @@ export function VisualPdfEditor() {
 
       const pages = doc.getPages();
 
-      // Render annotations onto pages
-      annotations.forEach((ann) => {
-        const pageIdx = ann.page - 1;
-        if (pageIdx >= 0 && pageIdx < pages.length) {
-          const page = pages[pageIdx];
-          const { height } = page.getSize();
+      for (let i = 0; i < pages.length; i++) {
+        const pageNum = i + 1;
+        const pageAnnotations = annotations.filter((a) => a.page === pageNum);
+        if (pageAnnotations.length === 0) continue;
 
-          if (ann.type === 'text' || ann.type === 'signature') {
-            page.drawText(ann.text || '', {
-              x: ann.x * (page.getWidth() / 600),
-              y: height - ann.y * (height / 800),
-              size: ann.type === 'signature' ? 18 : 14,
-              color: rgb(0.1, 0.1, 0.1),
-            });
+        const page = pages[i];
+        const { width: pageWidth, height: pageHeight } = page.getSize();
+
+        // Create high-resolution overlay canvas
+        const overlayCanvas = document.createElement('canvas');
+        overlayCanvas.width = 1200;
+        overlayCanvas.height = Math.round(1200 * (pageHeight / pageWidth));
+        const ctx = overlayCanvas.getContext('2d');
+        if (!ctx) continue;
+
+        const scaleX = overlayCanvas.width / 600;
+        const scaleY = overlayCanvas.height / 800;
+
+        // Render annotations onto overlay
+        pageAnnotations.forEach((item) => {
+          ctx.save();
+          if ((item.type === 'draw' || item.type === 'highlight') && item.points && item.points.length > 1) {
+            ctx.strokeStyle = item.color || (item.type === 'highlight' ? '#fef08a' : '#000000');
+            ctx.lineWidth = (item.size || (item.type === 'highlight' ? 18 : 3)) * scaleX;
+            ctx.globalAlpha = item.type === 'highlight' ? 0.45 : 1.0;
+            ctx.lineCap = item.type === 'highlight' ? 'square' : 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(item.points[0].x * scaleX, item.points[0].y * scaleY);
+            for (let pt = 1; pt < item.points.length; pt++) {
+              ctx.lineTo(item.points[pt].x * scaleX, item.points[pt].y * scaleY);
+            }
+            ctx.stroke();
+          } else if (item.type === 'text') {
+            ctx.fillStyle = item.color || '#000000';
+            ctx.font = `bold ${Math.round(20 * scaleX)}px sans-serif`;
+            ctx.fillText(item.text || '', item.x * scaleX, item.y * scaleY);
+          } else if (item.type === 'rectangle') {
+            ctx.strokeStyle = item.color || '#026fc7';
+            ctx.lineWidth = (item.size || 3) * scaleX;
+            ctx.strokeRect(item.x * scaleX, item.y * scaleY, (item.width || 120) * scaleX, (item.height || 60) * scaleY);
+          } else if (item.type === 'signature') {
+            ctx.fillStyle = item.color || '#000000';
+            ctx.font = `italic bold ${Math.round(26 * scaleX)}px cursive, sans-serif`;
+            ctx.fillText(item.text || loc.defaultSig, item.x * scaleX, item.y * scaleY);
           }
-        }
-      });
+          ctx.restore();
+        });
 
-      const modifiedBytes = await doc.save();
+        const overlayPngData = overlayCanvas.toDataURL('image/png');
+        overlayCanvas.width = 0;
+        overlayCanvas.height = 0;
+
+        const overlayPngBytes = base64ToUint8Array(overlayPngData);
+        const embeddedPng = await doc.embedPng(overlayPngBytes);
+
+        page.drawImage(embeddedPng, {
+          x: 0,
+          y: 0,
+          width: pageWidth,
+          height: pageHeight,
+        });
+      }
+
+      const modifiedBytes = await doc.save({ useObjectStreams: true });
       const blob = new Blob([modifiedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
-      const name = (pdfFile?.name || 'document').replace(/\.pdf$/i, '') + '_edited.pdf';
+      const name = (pdfFile?.name || 'document').replace(/\.pdf$/i, '') + '_annotated.pdf';
       downloadSingleFile(blob, name);
     } catch (err) {
       console.error('Export error:', err);
@@ -558,10 +609,13 @@ export function VisualPdfEditor() {
             ref={canvasRef}
             width={600}
             height={800}
-            onMouseDown={handleCanvasMouseDown}
-            onMouseMove={handleCanvasMouseMove}
-            onMouseUp={handleCanvasMouseUp}
-            className="cursor-crosshair block"
+            onMouseDown={handlePointerDown}
+            onMouseMove={handlePointerMove}
+            onMouseUp={handlePointerUp}
+            onTouchStart={handlePointerDown}
+            onTouchMove={handlePointerMove}
+            onTouchEnd={handlePointerUp}
+            className="cursor-crosshair block touch-none"
           />
         </div>
 

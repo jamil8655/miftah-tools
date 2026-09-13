@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const BASE_URL = 'https://jamil8655.github.io/nexora-tools';
+const BASE_URL = 'https://miftahtools.com';
 
 const TOOLS_SLUGS = [
   'merge-pdf', 'split-pdf', 'compress-pdf', 'pdf-to-word', 'pdf-to-image', 'image-to-pdf',
@@ -27,6 +27,10 @@ const TOOLS_SLUGS = [
 const STATIC_PAGES = [
   '',
   '/tools',
+  '/courses',
+  '/quiz',
+  '/workflows',
+  '/batch',
   '/pdf-editor',
   '/ocr',
   '/qr-barcode',
@@ -35,9 +39,18 @@ const STATIC_PAGES = [
   '/dev-tools',
   '/security-tools',
   '/ai-tools',
-  '/dashboard',
+  '/downloads',
+  '/favorites',
   '/history',
-  '/account'
+  '/settings',
+  '/about',
+  '/faq',
+  '/contact',
+  '/privacy',
+  '/terms',
+  '/refund',
+  '/guidelines',
+  '/disclaimer'
 ];
 
 const today = new Date().toISOString().split('T')[0];

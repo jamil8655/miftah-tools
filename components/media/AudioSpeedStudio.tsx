@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { FastForward, Upload, Download, CheckCircle, AlertCircle, RefreshCw, FileAudio, Gauge } from 'lucide-react';
 import { changeAudioSpeed } from '@/lib/media/audio-engine';
+import { downloadSingleFile } from '@/lib/utils/download';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 export function AudioSpeedStudio() {
   const [file, setFile] = useState<File | null>(null);
@@ -166,14 +168,20 @@ export function AudioSpeedStudio() {
             <audio controls src={resultUrl} className="w-full rounded-lg" />
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <a
-                href={resultUrl}
-                download={`speed_${speed}x_${file?.name.replace(/\.[^/.]+$/, '')}.wav`}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
+              <button
+                type="button"
+                onClick={() => {
+                  if (resultBlob) {
+                    triggerHaptic('medium');
+                    const outName = `speed_${speed}x_${file?.name.replace(/\.[^/.]+$/, '') || 'audio'}.wav`;
+                    downloadSingleFile(resultBlob, outName);
+                  }
+                }}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all"
               >
                 <Download className="w-5 h-5" />
                 Download {speed}x Audio (WAV)
-              </a>
+              </button>
               <button
                 onClick={() => {
                   setFile(null);

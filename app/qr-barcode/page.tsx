@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
-import { PrivacyBadge } from '@/components/shared/PrivacyBadge';
 import { QrGenerator } from '@/components/qr/QrGenerator';
 import { BarcodeStudio } from '@/components/qr/BarcodeStudio';
 import { QrCode, Barcode } from 'lucide-react';
@@ -10,35 +9,35 @@ import { useI18n } from '@/lib/i18n/i18n-context';
 
 const QR_PAGE_LOCALES = {
   en: {
-    title: 'QR Code & Barcode Studio',
-    desc: 'Generate custom styled QR codes for URLs, Wi-Fi credentials, and contacts, or create retail and inventory barcodes with instant vector/image download.',
+    title: 'QR Code & Barcode',
+    desc: 'Generate custom styled QR codes and barcodes with instant download.',
     tabs: {
-      qr: 'QR Code Generator',
-      barcode: 'Barcode Generator',
+      qr: 'QR Code',
+      barcode: 'Barcode',
     },
   },
   ur: {
-    title: 'کیو آر کوڈ اور بارکوڈ اسٹوڈیو',
-    desc: 'لنکس، وائی فائی، اور روابط کے لیے اسٹائلش QR کوڈز بنائیں، یا شاپنگ اور انوینٹری بارکوڈز تیار کریں۔',
+    title: 'کیو آر اور بارکوڈ',
+    desc: 'اسٹائلش QR کوڈز اور بارکوڈز بنائیں اور ڈاؤن لوڈ کریں۔',
     tabs: {
-      qr: 'کیو آر کوڈ جنریٹر',
-      barcode: 'بارکوڈ جنریٹر',
+      qr: 'کیو آر کوڈ',
+      barcode: 'بارکوڈ',
     },
   },
   ar: {
-    title: 'استوديو رموز الاستجابة السريعة والباركود',
-    desc: 'إنشاء رموز QR مخصصة للروابط وشبكات الواي فاي وجهات الاتصال، وتوليد باركود المنتجات والمخازن.',
+    title: 'رمز QR والباركود',
+    desc: 'توليد رموز QR والباركود بدقة عالية وتنزيل فوري.',
     tabs: {
-      qr: 'مولد رموز QR',
-      barcode: 'مولد الباركود',
+      qr: 'رمز QR',
+      barcode: 'الباركود',
     },
   },
   hi: {
-    title: 'क्यूआर कोड और बारकोड स्टूडियो',
-    desc: 'यूआरएल, वाई-फाई और संपर्कों के लिए कस्टम स्टाइल वाले क्यूआर कोड बनाएं, या इन्वेंट्री और रिटेल बारकोड जनरेट करें।',
+    title: 'क्यूआर और बारकोड',
+    desc: 'कस्टम स्टाइल वाले क्यूआर कोड और बारकोड जनरेट करें।',
     tabs: {
-      qr: 'QR कोड जनरेटर',
-      barcode: 'बारकोड जनरेटर',
+      qr: 'QR कोड',
+      barcode: 'बारकोड',
     },
   },
 };
@@ -50,18 +49,15 @@ export default function QrBarcodePage() {
   const [activeTab, setActiveTab] = useState<'qr' | 'barcode'>('qr');
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
       <Breadcrumbs items={[{ label: 'Utilities', href: '/tools' }, { label: loc.title }]} />
 
-      <div className="text-center space-y-3">
-        <div className="flex justify-center">
-          <PrivacyBadge isClientSide={true} />
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight flex items-center justify-center gap-2.5">
-          <QrCode className="w-8 h-8 text-brand-600 dark:text-brand-400" />
+      <div className="text-center space-y-1">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight flex items-center justify-center gap-2">
+          <QrCode className="w-5 h-5 text-brand-600 dark:text-brand-400" />
           <span>{loc.title}</span>
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl mx-auto">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
           {loc.desc}
         </p>
       </div>

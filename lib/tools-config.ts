@@ -18,7 +18,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 50,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -45,7 +45,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "zip",
     "outputMimeType": "application/zip",
@@ -72,7 +72,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -99,7 +99,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -126,7 +126,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -153,7 +153,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -180,7 +180,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -207,7 +207,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -234,7 +234,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -261,7 +261,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -288,7 +288,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -315,7 +315,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -342,7 +342,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -369,7 +369,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -396,7 +396,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -423,7 +423,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -450,7 +450,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -477,7 +477,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -504,7 +504,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -531,7 +531,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -558,7 +558,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -585,7 +585,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -612,7 +612,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -639,7 +639,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -666,7 +666,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -693,7 +693,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -720,7 +720,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -747,7 +747,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -774,7 +774,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -801,7 +801,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -828,7 +828,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -855,7 +855,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -882,7 +882,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -909,7 +909,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -936,7 +936,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -963,7 +963,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -990,7 +990,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1017,7 +1017,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1044,7 +1044,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1071,7 +1071,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1098,7 +1098,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "docx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -1125,7 +1125,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "docx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -1152,7 +1152,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -1179,7 +1179,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "rtf",
     "outputMimeType": "text/plain",
@@ -1206,7 +1206,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "xlsx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1233,7 +1233,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "xlsx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1260,7 +1260,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "csv",
     "outputMimeType": "text/csv",
@@ -1287,7 +1287,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pptx",
     "outputMimeType": "text/plain",
@@ -1314,7 +1314,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pptx",
     "outputMimeType": "text/plain",
@@ -1341,7 +1341,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -1368,7 +1368,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -1395,7 +1395,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -1422,7 +1422,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "webp",
     "outputMimeType": "text/plain",
@@ -1449,7 +1449,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -1476,7 +1476,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -1503,7 +1503,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "html",
     "outputMimeType": "text/plain",
@@ -1530,7 +1530,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "md",
     "outputMimeType": "text/plain",
@@ -1557,7 +1557,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "epub",
     "outputMimeType": "text/plain",
@@ -1584,7 +1584,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "svg",
     "outputMimeType": "text/plain",
@@ -1611,7 +1611,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1638,7 +1638,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1665,7 +1665,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1692,7 +1692,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1719,7 +1719,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "zip",
     "outputMimeType": "application/zip",
@@ -1747,7 +1747,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".docx",
       ".doc"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1774,7 +1774,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".doc"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1801,7 +1801,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".docx"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1829,7 +1829,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".xlsx",
       ".xls"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1856,7 +1856,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".xls"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1883,7 +1883,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".xlsx"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1910,7 +1910,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".csv"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1938,7 +1938,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".pptx",
       ".ppt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1965,7 +1965,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".ppt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -1992,7 +1992,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pptx"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2019,7 +2019,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2046,7 +2046,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".rtf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2074,7 +2074,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".html",
       ".htm"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2101,7 +2101,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".md"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2130,7 +2130,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".jpg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2157,7 +2157,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".jpeg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2185,7 +2185,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".png"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2212,7 +2212,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2240,7 +2240,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".tiff",
       ".tif"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2267,7 +2267,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".bmp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2294,7 +2294,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".svg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2321,7 +2321,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".epub"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2354,7 +2354,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".webp",
       ".bmp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2387,7 +2387,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".webp",
       ".bmp"
     ],
-    "maxFiles": 50,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2418,7 +2418,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".jpg",
       ".jpeg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2446,7 +2446,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".html",
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2473,7 +2473,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2500,7 +2500,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2527,7 +2527,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2554,7 +2554,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2581,7 +2581,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2608,7 +2608,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2635,7 +2635,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2662,7 +2662,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2689,7 +2689,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2716,7 +2716,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2743,7 +2743,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2770,7 +2770,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2797,7 +2797,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2824,7 +2824,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2851,7 +2851,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2878,7 +2878,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2905,7 +2905,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -2932,7 +2932,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "docx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -2964,7 +2964,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -2995,7 +2995,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".jpeg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -3026,7 +3026,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -3053,7 +3053,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -3080,7 +3080,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3111,7 +3111,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".jpeg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3140,7 +3140,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".jpg",
       ".png"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "docx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -3169,7 +3169,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".jpg",
       ".png"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3198,7 +3198,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".jpg",
       ".png"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "xlsx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -3227,7 +3227,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".jpg",
       ".png"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "csv",
     "outputMimeType": "text/csv",
@@ -3255,7 +3255,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".docx",
       ".doc"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3283,7 +3283,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".docx",
       ".doc"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "html",
     "outputMimeType": "text/plain",
@@ -3311,7 +3311,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".docx",
       ".doc"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "md",
     "outputMimeType": "text/plain",
@@ -3341,7 +3341,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".txt",
       ".pdf"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3368,7 +3368,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".docx"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "docx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -3395,7 +3395,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".docx"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "docx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -3423,7 +3423,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".docx",
       ".doc"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3451,7 +3451,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".docx",
       ".doc"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3479,7 +3479,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".docx",
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "docx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -3507,7 +3507,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".xlsx",
       ".xls"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "csv",
     "outputMimeType": "text/csv",
@@ -3534,7 +3534,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".csv"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "xlsx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -3563,7 +3563,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".xls",
       ".csv"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "json",
     "outputMimeType": "application/json",
@@ -3590,7 +3590,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".json"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "xlsx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -3618,7 +3618,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".xlsx",
       ".xls"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3646,7 +3646,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".xlsx",
       ".xls"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "html",
     "outputMimeType": "text/plain",
@@ -3673,7 +3673,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".csv"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "csv",
     "outputMimeType": "text/csv",
@@ -3700,7 +3700,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".csv"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "csv",
     "outputMimeType": "text/csv",
@@ -3727,7 +3727,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".csv"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "csv",
     "outputMimeType": "text/csv",
@@ -3755,7 +3755,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".pptx",
       ".ppt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3783,7 +3783,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".pptx",
       ".ppt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "zip",
     "outputMimeType": "application/zip",
@@ -3811,7 +3811,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".pptx",
       ".ppt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -3843,7 +3843,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -3873,7 +3873,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".jpg",
       ".jpeg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -3901,7 +3901,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".png"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -3928,7 +3928,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "webp",
     "outputMimeType": "text/plain",
@@ -3960,7 +3960,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -3992,7 +3992,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4024,7 +4024,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4056,7 +4056,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4090,7 +4090,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".bmp",
       ".tiff"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -4120,7 +4120,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".jpg",
       ".jpeg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -4148,7 +4148,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".png"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4178,7 +4178,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".jpg",
       ".jpeg"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "webp",
     "outputMimeType": "text/plain",
@@ -4206,7 +4206,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".png"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "webp",
     "outputMimeType": "text/plain",
@@ -4233,7 +4233,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4260,7 +4260,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -4288,7 +4288,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".tiff",
       ".tif"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4315,7 +4315,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".bmp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4343,7 +4343,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".heic",
       ".heif"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4371,7 +4371,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".heic",
       ".heif"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -4403,7 +4403,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4435,7 +4435,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -4467,7 +4467,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4499,7 +4499,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4531,7 +4531,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4563,7 +4563,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4595,7 +4595,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4627,7 +4627,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "jpg",
     "outputMimeType": "image/jpeg",
@@ -4659,7 +4659,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4691,7 +4691,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".png",
       ".webp"
     ],
-    "maxFiles": 50,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "zip",
     "outputMimeType": "application/zip",
@@ -4721,7 +4721,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".doc",
       ".docx"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4748,7 +4748,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4775,7 +4775,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4802,7 +4802,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4829,7 +4829,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4856,7 +4856,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4883,7 +4883,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4910,7 +4910,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4937,7 +4937,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4964,7 +4964,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -4991,7 +4991,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5018,7 +5018,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5045,7 +5045,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5072,7 +5072,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5099,7 +5099,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5129,7 +5129,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".js",
       ".py"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5156,7 +5156,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5183,7 +5183,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5210,7 +5210,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5237,7 +5237,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5264,7 +5264,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5291,7 +5291,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5318,7 +5318,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5345,7 +5345,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "docx",
     "outputMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -5373,7 +5373,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".md",
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "pdf",
     "outputMimeType": "application/pdf",
@@ -5400,7 +5400,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".md"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "html",
     "outputMimeType": "text/plain",
@@ -5427,7 +5427,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".html"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5454,7 +5454,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5481,7 +5481,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       "*/*"
     ],
-    "maxFiles": 50,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "zip",
     "outputMimeType": "application/zip",
@@ -5508,7 +5508,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".zip"
     ],
-    "maxFiles": 50,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "zip",
     "outputMimeType": "application/zip",
@@ -5535,7 +5535,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       "*/*"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5562,7 +5562,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       "*/*"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5589,7 +5589,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       "*/*"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5616,7 +5616,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       "*/*"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5643,7 +5643,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       "*/*"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5670,7 +5670,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5697,7 +5697,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -5724,7 +5724,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "png",
     "outputMimeType": "image/png",
@@ -5751,7 +5751,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5779,7 +5779,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".json",
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "json",
     "outputMimeType": "application/json",
@@ -5807,7 +5807,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".json",
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "json",
     "outputMimeType": "application/json",
@@ -5834,7 +5834,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5861,7 +5861,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5888,7 +5888,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5915,7 +5915,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5942,7 +5942,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 100,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5969,7 +5969,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -5996,7 +5996,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -6023,7 +6023,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "txt",
     "outputMimeType": "text/plain",
@@ -6050,7 +6050,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
     "acceptedExtensions": [
       ".txt"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "mp4",
     "outputMimeType": "text/plain",
@@ -6081,7 +6081,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".mkv",
       ".webm"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "mp3",
     "outputMimeType": "text/plain",
@@ -6111,7 +6111,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".m4a",
       ".aac"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "wav",
     "outputMimeType": "text/plain",
@@ -6141,7 +6141,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".ogg",
       ".m4a"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "mp3",
     "outputMimeType": "text/plain",
@@ -6170,7 +6170,7 @@ export const TOOLS_LIST: ToolDefinition[] = [
       ".wav",
       ".m4a"
     ],
-    "maxFiles": 10,
+    "maxFiles": 50,
     "maxFileSizeMB": 500,
     "outputExtension": "wav",
     "outputMimeType": "text/plain",
@@ -6178,193 +6178,6 @@ export const TOOLS_LIST: ToolDefinition[] = [
       "audio speed changer",
       "media",
       "audio speed"
-    ]
-  },
-  {
-    "id": "auto-crop-images-to-pdf",
-    "slug": "auto-crop-images-to-pdf",
-    "name": "Auto Cut Images to PDF",
-    "shortDesc": "Smart crop, split halves, custom trim, and assemble multiple images into a numbered PDF.",
-    "fullDesc": "Smart crop, split halves (top/bottom, left/right), custom trim margins, and assemble multiple images into a sequentially numbered PDF document.",
-    "category": "image",
-    "icon": "Scissors",
-    "popular": true,
-    "featured": true,
-    "isClientSide": true,
-    "acceptedMimeTypes": [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/bmp"
-    ],
-    "acceptedExtensions": [
-      ".jpg",
-      ".jpeg",
-      ".png",
-      ".webp",
-      ".bmp"
-    ],
-    "maxFiles": 50,
-    "maxFileSizeMB": 500,
-    "outputExtension": "pdf",
-    "outputMimeType": "application/pdf",
-    "tags": [
-      "auto crop images to pdf",
-      "split image to pdf",
-      "image half cut to pdf",
-      "smart crop pdf",
-      "crop image to pdf"
-    ]
-  },
-  {
-    "id": "financial-calculators",
-    "slug": "emi-calculator",
-    "name": "Loan & EMI Calculator",
-    "shortDesc": "Calculate monthly loan EMI, total interest, and amortized repayment schedules.",
-    "fullDesc": "Calculate monthly loan EMI, total interest, and amortized repayment schedules.",
-    "category": "calculator",
-    "icon": "Coins",
-    "popular": true,
-    "featured": true,
-    "isClientSide": true,
-    "acceptedMimeTypes": [],
-    "acceptedExtensions": [],
-    "maxFiles": 0,
-    "maxFileSizeMB": 0,
-    "outputExtension": "",
-    "outputMimeType": "",
-    "tags": [
-      "emi calculator",
-      "loan calculator",
-      "mortgage calculator",
-      "home loan emi",
-      "car loan emi",
-      "finance"
-    ]
-  },
-  {
-    "id": "gst-calculator",
-    "slug": "gst-calculator",
-    "name": "GST & Sales Tax Calculator",
-    "shortDesc": "Calculate inclusive and exclusive GST / VAT taxes with CGST and SGST splits.",
-    "fullDesc": "Calculate inclusive and exclusive GST / VAT taxes with CGST and SGST splits.",
-    "category": "calculator",
-    "icon": "Receipt",
-    "popular": true,
-    "featured": false,
-    "isClientSide": true,
-    "acceptedMimeTypes": [],
-    "acceptedExtensions": [],
-    "maxFiles": 0,
-    "maxFileSizeMB": 0,
-    "outputExtension": "",
-    "outputMimeType": "",
-    "tags": [
-      "gst calculator",
-      "vat calculator",
-      "sales tax calculator",
-      "tax calculator",
-      "cgst sgst"
-    ]
-  },
-  {
-    "id": "discount-calculator",
-    "slug": "discount-calculator",
-    "name": "Discount & Sale Calculator",
-    "shortDesc": "Calculate final shopping price, percentage discounts, and total money saved.",
-    "fullDesc": "Calculate final shopping price, percentage discounts, and total money saved.",
-    "category": "calculator",
-    "icon": "Tag",
-    "popular": false,
-    "featured": false,
-    "isClientSide": true,
-    "acceptedMimeTypes": [],
-    "acceptedExtensions": [],
-    "maxFiles": 0,
-    "maxFileSizeMB": 0,
-    "outputExtension": "",
-    "outputMimeType": "",
-    "tags": [
-      "discount calculator",
-      "sale price",
-      "percentage off",
-      "savings calculator"
-    ]
-  },
-  {
-    "id": "profit-margin-calculator",
-    "slug": "profit-margin-calculator",
-    "name": "Profit Margin & Markup Calculator",
-    "shortDesc": "Calculate gross profit, profit margins, and markup percentages for products and businesses.",
-    "fullDesc": "Calculate gross profit, profit margins, and markup percentages for products and businesses.",
-    "category": "calculator",
-    "icon": "TrendingUp",
-    "popular": false,
-    "featured": false,
-    "isClientSide": true,
-    "acceptedMimeTypes": [],
-    "acceptedExtensions": [],
-    "maxFiles": 0,
-    "maxFileSizeMB": 0,
-    "outputExtension": "",
-    "outputMimeType": "",
-    "tags": [
-      "profit margin",
-      "markup calculator",
-      "cost price",
-      "selling price",
-      "business calculator"
-    ]
-  },
-  {
-    "id": "standard-calculator",
-    "slug": "calculator",
-    "name": "Standard Calculator",
-    "shortDesc": "Fast daily calculator with history tracking, memory keys (M+, MR), percentages, and clean interface.",
-    "fullDesc": "Fast daily calculator with history tracking, memory keys (M+, MR), percentages, and clean interface.",
-    "category": "calculator",
-    "icon": "Calculator",
-    "popular": true,
-    "featured": true,
-    "isClientSide": true,
-    "acceptedMimeTypes": [],
-    "acceptedExtensions": [],
-    "maxFiles": 0,
-    "maxFileSizeMB": 0,
-    "outputExtension": "",
-    "outputMimeType": "",
-    "tags": [
-      "calculator",
-      "daily calculator",
-      "standard calculator",
-      "basic calculator",
-      "math calculator",
-      "simple calculator"
-    ]
-  },
-  {
-    "id": "scientific-calculator",
-    "slug": "scientific-calculator",
-    "name": "Scientific Calculator",
-    "shortDesc": "Advanced scientific calculator with trigonometry, roots, powers, logs, and factorials.",
-    "fullDesc": "Advanced scientific calculator with trigonometry, roots, powers, logs, and factorials.",
-    "category": "calculator",
-    "icon": "Sparkles",
-    "popular": true,
-    "featured": false,
-    "isClientSide": true,
-    "acceptedMimeTypes": [],
-    "acceptedExtensions": [],
-    "maxFiles": 0,
-    "maxFileSizeMB": 0,
-    "outputExtension": "",
-    "outputMimeType": "",
-    "tags": [
-      "scientific calculator",
-      "trigonometry",
-      "sin cos tan",
-      "log",
-      "math solver"
     ]
   }
 ];
@@ -6376,10 +6189,10 @@ export const CATEGORIES_CONFIG: { id: ToolCategory; label: string; icon: string;
   { id: 'ocr', label: 'OCR & Scans', icon: 'ScanText', desc: 'Extract text from scanned PDFs and photos.' },
   { id: 'text', label: 'Text & Writing', icon: 'Type', desc: 'Word count, case converters, line sorters, and diff checker.' },
   { id: 'compress', label: 'Compression', icon: 'Minimize2', desc: 'Reduce file sizes of PDFs, images, and documents.' },
-  { id: 'security', label: 'Security & Privacy', icon: 'ShieldCheck', desc: 'SHA checksums, password protect, sanitize, and redact.' },
+  { id: 'security', label: 'Security & Privacy', icon: 'Fingerprint', desc: 'SHA checksums, password protect, sanitize, and redact.' },
   { id: 'media', label: 'Audio & Video', icon: 'Video', desc: '4K video downloader, MP3 converter, and volume booster.' },
-  { id: 'calculator', label: 'Calculators & Units', icon: 'Calculator', desc: 'Storage units, bandwidth ETA, general units, and percentages.' },
-  { id: 'dev', label: 'Developer Utilities', icon: 'Terminal', desc: 'JSON formatter, Base64, timestamps, colors, and UUIDs.' },
+  { id: 'calculator', label: 'Calculators & Units', icon: 'Binary', desc: 'Storage units, bandwidth ETA, general units, and percentages.' },
+  { id: 'dev', label: 'Developer Utilities', icon: 'Code2', desc: 'JSON formatter, Base64, timestamps, colors, and UUIDs.' },
   { id: 'qr', label: 'QR & Barcodes', icon: 'QrCode', desc: 'Generate styled QR codes and inventory barcodes.' },
-  { id: 'ai', label: 'AI Workspace', icon: 'Brain', desc: 'AI document summarizer, rewriter, and workflow builder.' },
+  { id: 'ai', label: 'AI Workspace', icon: 'Sparkles', desc: 'AI document summarizer, rewriter, and workflow builder.' },
 ];

@@ -33,7 +33,11 @@ export const initNativeAndroidBridge = (routerBack?: () => void) => {
   // 3. Android Hardware Back Button Listener
   try {
     CapApp.addListener('backButton', ({ canGoBack }) => {
-      if (canGoBack && routerBack) {
+      if (typeof window !== 'undefined' && window.location.pathname === '/') {
+        CapApp.exitApp();
+      } else if (canGoBack && routerBack) {
+        routerBack();
+      } else if (routerBack) {
         routerBack();
       } else {
         CapApp.exitApp();
@@ -79,6 +83,14 @@ export const shareFileNative = async (
         return false;
       }
     }
+    // Fallback: Copy link to clipboard
+    if (typeof navigator !== 'undefined' && navigator.clipboard && urlOrFilePath) {
+      try {
+        await navigator.clipboard.writeText(`${title}\n${text}\n${urlOrFilePath}`);
+        alert('Link copied to clipboard!');
+        return true;
+      } catch (e) {}
+    }
     return false;
   }
 
@@ -94,6 +106,37 @@ export const shareFileNative = async (
     console.warn('Native share notice:', e);
     return false;
   }
+};
+
+/**
+ * Universal Share App Trigger with localized copy
+ */
+export const shareAppNative = async (lang: 'en' | 'ur' | 'ar' | 'hi' = 'en'): Promise<boolean> => {
+  const shareData = {
+    en: {
+      title: 'Miftah Tools - 220+ Free Offline Tools & Master Courses',
+      text: 'Transform PDFs, compress images, edit media, and learn digital skills with Miftah Tools! 100% private and client-side.',
+      url: 'https://miftahtools.com/',
+    },
+    ur: {
+      title: 'مفتاح ٹولز - 220+ مفت اور پرائیویٹ ٹولز',
+      text: 'مفتاح ٹولز استعمال کریں! 220 سے زائد پی ڈی ایف، امیج اور دستاویزات کے ٹولز بغیر کسی سرور اپلوڈ کے 100% محفوظ اور تیز رفتار۔',
+      url: 'https://miftahtools.com/',
+    },
+    ar: {
+      title: 'مفتاح تولز - أكثر من 220 أداة مجانية وآمنة للملفات',
+      text: 'جرّب تطبيق مفتاح تولز! أكثر من 220 أداة احترافية للتعامل مع ملفات PDF والصور والوسائط بخصوصية تامة 100% على جهازك.',
+      url: 'https://miftahtools.com/',
+    },
+    hi: {
+      title: 'मिफ्ताह टूल्स - 220+ मुफ़्त व सुरक्षित डिजिटल टूल्स',
+      text: 'मिफ्ताह टूल्स आज़माएं! 220+ मुफ़्त PDF, इमेज, ऑडियो, वीडियो और डेवलपर टूल्स 100% सुरक्षित और ऑन-डिवाइस।',
+      url: 'https://miftahtools.com/',
+    },
+  };
+
+  const current = shareData[lang] || shareData.en;
+  return shareFileNative(current.title, current.text, current.url);
 };
 
 /**

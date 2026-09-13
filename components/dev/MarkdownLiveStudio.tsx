@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { FileCode, Download, Copy, Check, Sparkles, BookOpen, Bold, Italic, List, Code, Heading } from 'lucide-react';
 import { marked } from 'marked';
+import { sanitizeHtml } from '@/lib/utils/sanitizer';
 import { markdownToPdf } from '@/lib/pdf/pdf-manipulator';
 
 export function MarkdownLiveStudio() {
@@ -53,7 +54,7 @@ console.log(greeting);
     setMarkdown((prev) => prev + `\n${prefix}Text${suffix}`);
   };
 
-  const htmlContent = marked.parse(markdown) as string;
+  const htmlContent = sanitizeHtml(marked.parse(markdown) as string);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

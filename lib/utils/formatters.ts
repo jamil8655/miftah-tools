@@ -21,6 +21,21 @@ export function formatBytesDual(bytes: number): string {
   return `${Math.round(kb).toLocaleString()} KB (${mb.toFixed(2)} MB)`;
 }
 
+export function base64ToUint8Array(dataUrlOrBase64: string): Uint8Array {
+  try {
+    const base64 = dataUrlOrBase64.includes(',') ? dataUrlOrBase64.split(',')[1] : dataUrlOrBase64;
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  } catch (err) {
+    console.error('Error converting base64 to bytes:', err);
+    return new Uint8Array(0);
+  }
+}
+
 export function formatTimeSeconds(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)} seconds`;
   if (seconds < 3600) {

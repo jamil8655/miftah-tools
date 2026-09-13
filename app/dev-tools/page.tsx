@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
-import { PrivacyBadge } from '@/components/shared/PrivacyBadge';
 import { JsonStudio } from '@/components/dev/JsonStudio';
 import { Base64Studio } from '@/components/dev/Base64Studio';
 import { TimestampStudio } from '@/components/dev/TimestampStudio';
@@ -13,47 +12,47 @@ import { useI18n } from '@/lib/i18n/i18n-context';
 
 const DEV_PAGE_LOCALES = {
   en: {
-    title: 'Developer & Web Utilities Studio',
-    desc: 'Essential tools for developers: Regex tester, SQL beautifier, CSV/JSON converter, URL encoder, JSON validator, Base64 encoder/decoder, and Unix Epoch timestamp.',
+    title: 'Developer Tools',
+    desc: 'Regex, SQL, CSV/JSON, URL encoder, JSON validator, and Base64.',
     tabs: {
-      toolkit: 'Pro Code Toolkit',
+      toolkit: 'Toolkit',
       json: 'JSON Formatter',
-      base64: 'Base64 Encoder',
-      timestamp: 'Unix Timestamp',
-      color: 'Color Studio',
+      base64: 'Base64',
+      timestamp: 'Timestamp',
+      color: 'Colors',
     },
   },
   ur: {
-    title: 'ڈویلپرز اور ویب یوٹیلٹیز اسٹوڈیو',
-    desc: 'ڈیولپرز کے لیے لازمی ٹولز: ریجیکس ٹیسٹر، ایس کیو ایل فارمیٹر، CSV/JSON کنورٹر، یو آر ایل اینکوڈر، JSON ویلیڈیٹر، اور بیس64۔',
+    title: 'ڈیولپر ٹولز',
+    desc: 'ریجیکس، ایس کیو ایل، CSV/JSON، یو آر ایل اینکوڈر اور بیس64۔',
     tabs: {
-      toolkit: 'پرو کوڈ ٹول کٹ',
+      toolkit: 'ٹول کٹ',
       json: 'JSON فارمیٹر',
-      base64: 'بیس64 اینکوڈر',
-      timestamp: 'یونکس ٹائم اسٹیمپ',
-      color: 'کلر اسٹوڈیو',
+      base64: 'بیس64',
+      timestamp: 'ٹائم اسٹیمپ',
+      color: 'کلر',
     },
   },
   ar: {
-    title: 'استوديو أدوات المطورين والويب',
-    desc: 'أدوات أساسية للمطورين: اختبار التعبيرات النمطية Regex، تنسيق SQL، تحويل CSV/JSON، تشفير وفك تشفير الروابط، وBase64.',
+    title: 'أدوات المطورين',
+    desc: 'أدوات Regex، وتنسيق SQL، وتحويل CSV/JSON، وBase64.',
     tabs: {
-      toolkit: 'حزمة أدوات الأكواد',
+      toolkit: 'الأدوات',
       json: 'منسق JSON',
-      base64: 'ترميز Base64',
-      timestamp: 'الوقت بتوقيت Unix',
-      color: 'استوديو الألوان',
+      base64: 'Base64',
+      timestamp: 'الوقت Unix',
+      color: 'الألوان',
     },
   },
   hi: {
-    title: 'डेवलपर और वेब यूटिलिटीज स्टूडियो',
-    desc: 'डेवलपर्स के लिए आवश्यक टूल्स: रेगेक्स टेस्टर, एसक्यूएल फॉर्मेटर, CSV/JSON कनवर्टर, यूआरएल एनकोडर, JSON वैलिडेटर और बेस64।',
+    title: 'डेवलपर टूल्स',
+    desc: 'रेगेक्स टेस्टर, एसक्यूएल फॉर्मेटर, CSV/JSON और बेस64।',
     tabs: {
-      toolkit: 'प्रो कोड टूलकिट',
+      toolkit: 'टूलकिट',
       json: 'JSON फॉर्मेटर',
-      base64: 'Base64 एनकोडर',
-      timestamp: 'यूनिक्स टाइमस्टैम्प',
-      color: 'कलर स्टूडियो',
+      base64: 'Base64',
+      timestamp: 'टाइमस्टैम्प',
+      color: 'कलर',
     },
   },
 };
@@ -65,18 +64,15 @@ export default function DevToolsPage() {
   const [activeTab, setActiveTab] = useState<'toolkit' | 'json' | 'base64' | 'timestamp' | 'color'>('toolkit');
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
       <Breadcrumbs items={[{ label: loc.title }]} />
 
-      <div className="text-center space-y-3">
-        <div className="flex justify-center">
-          <PrivacyBadge isClientSide={true} />
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight flex items-center justify-center gap-2.5">
-          <Terminal className="w-8 h-8 text-brand-600 dark:text-brand-400" />
+      <div className="text-center space-y-1">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight flex items-center justify-center gap-2">
+          <Terminal className="w-5 h-5 text-brand-600 dark:text-brand-400" />
           <span>{loc.title}</span>
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl mx-auto">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
           {loc.desc}
         </p>
       </div>

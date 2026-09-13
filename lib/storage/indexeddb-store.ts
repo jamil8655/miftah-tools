@@ -274,6 +274,18 @@ export const DEFAULT_WORKFLOW_TEMPLATES: SavedWorkflow[] = [
       { id: 'w3', toolId: 'image-converter', toolName: 'Convert to Next-Gen WebP', options: { targetFormat: 'image/webp' }, status: 'Waiting' },
     ],
   },
+  {
+    id: 'wf_doc_clean_markdown',
+    name: 'Universal Document to Structured Markdown',
+    description: 'Parse Word/Excel/PPTX/PDF/CSV ➔ Extract Tables, Speaker Notes & Structure ➔ Export Clean Offline Markdown.',
+    category: 'document',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    isTemplate: true,
+    steps: [
+      { id: 'd1', toolId: 'doc-to-markdown', toolName: 'Offline Structured Markdown Parser', options: { format: 'gfm' }, status: 'Waiting' },
+    ],
+  },
 ];
 
 export async function getSavedWorkflows(): Promise<SavedWorkflow[]> {
