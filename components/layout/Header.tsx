@@ -43,6 +43,8 @@ const HEADER_LOCALES = {
     supportSection: 'Support & Legal',
     allTools: 'All 220+ Tools',
     workflows: 'Workflows Studio',
+    courses: 'Master Courses',
+    about: 'About Platform',
     downloads: 'Downloads Storage',
     history: 'Conversion History',
     settings: 'App Settings',
@@ -66,6 +68,8 @@ const HEADER_LOCALES = {
     supportSection: 'معاونت اور قانونی',
     allTools: 'تمام 220+ ٹولز',
     workflows: 'ورک فلوز اسٹوڈیو',
+    courses: 'ماسٹر کورسز',
+    about: 'پلیٹ فارم کے بارے میں',
     downloads: 'ڈاؤن لوڈز اسٹوریج',
     history: 'تبدیلی کی ہسٹری',
     settings: 'ایپ سیٹنگز',
@@ -89,6 +93,8 @@ const HEADER_LOCALES = {
     supportSection: 'الدعم والمعلومات القانونية',
     allTools: 'جميع الأدوات 220+',
     workflows: 'استوديو سير العمل',
+    courses: 'الدورات التعليمية',
+    about: 'عن المنصة',
     downloads: 'مساحة التنزيلات',
     history: 'سجل العمليات',
     settings: 'إعدادات التطبيق',
@@ -112,6 +118,8 @@ const HEADER_LOCALES = {
     supportSection: 'सहायता व कानूनी',
     allTools: 'सभी 220+ टूल्स',
     workflows: 'वर्कफ़्लो स्टूडियो',
+    courses: 'मास्टर कोर्सेज',
+    about: 'मंच के बारे में',
     downloads: 'डाउनलोड स्टोरेज',
     history: 'कन्वर्शन इतिहास',
     settings: 'ऐप सेटिंग्स',
@@ -390,6 +398,7 @@ export function Header() {
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">{loc.navigationSection}</p>
                 {[
                   { label: loc.allTools, href: '/tools', icon: Sparkles },
+                  { label: loc.courses, href: '/courses', icon: GraduationCap },
                   { label: loc.workflows, href: '/workflows', icon: Workflow },
                   { label: loc.downloads, href: '/downloads', icon: Download },
                   { label: loc.history, href: '/history', icon: History },
@@ -418,6 +427,7 @@ export function Header() {
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">{loc.supportSection}</p>
                 {[
+                  { label: loc.about, href: '/about', icon: Info },
                   { label: loc.faq, href: '/faq', icon: HelpCircle },
                   { label: loc.contact, href: '/contact', icon: Info },
                   { label: loc.privacy, href: '/privacy', icon: ShieldCheck },

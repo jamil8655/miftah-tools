@@ -230,23 +230,22 @@ export function FileUploader({
       className="w-full space-y-4"
     >
       {/* Upload Drop Area */}
-      <div
+      <label
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => !disabled && fileInputRef.current?.click()}
-        className={`relative rounded-3xl p-6 sm:p-10 text-center transition-all duration-200 cursor-pointer select-none border-2 border-dashed ${
+        className={`relative block rounded-3xl p-6 sm:p-10 text-center transition-all duration-200 cursor-pointer select-none border-2 border-dashed ${
           isDragging
             ? 'border-brand-500 bg-brand-500/10 scale-[1.01] shadow-xl shadow-brand-500/10'
             : 'border-slate-300 dark:border-slate-700/80 hover:border-brand-400 dark:hover:border-brand-500/60 bg-slate-50/80 dark:bg-slate-900/60'
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        } ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
       >
         <input
           ref={fileInputRef}
           type="file"
           multiple={maxFiles > 1}
           accept={acceptedExtensions.join(',') || acceptedMimeTypes.join(',')}
-          className="hidden"
+          className="sr-only"
           disabled={disabled}
           onChange={(e) => {
             if (e.target.files && e.target.files.length > 0) {
@@ -256,7 +255,7 @@ export function FileUploader({
           }}
         />
 
-        <div className="flex flex-col items-center justify-center space-y-3">
+        <div className="flex flex-col items-center justify-center space-y-3 pointer-events-none">
           <div className="w-12 h-12 rounded-2xl bg-brand-600/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 flex items-center justify-center shadow-xs">
             <UploadCloud className="w-6 h-6" />
           </div>
@@ -270,14 +269,12 @@ export function FileUploader({
             </p>
           </div>
 
-          <button
-            type="button"
-            disabled={disabled}
+          <span
             className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-bold text-xs shadow-md shadow-brand-600/20 transition-all inline-flex items-center gap-2 select-none"
           >
             <UploadCloud className="w-3.5 h-3.5" />
             <span>{loc.chooseBtn}</span>
-          </button>
+          </span>
 
           <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-400 pt-1 font-medium">
             {acceptedExtensions.length > 0 && (
@@ -293,7 +290,7 @@ export function FileUploader({
             )}
           </div>
         </div>
-      </div>
+      </label>
 
       {/* Error alert */}
       {errorMessage && (
