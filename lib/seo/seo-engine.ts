@@ -261,7 +261,7 @@ export function getCompleteToolSeo(tool: ToolDefinition): ToolSeoData {
   const howToSteps = generateHowToSteps(tool);
   const faqs = generateToolFaqs(tool);
   const relatedTools = getRelatedTools(tool);
-  const canonicalUrl = `${SITE_DOMAIN}/tools/${tool.slug}`;
+  const canonicalUrl = `${SITE_DOMAIN}/tools/${tool.slug}/`;
 
   const exts = tool.acceptedExtensions.join(', ').replace(/\./g, '').toUpperCase();
   const outExt = (tool.outputExtension || 'file').toUpperCase();
@@ -337,7 +337,7 @@ export function getCompleteToolSeo(tool: ToolDefinition): ToolSeoData {
         '@type': 'ListItem',
         position: 2,
         name: formatCategoryLabel(tool.category),
-        item: `${SITE_DOMAIN}/tools/${tool.category}`,
+        item: `${SITE_DOMAIN}/tools/${tool.category}/`,
       },
       {
         '@type': 'ListItem',
@@ -387,7 +387,7 @@ export function getCategorySeo(categorySlug: string): CategorySeoData | null {
   const relatedCategories = CATEGORIES_CONFIG.filter((c) => c.id !== cat.id).slice(0, 5).map((c) => ({
     id: c.id,
     name: c.label,
-    href: `/tools/${c.id}`,
+    href: `/tools/${c.id}/`,
   }));
 
   return {
@@ -398,7 +398,7 @@ export function getCategorySeo(categorySlug: string): CategorySeoData | null {
     h1: `Free Online ${cat.label}`,
     intro: `${cat.desc} Explore all ${tools.length} free client-side tools designed for secure document and file management.`,
     toolsCount: tools.length,
-    canonicalUrl: `${SITE_DOMAIN}/tools/${cat.id}`,
+    canonicalUrl: `${SITE_DOMAIN}/tools/${cat.id}/`,
     relatedCategories,
   };
 }

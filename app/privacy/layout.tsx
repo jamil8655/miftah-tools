@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   description:
     'Read the official Miftah Tools privacy policy. We do not store, view, or upload your documents to external servers. Your data stays 100% private on your device.',
   alternates: {
-    canonical: 'https://miftahtools.com/privacy',
+    canonical: 'https://miftahtools.com/privacy/',
   },
   openGraph: {
     title: 'Privacy Policy – 100% In-Browser Local Processing | Miftah Tools',
     description: 'Read the official Miftah Tools privacy policy. Your data stays 100% private on your device.',
-    url: 'https://miftahtools.com/privacy',
+    url: 'https://miftahtools.com/privacy/',
     siteName: 'Miftah Tools',
   },
   twitter: {

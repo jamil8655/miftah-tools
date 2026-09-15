@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   description:
     'Best practices and guidelines for document security, offline tool usage, batch operations, and image optimization on Miftah Tools.',
   alternates: {
-    canonical: 'https://miftahtools.com/guidelines',
+    canonical: 'https://miftahtools.com/guidelines/',
   },
   openGraph: {
     title: 'User Guidelines & Privacy Best Practices – Miftah Tools',
     description: 'Guidelines and best practices for using Miftah Tools.',
-    url: 'https://miftahtools.com/guidelines',
+    url: 'https://miftahtools.com/guidelines/',
     siteName: 'Miftah Tools',
   },
   twitter: {

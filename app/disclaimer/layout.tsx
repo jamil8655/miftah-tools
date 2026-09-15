@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   description:
     'Legal disclaimer regarding file transformations, privacy guarantees, third-party media downloading, and software usage on Miftah Tools.',
   alternates: {
-    canonical: 'https://miftahtools.com/disclaimer',
+    canonical: 'https://miftahtools.com/disclaimer/',
   },
   openGraph: {
     title: 'Disclaimer & Responsible Use – Miftah Tools',
     description: 'Legal disclaimer and responsible use guidelines for Miftah Tools.',
-    url: 'https://miftahtools.com/disclaimer',
+    url: 'https://miftahtools.com/disclaimer/',
     siteName: 'Miftah Tools',
   },
   twitter: {

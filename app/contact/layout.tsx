@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   description:
     'Get in touch with the Miftah Tools team for technical support, feature requests, bug reports, questions, and partnership opportunities.',
   alternates: {
-    canonical: 'https://miftahtools.com/contact',
+    canonical: 'https://miftahtools.com/contact/',
   },
   openGraph: {
     title: 'Contact Us – Miftah Tools',
     description: 'Get in touch with the Miftah Tools team for support and inquiries.',
-    url: 'https://miftahtools.com/contact',
+    url: 'https://miftahtools.com/contact/',
     siteName: 'Miftah Tools',
   },
   twitter: {

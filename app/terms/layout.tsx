@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   description:
     'Review the official terms of service and conditions for using Miftah Tools online utilities, file processors, and developer resources.',
   alternates: {
-    canonical: 'https://miftahtools.com/terms',
+    canonical: 'https://miftahtools.com/terms/',
   },
   openGraph: {
     title: 'Terms of Service – Miftah Tools',
     description: 'Terms of service and usage conditions for Miftah Tools.',
-    url: 'https://miftahtools.com/terms',
+    url: 'https://miftahtools.com/terms/',
     siteName: 'Miftah Tools',
   },
   twitter: {

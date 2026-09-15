@@ -88,7 +88,7 @@ sitemapXml += `  <url>
 // 2. Category Pages (Priority 0.9, Daily)
 CATEGORIES.forEach((cat) => {
   sitemapXml += `  <url>
-    <loc>${BASE_URL}/tools/${cat}</loc>
+    <loc>${BASE_URL}/tools/${cat}/</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -98,8 +98,9 @@ CATEGORIES.forEach((cat) => {
 
 // 3. Standalone Tool Workspaces & Hubs (Priority 0.9, Weekly)
 STANDALONE_HUBS.forEach((hub) => {
+  const cleanHub = hub.endsWith('/') ? hub : `${hub}/`;
   sitemapXml += `  <url>
-    <loc>${BASE_URL}${hub}</loc>
+    <loc>${BASE_URL}${cleanHub}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -114,7 +115,7 @@ toolsList.forEach((tool) => {
   if (!seenSlugs.has(canonicalSlug)) {
     seenSlugs.add(canonicalSlug);
     sitemapXml += `  <url>
-    <loc>${BASE_URL}/tools/${canonicalSlug}</loc>
+    <loc>${BASE_URL}/tools/${canonicalSlug}/</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -125,8 +126,9 @@ toolsList.forEach((tool) => {
 
 // 5. Informational & Legal Pages (Priority 0.6, Monthly)
 INFORMATIONAL_PAGES.forEach((page) => {
+  const cleanPage = page.endsWith('/') ? page : `${page}/`;
   sitemapXml += `  <url>
-    <loc>${BASE_URL}${page}</loc>
+    <loc>${BASE_URL}${cleanPage}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

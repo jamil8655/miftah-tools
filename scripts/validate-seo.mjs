@@ -97,16 +97,23 @@ if (!forbiddenFound) {
   assert(true, 'No private or non-indexable user routes found in sitemap');
 }
 
-// Ensure all individual tools are in sitemap
+// Ensure all individual tools are in sitemap with trailing slash
 let allToolsInSitemap = true;
 toolsList.forEach((tool) => {
-  const canonicalUrl = `${BASE_URL}/tools/${tool.slug || tool.id}`;
+  const canonicalUrl = `${BASE_URL}/tools/${tool.slug || tool.id}/`;
   if (!uniqueSitemapUrls.has(canonicalUrl)) {
     allToolsInSitemap = false;
     console.warn(`  ⚠️ Missing tool from sitemap: ${canonicalUrl}`);
   }
 });
-assert(allToolsInSitemap, `All ${toolsList.length} individual tool canonical URLs are present in sitemap`);
+assert(allToolsInSitemap, `All ${toolsList.length} individual tool canonical URLs (with trailing slash) are present in sitemap`);
+
+// Check that all sitemap URLs start with https://miftahtools.com/ and end with /
+const allHttps = sitemapUrls.every((u) => u.startsWith('https://miftahtools.com/'));
+assert(allHttps, 'All sitemap URLs use HTTPS and canonical domain https://miftahtools.com/');
+
+const allTrailingSlash = sitemapUrls.every((u) => u.endsWith('/'));
+assert(allTrailingSlash, 'All sitemap URLs end with trailing slash to prevent HTTP 308 redirects');
 
 // Summary
 console.log('\n========================================');

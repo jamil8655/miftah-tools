@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   description:
     'Find answers to common questions about file security, supported formats, offline PWA access, zero server tracking, and browser compatibility on Miftah Tools.',
   alternates: {
-    canonical: 'https://miftahtools.com/faq',
+    canonical: 'https://miftahtools.com/faq/',
   },
   openGraph: {
     title: 'Frequently Asked Questions (FAQ) – Miftah Tools',
     description: 'Frequently asked questions and answers about Miftah Tools.',
-    url: 'https://miftahtools.com/faq',
+    url: 'https://miftahtools.com/faq/',
     siteName: 'Miftah Tools',
   },
   twitter: {
