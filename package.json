@@ -11,8 +11,8 @@
     "render-start": "node server/video-server.js",
     "lint": "next lint",
     "zip": "tar -a -c -f C:/Users/jrahm/Desktop/miftahtools-live.zip -C out .",
-    "deploy": "node scripts/deploy-hostinger.mjs",
-    "deploy:all": "npm run build && npx cap sync android && node scripts/deploy-hostinger.mjs && git add -A && git commit -m \"chore: auto deploy update\" && git push origin main",
+    "deploy": "npm run build && node scripts/deploy-github-pages.mjs",
+    "deploy:all": "npm run build && node scripts/deploy-github-pages.mjs && git add -A && git commit -m \"chore: auto deploy update\" && git push origin main",
     "android:sync": "next build && npx cap sync android",
     "android:open": "npx cap open android",
     "android:build": "next build && npx cap sync android && cd android && gradlew assembleDebug"
