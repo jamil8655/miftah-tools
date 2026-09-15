@@ -349,20 +349,22 @@ export function ToolOptionControls({
 
         const handleSliderChange = (newKb: number) => {
           const validKb = Math.max(10, newKb);
-          updateOption('targetKb', validKb);
-          const limitStr = validKb >= 1024 ? `${(validKb / 1024).toFixed(1).replace(/\.0$/, '')}mb` : `${validKb}kb`;
-          updateOption('targetSizeLimit', limitStr);
-          if (validKb >= 1024) {
-            updateOption('customNumValue', (validKb / 1024).toFixed(validKb % 1024 === 0 ? 0 : 1));
-            updateOption('customNumUnit', 'mb');
-          } else {
-            updateOption('customNumValue', validKb.toString());
-            updateOption('customNumUnit', 'kb');
-          }
-          if (totalBytes > 0) {
-            const targetQuality = Math.max(0.15, Math.min(0.95, (validKb * 1024) / totalBytes));
-            updateOption('quality', targetQuality);
-          }
+          const isMb = validKb >= 1024;
+          const numVal = isMb
+            ? (validKb / 1024).toFixed(validKb % 1024 === 0 ? 0 : 1)
+            : validKb.toString();
+          const unit = isMb ? 'mb' : 'kb';
+          const limitStr = `${numVal}${unit}`;
+          const targetQuality = totalBytes > 0 ? Math.max(0.15, Math.min(0.95, (validKb * 1024) / totalBytes)) : 0.75;
+
+          onOptionsChange({
+            ...options,
+            targetKb: validKb,
+            targetSizeLimit: limitStr,
+            customNumValue: numVal,
+            customNumUnit: unit,
+            quality: targetQuality,
+          });
         };
 
         const targetBytes = currentTargetKb * 1024;
@@ -398,8 +400,8 @@ export function ToolOptionControls({
               </div>
             )}
 
-            {/* Horizontal Range Slider (Left to Right / बाएं से दाएं) */}
-            <div className="space-y-2 pt-1">
+            {/* Horizontal Range Slider (Always LTR to prevent RTL browser locking) */}
+            <div dir="ltr" className="space-y-2 pt-1">
               <div className="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-300">
                 <span className="text-[11px] text-slate-400 font-normal">{L.sliderHelp}</span>
                 <span className="font-mono font-black text-brand-600 dark:text-brand-400">
@@ -408,6 +410,7 @@ export function ToolOptionControls({
               </div>
               <input
                 type="range"
+                dir="ltr"
                 min={0}
                 max={100}
                 step={1}
@@ -455,7 +458,7 @@ export function ToolOptionControls({
                       key={preset.label}
                       type="button"
                       onClick={() => handleSliderChange(preset.kb)}
-                      className={`py-2 px-1 rounded-xl text-xs font-black border transition-all active:scale-95 text-center ${
+                      className={`py-2 px-1 rounded-xl text-xs font-black border transition-all active:scale-95 text-center cursor-pointer ${
                         isSelected
                           ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/20 ring-2 ring-brand-500/30'
                           : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-brand-500'
@@ -488,16 +491,24 @@ export function ToolOptionControls({
                   }
                   onChange={(e) => {
                     const str = e.target.value;
-                    updateOption('customNumValue', str);
                     const val = parseFloat(str);
                     if (!isNaN(val) && val > 0) {
                       const unit = options.customNumUnit || (currentTargetKb >= 1024 ? 'mb' : 'kb');
                       const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
-                      updateOption('targetKb', targetKb);
-                      updateOption('targetSizeLimit', unit === 'mb' ? `${val}mb` : `${val}kb`);
-                      if (totalBytes > 0) {
-                        updateOption('quality', Math.max(0.15, Math.min(0.95, (targetKb * 1024) / totalBytes)));
-                      }
+                      const limitStr = `${val}${unit}`;
+                      const targetQuality = totalBytes > 0 ? Math.max(0.15, Math.min(0.95, (targetKb * 1024) / totalBytes)) : 0.75;
+                      onOptionsChange({
+                        ...options,
+                        customNumValue: str,
+                        targetKb,
+                        targetSizeLimit: limitStr,
+                        quality: targetQuality,
+                      });
+                    } else {
+                      onOptionsChange({
+                        ...options,
+                        customNumValue: str,
+                      });
                     }
                   }}
                   className="w-32 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
@@ -511,7 +522,6 @@ export function ToolOptionControls({
                         key={unit}
                         type="button"
                         onClick={() => {
-                          updateOption('customNumUnit', unit);
                           const rawVal =
                             options.customNumValue !== undefined
                               ? options.customNumValue
@@ -521,11 +531,21 @@ export function ToolOptionControls({
                           const val = parseFloat(rawVal);
                           if (!isNaN(val) && val > 0) {
                             const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
-                            updateOption('targetKb', targetKb);
-                            updateOption('targetSizeLimit', unit === 'mb' ? `${val}mb` : `${val}kb`);
+                            const limitStr = `${val}${unit}`;
+                            onOptionsChange({
+                              ...options,
+                              customNumUnit: unit,
+                              targetKb,
+                              targetSizeLimit: limitStr,
+                            });
+                          } else {
+                            onOptionsChange({
+                              ...options,
+                              customNumUnit: unit,
+                            });
                           }
                         }}
-                        className={`px-3 py-1 text-xs font-extrabold uppercase rounded-lg transition-all ${
+                        className={`px-3 py-1 text-xs font-extrabold uppercase rounded-lg transition-all cursor-pointer ${
                           isUnitSelected ? 'bg-brand-600 text-white shadow-xs' : 'text-slate-500'
                         }`}
                       >
@@ -549,22 +569,28 @@ export function ToolOptionControls({
               {Math.round((1 - (options.quality ?? 0.75)) * 100)}% {L.compressed} ({Math.round((options.quality ?? 0.75) * 100)}% {L.quality})
             </span>
           </div>
-          <input
-            type="range"
-            min={0.1}
-            max={0.95}
-            step={0.05}
-            value={options.quality ?? 0.75}
-            onChange={(e) => {
-              updateOption('quality', parseFloat(e.target.value));
-              updateOption('targetKb', null);
-            }}
-            className="w-full accent-brand-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
-          />
-          <div className="flex justify-between text-[10px] text-slate-400 font-mono font-medium">
-            <span>{L.maxCompression}</span>
-            <span>{L.balanced}</span>
-            <span>{L.highQuality}</span>
+          <div dir="ltr" className="space-y-1">
+            <input
+              type="range"
+              dir="ltr"
+              min={0.1}
+              max={0.95}
+              step={0.05}
+              value={options.quality ?? 0.75}
+              onChange={(e) => {
+                onOptionsChange({
+                  ...options,
+                  quality: parseFloat(e.target.value),
+                  targetKb: null,
+                });
+              }}
+              className="w-full accent-brand-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] text-slate-400 font-mono font-medium select-none">
+              <span>{L.maxCompression}</span>
+              <span>{L.balanced}</span>
+              <span>{L.highQuality}</span>
+            </div>
           </div>
         </div>
       )}
