@@ -140,7 +140,20 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
   }, [tool.id]);
 
   const handleStartProcess = async () => {
-    if (selectedFiles.length === 0 && tool.maxFiles > 0) return;
+    if (selectedFiles.length === 0 && tool.maxFiles > 0) {
+      setErrorMessage(
+        language === 'ur'
+          ? 'براہ کرم پروسیسنگ شروع کرنے کے لیے پہلے ایک فائل منتخب کریں۔'
+          : language === 'hi'
+          ? 'कृपया प्रोसेस शुरू करने के लिए पहले एक फ़ाइल चुनें।'
+          : language === 'ar'
+          ? 'يرجى اختيار ملف أولاً لبدء المعالجة.'
+          : 'Please select or upload a file first to start processing.'
+      );
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement | null;
+      if (fileInput) fileInput.click();
+      return;
+    }
     triggerHaptic('medium');
     setIsProcessing(true);
     setProgress(10);
@@ -332,31 +345,29 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
               <AdSlot placement="in-feed" />
 
               {/* Step 2: Dynamic & Fine-Grained Tool Options */}
-              {selectedFiles.length > 0 && (
-                <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
-                      2
-                    </span>
-                    <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-                      {language === 'ur'
-                        ? 'اختیارات اور سیٹنگز'
-                        : language === 'ar'
-                        ? 'الخيارات والإعدادات'
-                        : language === 'hi'
-                        ? 'विकल्प व सेटिंग्स'
-                        : 'Custom Options & Settings'}
-                    </h3>
-                  </div>
-
-                  <ToolOptionControls
-                    tool={tool}
-                    files={selectedFiles}
-                    options={options}
-                    onOptionsChange={setOptions}
-                  />
+              <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-black flex items-center justify-center shadow-xs">
+                    2
+                  </span>
+                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
+                    {language === 'ur'
+                      ? 'اختیارات اور مطلوبہ سائز کی سیٹنگز'
+                      : language === 'ar'
+                      ? 'الخيارات وإعدادات الحجم المستهدف'
+                      : language === 'hi'
+                      ? 'विकल्प व लक्षित साइज़ सेटिंग्स'
+                      : 'Custom Options & Target Size'}
+                  </h3>
                 </div>
-              )}
+
+                <ToolOptionControls
+                  tool={tool}
+                  files={selectedFiles}
+                  options={options}
+                  onOptionsChange={setOptions}
+                />
+              </div>
 
               {/* Error Message Alert */}
               {errorMessage && (
@@ -367,19 +378,17 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
               )}
 
               {/* Step 3: Action Trigger Button */}
-              {(selectedFiles.length > 0 || tool.maxFiles === 0) && (
-                <div className="pt-3">
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={handleStartProcess}
-                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-sm sm:text-base shadow-xl shadow-brand-600/25 hover:shadow-brand-600/40 transition-all duration-150 flex items-center justify-center gap-3 select-none tracking-wide min-h-[52px]"
-                  >
-                    <Play className="w-5 h-5 fill-current shrink-0" />
-                    <span>{loc.startAction(localized.name)}</span>
-                  </button>
-                </div>
-              )}
+              <div className="pt-3">
+                <button
+                  type="button"
+                  disabled={isProcessing}
+                  onClick={handleStartProcess}
+                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-sm sm:text-base shadow-xl shadow-brand-600/25 hover:shadow-brand-600/40 transition-all duration-150 flex items-center justify-center gap-3 select-none tracking-wide min-h-[52px]"
+                >
+                  <Play className="w-5 h-5 fill-current shrink-0" />
+                  <span>{loc.startAction(localized.name)}</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

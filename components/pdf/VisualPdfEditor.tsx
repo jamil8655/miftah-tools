@@ -486,7 +486,7 @@ export function VisualPdfEditor() {
       }
 
       const modifiedBytes = await doc.save({ useObjectStreams: true });
-      const blob = new Blob([modifiedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+      const blob = new Blob([modifiedBytes as any], { type: 'application/pdf' });
       const name = (pdfFile?.name || 'document').replace(/\.pdf$/i, '') + '_edited.pdf';
       downloadSingleFile(blob, name);
     } catch (err) {
