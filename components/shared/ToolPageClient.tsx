@@ -130,6 +130,7 @@ import { PassportPhotoStudio } from '@/components/image/PassportPhotoStudio';
 import { BackgroundRemoverStudio } from '@/components/image/BackgroundRemoverStudio';
 import { FaviconStudio } from '@/components/image/FaviconStudio';
 import { AutoCropImagesToPdfStudio } from '@/components/image/AutoCropImagesToPdfStudio';
+import { ImageToPdfStudio } from '@/components/image/ImageToPdfStudio';
 import { UnifiedImageStudio } from '@/components/image/UnifiedImageStudio';
 import { OcrStudio } from '@/components/ocr/OcrStudio';
 import { CameraScannerStudio } from '@/components/camera/CameraScannerStudio';
@@ -370,6 +371,37 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'crop-images-to-pdf'
   ) {
     customWorkspace = <AutoCropImagesToPdfStudio />;
+  } else if (
+    tool.id === 'jpg-to-pdf' ||
+    tool.id === 'jpeg-to-pdf' ||
+    tool.id === 'png-to-pdf' ||
+    tool.id === 'image-to-pdf' ||
+    tool.id === 'images-to-pdf' ||
+    tool.id === 'webp-to-pdf' ||
+    tool.id === 'bmp-to-pdf' ||
+    tool.id === 'tiff-to-pdf' ||
+    tool.id === 'heic-to-pdf' ||
+    tool.id === 'photo-to-pdf' ||
+    tool.id === 'photos-to-pdf' ||
+    tool.id === 'screenshot-to-pdf' ||
+    tool.slug === 'jpg-to-pdf' ||
+    tool.slug === 'jpeg-to-pdf' ||
+    tool.slug === 'png-to-pdf' ||
+    tool.slug === 'image-to-pdf' ||
+    tool.slug === 'images-to-pdf' ||
+    tool.slug === 'webp-to-pdf' ||
+    tool.slug === 'bmp-to-pdf' ||
+    tool.slug === 'tiff-to-pdf' ||
+    tool.slug === 'heic-to-pdf' ||
+    tool.slug === 'photo-to-pdf' ||
+    tool.slug === 'photos-to-pdf' ||
+    tool.slug === 'screenshot-to-pdf' ||
+    tool.slug === 'convert-jpg-to-pdf' ||
+    tool.slug === 'convert-png-to-pdf' ||
+    tool.slug === 'convert-image-to-pdf' ||
+    tool.slug === 'images-to-pdf-converter'
+  ) {
+    customWorkspace = <ImageToPdfStudio />;
   } else if (
     tool.id === 'ocr-pdf' ||
     tool.id === 'ocr-image' ||
