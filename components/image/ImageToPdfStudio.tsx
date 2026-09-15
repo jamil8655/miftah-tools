@@ -44,7 +44,7 @@ export interface ImageToPdfItem {
 }
 
 const SIZE_PRESETS = [
-  { label: 'Auto (Original)', value: 0 },
+  { label: '50 KB', value: 50 },
   { label: '100 KB', value: 100 },
   { label: '200 KB', value: 200 },
   { label: '500 KB', value: 500 },
@@ -77,8 +77,8 @@ export function ImageToPdfStudio() {
   const [globalFilter, setGlobalFilter] = useState<'original' | 'document' | 'bw' | 'grayscale' | 'vibrant'>('original');
 
   // Compression & Size Control
-  const [targetSizeKB, setTargetSizeKB] = useState<number>(0); // 0 = Auto
-  const [customTargetInput, setCustomTargetInput] = useState<string>('');
+  const [targetSizeKB, setTargetSizeKB] = useState<number>(200);
+  const [customTargetInput, setCustomTargetInput] = useState<string>('200');
   const [qualityLevel, setQualityLevel] = useState<number>(85); // 10 to 100
   const [maxDimension, setMaxDimension] = useState<number>(2048); // 800 to 4096
 
@@ -537,7 +537,7 @@ export function ImageToPdfStudio() {
             <div className="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase">Target Size</span>
               <span className="text-sm font-extrabold text-brand-600 dark:text-brand-400 font-mono">
-                {targetSizeKB > 0 ? (targetSizeKB >= 1024 ? `${(targetSizeKB / 1024).toFixed(1)} MB` : `${targetSizeKB} KB`) : 'Auto High-Res'}
+                {targetSizeKB >= 1024 ? `${(targetSizeKB / 1024).toFixed(1)} MB` : `${targetSizeKB} KB`}
               </span>
             </div>
             <div className="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
@@ -604,9 +604,7 @@ export function ImageToPdfStudio() {
 
               {/* Target Size Badge */}
               <div className="px-3.5 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 font-bold text-xs">
-                {targetSizeKB === 0
-                  ? '⚡ Auto Mode (Best Quality)'
-                  : `🎯 Limit Target: ~${targetSizeKB >= 1024 ? `${(targetSizeKB / 1024).toFixed(1)} MB` : `${targetSizeKB} KB`}`}
+                {`🎯 Limit Target: ~${targetSizeKB >= 1024 ? `${(targetSizeKB / 1024).toFixed(1)} MB` : `${targetSizeKB} KB`}`}
               </div>
             </div>
 
@@ -634,20 +632,20 @@ export function ImageToPdfStudio() {
               <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span>Drag Slider for Custom Size Reduction:</span>
                 <span className="text-brand-600 font-mono">
-                  {targetSizeKB === 0 ? 'Original Size' : targetSizeKB >= 1024 ? `${(targetSizeKB / 1024).toFixed(2)} MB` : `${targetSizeKB} KB`}
+                  {targetSizeKB >= 1024 ? `${(targetSizeKB / 1024).toFixed(2)} MB` : `${targetSizeKB} KB`}
                 </span>
               </div>
               <input
                 type="range"
-                min={0}
+                min={50}
                 max={10240}
-                step={50}
+                step={25}
                 value={targetSizeKB}
                 onChange={(e) => handleApplyPresetSize(Number(e.target.value))}
                 className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600"
               />
               <div className="flex justify-between text-[10px] font-semibold text-slate-400">
-                <span>0 KB (Auto High-Res)</span>
+                <span>50 KB</span>
                 <span>500 KB (Govt Portals)</span>
                 <span>2 MB (Standard Email)</span>
                 <span>10 MB (Max)</span>

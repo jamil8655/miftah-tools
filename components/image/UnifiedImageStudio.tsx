@@ -46,12 +46,27 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
 
   // Compression & Format
   const [targetKb, setTargetKb] = useState<number>(100);
+  const [customNumInput, setCustomNumInput] = useState<string>('100');
+  const [customUnit, setCustomUnit] = useState<'kb' | 'mb'>('kb');
   const [targetFormat, setTargetFormat] = useState<string>('image/jpeg');
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [compressedResult, setCompressedResult] = useState<{ blob: Blob; dataUrl: string; finalKB: number } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const originalImageRef = useRef<HTMLImageElement | null>(null);
+
+  const updateTargetKbWithSync = (kb: number) => {
+    const validKb = Math.max(10, kb);
+    setTargetKb(validKb);
+    if (validKb >= 1024) {
+      const mbVal = (validKb / 1024).toFixed(validKb % 1024 === 0 ? 0 : 1);
+      setCustomNumInput(mbVal);
+      setCustomUnit('mb');
+    } else {
+      setCustomNumInput(validKb.toString());
+      setCustomUnit('kb');
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -368,15 +383,15 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
                   </span>
                 </div>
 
-                {/* Left-to-Right Range Slider */}
+                {/* Left-to-Right Range Slider (Left to Right / बाएं से दाएं) */}
                 <div className="space-y-1.5">
                   <input
                     type="range"
                     min={20}
                     max={10240}
-                    step={20}
+                    step={10}
                     value={targetKb}
-                    onChange={(e) => setTargetKb(Number(e.target.value))}
+                    onChange={(e) => updateTargetKbWithSync(Number(e.target.value))}
                     className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono">
@@ -389,13 +404,62 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
                   </div>
                 </div>
 
+                {/* Direct Editable Type-in Box for KB / MB */}
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                    Type Exact Size:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      step="any"
+                      placeholder="e.g. 50 or 2"
+                      value={customNumInput}
+                      onChange={(e) => {
+                        const str = e.target.value;
+                        setCustomNumInput(str);
+                        const val = parseFloat(str);
+                        if (!isNaN(val) && val > 0) {
+                          const kb = customUnit === 'mb' ? Math.round(val * 1024) : Math.round(val);
+                          setTargetKb(Math.max(10, kb));
+                        }
+                      }}
+                      className="w-24 sm:w-28 px-3 py-1.5 text-xs font-mono font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                    <div className="flex rounded-xl bg-slate-200/80 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                      {(['kb', 'mb'] as const).map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => {
+                            setCustomUnit(u);
+                            const val = parseFloat(customNumInput);
+                            if (!isNaN(val) && val > 0) {
+                              const kb = u === 'mb' ? Math.round(val * 1024) : Math.round(val);
+                              setTargetKb(Math.max(10, kb));
+                            }
+                          }}
+                          className={`px-2.5 py-1 text-xs font-extrabold uppercase rounded-lg transition-all ${
+                            customUnit === u
+                              ? 'bg-brand-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400'
+                          }`}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Quick Presets */}
                 <div className="grid grid-cols-4 gap-1.5">
                   {[20, 50, 100, 200, 500, 1024, 2048, 5120].map((kb) => (
                     <button
                       key={kb}
                       type="button"
-                      onClick={() => setTargetKb(kb)}
+                      onClick={() => updateTargetKbWithSync(kb)}
                       className={`py-1.5 text-[11px] font-bold rounded-xl border transition-all ${
                         targetKb === kb
                           ? 'bg-brand-600 text-white border-brand-600 shadow-xs'

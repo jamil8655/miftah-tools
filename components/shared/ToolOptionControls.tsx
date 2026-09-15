@@ -346,58 +346,44 @@ export function ToolOptionControls({
           { kb: 20480, label: '20 MB', display: '20 MB' },
           { kb: 30720, label: '30 MB', display: '30 MB' },
           { kb: 51200, label: '50 MB', display: '50 MB' },
-          { kb: 0, label: 'Auto', display: 'Auto (Best)' },
         ];
 
-        const currentTargetKb = options.targetKb ?? 0;
+        const currentTargetKb = options.targetKb || 100;
         let activeSliderIndex = TARGET_SLIDER_STEPS.findIndex((s) => s.kb === currentTargetKb);
         if (activeSliderIndex === -1) {
-          if (currentTargetKb === 0) {
-            activeSliderIndex = TARGET_SLIDER_STEPS.length - 1;
-          } else {
-            let closestDist = Infinity;
-            let closestIdx = 0;
-            TARGET_SLIDER_STEPS.forEach((s, idx) => {
-              if (s.kb > 0) {
-                const dist = Math.abs(s.kb - currentTargetKb);
-                if (dist < closestDist) {
-                  closestDist = dist;
-                  closestIdx = idx;
-                }
-              }
-            });
-            activeSliderIndex = closestIdx;
-          }
+          let closestDist = Infinity;
+          let closestIdx = 2;
+          TARGET_SLIDER_STEPS.forEach((s, idx) => {
+            const dist = Math.abs(s.kb - currentTargetKb);
+            if (dist < closestDist) {
+              closestDist = dist;
+              closestIdx = idx;
+            }
+          });
+          activeSliderIndex = closestIdx;
         }
 
         const handleSliderChange = (newIndex: number) => {
-          const step = TARGET_SLIDER_STEPS[newIndex];
-          if (!step || step.kb === 0) {
-            updateOption('targetKb', null);
-            updateOption('targetSizeLimit', 'auto');
-            updateOption('customNumValue', '');
-            updateOption('quality', 0.8);
+          const step = TARGET_SLIDER_STEPS[newIndex] || TARGET_SLIDER_STEPS[2];
+          updateOption('targetKb', step.kb);
+          const limitStr = step.kb >= 1024 ? `${(step.kb / 1024).toFixed(1).replace(/\.0$/, '')}mb` : `${step.kb}kb`;
+          updateOption('targetSizeLimit', limitStr);
+          if (step.kb >= 1024) {
+            updateOption('customNumValue', (step.kb / 1024).toString());
+            updateOption('customNumUnit', 'mb');
           } else {
-            updateOption('targetKb', step.kb);
-            const limitStr = step.kb >= 1024 ? `${(step.kb / 1024).toFixed(1).replace(/\.0$/, '')}mb` : `${step.kb}kb`;
-            updateOption('targetSizeLimit', limitStr);
-            if (step.kb >= 1024) {
-              updateOption('customNumValue', (step.kb / 1024).toString());
-              updateOption('customNumUnit', 'mb');
-            } else {
-              updateOption('customNumValue', step.kb.toString());
-              updateOption('customNumUnit', 'kb');
-            }
-            if (totalBytes > 0) {
-              const targetQuality = Math.max(0.15, Math.min(0.95, (step.kb * 1024) / totalBytes));
-              updateOption('quality', targetQuality);
-            }
+            updateOption('customNumValue', step.kb.toString());
+            updateOption('customNumUnit', 'kb');
+          }
+          if (totalBytes > 0) {
+            const targetQuality = Math.max(0.15, Math.min(0.95, (step.kb * 1024) / totalBytes));
+            updateOption('quality', targetQuality);
           }
         };
 
-        const targetBytes = currentTargetKb > 0 ? currentTargetKb * 1024 : 0;
+        const targetBytes = currentTargetKb * 1024;
         const estimatedReduction =
-          totalBytes > 0 && targetBytes > 0 && targetBytes < totalBytes
+          totalBytes > 0 && targetBytes < totalBytes
             ? Math.round(((totalBytes - targetBytes) / totalBytes) * 100)
             : null;
 
@@ -411,11 +397,9 @@ export function ToolOptionControls({
               </label>
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm font-mono font-black text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/80 px-3 py-1 rounded-xl border border-brand-200 dark:border-brand-800 shadow-xs">
-                  {options.targetKb
-                    ? options.targetKb >= 1024
-                      ? `🎯 Target: ${(options.targetKb / 1024).toFixed(options.targetKb % 1024 === 0 ? 0 : 1)} MB`
-                      : `🎯 Target: ${options.targetKb} KB`
-                    : '⚡ Auto Adaptive Quality'}
+                  {currentTargetKb >= 1024
+                    ? `🎯 Target: ${(currentTargetKb / 1024).toFixed(currentTargetKb % 1024 === 0 ? 0 : 1)} MB`
+                    : `🎯 Target: ${currentTargetKb} KB`}
                 </span>
               </div>
             </div>
@@ -430,7 +414,7 @@ export function ToolOptionControls({
               </div>
             )}
 
-            {/* Horizontal Range Slider (Left to Right / दाएं से बाएं) */}
+            {/* Horizontal Range Slider (Left to Right / बाएं से दाएं) */}
             <div className="space-y-2 pt-1">
               <div className="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-300">
                 <span className="text-[11px] text-slate-400 font-normal">{L.sliderHelp}</span>
@@ -455,7 +439,6 @@ export function ToolOptionControls({
                 <span>5 MB</span>
                 <span>20 MB</span>
                 <span>50 MB</span>
-                <span>Auto</span>
               </div>
             </div>
 
@@ -464,7 +447,7 @@ export function ToolOptionControls({
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                 {L.targetSizePreset}
               </span>
-              <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-10 gap-1.5">
+              <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5">
                 {[
                   { label: '50 KB', kb: 50 },
                   { label: '100 KB', kb: 100 },
@@ -475,34 +458,26 @@ export function ToolOptionControls({
                   { label: '3 MB', kb: 3072 },
                   { label: '5 MB', kb: 5120 },
                   { label: '10 MB', kb: 10240 },
-                  { label: 'Auto', kb: 0 },
                 ].map((preset) => {
-                  const isSelected = preset.kb === 0 ? !options.targetKb : options.targetKb === preset.kb;
+                  const isSelected = currentTargetKb === preset.kb;
                   return (
                     <button
                       key={preset.label}
                       type="button"
                       onClick={() => {
-                        if (preset.kb === 0) {
-                          updateOption('targetKb', null);
-                          updateOption('targetSizeLimit', 'auto');
-                          updateOption('customNumValue', '');
-                          updateOption('quality', 0.8);
+                        updateOption('targetKb', preset.kb);
+                        const limitStr = preset.kb >= 1024 ? `${preset.kb / 1024}mb` : `${preset.kb}kb`;
+                        updateOption('targetSizeLimit', limitStr);
+                        if (preset.kb >= 1024) {
+                          updateOption('customNumValue', (preset.kb / 1024).toString());
+                          updateOption('customNumUnit', 'mb');
                         } else {
-                          updateOption('targetKb', preset.kb);
-                          const limitStr = preset.kb >= 1024 ? `${preset.kb / 1024}mb` : `${preset.kb}kb`;
-                          updateOption('targetSizeLimit', limitStr);
-                          if (preset.kb >= 1024) {
-                            updateOption('customNumValue', (preset.kb / 1024).toString());
-                            updateOption('customNumUnit', 'mb');
-                          } else {
-                            updateOption('customNumValue', preset.kb.toString());
-                            updateOption('customNumUnit', 'kb');
-                          }
-                          if (totalBytes > 0) {
-                            const targetQuality = Math.max(0.15, Math.min(0.95, (preset.kb * 1024) / totalBytes));
-                            updateOption('quality', targetQuality);
-                          }
+                          updateOption('customNumValue', preset.kb.toString());
+                          updateOption('customNumUnit', 'kb');
+                        }
+                        if (totalBytes > 0) {
+                          const targetQuality = Math.max(0.15, Math.min(0.95, (preset.kb * 1024) / totalBytes));
+                          updateOption('quality', targetQuality);
                         }
                       }}
                       className={`py-2 px-1 rounded-xl text-xs font-black border transition-all active:scale-95 text-center ${
