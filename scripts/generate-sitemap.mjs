@@ -27,7 +27,6 @@ const TOOLS_SLUGS = [
 const STATIC_PAGES = [
   '',
   '/tools',
-  '/courses',
   '/quiz',
   '/workflows',
   '/batch',

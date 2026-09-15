@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
-import { Star, Trash2, ExternalLink, Wrench, GraduationCap, ArrowRight } from 'lucide-react';
+import { Star, Trash2, ExternalLink, Wrench, Workflow, ArrowRight } from 'lucide-react';
 
 export default function FavoritesPage() {
   const { t } = useI18n();
@@ -33,7 +33,7 @@ export default function FavoritesPage() {
             {t.userDashboard.noFavorites}
           </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Click the star icon on any tool or course to save it here for fast one-click access.
+            Click the star icon on any tool to save it here for fast one-click access.
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <Link
@@ -43,10 +43,10 @@ export default function FavoritesPage() {
               {t.nav.allTools}
             </Link>
             <Link
-              href="/courses"
+              href="/workflows"
               className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200"
             >
-              {t.nav.courses}
+              {t.nav.workflows}
             </Link>
           </div>
         </div>

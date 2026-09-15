@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   LogOut,
   ChevronDown,
-  GraduationCap,
+  Workflow,
   Camera,
   LayoutDashboard,
   Sparkles,
@@ -158,7 +158,7 @@ export function UserMenuDropdown({
 
   const menuItems = [
     { label: t.nav.myProfile || 'Dashboard & Profile', href: '/account', icon: LayoutDashboard },
-    { label: t.courses.myCourses || 'My Courses', href: '/courses', icon: GraduationCap },
+    { label: t.nav.workflows || 'Workflows Studio', href: '/workflows', icon: Workflow },
     { label: t.nav.allTools || 'Tools Directory', href: '/tools', icon: Wrench },
     { label: t.userDashboard.favoritesTitle || 'My Favorites', href: '/favorites', icon: Star },
     { label: t.userDashboard.historyTitle || 'Activity History', href: '/history', icon: Clock },

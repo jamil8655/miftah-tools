@@ -23,7 +23,6 @@ import {
   ShieldCheck,
   Search,
   X,
-  GraduationCap,
   ChevronRight,
 } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
@@ -52,9 +51,9 @@ const categoryIconMap: Record<string, React.ElementType> = {
 
 const PAGE_LOCALES = {
   en: {
-    heroBadge: '✨ 220+ Free Tools & Master Courses',
+    heroBadge: '✨ 220+ Free Tools & Document Utilities',
     heroTitle: 'Fast, Private & Free Online Utilities',
-    heroSubtitle: 'Transform documents, convert images, optimize media, format code, and master skills — 100% private in your browser.',
+    heroSubtitle: 'Transform documents, convert images, optimize media, format code, and automate workflows — 100% private in your browser.',
     searchPlaceholder: 'Search 220+ tools (e.g. PDF to Word, OCR, Compress, QR)...',
     clearSearch: 'Clear',
     allToolsTab: 'All Tools',
@@ -64,9 +63,6 @@ const PAGE_LOCALES = {
     toolsCount: (count: number) => `${count} tools`,
     noToolsFound: 'No tools found matching your search.',
     resetFilters: 'Reset filters',
-    coursesTitle: 'Featured Master Courses',
-    coursesSubtitle: 'Free, open curriculums with practical interactive projects.',
-    viewAllCourses: 'Explore All Courses →',
     viewAllTools: 'View All 220+ Tools Directory →',
     trustPrivate: '100% In-Browser Privacy',
     trustPrivateDesc: 'Files never leave your device',
@@ -78,9 +74,9 @@ const PAGE_LOCALES = {
     manageBookmarks: 'Manage Bookmarks →',
   },
   ur: {
-    heroBadge: '✨ 220+ مفت آن لائن ٹولز اور تعلیمی کورسز',
+    heroBadge: '✨ 220+ مفت آن لائن ٹولز اور دستاویز یوٹیلیٹیز',
     heroTitle: 'مفت، تیز اور مکمل نجی آن لائن ٹولز',
-    heroSubtitle: 'دستاویزات میں ترمیم، تصاویر کی تبدیلی، میڈیا آپٹیمائزیشن اور پروگرامنگ اسکلز — بغیر کسی سرور اپلوڈ کے براہِ راست براؤزر میں۔',
+    heroSubtitle: 'دستاویزات میں ترمیم، تصاویر کی تبدیلی، میڈیا آپٹیمائزیشن اور ورک فلو آٹومیشن — بغیر کسی سرور اپلوڈ کے براہِ راست براؤزر میں۔',
     searchPlaceholder: '220+ ٹولز تلاش کریں (مثلاً پی ڈی ایف، امیج، او سی آر، کیو آر)...',
     clearSearch: 'صاف کریں',
     allToolsTab: 'تمام ٹولز',
@@ -90,9 +86,6 @@ const PAGE_LOCALES = {
     toolsCount: (count: number) => `${count} ٹولز`,
     noToolsFound: 'آپ کی تلاش کے مطابق کوئی ٹول نہیں ملا۔',
     resetFilters: 'فلٹرز ری سیٹ کریں',
-    coursesTitle: 'نمایاں ماسٹر کورسز',
-    coursesSubtitle: 'مفت اور کھلے نصاب کے ساتھ جدید پریکٹیکل پروجیکٹس۔',
-    viewAllCourses: 'تمام کورسز دیکھیں ←',
     viewAllTools: 'تمام 220+ ٹولز ڈائرکٹری دیکھیں ←',
     trustPrivate: '100% مکمل مقامی رازداری',
     trustPrivateDesc: 'فائلیں آپ کے ڈیوائس پر ہی رہتی ہیں',
@@ -104,7 +97,7 @@ const PAGE_LOCALES = {
     manageBookmarks: 'بک مارکس کا انتظام کریں ←',
   },
   ar: {
-    heroBadge: '✨ أكثر من 220 أداة مجانية ودورات تعليمية',
+    heroBadge: '✨ أكثر من 220 أداة مجانية لمعالجة المستندات',
     heroTitle: 'أدوات مجانية وآمنة وسريعة لمعالجة الملفات',
     heroSubtitle: 'تحويل المستندات، وضغط الصور، وتعديل الوسائط، والبرمجة — خصوصية محلية تامة 100% داخل المتصفح.',
     searchPlaceholder: 'ابحث في 220+ أداة (مثل تحويل PDF، ضغط، OCR، QR)...',
@@ -116,9 +109,6 @@ const PAGE_LOCALES = {
     toolsCount: (count: number) => `${count} أداة`,
     noToolsFound: 'لم يتم العثور على أي أداة مطابقة لبحثك.',
     resetFilters: 'إعادة ضبط التصفية',
-    coursesTitle: 'الدورات التدريبية المتميزة',
-    coursesSubtitle: 'مناهج تقنية مفتوحة ومجانية مع مشاريع تفاعلية عملية.',
-    viewAllCourses: 'استكشف جميع الكورسات ←',
     viewAllTools: 'استكشف دليل جميع الأدوات 220+ ←',
     trustPrivate: 'خصوصية محلية 100%',
     trustPrivateDesc: 'ملفاتك لا تغادر جهازك أبداً',
@@ -130,21 +120,18 @@ const PAGE_LOCALES = {
     manageBookmarks: 'إدارة الإشارات المرجعية ←',
   },
   hi: {
-    heroBadge: '✨ 220+ मुफ़्त ऑनलाइन टूल्स व मास्टर कोर्सेज',
-    heroTitle: 'मुफ़्त, तेज़ और सुरक्षित ऑनलाइन यूटिलिटीज',
-    heroSubtitle: 'दस्तावेज़ रूपांतरण, छवि संपीड़न, वीडियो टूल्स और कोडिंग — 100% इन-ब्राउज़र गोपनीयता के साथ।',
-    searchPlaceholder: '220+ टूल्स खोजें (जैसे PDF से Word, OCR, Compress, QR)...',
+    heroBadge: '✨ 220+ मुफ़्त ऑनलाइन टूल्स व दस्तावेज़ यूटिलिटीज',
+    heroTitle: 'फास्ट, प्राइवेट और मुफ़्त ऑनलाइन टूल्स',
+    heroSubtitle: 'दस्तावेज़ कस्टमाइज़ करें, इमेज कन्वर्ट करें, मीडिया ऑप्टिमाइज़ करें और वर्कफ़्लो ऑटोमेट करें — 100% इन-ब्राउज़र गोपनीयता।',
+    searchPlaceholder: '220+ टूल्स खोजें (उदा. PDF से Word, OCR, कंप्रेस, QR)...',
     clearSearch: 'साफ़ करें',
     allToolsTab: 'सभी टूल्स',
-    frequentTools: 'लोकप्रिय त्वरित टूल्स',
+    frequentTools: 'लोकप्रिय टूल्स',
     browseByCategory: 'श्रेणियों के अनुसार ब्राउज़ करें',
     directoryTitle: 'टूल्स निर्देशिका',
     toolsCount: (count: number) => `${count} टूल्स`,
     noToolsFound: 'आपकी खोज से मेल खाता कोई टूल नहीं मिला।',
     resetFilters: 'फ़िल्टर रीसेट करें',
-    coursesTitle: 'प्रमुख मास्टर कोर्सेज',
-    coursesSubtitle: 'मुफ़्त, खुले पाठ्यक्रम और व्यावहारिक प्रोजेक्ट्स।',
-    viewAllCourses: 'सभी कोर्सेज देखें →',
     viewAllTools: 'सभी 220+ टूल्स डायरेक्टरी देखें →',
     trustPrivate: '100% इन-ब्राउज़र गोपनीयता',
     trustPrivateDesc: 'फ़ाइलें कभी डिवाइस से बाहर नहीं जातीं',
@@ -156,33 +143,6 @@ const PAGE_LOCALES = {
     manageBookmarks: 'बुकमार्क प्रबंधित करें →',
   },
 };
-
-const FEATURED_COURSES = [
-  {
-    id: 'modern-fullstack-web-mastery',
-    title: 'Full-Stack Web Mastery',
-    desc: 'Master React, Next.js 15, TypeScript, Node.js, and Modern Web Architecture.',
-    badge: 'Comprehensive',
-    lessons: '48 Lessons',
-    color: 'from-blue-600 to-indigo-600',
-  },
-  {
-    id: 'python-ai-prompt-engineering-mastery',
-    title: 'Python & AI Prompt Mastery',
-    desc: 'Build AI agents, automated pipelines, LLM workflows, and data scripts.',
-    badge: 'AI & Data',
-    lessons: '36 Lessons',
-    color: 'from-emerald-600 to-teal-600',
-  },
-  {
-    id: 'document-pdf-automation-mastery',
-    title: 'Document & PDF Engineering',
-    desc: 'Deep-dive into client-side WASM, OCR, PDF syntax, and automated pipelines.',
-    badge: 'Engineering',
-    lessons: '28 Lessons',
-    color: 'from-rose-600 to-red-600',
-  },
-];
 
 const POPULAR_QUICK_ACTIONS = [
   { id: 'pdf-to-docx', name: 'PDF to Word (OCR)', cat: 'pdf', icon: FileText, color: 'bg-indigo-600' },
@@ -488,56 +448,6 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <AdSlot placement="in-feed" />
       </section>
-
-      {/* 6. FEATURED MASTER COURSES (FREE EDUCATIONAL HUB) */}
-      {!searchQuery && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wide flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-brand-600" />
-                <span>{loc.coursesTitle}</span>
-              </h2>
-              <p className="text-xs text-slate-500">{loc.coursesSubtitle}</p>
-            </div>
-            <Link href="/courses" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
-              {loc.viewAllCourses}
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {FEATURED_COURSES.map((course) => (
-              <Link
-                key={course.id}
-                href={`/courses/${course.id}`}
-                className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-brand-500 dark:hover:border-brand-500 hover:shadow-lg transition-all group flex flex-col justify-between space-y-4"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 text-[10px] font-bold border border-brand-200 dark:border-brand-800">
-                      {course.badge}
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-400">{course.lessons}</span>
-                  </div>
-
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">
-                    {course.title}
-                  </h3>
-
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    {course.desc}
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-brand-600 dark:text-brand-400">
-                  <span>Start Learning Free</span>
-                  <ChevronRight className={`w-4 h-4 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform ${isRTL ? 'rotate-180' : ''}`} />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }

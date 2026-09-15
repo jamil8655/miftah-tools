@@ -8,7 +8,6 @@ import {
   Sparkles,
   Smartphone,
   Workflow,
-  GraduationCap,
   Bell,
   LogIn,
   Info,
@@ -43,7 +42,6 @@ const HEADER_LOCALES = {
     supportSection: 'Support & Legal',
     allTools: 'All 220+ Tools',
     workflows: 'Workflows Studio',
-    courses: 'Master Courses',
     about: 'About Platform',
     downloads: 'Downloads Storage',
     history: 'Conversion History',
@@ -68,7 +66,6 @@ const HEADER_LOCALES = {
     supportSection: 'معاونت اور قانونی',
     allTools: 'تمام 220+ ٹولز',
     workflows: 'ورک فلوز اسٹوڈیو',
-    courses: 'ماسٹر کورسز',
     about: 'پلیٹ فارم کے بارے میں',
     downloads: 'ڈاؤن لوڈز اسٹوریج',
     history: 'تبدیلی کی ہسٹری',
@@ -93,7 +90,6 @@ const HEADER_LOCALES = {
     supportSection: 'الدعم والمعلومات القانونية',
     allTools: 'جميع الأدوات 220+',
     workflows: 'استوديو سير العمل',
-    courses: 'الدورات التعليمية',
     about: 'عن المنصة',
     downloads: 'مساحة التنزيلات',
     history: 'سجل العمليات',
@@ -118,7 +114,6 @@ const HEADER_LOCALES = {
     supportSection: 'सहायता व कानूनी',
     allTools: 'सभी 220+ टूल्स',
     workflows: 'वर्कफ़्लो स्टूडियो',
-    courses: 'मास्टर कोर्सेज',
     about: 'मंच के बारे में',
     downloads: 'डाउनलोड स्टोरेज',
     history: 'कन्वर्शन इतिहास',
@@ -128,22 +123,22 @@ const HEADER_LOCALES = {
     faq: 'अक्सर पूछे जाने वाले प्रश्न',
     contact: 'डेवलपर से संपर्क करें',
     privacy: 'गोपनीयता नीति',
-    terms: 'नियम व शर्तें',
-    language: 'भाषा चुनें',
+    terms: 'नियम और शर्तें',
+    language: 'भाषा',
     logout: 'लॉग आउट',
-    versionLabel: '220+ ऑफ़लाइन टूल्स',
+    versionLabel: '220+ क्लाइंट-साइड टूल्स',
   },
 };
 
 export function Header() {
-  const pathname = usePathname();
-  const { t, language, setLanguage, isRTL } = useI18n();
+  const { language, setLanguage, isRTL, t } = useI18n();
   const { unreadCount } = useUserStore();
+  const pathname = usePathname();
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuDrawerOpen, setIsMenuDrawerOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [canInstall, setCanInstall] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isNativeApp, setIsNativeApp] = useState(false);
   const loc = HEADER_LOCALES[language] || HEADER_LOCALES.en;
 
@@ -204,7 +199,6 @@ export function Header() {
   const navLinks = [
     { label: t.nav.allTools || loc.allTools, href: '/tools', icon: Sparkles },
     { label: t.nav.workflows || loc.workflows, href: '/workflows', icon: Workflow },
-    { label: t.nav.courses || 'Courses', href: '/courses', icon: GraduationCap },
     { label: t.footer.aboutPlatform || 'About', href: '/about', icon: Info },
   ];
 
@@ -398,7 +392,6 @@ export function Header() {
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">{loc.navigationSection}</p>
                 {[
                   { label: loc.allTools, href: '/tools', icon: Sparkles },
-                  { label: loc.courses, href: '/courses', icon: GraduationCap },
                   { label: loc.workflows, href: '/workflows', icon: Workflow },
                   { label: loc.downloads, href: '/downloads', icon: Download },
                   { label: loc.history, href: '/history', icon: History },

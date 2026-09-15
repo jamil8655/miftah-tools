@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   Zap,
   Lock,
-  GraduationCap,
+  Workflow,
   HelpCircle,
   Mail,
   FileText,
@@ -16,6 +16,7 @@ import {
   BookOpen,
   Globe2,
   Share2,
+  Layers,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { shareAppNative } from '@/lib/native/android-bridge';
@@ -28,13 +29,14 @@ const FOOTER_LOCALES = {
     engineDesc: 'Transform massive documents & media smoothly in-browser.',
     privacyTitle: '100% In-Browser Privacy',
     privacyDesc: 'Files never touch external servers or get stored remotely.',
-    learningTitle: 'Free & Open Learning Paths',
-    learningDesc: 'Browse curriculums & lessons with zero forced locks.',
-    webDev: 'Web Development Mastery',
-    pythonAi: 'Python & AI Prompt Mastery',
-    docEngineering: 'Document Engineering Mastery',
-    cyberSec: 'Cyber Security & Encryption',
-    viewAllCourses: 'Explore All Courses →',
+    toolsBadgeTitle: '220+ Client-Side Utilities',
+    toolsBadgeDesc: 'PDF, Image, Video, OCR, Code & Math Tools.',
+    categoriesTitle: 'Popular Categories',
+    pdfTools: 'PDF Tools & Editor',
+    imageTools: 'Image Tools & Studio',
+    ocrTools: 'OCR & Text Extractors',
+    workflowTools: 'Automated Workflows',
+    viewAllCategories: 'Explore All 220+ Tools →',
     viewAllTools: 'Explore All 220+ Tools →',
     pdfToWord: 'PDF to Word (OCR)',
     pdfEditor: 'PDF Editor Studio',
@@ -48,13 +50,14 @@ const FOOTER_LOCALES = {
     engineDesc: 'بڑی دستاویزات اور میڈیا کو براؤزر کے اندر آسانی سے پروسیس کریں۔',
     privacyTitle: '100% مکمل رازداری کی ضمانت',
     privacyDesc: 'آپ کی فائلیں کبھی بھی بیرونی سرور پر اپلوڈ نہیں ہوتیں۔',
-    learningTitle: 'مفت اور کھلا تعلیمی نصاب',
-    learningDesc: 'مکمل کورسز اور اسباق بغیر کسی رکاوٹ کے حاصل کریں۔',
-    webDev: 'جدید ویب ڈویلپمنٹ ماسٹری',
-    pythonAi: 'پائتھن اور اے آئی ایجنٹس',
-    docEngineering: 'دستاویز اور پی ڈی ایف انجینئرنگ',
-    cyberSec: 'سائبر سیکیورٹی اور انکرپشن',
-    viewAllCourses: 'تمام کورسز دیکھیں ←',
+    toolsBadgeTitle: '220+ کلائنٹ سائیڈ ٹولز',
+    toolsBadgeDesc: 'پی ڈی ایف، تصاویر، او سی آر، کوڈ اور ریاضی کے ٹولز۔',
+    categoriesTitle: 'مقبول ٹولز کیٹگریز',
+    pdfTools: 'پی ڈی ایف ٹولز و ایڈیٹر',
+    imageTools: 'امیج ٹولز و اسٹوڈیو',
+    ocrTools: 'او سی آر و ٹیکسٹ ایکسٹریکٹر',
+    workflowTools: 'خودکار ورک فلوز',
+    viewAllCategories: 'تمام 220+ ٹولز دیکھیں ←',
     viewAllTools: 'تمام 220+ ٹولز دیکھیں ←',
     pdfToWord: 'پی ڈی ایف سے ورڈ (OCR)',
     pdfEditor: 'پی ڈی ایف ایڈیٹر اسٹوڈیو',
@@ -68,13 +71,14 @@ const FOOTER_LOCALES = {
     engineDesc: 'معالجة المستندات والوسائط الضخمة مباشرة وبسلاسة في المتصفح.',
     privacyTitle: 'خصوصية وأمان محلي بنسبة 100%',
     privacyDesc: 'ملفاتك لا تغادر جهازك ولا يتم تخزينها على أي خادم خارجي.',
-    learningTitle: 'مسارات تعليمية مجانية ومفتوحة',
-    learningDesc: 'استكشف المناهج والدروس التقنية الكاملة بحرية تامة.',
-    webDev: 'احتراف تطوير الويب المتكامل',
-    pythonAi: 'بايثون وهندسة الأوامر الذكية',
-    docEngineering: 'هندسة وأتمتة مستندات PDF',
-    cyberSec: 'الأمن السيبراني والتشفير',
-    viewAllCourses: 'استكشف جميع الكورسات ←',
+    toolsBadgeTitle: '220+ أداة محلية متطورة',
+    toolsBadgeDesc: 'أدوات PDF، الصور، OCR، البرمجة والحاسبات.',
+    categoriesTitle: 'التصنيفات الشائعة',
+    pdfTools: 'أدوات ومحرر PDF',
+    imageTools: 'استوديو معالجة الصور',
+    ocrTools: 'استخراج النصوص OCR',
+    workflowTools: 'أتمتة سير العمل',
+    viewAllCategories: 'استكشف جميع الأدوات 220+ ←',
     viewAllTools: 'استكشف جميع الأدوات 220+ ←',
     pdfToWord: 'تحويل PDF إلى Word (OCR)',
     pdfEditor: 'استوديو محرر PDF التفاعلي',
@@ -88,13 +92,14 @@ const FOOTER_LOCALES = {
     engineDesc: 'ब्राउज़र में सीधे भारी दस्तावेज़ और मीडिया फ़ाइलें प्रोसेस करें।',
     privacyTitle: '100% इन-ब्राउज़र गोपनीयता',
     privacyDesc: 'आपकी फ़ाइलें कभी किसी बाहरी सर्वर पर अपलोड नहीं होती हैं।',
-    learningTitle: 'निःशुल्क व खुला शिक्षण पाठ्यक्रम',
-    learningDesc: 'बिना किसी रुकावट के सम्पूर्ण कोर्सेज और पाठ पढ़ें।',
-    webDev: 'वेब डेवलपमेंट मास्टरी',
-    pythonAi: 'पायथन व एआई प्रॉम्प्ट मास्टरी',
-    docEngineering: 'दस्तावेज़ व PDF इंजीनियरिंग',
-    cyberSec: 'साइबर सुरक्षा व एन्क्रिप्शन',
-    viewAllCourses: 'सभी कोर्सेज देखें →',
+    toolsBadgeTitle: '220+ क्लाइंट-साइड टूल्स',
+    toolsBadgeDesc: 'PDF, इमेज, वीडियो, OCR, कोडिंग व गणित टूल्स।',
+    categoriesTitle: 'लोकप्रिय श्रेणियां',
+    pdfTools: 'PDF टूल्स व एडिटर',
+    imageTools: 'इमेज टूल्स व स्टूडियो',
+    ocrTools: 'OCR व टेक्स्ट एक्सट्रैक्टर',
+    workflowTools: 'स्वचालित वर्कफ़्लो',
+    viewAllCategories: 'सभी 220+ टूल्स देखें →',
     viewAllTools: 'सभी 220+ टूल्स देखें →',
     pdfToWord: 'PDF से Word (OCR)',
     pdfEditor: 'PDF एडिटर स्टूडियो',
@@ -138,11 +143,11 @@ export function Footer() {
 
           <div className="flex items-center justify-center sm:justify-start gap-3">
             <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 shrink-0">
-              <GraduationCap className="w-5 h-5" />
+              <Layers className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">{loc.learningTitle}</p>
-              <p className="text-[11px] text-slate-500">{loc.learningDesc}</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">{loc.toolsBadgeTitle}</p>
+              <p className="text-[11px] text-slate-500">{loc.toolsBadgeDesc}</p>
             </div>
           </div>
         </div>
@@ -204,36 +209,36 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Section 1: Master Courses & Learning */}
+          {/* Section 1: Categories & Key Hubs */}
           <div className="space-y-3">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-brand-600" />
-              {t.footer.courses}
+              <Layers className="w-3.5 h-3.5 text-brand-600" />
+              {loc.categoriesTitle}
             </h4>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
-                <Link href="/courses/modern-fullstack-web-mastery" className="hover:text-brand-600 transition-colors">
-                  {loc.webDev}
+                <Link href="/tools?category=pdf" className="hover:text-brand-600 transition-colors">
+                  {loc.pdfTools}
                 </Link>
               </li>
               <li>
-                <Link href="/courses/python-ai-prompt-engineering-mastery" className="hover:text-brand-600 transition-colors">
-                  {loc.pythonAi}
+                <Link href="/tools?category=image" className="hover:text-brand-600 transition-colors">
+                  {loc.imageTools}
                 </Link>
               </li>
               <li>
-                <Link href="/courses/document-pdf-automation-mastery" className="hover:text-brand-600 transition-colors">
-                  {loc.docEngineering}
+                <Link href="/ocr" className="hover:text-brand-600 transition-colors">
+                  {loc.ocrTools}
                 </Link>
               </li>
               <li>
-                <Link href="/courses/cybersecurity-privacy-engineering" className="hover:text-brand-600 transition-colors">
-                  {loc.cyberSec}
+                <Link href="/workflows" className="hover:text-brand-600 transition-colors">
+                  {loc.workflowTools}
                 </Link>
               </li>
               <li>
-                <Link href="/courses" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
-                  {loc.viewAllCourses}
+                <Link href="/tools" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
+                  {loc.viewAllCategories}
                 </Link>
               </li>
             </ul>

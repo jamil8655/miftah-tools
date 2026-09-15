@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   Zap,
   Lock,
-  GraduationCap,
+  Workflow,
   Cpu,
   Layers,
   CheckCircle2,
@@ -20,16 +20,16 @@ import { useI18n } from '@/lib/i18n/i18n-context';
 const ABOUT_LOCALES = {
   en: {
     badge: 'About Miftah Tools Platform',
-    heroTitle: 'The Privacy-First Digital Utility & Learning Ecosystem',
-    heroSubtitle: 'Miftah Tools bridges the gap between high-performance client-side digital tools and practical engineering education. Transform files instantly with 100% local privacy and master real digital skills.',
+    heroTitle: 'The Privacy-First Digital Utility & Productivity Ecosystem',
+    heroSubtitle: 'Miftah Tools bridges the gap between high-performance client-side digital tools and automated workflows. Transform files instantly with 100% local privacy and zero server uploads.',
     allToolsBtn: 'Explore All Tools',
-    coursesBtn: 'View Courses',
+    workflowsBtn: 'Workflows Studio',
     pillar1Title: '100% Client-Side Privacy',
     pillar1Desc: 'Every PDF, image, and document is processed directly in your browser using WebAssembly (WASM). Your sensitive files are never uploaded to any remote server.',
     pillar2Title: 'Blazing Fast Execution',
     pillar2Desc: 'Zero network latency on file transformations. Compress, merge, extract text, and calculate at hardware-accelerated speeds.',
-    pillar3Title: 'Open Practical Education',
-    pillar3Desc: 'Learn full-stack engineering, AI prompt design, and cybersecurity through real project-based courses with free previews and zero mandatory locks.',
+    pillar3Title: 'Automated Multi-Step Workflows',
+    pillar3Desc: 'Chain multiple file operations together into automated pipelines to batch process documents and images with one click.',
     stackTitle: 'What Powers Miftah Tools?',
     stackSubtitle: 'A modern technology stack designed for privacy, resilience, and speed.',
     features: [
@@ -40,22 +40,22 @@ const ABOUT_LOCALES = {
       { title: 'Firebase Authentication & Claims', desc: 'Enterprise cryptographic role verification and secure state.' },
       { title: 'Full 4-Language Localization', desc: 'Seamless instant switching between English, Urdu, Arabic, and Hindi with RTL.' },
     ],
-    ctaTitle: 'Ready to experience next-generation tools & learning?',
-    ctaSubtitle: 'All 220+ tools and course curriculums are 100% free and open for everyone. No credit card, no sign-up barrier.',
+    ctaTitle: 'Ready to experience next-generation tools & utilities?',
+    ctaSubtitle: 'All 220+ tools and workflows are 100% free and open for everyone. No credit card, no sign-up barrier.',
     ctaBtn: 'Start Using Tools Now',
   },
   ur: {
     badge: 'مفتاح ٹولز پلیٹ فارم کا تعارف',
-    heroTitle: 'پرائیویسی پر مبنی جدید ڈیجیٹل ٹولز اور تعلیمی نظام',
-    heroSubtitle: 'مفتاح ٹولز بغیر کسی سرور اپلوڈ کے 100٪ آپ کے اپنے ڈیوائس پر تیز رفتار فائل پروسیسنگ اور اعلیٰ ڈیجیٹل کورسز مہیا کرتا ہے۔ مکمل پرائیویسی کے ساتھ فائلز تبدیل کریں اور نئی مہارتیں سیکھیں۔',
+    heroTitle: 'پرائیویسی پر مبنی جدید ڈیجیٹل ٹولز اور پروڈکٹیوٹی پلیٹ فارم',
+    heroSubtitle: 'مفتاح ٹولز بغیر کسی سرور اپلوڈ کے 100٪ آپ کے اپنے ڈیوائس پر تیز رفتار فائل پروسیسنگ اور خودکار ورک فلوز مہیا کرتا ہے۔ مکمل پرائیویسی کے ساتھ فائلز تبدیل کریں اور اپنا وقت بچائیں۔',
     allToolsBtn: 'تمام ٹولز دیکھیں',
-    coursesBtn: 'کورسز دیکھیں',
+    workflowsBtn: 'ورک فلوز اسٹوڈیو',
     pillar1Title: '100٪ لوکل کلائنٹ سائیڈ پرائیویسی',
     pillar1Desc: 'ہر پی ڈی ایف، تصویر اور دستاویز ویب اسمبلی (WASM) کے ذریعے براہ راست آپ کے براؤزر میں پروسیس ہوتی ہے۔ آپ کا حساس ڈیٹا کسی سرور پر اپلوڈ نہیں ہوتا۔',
     pillar2Title: 'انتہائی تیز رفتار کارکردگی',
     pillar2Desc: 'فائل پروسیسنگ میں بغیر کسی انٹرنیٹ تاخیر کے۔ کمپریس کریں، فائلیں جوڑیں، ٹیکسٹ نکالیں اور ہارڈویئر سپیڈ پر نتائج حاصل کریں۔',
-    pillar3Title: 'کھلی اور بااختیار تعلیم',
-    pillar3Desc: 'فل اسٹیک انجینئرنگ، AI پرامپٹ ڈیزائن اور سائبر سیکیورٹی کو عملی پروجیکٹس کے ذریعے بغیر کسی جبری فیس یا رکاوٹ کے سیکھیں۔',
+    pillar3Title: 'خودکار ملٹی اسٹیپ ورک فلوز',
+    pillar3Desc: 'ایک ہی کلک میں ملٹیپل ٹولز کو جوڑ کر بیچ پروسیسنگ پائپ لائنز بنائیں اور کام کو خودکار بنائیں۔',
     stackTitle: 'مفتاح ٹولز کو کیا چیز طاقتور بناتی ہے؟',
     stackSubtitle: 'ایک جدید ٹیکنالوجی اسٹیک جو پرائیویسی، پائیداری اور رفتار کے لیے تیار کیا گیا ہے۔',
     features: [
@@ -67,21 +67,21 @@ const ABOUT_LOCALES = {
       { title: '4 زبانوں میں مکمل ترجمہ', desc: 'انگریزی، اردو، عربی اور ہندی میں فوری تبدیلی بمعہ RTL سپورٹ۔' },
     ],
     ctaTitle: 'کیا آپ اگلی نسل کے ٹولز استعمال کرنے کے لیے تیار ہیں؟',
-    ctaSubtitle: 'تمام 220+ ٹولز اور کورسز کے نصاب سب کے لیے 100٪ مفت اور کھلے ہیں۔ نہ کریڈٹ کارڈ کی ضرورت ہے نہ لازمی رجسٹریشن کی۔',
+    ctaSubtitle: 'تمام 220+ ٹولز اور ورک فلوز سب کے لیے 100٪ مفت اور کھلے ہیں۔ نہ کریڈٹ کارڈ کی ضرورت ہے نہ لازمی رجسٹریشن کی۔',
     ctaBtn: 'ابھی ٹولز استعمال کرنا شروع کریں',
   },
   ar: {
     badge: 'عن منصة مفتاح تولز',
-    heroTitle: 'المنظومة الرقمية الرائدة في الخصوصية والأدوات الذكية والتعليم',
-    heroSubtitle: 'تجمع منصة مفتاح تولز بين الأداء الفائق لمعالجة الملفات محلياً داخل جهازك بنسبة 100٪ والتعليم الهندسي التطبيقي. تمتع بالخصوصية التامة واكتسب مهارات رقمية حقيقية.',
+    heroTitle: 'المنظومة الرقمية الرائدة في الخصوصية والأدوات الذكية والإنتاجية',
+    heroSubtitle: 'تجمع منصة مفتاح تولز بين الأداء الفائق لمعالجة الملفات محلياً داخل جهازك بنسبة 100٪ وسير العمل المؤتمت. تمتع بالخصوصية التامة وسرعة الإنجاز.',
     allToolsBtn: 'استكشاف جميع الأدوات',
-    coursesBtn: 'عرض الدورات التعليمية',
+    workflowsBtn: 'استوديو سير العمل',
     pillar1Title: 'خصوصية تامة 100٪ على جهازك',
     pillar1Desc: 'تتم معالجة كافة ملفات PDF والصور والمستندات مباشرة في متصفحك عبر تقنية WebAssembly (WASM). لا يتم رفع أي ملف إلى أي خادم خارجي أبداً.',
     pillar2Title: 'سرعة معالجة فائقة وخاطفة',
     pillar2Desc: 'بدون أي تأخير في الشبكة أو رفع وتنزيل بطيء. اضغط، ادمج، استخرج النصوص واحسب بأقصى سرعة لجهازك.',
-    pillar3Title: 'تعليم تقني عملي ومتاح للجميع',
-    pillar3Desc: 'تعلم هندسة البرمجيات، وهندسة الأوامر للذكاء الاصطناعي، والأمن السيبراني من خلال مشاريع حقيقية دون أي قيود.',
+    pillar3Title: 'سير عمل مؤتمت ومتعدد المراحل',
+    pillar3Desc: 'دمج وتنسيق عمليات متعددة للملفات دفعة واحدة بنقرة واحدة لتحقيق أعلى إنتاجية.',
     stackTitle: 'التقنيات التي تدعم منصة مفتاح تولز',
     stackSubtitle: 'بنية برمجية حديثة مصممة خصيصاً للخصوصية والأمان والسرعة الفائقة.',
     features: [
@@ -93,21 +93,21 @@ const ABOUT_LOCALES = {
       { title: 'تعريب وترجمة كاملة بـ 4 لغات', desc: 'تبديل فوري وسلس بين العربية، الأردية، الهندية والإنجليزية مع دعم RTL.' },
     ],
     ctaTitle: 'هل أنت مستعد لتجربة الجيل القادم من الأدوات الرقمية؟',
-    ctaSubtitle: 'جميع الأدوات الـ 220+ والمناهج التعليمية مجانية 100٪ ومتاحة للجميع دون الحاجة لبطاقة ائتمان.',
+    ctaSubtitle: 'جميع الأدوات الـ 220+ وسير العمل مجانية 100٪ ومتاحة للجميع دون الحاجة لبطاقة ائتمان.',
     ctaBtn: 'ابدأ باستخدام الأدوات الآن',
   },
   hi: {
     badge: 'मिफ्ताह टूल्स प्लेटफॉर्म का परिचय',
-    heroTitle: 'गोपनीयता-प्रथम डिजिटल यूटिलिटी व लर्निंग इकोसिस्टम',
-    heroSubtitle: 'मिफ्ताह टूल्स 100% ऑन-डिवाइस लोकल प्रोसेसिंग और उच्च-गुणवत्ता शिक्षा का संगम है। बिना किसी सर्वर अपलोड के फाइलों को कस्टमाइज़ करें और डिजिटल स्किल्स सीखें।',
+    heroTitle: 'गोपनीयता-प्रथम डिजिटल यूटिलिटी व उत्पादकता इकोसिस्टम',
+    heroSubtitle: 'मिफ्ताह टूल्स 100% ऑन-डिवाइस लोकल प्रोसेसिंग और स्वचालित वर्कफ़्लो का संगम है। बिना किसी सर्वर अपलोड के फाइलों को कस्टमाइज़ करें और अपना समय बचाएं।',
     allToolsBtn: 'सभी टूल्स देखें',
-    coursesBtn: 'कोर्सेज देखें',
+    workflowsBtn: 'वर्कफ़्लो स्टूडियो',
     pillar1Title: '100% क्लाइंट-साइड गोपनीयता',
     pillar1Desc: 'प्रत्येक PDF, फोटो और दस्तावेज़ WebAssembly (WASM) के माध्यम से आपके अपने फोन/कंप्यूटर में प्रोसेस होता है। फाइलें कभी सर्वर पर अपलोड नहीं होतीं।',
     pillar2Title: 'अत्यंत तीव्र गति से निष्पादन',
     pillar2Desc: 'फाइल प्रोसेसिंग में नेटवर्क की कोई देरी नहीं। कंप्रेस करें, मर्ज करें, टेक्स्ट निकालें और हार्डवेयर गति से परिणाम प्राप्त करें।',
-    pillar3Title: 'ओपन व्यावहारिक तकनीकी शिक्षा',
-    pillar3Desc: 'फुल-स्टैक इंजीनियरिंग, AI प्रॉम्प्ट डिज़ाइन और साइबर सुरक्षा को वास्तविक प्रोजेक्ट्स के माध्यम से बिना किसी बाध्यता के सीखें।',
+    pillar3Title: 'स्वचालित मल्टी-स्टेप वर्कफ़्लो',
+    pillar3Desc: 'कई फाइल ऑपरेशन्स को एक साथ जोड़कर बैच प्रोसेसिंग पाइपलाइन्स बनाएं और काम को आसान बनाएं।',
     stackTitle: 'मिफ्ताह टूल्स को क्या खास बनाता है?',
     stackSubtitle: 'गोपनीयता, विश्वसनीयता और उच्च गति के लिए डिज़ाइन किया गया आधुनिक टेक्नोलॉजी स्टैक।',
     features: [
@@ -115,11 +115,11 @@ const ABOUT_LOCALES = {
       { title: 'WebAssembly (WASM) इंजन', desc: 'ब्राउज़र मेमोरी में नेटिव गति के साथ सुरक्षित प्रोसेसिंग।' },
       { title: 'टेसेरैक्ट OCR विज़न', desc: 'स्थानीय GPU/CPU पर बहुभाषी टेक्स्ट निष्कर्षण की सुविधा।' },
       { title: 'ऑफलाइन सक्षम PWA ऐप', desc: 'मिफ्ताह टूल्स को एंड्रॉइड, विंडोज, मैक और iOS पर ऐप के रूप में इंस्टॉल करें।' },
-      { title: 'फ़ायरबेस प्रमाणीकरण व सुरक्षा', desc: 'एंटरप्राइज-ग्रेड क्रिप्टोग्राफ़िक सुरक्षा और सुरक्षित प्रगति ट्रैकिंग।' },
+      { title: 'फ़ायरबेस प्रमाणीकरण व सुरक्षा', desc: 'एंटरप्राइज-ग्रेड क्रिप्टोग्राफ़िक सुरक्षा और सुरक्षित डेटा प्रबंधन।' },
       { title: '4 भाषाओं में पूर्ण स्थानीयकरण', desc: 'अंग्रेजी, उर्दू, अरबी और हिंदी में तत्काल भाषा परिवर्तन व RTL सपोर्ट।' },
     ],
     ctaTitle: 'क्या आप अगली पीढ़ी के टूल्स इस्तेमाल करने के लिए तैयार हैं?',
-    ctaSubtitle: 'सभी 220+ टूल्स और कोर्स पाठ्यक्रम सभी के लिए 100% मुफ़्त और खुले हैं। कोई क्रेडिट कार्ड या अनिवार्य शुल्क नहीं।',
+    ctaSubtitle: 'सभी 220+ टूल्स और वर्कफ़्लो सभी के लिए 100% मुफ़्त और खुले हैं। कोई क्रेडिट कार्ड या अनिवार्य शुल्क नहीं।',
     ctaBtn: 'अभी टूल्स का उपयोग शुरू करें',
   },
 };
@@ -152,11 +152,11 @@ export default function AboutPage() {
               {loc.allToolsBtn}
             </Link>
             <Link
-              href="/courses"
+              href="/workflows"
               className="px-6 py-3 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-bold text-sm border border-slate-200 dark:border-slate-800 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <GraduationCap className="w-4 h-4 text-brand-600" />
-              {loc.coursesBtn}
+              <Workflow className="w-4 h-4 text-brand-600" />
+              {loc.workflowsBtn}
             </Link>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function AboutPage() {
 
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center">
-              <GraduationCap className="w-6 h-6" />
+              <Workflow className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">{loc.pillar3Title}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
