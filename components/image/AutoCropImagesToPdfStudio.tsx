@@ -603,7 +603,7 @@ export function AutoCropImagesToPdfStudio() {
 
             {/* Custom Crop Sliders if custom mode */}
             {cutMode === 'custom-margins' && (
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in">
+              <div dir="ltr" className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   {loc.customMarginsLabel}
                 </span>
@@ -612,44 +612,48 @@ export function AutoCropImagesToPdfStudio() {
                     <label className="text-[11px] font-semibold text-slate-500">{loc.topCut} {topCrop}%</label>
                     <input
                       type="range"
+                      dir="ltr"
                       min={0}
                       max={45}
                       value={topCrop}
                       onChange={(e) => setTopCrop(Number(e.target.value))}
-                      className="w-full accent-brand-600"
+                      className="w-full accent-brand-600 cursor-pointer"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-slate-500">{loc.bottomCut} {bottomCrop}%</label>
                     <input
                       type="range"
+                      dir="ltr"
                       min={0}
                       max={45}
                       value={bottomCrop}
                       onChange={(e) => setBottomCrop(Number(e.target.value))}
-                      className="w-full accent-brand-600"
+                      className="w-full accent-brand-600 cursor-pointer"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-slate-500">{loc.leftCut} {leftCrop}%</label>
                     <input
                       type="range"
+                      dir="ltr"
                       min={0}
                       max={45}
                       value={leftCrop}
                       onChange={(e) => setLeftCrop(Number(e.target.value))}
-                      className="w-full accent-brand-600"
+                      className="w-full accent-brand-600 cursor-pointer"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-slate-500">{loc.rightCut} {rightCrop}%</label>
                     <input
                       type="range"
+                      dir="ltr"
                       min={0}
                       max={45}
                       value={rightCrop}
                       onChange={(e) => setRightCrop(Number(e.target.value))}
-                      className="w-full accent-brand-600"
+                      className="w-full accent-brand-600 cursor-pointer"
                     />
                   </div>
                 </div>

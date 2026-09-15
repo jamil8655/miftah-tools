@@ -612,7 +612,7 @@ export function PassportPhotoStudio() {
                 </div>
 
                 {/* Edge Matting Controls */}
-                <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <div dir="ltr" className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                       <span>Cutout Tolerance:</span>
@@ -620,11 +620,12 @@ export function PassportPhotoStudio() {
                     </div>
                     <input
                       type="range"
+                      dir="ltr"
                       min="10"
                       max="70"
                       value={tolerance}
                       onChange={(e) => setTolerance(Number(e.target.value))}
-                      className="w-full accent-brand-600"
+                      className="w-full accent-brand-600 cursor-pointer"
                     />
                   </div>
 
@@ -635,11 +636,12 @@ export function PassportPhotoStudio() {
                     </div>
                     <input
                       type="range"
+                      dir="ltr"
                       min="1"
                       max="8"
                       value={edgeSmoothing}
                       onChange={(e) => setEdgeSmoothing(Number(e.target.value))}
-                      className="w-full accent-brand-600"
+                      className="w-full accent-brand-600 cursor-pointer"
                     />
                   </div>
                 </div>
@@ -648,7 +650,7 @@ export function PassportPhotoStudio() {
 
             {/* TAB 2: HD CLARITY & LIGHTING */}
             {activeTab === 'enhance' && (
-              <div className="space-y-5 animate-in fade-in">
+              <div dir="ltr" className="space-y-5 animate-in fade-in">
                 <div className="flex items-center justify-between p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
                   <div className="space-y-0.5">
                     <div className="text-xs font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
@@ -678,11 +680,12 @@ export function PassportPhotoStudio() {
                   </div>
                   <input
                     type="range"
+                    dir="ltr"
                     min="80"
                     max="140"
                     value={brightness}
                     onChange={(e) => setBrightness(Number(e.target.value))}
-                    className="w-full accent-brand-600"
+                    className="w-full accent-brand-600 cursor-pointer"
                   />
                 </div>
 
@@ -696,11 +699,12 @@ export function PassportPhotoStudio() {
                   </div>
                   <input
                     type="range"
+                    dir="ltr"
                     min="80"
                     max="140"
                     value={contrast}
                     onChange={(e) => setContrast(Number(e.target.value))}
-                    className="w-full accent-brand-600"
+                    className="w-full accent-brand-600 cursor-pointer"
                   />
                 </div>
               </div>

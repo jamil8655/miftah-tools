@@ -124,20 +124,27 @@ export function AudioBoosterStudio() {
             </div>
 
             {/* Gain Slider */}
-            <div className="space-y-2 bg-white border border-slate-200 rounded-xl p-4">
+            <div dir="ltr" className="space-y-2 bg-white border border-slate-200 rounded-xl p-4">
               <div className="flex justify-between items-center text-xs font-bold text-slate-800">
                 <span>Custom Volume Boost:</span>
                 <span className="text-amber-600 font-extrabold">{Math.round(gainLevel * 100)}% ({gainLevel}x Volume)</span>
               </div>
               <input
                 type="range"
+                dir="ltr"
                 min={1.0}
-                max={3.0}
+                max={4.0}
                 step={0.1}
                 value={gainLevel}
                 onChange={(e) => setGainLevel(parseFloat(e.target.value))}
-                className="w-full accent-amber-500"
+                className="w-full accent-amber-500 cursor-pointer"
               />
+              <div className="flex justify-between text-[10px] text-slate-400 font-semibold">
+                <span>100% (Original)</span>
+                <span>200% (2x)</span>
+                <span>300% (3x)</span>
+                <span>400% (Max)</span>
+              </div>
             </div>
 
             <button

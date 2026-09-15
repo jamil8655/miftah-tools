@@ -403,7 +403,7 @@ export function FinancialLoanCalculators() {
             </h3>
 
             {/* Loan Amount */}
-            <div className="space-y-2">
+            <div dir="ltr" className="space-y-2">
               <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span>{loc.emi.loanAmount}</span>
                 <span className="font-mono text-brand-600 dark:text-brand-400 text-sm">
@@ -412,6 +412,7 @@ export function FinancialLoanCalculators() {
               </div>
               <input
                 type="range"
+                dir="ltr"
                 min="10000"
                 max="10000000"
                 step="10000"
@@ -428,13 +429,14 @@ export function FinancialLoanCalculators() {
             </div>
 
             {/* Interest Rate */}
-            <div className="space-y-2">
+            <div dir="ltr" className="space-y-2">
               <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span>{loc.emi.interestRate}</span>
                 <span className="font-mono text-brand-600 dark:text-brand-400 text-sm">{interestRate}%</span>
               </div>
               <input
                 type="range"
+                dir="ltr"
                 min="1"
                 max="30"
                 step="0.1"
@@ -452,7 +454,7 @@ export function FinancialLoanCalculators() {
             </div>
 
             {/* Tenure in Years */}
-            <div className="space-y-2">
+            <div dir="ltr" className="space-y-2">
               <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span>{loc.emi.tenureYears}</span>
                 <span className="font-mono text-brand-600 dark:text-brand-400 text-sm">
@@ -461,12 +463,21 @@ export function FinancialLoanCalculators() {
               </div>
               <input
                 type="range"
+                dir="ltr"
                 min="1"
                 max="30"
                 step="1"
                 value={tenureYears}
                 onChange={(e) => setTenureYears(Number(e.target.value))}
                 className="w-full accent-brand-600 cursor-pointer"
+              />
+              <input
+                type="number"
+                min="1"
+                max="30"
+                value={tenureYears}
+                onChange={(e) => setTenureYears(Number(e.target.value) || 1)}
+                className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-bold font-mono"
               />
             </div>
           </div>

@@ -31,6 +31,49 @@ const SIZE_PRESETS = [
   { label: '10 MB', value: 10240 },
 ];
 
+const SLIDER_STOPS = [
+  { pos: 0, kb: 20 },
+  { pos: 12.5, kb: 50 },
+  { pos: 25, kb: 100 },
+  { pos: 37.5, kb: 200 },
+  { pos: 50, kb: 500 },
+  { pos: 62.5, kb: 1024 },
+  { pos: 75, kb: 2048 },
+  { pos: 87.5, kb: 5120 },
+  { pos: 100, kb: 10240 },
+];
+
+const kbToSliderPos = (kb: number): number => {
+  if (!kb || kb <= SLIDER_STOPS[0].kb) return 0;
+  if (kb >= SLIDER_STOPS[SLIDER_STOPS.length - 1].kb) return 100;
+  for (let i = 0; i < SLIDER_STOPS.length - 1; i++) {
+    const s1 = SLIDER_STOPS[i];
+    const s2 = SLIDER_STOPS[i + 1];
+    if (kb >= s1.kb && kb <= s2.kb) {
+      const ratio = (kb - s1.kb) / (s2.kb - s1.kb);
+      return Math.round(s1.pos + ratio * (s2.pos - s1.pos));
+    }
+  }
+  return 50;
+};
+
+const sliderPosToKb = (pos: number): number => {
+  if (pos <= 0) return SLIDER_STOPS[0].kb;
+  if (pos >= 100) return SLIDER_STOPS[SLIDER_STOPS.length - 1].kb;
+  for (let i = 0; i < SLIDER_STOPS.length - 1; i++) {
+    const s1 = SLIDER_STOPS[i];
+    const s2 = SLIDER_STOPS[i + 1];
+    if (pos >= s1.pos && pos <= s2.pos) {
+      const ratio = (pos - s1.pos) / (s2.pos - s1.pos);
+      const val = s1.kb + ratio * (s2.kb - s1.kb);
+      if (val > 1024) return Math.round(val / 256) * 256;
+      if (val > 200) return Math.round(val / 25) * 25;
+      return Math.round(val / 10) * 10;
+    }
+  }
+  return 500;
+};
+
 const ENHANCEMENT_FILTERS = [
   { id: 'original', name: 'Original Color', desc: 'No alteration to source colors' },
   { id: 'document', name: 'Document Scan', desc: 'Whitens background and sharpens text' },
@@ -604,27 +647,51 @@ export function ImageToPdfStudio() {
             </div>
 
             {/* Interactive Left-to-Right Range Slider */}
-            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div dir="ltr" className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                <span>Drag Slider for Custom Size Reduction:</span>
-                <span className="text-brand-600 font-mono">
-                  {targetSizeKB >= 1024 ? `${(targetSizeKB / 1024).toFixed(2)} MB` : `${targetSizeKB} KB`}
+                <span>Drag Slider for Custom Target Size:</span>
+                <span className="text-brand-600 font-mono font-bold">
+                  {targetSizeKB >= 1024 ? `${(targetSizeKB / 1024).toFixed(1)} MB` : `${targetSizeKB} KB`}
                 </span>
               </div>
               <input
                 type="range"
-                min={50}
-                max={10240}
-                step={25}
-                value={targetSizeKB}
-                onChange={(e) => handleApplyPresetSize(Number(e.target.value))}
+                dir="ltr"
+                min={0}
+                max={100}
+                step={1}
+                value={kbToSliderPos(targetSizeKB)}
+                onChange={(e) => {
+                  const newKb = sliderPosToKb(Number(e.target.value));
+                  handleApplyPresetSize(newKb);
+                }}
                 className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600"
               />
               <div className="flex justify-between text-[10px] font-semibold text-slate-400">
-                <span>50 KB</span>
-                <span>500 KB (Govt Portals)</span>
-                <span>2 MB (Standard Email)</span>
-                <span>10 MB (Max)</span>
+                <span>20 KB</span>
+                <span>100 KB</span>
+                <span>500 KB</span>
+                <span>1 MB</span>
+                <span>2 MB</span>
+                <span>5 MB</span>
+                <span>10 MB</span>
+              </div>
+
+              {/* Direct Manual Input */}
+              <div className="flex items-center gap-2 pt-1 max-w-xs">
+                <input
+                  type="number"
+                  min={10}
+                  max={50000}
+                  value={targetSizeKB}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) || 0;
+                    if (val > 0) handleApplyPresetSize(val);
+                  }}
+                  className="w-28 px-3 py-1.5 text-xs font-mono font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                  placeholder="e.g. 200"
+                />
+                <span className="text-xs font-bold text-slate-500">KB Target Size</span>
               </div>
             </div>
 

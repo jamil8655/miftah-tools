@@ -123,19 +123,36 @@ export function PasswordStudio() {
         </h3>
 
         {/* Length Slider */}
-        <div className="space-y-1.5">
+        <div dir="ltr" className="space-y-2">
           <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
             <span>Password Length</span>
-            <span className="text-brand-600 font-mono">{options.length} Characters</span>
+            <span className="text-brand-600 font-mono font-bold">{options.length} Characters</span>
           </div>
           <input
             type="range"
-            min="8"
+            dir="ltr"
+            min="6"
             max="64"
             value={options.length}
             onChange={(e) => setOptions({ ...options, length: parseInt(e.target.value) })}
-            className="w-full accent-brand-600"
+            className="w-full accent-brand-600 cursor-pointer"
           />
+          <div className="flex items-center gap-1.5 pt-1">
+            {[12, 16, 24, 32, 48].map((len) => (
+              <button
+                key={len}
+                type="button"
+                onClick={() => setOptions({ ...options, length: len })}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                  options.length === len
+                    ? 'bg-brand-600 text-white border-brand-700'
+                    : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                {len}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Checkbox Options */}

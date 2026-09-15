@@ -653,11 +653,12 @@ export function ToolOptionControls({
                       <span className="text-[10px] text-slate-400">{L.logoWidth}</span>
                       <input
                         type="range"
+                        dir="ltr"
                         min="20"
                         max="200"
                         value={options.headerImageWidth || 60}
                         onChange={(e) => updateOption('headerImageWidth', parseInt(e.target.value))}
-                        className="w-24 accent-brand-600"
+                        className="w-24 accent-brand-600 cursor-pointer"
                       />
                       <span className="text-[10px] font-mono">{options.headerImageWidth || 60}px</span>
                     </div>
@@ -774,11 +775,12 @@ export function ToolOptionControls({
                       <span className="text-[10px] text-slate-400">{L.logoWidth}</span>
                       <input
                         type="range"
+                        dir="ltr"
                         min="20"
                         max="200"
                         value={options.footerImageWidth || 60}
                         onChange={(e) => updateOption('footerImageWidth', parseInt(e.target.value))}
-                        className="w-24 accent-brand-600"
+                        className="w-24 accent-brand-600 cursor-pointer"
                       />
                       <span className="text-[10px] font-mono">{options.footerImageWidth || 60}px</span>
                     </div>
@@ -929,12 +931,13 @@ export function ToolOptionControls({
                 </label>
                 <input
                   type="range"
+                  dir="ltr"
                   min={0.05}
                   max={0.95}
                   step={0.05}
                   value={options.opacity ?? 0.3}
                   onChange={(e) => updateOption('opacity', parseFloat(e.target.value))}
-                  className="w-full accent-rose-600 mt-2"
+                  className="w-full accent-rose-600 mt-2 cursor-pointer"
                 />
               </div>
             </div>

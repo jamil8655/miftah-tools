@@ -204,34 +204,36 @@ export function BackgroundRemoverStudio() {
             </h3>
 
             {/* Tolerance Slider */}
-            <div className="space-y-2">
+            <div dir="ltr" className="space-y-2">
               <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span>Cutout Sensitivity:</span>
                 <span className="font-mono text-brand-600">{tolerance}%</span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="80"
+                dir="ltr"
+                min="5"
+                max="85"
                 value={tolerance}
                 onChange={(e) => setTolerance(Number(e.target.value))}
-                className="w-full accent-brand-600"
+                className="w-full accent-brand-600 cursor-pointer"
               />
             </div>
 
             {/* Edge Smoothing */}
-            <div className="space-y-2">
+            <div dir="ltr" className="space-y-2">
               <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span>Edge Feathering:</span>
                 <span className="font-mono text-brand-600">{edgeSmoothing}px</span>
               </div>
               <input
                 type="range"
+                dir="ltr"
                 min="0"
                 max="10"
                 value={edgeSmoothing}
                 onChange={(e) => setEdgeSmoothing(Number(e.target.value))}
-                className="w-full accent-brand-600"
+                className="w-full accent-brand-600 cursor-pointer"
               />
             </div>
 
