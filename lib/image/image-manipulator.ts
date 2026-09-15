@@ -478,3 +478,5 @@ export async function compressImage(
     };
   }
 }
+
+export { applyImageFilter } from '../engines/comprehensive-engines';

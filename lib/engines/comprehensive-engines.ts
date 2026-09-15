@@ -980,7 +980,19 @@ export async function pdfToCsv(file: File): Promise<Blob> {
 
 export async function applyImageFilter(
   file: File,
-  filterType: 'grayscale' | 'bw' | 'sharpen' | 'blur' | 'brightness' | 'contrast',
+  filterType:
+    | 'grayscale'
+    | 'bw'
+    | 'sharpen'
+    | 'blur'
+    | 'brightness'
+    | 'contrast'
+    | 'sepia'
+    | 'vintage'
+    | 'invert'
+    | 'warm'
+    | 'cool'
+    | 'vibrant',
   intensity: number = 1
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -1013,6 +1025,18 @@ export async function applyImageFilter(
           ctx.filter = `brightness(${intensity * 100}%)`;
         } else if (filterType === 'contrast') {
           ctx.filter = `contrast(${intensity * 100}%)`;
+        } else if (filterType === 'sepia') {
+          ctx.filter = `sepia(${Math.min(100, intensity * 100)}%)`;
+        } else if (filterType === 'vintage') {
+          ctx.filter = `sepia(${Math.min(80, intensity * 60)}%) contrast(110%) brightness(95%)`;
+        } else if (filterType === 'invert') {
+          ctx.filter = `invert(${Math.min(100, intensity * 100)}%)`;
+        } else if (filterType === 'vibrant') {
+          ctx.filter = `saturate(${Math.min(250, intensity * 180)}%) contrast(110%)`;
+        } else if (filterType === 'warm') {
+          ctx.filter = `sepia(30%) saturate(120%) brightness(105%)`;
+        } else if (filterType === 'cool') {
+          ctx.filter = `hue-rotate(180deg) saturate(90%) contrast(105%)`;
         }
 
         ctx.drawImage(img, 0, 0);
@@ -1026,13 +1050,15 @@ export async function applyImageFilter(
           const output = ctx.createImageData(w, h);
           const dst = output.data;
 
-          // 3x3 Sharpen Kernel
-          const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
-          const kWeight = 1;
+          // 3x3 High-Pass Sharpen Kernel
+          const amount = Math.min(2.5, Math.max(0.5, intensity));
+          const kernel = [0, -amount, 0, -amount, 1 + 4 * amount, -amount, 0, -amount, 0];
 
           for (let y = 1; y < h - 1; y++) {
             for (let x = 1; x < w - 1; x++) {
-              let r = 0, g = 0, b = 0;
+              let r = 0,
+                g = 0,
+                b = 0;
               for (let ky = -1; ky <= 1; ky++) {
                 for (let kx = -1; kx <= 1; kx++) {
                   const pos = ((y + ky) * w + (x + kx)) * 4;
@@ -1043,9 +1069,9 @@ export async function applyImageFilter(
                 }
               }
               const dstPos = (y * w + x) * 4;
-              dst[dstPos] = Math.min(255, Math.max(0, r / kWeight));
-              dst[dstPos + 1] = Math.min(255, Math.max(0, g / kWeight));
-              dst[dstPos + 2] = Math.min(255, Math.max(0, b / kWeight));
+              dst[dstPos] = Math.min(255, Math.max(0, r));
+              dst[dstPos + 1] = Math.min(255, Math.max(0, g));
+              dst[dstPos + 2] = Math.min(255, Math.max(0, b));
               dst[dstPos + 3] = src[dstPos + 3];
             }
           }
@@ -1059,7 +1085,7 @@ export async function applyImageFilter(
             else reject(new Error('Image filtering failed'));
           },
           file.type.includes('png') ? 'image/png' : 'image/jpeg',
-          0.92
+          0.95
         );
       } catch (err) {
         cleanup();
