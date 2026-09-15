@@ -732,6 +732,8 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
           {
             level: options.level || 'medium',
             targetSizeLimit: targetLimit,
+            targetKb: options.targetKb,
+            quality: options.quality,
           },
           (pct, status) => {
             const overallPct = Math.round(((i + pct / 100) / files.length) * 100);

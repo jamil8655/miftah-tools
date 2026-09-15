@@ -5,7 +5,8 @@ export interface CompressOptions {
   level?: 'extreme' | 'medium' | 'light' | 'custom';
   quality?: number; // 0.1 to 1.0
   scale?: number; // 0.5 to 2.0
-  targetSizeLimit?: string; // '100kb', '200kb', '500kb', '1mb', '2mb', '5mb', 'auto'
+  targetSizeLimit?: string; // '100kb', '200kb', '500kb', '1mb', '2mb', '5mb', 'auto' or custom e.g. '350kb'
+  targetKb?: number; // e.g. 50, 100, 200, 500, 1024, 2048, 5120
 }
 
 export interface CompressResult {
@@ -37,24 +38,44 @@ export async function compressPdfAdvanced(
   let jpegQuality = 0.60;
   let renderScale = 1.20;
 
-  if (target === '100kb') {
-    jpegQuality = 0.35;
-    renderScale = 0.85;
-  } else if (target === '200kb') {
-    jpegQuality = 0.45;
-    renderScale = 0.95;
-  } else if (target === '500kb') {
-    jpegQuality = 0.60;
-    renderScale = 1.10;
-  } else if (target === '1mb') {
-    jpegQuality = 0.72;
-    renderScale = 1.30;
-  } else if (target === '2mb') {
-    jpegQuality = 0.80;
-    renderScale = 1.45;
-  } else if (target === '5mb') {
-    jpegQuality = 0.88;
-    renderScale = 1.60;
+  // Check for targetKb directly or parse target string
+  let targetKb = options.targetKb;
+  if (!targetKb && target && target !== 'auto') {
+    const matchMb = target.toLowerCase().match(/^([\d.]+)\s*mb$/);
+    const matchKb = target.toLowerCase().match(/^([\d.]+)\s*kb$/);
+    if (matchMb) {
+      targetKb = Math.round(parseFloat(matchMb[1]) * 1024);
+    } else if (matchKb) {
+      targetKb = Math.round(parseFloat(matchKb[1]));
+    }
+  }
+
+  if (targetKb && targetKb > 0) {
+    if (targetKb <= 60) {
+      jpegQuality = 0.28;
+      renderScale = 0.75;
+    } else if (targetKb <= 120) {
+      jpegQuality = 0.35;
+      renderScale = 0.85;
+    } else if (targetKb <= 250) {
+      jpegQuality = 0.45;
+      renderScale = 0.95;
+    } else if (targetKb <= 600) {
+      jpegQuality = 0.60;
+      renderScale = 1.10;
+    } else if (targetKb <= 1200) {
+      jpegQuality = 0.72;
+      renderScale = 1.28;
+    } else if (targetKb <= 2500) {
+      jpegQuality = 0.80;
+      renderScale = 1.45;
+    } else if (targetKb <= 6000) {
+      jpegQuality = 0.88;
+      renderScale = 1.60;
+    } else {
+      jpegQuality = 0.92;
+      renderScale = 1.75;
+    }
   } else if (level === 'extreme') {
     jpegQuality = 0.40;
     renderScale = 0.95;
@@ -64,9 +85,12 @@ export async function compressPdfAdvanced(
   } else if (level === 'light') {
     jpegQuality = 0.80;
     renderScale = 1.45;
-  } else if (options.quality) {
+  }
+
+  // If explicit quality is passed and targetKb wasn't set, respect quality
+  if (options.quality && !targetKb) {
     jpegQuality = options.quality;
-    renderScale = options.scale || 1.20;
+    renderScale = options.scale || (options.quality < 0.4 ? 0.95 : options.quality < 0.7 ? 1.20 : 1.45);
   }
 
   onProgress?.(5, 'Analyzing PDF document structure...');

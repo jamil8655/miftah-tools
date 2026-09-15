@@ -297,23 +297,50 @@ export function UnifiedImageStudio() {
               </div>
             )}
 
-            {/* C. Exact KB Panel */}
+            {/* C. Exact KB & MB Target Size Panel */}
             {activeTab === 'compress' && (
-              <div className="space-y-3 pt-2">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Target Size Limit:</label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[20, 50, 100, 200, 500, 1000].map((kb) => (
+              <div className="space-y-4 pt-2">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span>Target Size Limit:</span>
+                  <span className="font-mono text-brand-600 dark:text-brand-400 font-extrabold text-xs px-2.5 py-0.5 rounded-lg bg-brand-50 dark:bg-brand-950 border border-brand-200 dark:border-brand-800">
+                    🎯 {targetKb >= 1024 ? `${(targetKb / 1024).toFixed(targetKb % 1024 === 0 ? 0 : 1)} MB` : `${targetKb} KB`}
+                  </span>
+                </div>
+
+                {/* Left-to-Right Range Slider */}
+                <div className="space-y-1.5">
+                  <input
+                    type="range"
+                    min={20}
+                    max={10240}
+                    step={20}
+                    value={targetKb}
+                    onChange={(e) => setTargetKb(Number(e.target.value))}
+                    className="w-full accent-brand-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                    <span>20 KB</span>
+                    <span>500 KB</span>
+                    <span>2 MB</span>
+                    <span>5 MB</span>
+                    <span>10 MB</span>
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                  {[50, 100, 200, 500, 1024, 2048, 5120].map((kb) => (
                     <button
                       key={kb}
                       type="button"
                       onClick={() => setTargetKb(kb)}
-                      className={`py-2 text-[11px] font-bold rounded-xl border ${
+                      className={`py-2 text-[11px] font-bold rounded-xl border transition-all ${
                         targetKb === kb
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 text-slate-600'
+                          ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      {kb >= 1000 ? `${kb / 1000} MB` : `${kb} KB`}
+                      {kb >= 1024 ? `${kb / 1024} MB` : `${kb} KB`}
                     </button>
                   ))}
                 </div>

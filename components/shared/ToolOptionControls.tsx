@@ -109,6 +109,36 @@ export function ToolOptionControls({
       ar: '🎯 الحجم المستهدف (اختر بالكيلوبايت KB أو الميجابايت MB):',
       hi: '🎯 लक्षित फ़ाइल साइज़ (KB या MB प्रीसेट चुनें या कस्टम दर्ज करें):',
     }[language] || 'Target File Size:',
+    sliderHeading: {
+      en: '🎯 Target Size Slider (Drag Left ➔ Right to Select MB / KB):',
+      ur: '🎯 مطلوبہ سائز سلائیڈر (بائیں ➔ دائیں گھسیٹیں):',
+      ar: '🎯 شريط تحديد الحجم المستهدف (اسحب من اليسار إلى اليمين):',
+      hi: '🎯 लक्षित साइज़ स्लाइडर (बाएं ➔ दाएं खिसकाकर MB / KB चुनें):',
+    }[language] || 'Target Size Slider (Drag Left to Right):',
+    sliderHelp: {
+      en: 'Drag left for smaller file size (lower MB/KB) or right for higher visual clarity.',
+      ur: 'فائل کا سائز کم کرنے کے لیے بائیں یا واضح کوالٹی کے لیے دائیں گھسیٹیں۔',
+      ar: 'اسحب لليسار لتقليل الحجم بالميجابايت، أو لليمين للحفاظ على دقة أعلى.',
+      hi: 'फ़ाइल साइज़ छोटा करने के लिए बाएं या बेहतर क्वालिटी के लिए दाएं खिसकाएं।',
+    }[language] || 'Drag slider to adjust target size.',
+    estReduction: {
+      en: 'Estimated Compression:',
+      ur: 'متوقع فائل کمی:',
+      ar: 'نسبة الضغط التقديرية:',
+      hi: 'अनुमानित बचत:',
+    }[language] || 'Estimated Savings:',
+    sizeTargetMode: {
+      en: '🎯 Target Size Slider (MB / KB)',
+      ur: '🎯 مطلوبہ سائز سلائیڈر (MB / KB)',
+      ar: '🎯 شريط الحجم المستهدف (MB / KB)',
+      hi: '🎯 लक्षित साइज़ स्लाइडर (MB / KB)',
+    }[language] || 'Target Size (MB/KB)',
+    qualityMode: {
+      en: '⚡ Quality & Ratio %',
+      ur: '⚡ کوالٹی تناسب (%)',
+      ar: '⚡ نسبة الجودة (%)',
+      hi: '⚡ क्वालिटी व कंप्रेशन %',
+    }[language] || 'Quality %',
     customTarget: {
       en: 'Custom Size',
       ur: 'اپنی مرضی کا سائز',
@@ -116,16 +146,16 @@ export function ToolOptionControls({
       hi: 'कस्टम साइज़',
     }[language] || 'Custom Size',
     enterTargetValue: {
-      en: 'Enter target value (e.g. 100, 500, 2):',
-      ur: 'مطلوبہ سائز نمبر لکھیں (مثلاً 100، 500، 2):',
-      ar: 'أدخل الحجم المطلوب (مثال: 100، 500، 2):',
-      hi: 'लक्षित साइज़ मान दर्ज करें (उदा. 100, 500, 2):',
-    }[language] || 'Enter target value:',
+      en: 'Or enter custom exact size (e.g. 100, 500, 2):',
+      ur: 'یا اپنی مرضی کا سائز نمبر لکھیں (مثلاً 100، 500، 2):',
+      ar: 'أو أدخل حجماً مخصصاً دقيقاً (مثال: 100، 500، 2):',
+      hi: 'या सटीक साइज़ मान दर्ज करें (उदा. 100, 500, 2):',
+    }[language] || 'Or enter custom exact size:',
     compressionStrength: {
-      en: 'Compression Strength:',
-      ur: 'کمپریشن کی طاقت:',
-      ar: 'قوة الضغط:',
-      hi: 'कंप्रेशन की तीव्रता:',
+      en: 'Compression Strength & Quality Ratio:',
+      ur: 'کمپریشن کی طاقت اور کوالٹی فیصد:',
+      ar: 'قوة الضغط ونسبة الجودة:',
+      hi: 'कंप्रेशन की तीव्रता व क्वालिटी प्रतिशत:',
     }[language] || 'Compression Strength:',
     compressed: {
       en: 'Compressed',
@@ -294,126 +324,259 @@ export function ToolOptionControls({
         </span>
       </div>
 
-      {/* 1. UNIVERSAL MB & KB TARGET SIZE CONTROLLER */}
-      {showTargetSizeSection && (
-        <div className="space-y-3 p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 shadow-xs">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span>{L.targetSizePreset}</span>
-            </label>
-            <span className="text-xs font-mono font-black text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950 px-2 py-0.5 rounded-md border border-brand-200 dark:border-brand-800">
-              {options.targetKb
-                ? `${options.targetKb >= 1000 ? (options.targetKb / 1024).toFixed(1) + ' MB' : options.targetKb + ' KB'} Target`
-                : 'Adaptive Quality'}
-            </span>
-          </div>
+      {/* 1. UNIVERSAL MB & KB TARGET SIZE CONTROLLER & SLIDER */}
+      {showTargetSizeSection && (() => {
+        const TARGET_SLIDER_STEPS = [
+          { kb: 20, label: '20 KB', display: '20 KB' },
+          { kb: 50, label: '50 KB', display: '50 KB' },
+          { kb: 100, label: '100 KB', display: '100 KB' },
+          { kb: 150, label: '150 KB', display: '150 KB' },
+          { kb: 200, label: '200 KB', display: '200 KB' },
+          { kb: 300, label: '300 KB', display: '300 KB' },
+          { kb: 500, label: '500 KB', display: '500 KB' },
+          { kb: 750, label: '750 KB', display: '750 KB' },
+          { kb: 1024, label: '1 MB', display: '1 MB' },
+          { kb: 1536, label: '1.5 MB', display: '1.5 MB' },
+          { kb: 2048, label: '2 MB', display: '2 MB' },
+          { kb: 3072, label: '3 MB', display: '3 MB' },
+          { kb: 5120, label: '5 MB', display: '5 MB' },
+          { kb: 8192, label: '8 MB', display: '8 MB' },
+          { kb: 10240, label: '10 MB', display: '10 MB' },
+          { kb: 15360, label: '15 MB', display: '15 MB' },
+          { kb: 20480, label: '20 MB', display: '20 MB' },
+          { kb: 30720, label: '30 MB', display: '30 MB' },
+          { kb: 51200, label: '50 MB', display: '50 MB' },
+          { kb: 0, label: 'Auto', display: 'Auto (Best)' },
+        ];
 
-          {/* Quick KB & MB Target Chips */}
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-            {[
-              { label: '20 KB', kb: 20 },
-              { label: '50 KB', kb: 50 },
-              { label: '100 KB', kb: 100 },
-              { label: '200 KB', kb: 200 },
-              { label: '500 KB', kb: 500 },
-              { label: '1 MB', kb: 1024 },
-              { label: '2 MB', kb: 2048 },
-              { label: '5 MB', kb: 5120 },
-              { label: '10 MB', kb: 10240 },
-              { label: '25 MB', kb: 25600 },
-              { label: '50 MB', kb: 51200 },
-              { label: 'Auto', kb: 0 },
-            ].map((preset) => {
-              const isSelected = preset.kb === 0 ? !options.targetKb : options.targetKb === preset.kb;
-              return (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => {
-                    if (preset.kb === 0) {
-                      updateOption('targetKb', null);
-                      updateOption('targetSizeLimit', 'auto');
-                      updateOption('quality', 0.8);
-                    } else {
-                      updateOption('targetKb', preset.kb);
-                      updateOption('targetSizeLimit', preset.kb >= 1024 ? `${Math.round(preset.kb / 1024)}mb` : `${preset.kb}kb`);
-                      if (totalBytes > 0) {
-                        const targetQuality = Math.max(0.15, Math.min(0.95, (preset.kb * 1024) / totalBytes));
-                        updateOption('quality', targetQuality);
-                      }
-                    }
-                  }}
-                  className={`py-2 px-1 rounded-xl text-xs font-black border transition-all active:scale-95 text-center ${
-                    isSelected
-                      ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/20 ring-2 ring-brand-500/30'
-                      : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-brand-500'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
-          </div>
+        const currentTargetKb = options.targetKb ?? 0;
+        let activeSliderIndex = TARGET_SLIDER_STEPS.findIndex((s) => s.kb === currentTargetKb);
+        if (activeSliderIndex === -1) {
+          if (currentTargetKb === 0) {
+            activeSliderIndex = TARGET_SLIDER_STEPS.length - 1;
+          } else {
+            let closestDist = Infinity;
+            let closestIdx = 0;
+            TARGET_SLIDER_STEPS.forEach((s, idx) => {
+              if (s.kb > 0) {
+                const dist = Math.abs(s.kb - currentTargetKb);
+                if (dist < closestDist) {
+                  closestDist = dist;
+                  closestIdx = idx;
+                }
+              }
+            });
+            activeSliderIndex = closestIdx;
+          }
+        }
 
-          {/* Custom Numeric KB / MB Input */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-center gap-3">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 shrink-0">
-              {L.enterTargetValue}
-            </span>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+        const handleSliderChange = (newIndex: number) => {
+          const step = TARGET_SLIDER_STEPS[newIndex];
+          if (!step || step.kb === 0) {
+            updateOption('targetKb', null);
+            updateOption('targetSizeLimit', 'auto');
+            updateOption('customNumValue', '');
+            updateOption('quality', 0.8);
+          } else {
+            updateOption('targetKb', step.kb);
+            const limitStr = step.kb >= 1024 ? `${(step.kb / 1024).toFixed(1).replace(/\.0$/, '')}mb` : `${step.kb}kb`;
+            updateOption('targetSizeLimit', limitStr);
+            if (step.kb >= 1024) {
+              updateOption('customNumValue', (step.kb / 1024).toString());
+              updateOption('customNumUnit', 'mb');
+            } else {
+              updateOption('customNumValue', step.kb.toString());
+              updateOption('customNumUnit', 'kb');
+            }
+            if (totalBytes > 0) {
+              const targetQuality = Math.max(0.15, Math.min(0.95, (step.kb * 1024) / totalBytes));
+              updateOption('quality', targetQuality);
+            }
+          }
+        };
+
+        const targetBytes = currentTargetKb > 0 ? currentTargetKb * 1024 : 0;
+        const estimatedReduction =
+          totalBytes > 0 && targetBytes > 0 && targetBytes < totalBytes
+            ? Math.round(((totalBytes - targetBytes) / totalBytes) * 100)
+            : null;
+
+        return (
+          <div className="space-y-4 p-5 rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            {/* Header & Target Size Badge */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-700/60">
+              <label className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+                <span>{L.sliderHeading}</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-mono font-black text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/80 px-3 py-1 rounded-xl border border-brand-200 dark:border-brand-800 shadow-xs">
+                  {options.targetKb
+                    ? options.targetKb >= 1024
+                      ? `🎯 Target: ${(options.targetKb / 1024).toFixed(options.targetKb % 1024 === 0 ? 0 : 1)} MB`
+                      : `🎯 Target: ${options.targetKb} KB`
+                    : '⚡ Auto Adaptive Quality'}
+                </span>
+              </div>
+            </div>
+
+            {/* Estimated Reduction Info Banner */}
+            {estimatedReduction !== null && (
+              <div className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/60 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                <span>{L.estReduction}</span>
+                <span className="font-mono">
+                  {formatBytesDual(totalBytes)} ➔ ~{formatBytesDual(targetBytes)} ({estimatedReduction}% Reduction)
+                </span>
+              </div>
+            )}
+
+            {/* Horizontal Range Slider (Left to Right / दाएं से बाएं) */}
+            <div className="space-y-2 pt-1">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-300">
+                <span className="text-[11px] text-slate-400 font-normal">{L.sliderHelp}</span>
+                <span className="font-mono font-black text-brand-600 dark:text-brand-400">
+                  {TARGET_SLIDER_STEPS[activeSliderIndex]?.display}
+                </span>
+              </div>
               <input
-                type="number"
-                min="1"
-                step="any"
-                placeholder="e.g. 350"
-                value={options.customNumValue || ''}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  updateOption('customNumValue', e.target.value);
-                  if (!isNaN(val) && val > 0) {
-                    const unit = options.customNumUnit || 'kb';
-                    const targetKb = unit === 'mb' ? val * 1024 : val;
-                    updateOption('targetKb', targetKb);
-                    updateOption('targetSizeLimit', unit === 'mb' ? `${val}mb` : `${val}kb`);
-                    if (totalBytes > 0) {
-                      updateOption('quality', Math.max(0.15, Math.min(0.95, (targetKb * 1024) / totalBytes)));
-                    }
-                  }
-                }}
-                className="w-28 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold"
+                type="range"
+                min={0}
+                max={TARGET_SLIDER_STEPS.length - 1}
+                step={1}
+                value={activeSliderIndex}
+                onChange={(e) => handleSliderChange(parseInt(e.target.value, 10))}
+                className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer transition-all"
+                aria-label="Target Size Slider"
               />
-              <div className="flex rounded-xl bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
-                {['kb', 'mb'].map((unit) => {
-                  const isUnitSelected = (options.customNumUnit || 'kb') === unit;
+              <div className="flex justify-between text-[10px] text-slate-400 font-mono font-medium px-0.5 select-none">
+                <span>20 KB</span>
+                <span>200 KB</span>
+                <span>1 MB</span>
+                <span>5 MB</span>
+                <span>20 MB</span>
+                <span>50 MB</span>
+                <span>Auto</span>
+              </div>
+            </div>
+
+            {/* Quick KB & MB Target Chips */}
+            <div className="space-y-1.5 pt-2">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                {L.targetSizePreset}
+              </span>
+              <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-10 gap-1.5">
+                {[
+                  { label: '50 KB', kb: 50 },
+                  { label: '100 KB', kb: 100 },
+                  { label: '200 KB', kb: 200 },
+                  { label: '500 KB', kb: 500 },
+                  { label: '1 MB', kb: 1024 },
+                  { label: '2 MB', kb: 2048 },
+                  { label: '3 MB', kb: 3072 },
+                  { label: '5 MB', kb: 5120 },
+                  { label: '10 MB', kb: 10240 },
+                  { label: 'Auto', kb: 0 },
+                ].map((preset) => {
+                  const isSelected = preset.kb === 0 ? !options.targetKb : options.targetKb === preset.kb;
                   return (
                     <button
-                      key={unit}
+                      key={preset.label}
                       type="button"
                       onClick={() => {
-                        updateOption('customNumUnit', unit);
-                        const val = parseFloat(options.customNumValue);
-                        if (!isNaN(val) && val > 0) {
-                          const targetKb = unit === 'mb' ? val * 1024 : val;
-                          updateOption('targetKb', targetKb);
-                          updateOption('targetSizeLimit', unit === 'mb' ? `${val}mb` : `${val}kb`);
+                        if (preset.kb === 0) {
+                          updateOption('targetKb', null);
+                          updateOption('targetSizeLimit', 'auto');
+                          updateOption('customNumValue', '');
+                          updateOption('quality', 0.8);
+                        } else {
+                          updateOption('targetKb', preset.kb);
+                          const limitStr = preset.kb >= 1024 ? `${preset.kb / 1024}mb` : `${preset.kb}kb`;
+                          updateOption('targetSizeLimit', limitStr);
+                          if (preset.kb >= 1024) {
+                            updateOption('customNumValue', (preset.kb / 1024).toString());
+                            updateOption('customNumUnit', 'mb');
+                          } else {
+                            updateOption('customNumValue', preset.kb.toString());
+                            updateOption('customNumUnit', 'kb');
+                          }
+                          if (totalBytes > 0) {
+                            const targetQuality = Math.max(0.15, Math.min(0.95, (preset.kb * 1024) / totalBytes));
+                            updateOption('quality', targetQuality);
+                          }
                         }
                       }}
-                      className={`px-3 py-1 text-xs font-extrabold uppercase rounded-lg transition-all ${
-                        isUnitSelected ? 'bg-brand-600 text-white shadow-xs' : 'text-slate-500'
+                      className={`py-2 px-1 rounded-xl text-xs font-black border transition-all active:scale-95 text-center ${
+                        isSelected
+                          ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/20 ring-2 ring-brand-500/30'
+                          : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-brand-500'
                       }`}
                     >
-                      {unit}
+                      {preset.label}
                     </button>
                   );
                 })}
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* 2. COMPRESSION QUALITY SLIDER */}
+            {/* Custom Numeric KB / MB Input */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300 shrink-0">
+                {L.enterTargetValue}
+              </span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <input
+                  type="number"
+                  min="1"
+                  step="any"
+                  placeholder="e.g. 350 or 1.5"
+                  value={options.customNumValue || ''}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    updateOption('customNumValue', e.target.value);
+                    if (!isNaN(val) && val > 0) {
+                      const unit = options.customNumUnit || 'kb';
+                      const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
+                      updateOption('targetKb', targetKb);
+                      updateOption('targetSizeLimit', unit === 'mb' ? `${val}mb` : `${val}kb`);
+                      if (totalBytes > 0) {
+                        updateOption('quality', Math.max(0.15, Math.min(0.95, (targetKb * 1024) / totalBytes)));
+                      }
+                    }
+                  }}
+                  className="w-32 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold"
+                />
+                <div className="flex rounded-xl bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                  {['kb', 'mb'].map((unit) => {
+                    const isUnitSelected = (options.customNumUnit || 'kb') === unit;
+                    return (
+                      <button
+                        key={unit}
+                        type="button"
+                        onClick={() => {
+                          updateOption('customNumUnit', unit);
+                          const val = parseFloat(options.customNumValue);
+                          if (!isNaN(val) && val > 0) {
+                            const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
+                            updateOption('targetKb', targetKb);
+                            updateOption('targetSizeLimit', unit === 'mb' ? `${val}mb` : `${val}kb`);
+                          }
+                        }}
+                        className={`px-3 py-1 text-xs font-extrabold uppercase rounded-lg transition-all ${
+                          isUnitSelected ? 'bg-brand-600 text-white shadow-xs' : 'text-slate-500'
+                        }`}
+                      >
+                        {unit}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 2. COMPRESSION QUALITY & RATIO SLIDER */}
       {(isImageCompress || isPdfCompress) && (
         <div className="space-y-2 p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
           <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
