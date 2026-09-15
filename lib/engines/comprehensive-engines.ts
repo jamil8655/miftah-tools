@@ -404,6 +404,112 @@ export async function sanitizePdfMetadata(buffer: ArrayBuffer): Promise<Uint8Arr
   return await doc.save({ useObjectStreams: true });
 }
 
+export function reconstructPdfLayoutText(items: any[]): string {
+  if (!items || items.length === 0) return '';
+
+  const validItems = items.filter(
+    (it) => it && typeof it.str === 'string' && it.str.length > 0
+  );
+  if (validItems.length === 0) return '';
+
+  // Extract geometric coordinates
+  const elements = validItems.map((it) => {
+    const x = it.transform ? it.transform[4] : 0;
+    const y = it.transform ? it.transform[5] : 0;
+    const height = Math.abs(it.height || (it.transform ? it.transform[0] : 12)) || 12;
+    const width = it.width || it.str.length * (height * 0.5);
+    return {
+      str: it.str,
+      x,
+      y,
+      width,
+      height,
+    };
+  });
+
+  // Group items into lines based on Y proximity
+  elements.sort((a, b) => b.y - a.y);
+
+  interface LineGroup {
+    y: number;
+    avgHeight: number;
+    items: typeof elements;
+  }
+
+  const lines: LineGroup[] = [];
+  const lineTolerance = 4;
+
+  for (const el of elements) {
+    let matchedLine = lines.find((l) => Math.abs(l.y - el.y) <= Math.max(lineTolerance, el.height * 0.4));
+    if (matchedLine) {
+      matchedLine.items.push(el);
+      matchedLine.y = (matchedLine.y * (matchedLine.items.length - 1) + el.y) / matchedLine.items.length;
+      matchedLine.avgHeight = Math.max(matchedLine.avgHeight, el.height);
+    } else {
+      lines.push({
+        y: el.y,
+        avgHeight: el.height,
+        items: [el],
+      });
+    }
+  }
+
+  // Sort lines top to bottom (Y descending)
+  lines.sort((a, b) => b.y - a.y);
+
+  // For each line, sort items left to right (X ascending)
+  const lineStrings: { text: string; y: number; height: number }[] = [];
+
+  for (const line of lines) {
+    line.items.sort((a, b) => a.x - b.x);
+
+    let lineText = '';
+    let lastXEnd = -1;
+
+    for (let i = 0; i < line.items.length; i++) {
+      const it = line.items[i];
+      if (lastXEnd >= 0) {
+        const gap = it.x - lastXEnd;
+        const charWidthEst = it.height * 0.35;
+
+        if (gap > charWidthEst * 4) {
+          lineText += '    '; // Preserve table column spacing
+        } else if (gap > charWidthEst * 0.3 && !lineText.endsWith(' ') && !it.str.startsWith(' ')) {
+          lineText += ' ';
+        }
+      }
+
+      lineText += it.str;
+      lastXEnd = it.x + it.width;
+    }
+
+    if (lineText.trim()) {
+      lineStrings.push({ text: lineText.trimEnd(), y: line.y, height: line.avgHeight });
+    }
+  }
+
+  // Assemble full text with smart paragraph breaks
+  let result = '';
+  for (let i = 0; i < lineStrings.length; i++) {
+    const cur = lineStrings[i];
+    result += cur.text;
+
+    if (i < lineStrings.length - 1) {
+      const next = lineStrings[i + 1];
+      const verticalGap = cur.y - next.y;
+      const expectedLineGap = cur.height * 1.6;
+
+      if (verticalGap > expectedLineGap) {
+        result += '\n\n';
+      } else {
+        result += '\n';
+      }
+    }
+  }
+
+  return result.trim();
+}
+
 export async function extractTextFromPdf(
   buffer: ArrayBuffer,
   onProgress?: (pct: number, status: string) => void
@@ -419,14 +525,14 @@ export async function extractTextFromPdf(
   let fullText = '';
 
   for (let i = 1; i <= numPages; i++) {
-    onProgress?.(15 + Math.round((i / numPages) * 75), `Extracting text from page ${i} of ${numPages}...`);
+    onProgress?.(15 + Math.round((i / numPages) * 75), `Extracting structured text from page ${i} of ${numPages}...`);
     const page = await pdfDoc.getPage(i);
     const textContent = await page.getTextContent();
     const items = (textContent.items || []) as any[];
-    const pageText = items.map((item) => item.str || '').join(' ').trim();
+    const structuredPageText = reconstructPdfLayoutText(items);
 
-    if (pageText && pageText.length > 20) {
-      fullText += `--- Page ${i} ---\n${pageText}\n\n`;
+    if (structuredPageText && structuredPageText.length > 10) {
+      fullText += `--- Page ${i} ---\n${structuredPageText}\n\n`;
     } else {
       // Scanned page fallback with OCR
       try {

@@ -110,6 +110,7 @@ import { HashStudio } from '@/components/security/HashStudio';
 import { PasswordStudio } from '@/components/security/PasswordStudio';
 import { TextStudio } from '@/components/text/TextStudio';
 import { RichTextToDocumentStudio } from '@/components/text/RichTextToDocumentStudio';
+import { PdfToTextStudio } from '@/components/text/PdfToTextStudio';
 import { TextDiffViewer } from '@/components/text/TextDiffViewer';
 import { GeneralUnitConverter } from '@/components/calculators/GeneralUnitConverter';
 import { StorageUnitConverter } from '@/components/calculators/StorageUnitConverter';
@@ -273,6 +274,16 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'txt-to-word'
   ) {
     customWorkspace = <RichTextToDocumentStudio defaultFormat={tool.outputExtension === 'docx' || tool.slug?.includes('word') || tool.slug?.includes('docx') ? 'docx' : 'pdf'} />;
+  } else if (
+    tool.id === 'pdf-to-txt' ||
+    tool.id === 'pdf-to-text' ||
+    tool.id === 'extract-text-pdf' ||
+    tool.id === 'extract-text-from-pdf' ||
+    tool.slug === 'pdf-to-txt' ||
+    tool.slug === 'pdf-to-text' ||
+    tool.slug === 'extract-text-from-pdf'
+  ) {
+    customWorkspace = <PdfToTextStudio />;
   } else if (tool.id === 'text-diff') {
     customWorkspace = <TextDiffViewer />;
   } else if (tool.id === 'timestamp-converter') {
