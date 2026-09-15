@@ -52,8 +52,8 @@ const categoryIconMap: Record<string, React.ElementType> = {
 const PAGE_LOCALES = {
   en: {
     heroBadge: '✨ 220+ Free Tools & Document Utilities',
-    heroTitle: 'Fast, Private & Free Online Utilities',
-    heroSubtitle: 'Transform documents, convert images, optimize media, format code, and automate workflows — 100% private in your browser.',
+    heroTitle: '220+ Free Online Tools for PDF, Documents, Images & Utilities',
+    heroSubtitle: 'Convert, compress, edit, calculate, and manage files with 100% private in-browser WebAssembly processing. No sign-up required.',
     searchPlaceholder: 'Search 220+ tools (e.g. PDF to Word, OCR, Compress, QR)...',
     clearSearch: 'Clear',
     allToolsTab: 'All Tools',

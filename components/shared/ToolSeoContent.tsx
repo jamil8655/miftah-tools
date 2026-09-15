@@ -187,7 +187,7 @@ export function ToolSeoContent({ tool }: ToolSeoContentProps) {
             </p>
           </div>
           <Link
-            href="/tools"
+            href="/tools/"
             className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 shrink-0"
           >
             <span>All 220+ Tools</span>
@@ -199,7 +199,7 @@ export function ToolSeoContent({ tool }: ToolSeoContentProps) {
           {seo.relatedTools.map((rel) => (
             <Link
               key={rel.id}
-              href={`/tools/${rel.slug}`}
+              href={`/tools/${rel.slug}/`}
               className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-brand-500 dark:hover:border-brand-500 hover:shadow-md transition-all group flex flex-col justify-between space-y-2"
             >
               <div className="space-y-1">
