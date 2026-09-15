@@ -43,9 +43,10 @@ const PDF_EDITOR_LOCALES = {
       rectangle: 'Box',
       signature: 'Sign',
     },
-    textPlaceholder: 'Enter text...',
+    textPlaceholder: 'Type text to add...',
     defaultText: 'Your Text Here',
     defaultSig: 'Verified Signature',
+    fontSize: 'Font Size',
     pageOf: (curr: number, total: number) => `Page ${curr} of ${total}`,
   },
   ur: {
@@ -54,17 +55,18 @@ const PDF_EDITOR_LOCALES = {
     changePdf: 'پی ڈی ایف تبدیل کریں',
     openPdf: 'پی ڈی ایف کھولیں',
     savingPdf: 'پی ڈی ایف محفوظ کی جا رہی ہے...',
-    exportPdf: 'ترمیم شدہ پی ڈی ایف برآمد کریں',
+    exportPdf: 'ترمیم شدہ پی ڈی ایف ڈاؤنلوڈ کریں',
     tools: {
-      text: 'متن',
-      draw: 'قلم',
-      highlight: 'نمایاں کریں',
+      text: 'متن (Text)',
+      draw: 'قلم (Pen)',
+      highlight: 'ہائی لائٹ',
       rectangle: 'باکس',
       signature: 'دستخط',
     },
-    textPlaceholder: 'متن درج کریں...',
+    textPlaceholder: 'یہاں متن لکھیں...',
     defaultText: 'یہاں اپنا متن لکھیں',
     defaultSig: 'تصدیق شدہ دستخط',
+    fontSize: 'سائز',
     pageOf: (curr: number, total: number) => `صفحہ ${curr} از ${total}`,
   },
   ar: {
@@ -84,6 +86,7 @@ const PDF_EDITOR_LOCALES = {
     textPlaceholder: 'أدخل النص...',
     defaultText: 'اكتب نصك هنا',
     defaultSig: 'توقيع معتمد',
+    fontSize: 'الحجم',
     pageOf: (curr: number, total: number) => `صفحة ${curr} من ${total}`,
   },
   hi: {
@@ -94,8 +97,8 @@ const PDF_EDITOR_LOCALES = {
     savingPdf: 'पीडीएफ सहेजा जा रहा है...',
     exportPdf: 'संपादित पीडीएफ निर्यात करें',
     tools: {
-      text: 'पाठ',
-      draw: 'कलम',
+      text: 'पाठ (Text)',
+      draw: 'कलम (Pen)',
       highlight: 'हाइलाइट',
       rectangle: 'बॉक्स',
       signature: 'हस्ताक्षर',
@@ -103,6 +106,7 @@ const PDF_EDITOR_LOCALES = {
     textPlaceholder: 'पाठ दर्ज करें...',
     defaultText: 'अपना पाठ यहाँ लिखें',
     defaultSig: 'सत्यापित हस्ताक्षर',
+    fontSize: 'साइज़',
     pageOf: (curr: number, total: number) => `पृष्ठ ${curr} / ${total}`,
   },
 };
@@ -120,6 +124,7 @@ interface AnnotationItem {
   text?: string;
   color?: string;
   size?: number;
+  fontSize?: number;
   points?: { x: number; y: number }[];
 }
 
@@ -134,20 +139,22 @@ export function VisualPdfEditor() {
   const [activeTool, setActiveTool] = useState<EditorTool>('text');
   const [selectedColor, setSelectedColor] = useState<string>('#026fc7');
   const [brushSize, setBrushSize] = useState<number>(3);
-  const [scale, setScale] = useState<number>(1.0);
+  const [fontSize, setFontSize] = useState<number>(20);
+  const [canvasDims, setCanvasDims] = useState<{ width: number; height: number }>({ width: 600, height: 800 });
 
   // History Stacks for Multi-Level Undo / Redo
   const [annotations, setAnnotations] = useState<AnnotationItem[]>([]);
   const [undoStack, setUndoStack] = useState<AnnotationItem[][]>([]);
   const [redoStack, setRedoStack] = useState<AnnotationItem[][]>([]);
 
-  const [textInput, setTextInput] = useState<string>('Your Text Here');
+  const [textInput, setTextInput] = useState<string>('');
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pageImageCache = useRef<Map<number, HTMLImageElement>>(new Map());
+  const pdfDocRef = useRef<any>(null);
 
   // 1. Load Real PDF and render pages with getPdfJsLib
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,6 +169,7 @@ export function VisualPdfEditor() {
         if (!pdfjsLib) throw new Error('PDF library unavailable');
 
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+        pdfDocRef.current = pdf;
         setTotalPages(pdf.numPages);
         setCurrentPage(1);
         pageImageCache.current.clear();
@@ -175,32 +183,52 @@ export function VisualPdfEditor() {
   };
 
   const renderPdfPageImage = async (pdfDoc: any, pageNum: number) => {
-    if (pageImageCache.current.has(pageNum)) {
-      redrawCanvas();
-      return;
-    }
-
-    const page = await pdfDoc.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 1.5 });
-    const offCanvas = document.createElement('canvas');
-    offCanvas.width = viewport.width;
-    offCanvas.height = viewport.height;
-    const offCtx = offCanvas.getContext('2d');
-
-    if (offCtx) {
-      await page.render({ canvasContext: offCtx, viewport }).promise;
-      const dataUrl = offCanvas.toDataURL('image/jpeg', 0.85);
-      offCanvas.width = 0;
-      offCanvas.height = 0;
-
-      const img = new Image();
-      img.onload = () => {
-        pageImageCache.current.set(pageNum, img);
+    try {
+      if (pageImageCache.current.has(pageNum)) {
+        const cachedImg = pageImageCache.current.get(pageNum);
+        if (cachedImg) {
+          setCanvasDims({ width: cachedImg.naturalWidth, height: cachedImg.naturalHeight });
+        }
         redrawCanvas();
-      };
-      img.src = dataUrl;
+        return;
+      }
+
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.5 });
+      const w = Math.round(viewport.width);
+      const h = Math.round(viewport.height);
+      setCanvasDims({ width: w, height: h });
+
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = w;
+      offCanvas.height = h;
+      const offCtx = offCanvas.getContext('2d');
+
+      if (offCtx) {
+        await page.render({ canvasContext: offCtx, viewport }).promise;
+        const dataUrl = offCanvas.toDataURL('image/jpeg', 0.90);
+        offCanvas.width = 0;
+        offCanvas.height = 0;
+
+        const img = new Image();
+        img.onload = () => {
+          pageImageCache.current.set(pageNum, img);
+          redrawCanvas();
+        };
+        img.src = dataUrl;
+      }
+    } catch (err) {
+      console.error('Render page error:', err);
     }
   };
+
+  useEffect(() => {
+    if (pdfDocRef.current) {
+      renderPdfPageImage(pdfDocRef.current, currentPage);
+    } else {
+      redrawCanvas();
+    }
+  }, [currentPage]);
 
   // 2. Redraw Canvas with background page image + vector annotations
   const redrawCanvas = useCallback(() => {
@@ -211,7 +239,7 @@ export function VisualPdfEditor() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw background PDF page image or white canvas simulation
+    // Draw background PDF page image or clean white canvas
     const pageImg = pageImageCache.current.get(currentPage);
     if (pageImg) {
       ctx.drawImage(pageImg, 0, 0, canvas.width, canvas.height);
@@ -240,7 +268,7 @@ export function VisualPdfEditor() {
       } else if (item.type === 'highlight' && item.points && item.points.length > 1) {
         ctx.strokeStyle = item.color || '#fef08a';
         ctx.globalAlpha = 0.45;
-        ctx.lineWidth = 18;
+        ctx.lineWidth = 22;
         ctx.lineCap = 'square';
         ctx.beginPath();
         ctx.moveTo(item.points[0].x, item.points[0].y);
@@ -250,15 +278,16 @@ export function VisualPdfEditor() {
         ctx.stroke();
       } else if (item.type === 'text') {
         ctx.fillStyle = item.color || '#000000';
-        ctx.font = 'bold 18px sans-serif';
+        const fSize = item.fontSize || 20;
+        ctx.font = `bold ${fSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
         ctx.fillText(item.text || '', item.x, item.y);
       } else if (item.type === 'rectangle') {
         ctx.strokeStyle = item.color || '#026fc7';
         ctx.lineWidth = item.size || 3;
-        ctx.strokeRect(item.x, item.y, item.width || 120, item.height || 60);
+        ctx.strokeRect(item.x, item.y, item.width || 140, item.height || 70);
       } else if (item.type === 'signature') {
         ctx.fillStyle = item.color || '#000000';
-        ctx.font = 'italic bold 22px cursive, sans-serif';
+        ctx.font = 'italic bold 24px cursive, sans-serif';
         ctx.fillText(item.text || loc.defaultSig, item.x, item.y);
       }
       ctx.restore();
@@ -268,7 +297,7 @@ export function VisualPdfEditor() {
     if (isDrawing && currentPath.length > 1) {
       ctx.save();
       ctx.strokeStyle = selectedColor;
-      ctx.lineWidth = activeTool === 'highlight' ? 18 : brushSize;
+      ctx.lineWidth = activeTool === 'highlight' ? 22 : brushSize;
       ctx.globalAlpha = activeTool === 'highlight' ? 0.45 : 1.0;
       ctx.lineCap = 'round';
       ctx.beginPath();
@@ -283,15 +312,15 @@ export function VisualPdfEditor() {
 
   useEffect(() => {
     redrawCanvas();
-  }, [redrawCanvas]);
+  }, [redrawCanvas, canvasDims]);
 
   // 3. Canvas Mouse & Touch Drawing Handlers
   const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    const clientX = 'touches' in e && e.touches.length > 0 ? e.touches[0].clientX : 'clientX' in e ? e.clientX : 0;
-    const clientY = 'touches' in e && e.touches.length > 0 ? e.touches[0].clientY : 'clientY' in e ? e.clientY : 0;
+    const clientX = 'touches' in e && e.touches.length > 0 ? e.touches[0].clientX : 'clientX' in e ? (e as React.MouseEvent).clientX : 0;
+    const clientY = 'touches' in e && e.touches.length > 0 ? e.touches[0].clientY : 'clientY' in e ? (e as React.MouseEvent).clientY : 0;
     return {
       x: (clientX - rect.left) * (canvas.width / rect.width),
       y: (clientY - rect.top) * (canvas.height / rect.height),
@@ -307,14 +336,16 @@ export function VisualPdfEditor() {
     setRedoStack([]); // Clear redo stack on new action
 
     if (activeTool === 'text') {
+      const textToPlace = textInput.trim() ? textInput : loc.defaultText;
       const newAnn: AnnotationItem = {
         id: 'ann_' + Date.now(),
         type: 'text',
         page: currentPage,
         x,
         y,
-        text: textInput || loc.defaultText,
+        text: textToPlace,
         color: selectedColor,
+        fontSize: fontSize,
       };
       setAnnotations((prev) => [...prev, newAnn]);
     } else if (activeTool === 'rectangle') {
@@ -331,13 +362,14 @@ export function VisualPdfEditor() {
       };
       setAnnotations((prev) => [...prev, newAnn]);
     } else if (activeTool === 'signature') {
+      const sigToPlace = textInput.trim() ? textInput : loc.defaultSig;
       const newAnn: AnnotationItem = {
         id: 'ann_' + Date.now(),
         type: 'signature',
         page: currentPage,
         x,
         y,
-        text: textInput || loc.defaultSig,
+        text: sigToPlace,
         color: selectedColor,
       };
       setAnnotations((prev) => [...prev, newAnn]);
@@ -388,6 +420,12 @@ export function VisualPdfEditor() {
     setRedoStack((prev) => prev.slice(0, prev.length - 1));
   };
 
+  const handleClearPage = () => {
+    setUndoStack((prev) => [...prev, [...annotations]]);
+    setRedoStack([]);
+    setAnnotations((prev) => prev.filter((a) => a.page !== currentPage));
+  };
+
   // 5. Real Export with pdf-lib & High-Resolution Vector/Overlay Baking
   const handleExportPdf = async () => {
     setIsExporting(true);
@@ -410,22 +448,23 @@ export function VisualPdfEditor() {
         const page = pages[i];
         const { width: pageWidth, height: pageHeight } = page.getSize();
 
-        // Create high-resolution overlay canvas
+        // Create high-resolution overlay canvas matching the target page aspect ratio
         const overlayCanvas = document.createElement('canvas');
-        overlayCanvas.width = 1200;
-        overlayCanvas.height = Math.round(1200 * (pageHeight / pageWidth));
+        overlayCanvas.width = 1600;
+        overlayCanvas.height = Math.round(1600 * (pageHeight / pageWidth));
         const ctx = overlayCanvas.getContext('2d');
         if (!ctx) continue;
 
-        const scaleX = overlayCanvas.width / 600;
-        const scaleY = overlayCanvas.height / 800;
+        // Proportional scale factor relative to current editor canvas dimensions
+        const scaleX = overlayCanvas.width / canvasDims.width;
+        const scaleY = overlayCanvas.height / canvasDims.height;
 
         // Render annotations onto overlay
         pageAnnotations.forEach((item) => {
           ctx.save();
           if ((item.type === 'draw' || item.type === 'highlight') && item.points && item.points.length > 1) {
             ctx.strokeStyle = item.color || (item.type === 'highlight' ? '#fef08a' : '#000000');
-            ctx.lineWidth = (item.size || (item.type === 'highlight' ? 18 : 3)) * scaleX;
+            ctx.lineWidth = (item.size || (item.type === 'highlight' ? 22 : 3)) * scaleX;
             ctx.globalAlpha = item.type === 'highlight' ? 0.45 : 1.0;
             ctx.lineCap = item.type === 'highlight' ? 'square' : 'round';
             ctx.lineJoin = 'round';
@@ -437,15 +476,16 @@ export function VisualPdfEditor() {
             ctx.stroke();
           } else if (item.type === 'text') {
             ctx.fillStyle = item.color || '#000000';
-            ctx.font = `bold ${Math.round(20 * scaleX)}px sans-serif`;
+            const fSize = (item.fontSize || 20) * scaleX;
+            ctx.font = `bold ${Math.round(fSize)}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
             ctx.fillText(item.text || '', item.x * scaleX, item.y * scaleY);
           } else if (item.type === 'rectangle') {
             ctx.strokeStyle = item.color || '#026fc7';
             ctx.lineWidth = (item.size || 3) * scaleX;
-            ctx.strokeRect(item.x * scaleX, item.y * scaleY, (item.width || 120) * scaleX, (item.height || 60) * scaleY);
+            ctx.strokeRect(item.x * scaleX, item.y * scaleY, (item.width || 140) * scaleX, (item.height || 70) * scaleY);
           } else if (item.type === 'signature') {
             ctx.fillStyle = item.color || '#000000';
-            ctx.font = `italic bold ${Math.round(26 * scaleX)}px cursive, sans-serif`;
+            ctx.font = `italic bold ${Math.round(24 * scaleX)}px cursive, sans-serif`;
             ctx.fillText(item.text || loc.defaultSig, item.x * scaleX, item.y * scaleY);
           }
           ctx.restore();
@@ -468,7 +508,7 @@ export function VisualPdfEditor() {
 
       const modifiedBytes = await doc.save({ useObjectStreams: true });
       const blob = new Blob([modifiedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
-      const name = (pdfFile?.name || 'document').replace(/\.pdf$/i, '') + '_annotated.pdf';
+      const name = (pdfFile?.name || 'document').replace(/\.pdf$/i, '') + '_edited.pdf';
       downloadSingleFile(blob, name);
     } catch (err) {
       console.error('Export error:', err);
@@ -524,7 +564,7 @@ export function VisualPdfEditor() {
       {/* Main Toolbar & Tools Bar */}
       <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md flex flex-wrap items-center justify-between gap-3">
         {/* Tool Selectors */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           {[
             { id: 'text', label: loc.tools.text, icon: Type },
             { id: 'draw', label: loc.tools.draw, icon: PenTool },
@@ -552,18 +592,36 @@ export function VisualPdfEditor() {
           })}
         </div>
 
-        {/* Color Picker & Text Input for Stamps */}
-        <div className="flex items-center gap-3">
+        {/* Text Input, Font Size & Color Picker */}
+        <div className="flex items-center gap-3 flex-wrap">
           {(activeTool === 'text' || activeTool === 'signature') && (
-            <input
-              type="text"
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              placeholder={loc.textPlaceholder}
-              className="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-36"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder={loc.textPlaceholder}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 w-44 sm:w-56 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+
+              {activeTool === 'text' && (
+                <select
+                  value={fontSize}
+                  onChange={(e) => setFontSize(Number(e.target.value))}
+                  className="px-2 py-1.5 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                >
+                  <option value={14}>14px</option>
+                  <option value={18}>18px</option>
+                  <option value={22}>22px</option>
+                  <option value={28}>28px</option>
+                  <option value={36}>36px</option>
+                  <option value={48}>48px</option>
+                </select>
+              )}
+            </div>
           )}
 
+          {/* Color Palette */}
           <div className="flex items-center gap-1.5">
             {['#026fc7', '#dc2626', '#16a34a', '#000000', '#f59e0b', '#7c3aed'].map((c) => (
               <button
@@ -571,14 +629,14 @@ export function VisualPdfEditor() {
                 type="button"
                 onClick={() => setSelectedColor(c)}
                 className={`w-5 h-5 rounded-full transition-transform ${
-                  selectedColor === c ? 'scale-125 ring-2 ring-brand-500/50' : 'opacity-80'
+                  selectedColor === c ? 'scale-125 ring-2 ring-brand-500/50' : 'opacity-80 hover:opacity-100'
                 }`}
                 style={{ backgroundColor: c }}
               />
             ))}
           </div>
 
-          {/* Undo & Redo Buttons */}
+          {/* Undo, Redo, and Clear Buttons */}
           <div className="flex items-center gap-1 border-l rtl:border-l-0 rtl:border-r border-slate-200 dark:border-slate-800 pl-2 rtl:pl-0 rtl:pr-2">
             <button
               type="button"
@@ -598,24 +656,33 @@ export function VisualPdfEditor() {
             >
               <Redo2 className="w-4 h-4" />
             </button>
+            <button
+              type="button"
+              onClick={handleClearPage}
+              title="Clear Page Annotations"
+              className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Canvas Workspace */}
-      <div className="p-8 rounded-3xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-inner flex flex-col items-center justify-center min-h-[600px] overflow-auto">
-        <div className="shadow-2xl rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 bg-white">
+      {/* Interactive Canvas Workspace */}
+      <div className="p-4 sm:p-8 rounded-3xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-inner flex flex-col items-center justify-center min-h-[550px] overflow-auto">
+        <div className="shadow-2xl rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 bg-white max-w-full">
           <canvas
             ref={canvasRef}
-            width={600}
-            height={800}
+            width={canvasDims.width}
+            height={canvasDims.height}
             onMouseDown={handlePointerDown}
             onMouseMove={handlePointerMove}
             onMouseUp={handlePointerUp}
             onTouchStart={handlePointerDown}
             onTouchMove={handlePointerMove}
             onTouchEnd={handlePointerUp}
-            className="cursor-crosshair block touch-none"
+            className="cursor-crosshair block touch-none max-w-full h-auto"
+            style={{ maxHeight: '75vh' }}
           />
         </div>
 
@@ -626,7 +693,7 @@ export function VisualPdfEditor() {
               type="button"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 text-xs font-bold disabled:opacity-40"
+              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold disabled:opacity-40 shadow-xs"
             >
               <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
             </button>
@@ -637,7 +704,7 @@ export function VisualPdfEditor() {
               type="button"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 text-xs font-bold disabled:opacity-40"
+              className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold disabled:opacity-40 shadow-xs"
             >
               <ChevronRight className="w-4 h-4 rtl:rotate-180" />
             </button>

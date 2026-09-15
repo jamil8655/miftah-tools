@@ -22,10 +22,14 @@ import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { formatBytes } from '@/lib/utils/formatters';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 
-export function UnifiedImageStudio() {
+interface UnifiedImageStudioProps {
+  initialTab?: 'filter' | 'resize' | 'compress' | 'convert';
+}
+
+export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudioProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'filter' | 'resize' | 'compress' | 'convert'>('filter');
+  const [activeTab, setActiveTab] = useState<'filter' | 'resize' | 'compress' | 'convert'>(initialTab);
 
   // Sliders State
   const [brightness, setBrightness] = useState(100);
@@ -43,6 +47,8 @@ export function UnifiedImageStudio() {
   // Compression & Format
   const [targetKb, setTargetKb] = useState<number>(100);
   const [targetFormat, setTargetFormat] = useState<string>('image/jpeg');
+  const [isCompressing, setIsCompressing] = useState<boolean>(false);
+  const [compressedResult, setCompressedResult] = useState<{ blob: Blob; dataUrl: string; finalKB: number } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const originalImageRef = useRef<HTMLImageElement | null>(null);
@@ -94,14 +100,60 @@ export function UnifiedImageStudio() {
   };
 
   useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
     renderPreview();
   }, [brightness, contrast, grayscale, sepia, rotation]);
 
-  const handleDownloadOutput = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !imageFile) return;
+  // Live real-time compression recalculation whenever targetKb or targetFormat changes
+  useEffect(() => {
+    if (!imageFile) return;
+    let isCancelled = false;
 
+    const runCompression = async () => {
+      setIsCompressing(true);
+      try {
+        const { compressImageToTargetKB } = await import('@/lib/image/image-manipulator');
+        const res = await compressImageToTargetKB(imageFile, targetKb, targetFormat as any);
+        if (!isCancelled) {
+          setCompressedResult({
+            blob: res.blob,
+            dataUrl: res.dataUrl,
+            finalKB: Math.round(res.blob.size / 1024),
+          });
+        }
+      } catch (err) {
+        console.error('Compression preview error:', err);
+      } finally {
+        if (!isCancelled) setIsCompressing(false);
+      }
+    };
+
+    const timer = setTimeout(runCompression, 150);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [imageFile, targetKb, targetFormat]);
+
+  const handleDownloadOutput = async () => {
+    if (!imageFile) return;
     triggerHaptic('medium');
+
+    if (activeTab === 'compress') {
+      if (compressedResult) {
+        const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
+        const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_compressed_${targetKb}kb.${ext}`;
+        downloadSingleFile(compressedResult.blob, outName);
+        return;
+      }
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -115,10 +167,19 @@ export function UnifiedImageStudio() {
   };
 
   const handleShareOutput = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !imageFile) return;
-
+    if (!imageFile) return;
     triggerHaptic('light');
+
+    if (activeTab === 'compress' && compressedResult) {
+      const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
+      const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_compressed_${targetKb}kb.${ext}`;
+      shareDownloadedFile({ name: outName, blob: compressedResult.blob, mimeType: targetFormat });
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -316,10 +377,11 @@ export function UnifiedImageStudio() {
                     step={20}
                     value={targetKb}
                     onChange={(e) => setTargetKb(Number(e.target.value))}
-                    className="w-full accent-brand-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+                    className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono">
                     <span>20 KB</span>
+                    <span>100 KB</span>
                     <span>500 KB</span>
                     <span>2 MB</span>
                     <span>5 MB</span>
@@ -328,21 +390,56 @@ export function UnifiedImageStudio() {
                 </div>
 
                 {/* Quick Presets */}
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                  {[50, 100, 200, 500, 1024, 2048, 5120].map((kb) => (
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[20, 50, 100, 200, 500, 1024, 2048, 5120].map((kb) => (
                     <button
                       key={kb}
                       type="button"
                       onClick={() => setTargetKb(kb)}
-                      className={`py-2 text-[11px] font-bold rounded-xl border transition-all ${
+                      className={`py-1.5 text-[11px] font-bold rounded-xl border transition-all ${
                         targetKb === kb
                           ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
-                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100'
                       }`}
                     >
                       {kb >= 1024 ? `${kb / 1024} MB` : `${kb} KB`}
                     </button>
                   ))}
+                </div>
+
+                {/* Live Real-Time Compression Stats Result */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Original:</span>
+                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                      {imageFile ? formatBytes(imageFile.size) : '0 KB'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Compressed:</span>
+                    <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                      {isCompressing ? (
+                        <span className="animate-pulse text-amber-500">Calculating...</span>
+                      ) : compressedResult ? (
+                        `${compressedResult.finalKB} KB`
+                      ) : (
+                        `≤ ${targetKb} KB`
+                      )}
+                    </span>
+                  </div>
+
+                  {compressedResult && imageFile && imageFile.size > 0 && (
+                    <div className="pt-1 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-[11px]">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Saved {Math.max(0, Math.round((1 - (compressedResult.finalKB * 1024) / imageFile.size) * 100))}%
+                      </span>
+                      <span className="text-slate-400 font-medium text-[10px]">
+                        Web & Portal Ready
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -361,9 +361,30 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'photo-editor' ||
     tool.slug === 'photo-editor' ||
     tool.id === 'image-cropper' ||
-    tool.slug === 'image-cropper'
+    tool.slug === 'image-cropper' ||
+    tool.id === 'image-compress' ||
+    tool.slug === 'image-compress' ||
+    tool.id === 'image-compressor' ||
+    tool.slug === 'image-compressor' ||
+    tool.id === 'compress-image' ||
+    tool.slug === 'compress-image' ||
+    tool.id === 'compress-images' ||
+    tool.slug === 'compress-images' ||
+    tool.id === 'jpg-compressor' ||
+    tool.slug === 'jpg-compressor' ||
+    tool.id === 'png-compressor' ||
+    tool.slug === 'png-compressor' ||
+    tool.id === 'webp-compressor' ||
+    tool.slug === 'webp-compressor' ||
+    tool.id === 'reduce-image-size' ||
+    tool.slug === 'reduce-image-size'
   ) {
-    customWorkspace = <UnifiedImageStudio />;
+    const isCompress =
+      tool.id.includes('compress') ||
+      tool.slug?.includes('compress') ||
+      tool.id.includes('reduce') ||
+      tool.slug?.includes('reduce');
+    customWorkspace = <UnifiedImageStudio initialTab={isCompress ? 'compress' : 'filter'} />;
   } else if (
     tool.id === 'auto-crop-images-to-pdf' ||
     tool.slug === 'auto-crop-images-to-pdf' ||
