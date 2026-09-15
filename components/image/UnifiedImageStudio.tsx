@@ -39,6 +39,49 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const originalImageRef = useRef<HTMLImageElement | null>(null);
 
+  const SLIDER_STOPS = [
+    { pos: 0, kb: 20 },
+    { pos: 12, kb: 50 },
+    { pos: 25, kb: 100 },
+    { pos: 38, kb: 200 },
+    { pos: 52, kb: 500 },
+    { pos: 66, kb: 1024 },  // 1 MB
+    { pos: 78, kb: 2048 },  // 2 MB
+    { pos: 88, kb: 5120 },  // 5 MB
+    { pos: 100, kb: 10240 },// 10 MB
+  ];
+
+  const kbToSliderPos = (kb: number): number => {
+    if (!kb || kb <= SLIDER_STOPS[0].kb) return 0;
+    if (kb >= SLIDER_STOPS[SLIDER_STOPS.length - 1].kb) return 100;
+    for (let i = 0; i < SLIDER_STOPS.length - 1; i++) {
+      const s1 = SLIDER_STOPS[i];
+      const s2 = SLIDER_STOPS[i + 1];
+      if (kb >= s1.kb && kb <= s2.kb) {
+        const ratio = (kb - s1.kb) / (s2.kb - s1.kb);
+        return Math.round(s1.pos + ratio * (s2.pos - s1.pos));
+      }
+    }
+    return 25;
+  };
+
+  const sliderPosToKb = (pos: number): number => {
+    if (pos <= 0) return 20;
+    if (pos >= 100) return 10240;
+    for (let i = 0; i < SLIDER_STOPS.length - 1; i++) {
+      const s1 = SLIDER_STOPS[i];
+      const s2 = SLIDER_STOPS[i + 1];
+      if (pos >= s1.pos && pos <= s2.pos) {
+        const ratio = (pos - s1.pos) / (s2.pos - s1.pos);
+        const rawKb = s1.kb + ratio * (s2.kb - s1.kb);
+        if (rawKb < 200) return Math.round(rawKb / 5) * 5;
+        if (rawKb < 1000) return Math.round(rawKb / 25) * 25;
+        return Math.round(rawKb / 100) * 100;
+      }
+    }
+    return 100;
+  };
+
   const updateTargetKbWithSync = (kb: number) => {
     const validKb = Math.max(10, kb);
     setTargetKb(validKb);
@@ -371,17 +414,23 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
                 <div className="space-y-1.5">
                   <input
                     type="range"
-                    min={20}
-                    max={10240}
-                    step={10}
-                    value={targetKb}
-                    onChange={(e) => updateTargetKbWithSync(Number(e.target.value))}
-                    className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={kbToSliderPos(targetKb)}
+                    onChange={(e) => {
+                      const newKb = sliderPosToKb(Number(e.target.value));
+                      updateTargetKbWithSync(newKb);
+                    }}
+                    className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer transition-all"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono">
                     <span>20 KB</span>
+                    <span>50 KB</span>
                     <span>100 KB</span>
+                    <span>200 KB</span>
                     <span>500 KB</span>
+                    <span>1 MB</span>
                     <span>2 MB</span>
                     <span>5 MB</span>
                     <span>10 MB</span>
