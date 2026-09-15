@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Palette, Upload, Copy, Check, Sparkles, RefreshCw, Layers } from 'lucide-react';
+import { Palette, Upload, Copy, Check, Zap, RefreshCw, Layers } from 'lucide-react';
 import { extractColorPalette } from '@/lib/image/image-tools';
 
 export function ColorPaletteStudio() {

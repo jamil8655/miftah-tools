@@ -2,31 +2,7 @@
 
 import React, { useRef } from 'react';
 import { ToolDefinition } from '@/lib/types';
-import {
-  Sliders,
-  Zap,
-  Layers,
-  RotateCw,
-  Stamp,
-  Hash,
-  Scissors,
-  FileImage,
-  Sparkles,
-  Maximize2,
-  Lock,
-  Unlock,
-  Settings2,
-  HelpCircle,
-  FileText,
-  Image as ImageIcon,
-  UploadCloud,
-  X,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Palette,
-  Type,
-} from 'lucide-react';
+import { Sliders, Zap, Layers, RotateCw, Stamp, Hash, Scissors, FileImage, Maximize2, Lock, Unlock, Settings2, HelpCircle, FileText, Image as ImageIcon, UploadCloud, X, AlignLeft, AlignCenter, AlignRight, Palette, Type } from 'lucide-react';
 import { formatBytes, formatBytesDual } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
@@ -326,57 +302,22 @@ export function ToolOptionControls({
 
       {/* 1. UNIVERSAL MB & KB TARGET SIZE CONTROLLER & SLIDER */}
       {showTargetSizeSection && (() => {
-        const TARGET_SLIDER_STEPS = [
-          { kb: 20, label: '20 KB', display: '20 KB' },
-          { kb: 50, label: '50 KB', display: '50 KB' },
-          { kb: 100, label: '100 KB', display: '100 KB' },
-          { kb: 150, label: '150 KB', display: '150 KB' },
-          { kb: 200, label: '200 KB', display: '200 KB' },
-          { kb: 300, label: '300 KB', display: '300 KB' },
-          { kb: 500, label: '500 KB', display: '500 KB' },
-          { kb: 750, label: '750 KB', display: '750 KB' },
-          { kb: 1024, label: '1 MB', display: '1 MB' },
-          { kb: 1536, label: '1.5 MB', display: '1.5 MB' },
-          { kb: 2048, label: '2 MB', display: '2 MB' },
-          { kb: 3072, label: '3 MB', display: '3 MB' },
-          { kb: 5120, label: '5 MB', display: '5 MB' },
-          { kb: 8192, label: '8 MB', display: '8 MB' },
-          { kb: 10240, label: '10 MB', display: '10 MB' },
-          { kb: 15360, label: '15 MB', display: '15 MB' },
-          { kb: 20480, label: '20 MB', display: '20 MB' },
-          { kb: 30720, label: '30 MB', display: '30 MB' },
-          { kb: 51200, label: '50 MB', display: '50 MB' },
-        ];
-
         const currentTargetKb = options.targetKb || 100;
-        let activeSliderIndex = TARGET_SLIDER_STEPS.findIndex((s) => s.kb === currentTargetKb);
-        if (activeSliderIndex === -1) {
-          let closestDist = Infinity;
-          let closestIdx = 2;
-          TARGET_SLIDER_STEPS.forEach((s, idx) => {
-            const dist = Math.abs(s.kb - currentTargetKb);
-            if (dist < closestDist) {
-              closestDist = dist;
-              closestIdx = idx;
-            }
-          });
-          activeSliderIndex = closestIdx;
-        }
 
-        const handleSliderChange = (newIndex: number) => {
-          const step = TARGET_SLIDER_STEPS[newIndex] || TARGET_SLIDER_STEPS[2];
-          updateOption('targetKb', step.kb);
-          const limitStr = step.kb >= 1024 ? `${(step.kb / 1024).toFixed(1).replace(/\.0$/, '')}mb` : `${step.kb}kb`;
+        const handleSliderChange = (newKb: number) => {
+          const validKb = Math.max(10, newKb);
+          updateOption('targetKb', validKb);
+          const limitStr = validKb >= 1024 ? `${(validKb / 1024).toFixed(1).replace(/\.0$/, '')}mb` : `${validKb}kb`;
           updateOption('targetSizeLimit', limitStr);
-          if (step.kb >= 1024) {
-            updateOption('customNumValue', (step.kb / 1024).toString());
+          if (validKb >= 1024) {
+            updateOption('customNumValue', (validKb / 1024).toFixed(validKb % 1024 === 0 ? 0 : 1));
             updateOption('customNumUnit', 'mb');
           } else {
-            updateOption('customNumValue', step.kb.toString());
+            updateOption('customNumValue', validKb.toString());
             updateOption('customNumUnit', 'kb');
           }
           if (totalBytes > 0) {
-            const targetQuality = Math.max(0.15, Math.min(0.95, (step.kb * 1024) / totalBytes));
+            const targetQuality = Math.max(0.15, Math.min(0.95, (validKb * 1024) / totalBytes));
             updateOption('quality', targetQuality);
           }
         };
@@ -392,7 +333,7 @@ export function ToolOptionControls({
             {/* Header & Target Size Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-700/60">
               <label className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+                <Zap className="w-4 h-4 text-brand-600" />
                 <span>{L.sliderHeading}</span>
               </label>
               <div className="flex items-center gap-2">
@@ -419,16 +360,16 @@ export function ToolOptionControls({
               <div className="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-300">
                 <span className="text-[11px] text-slate-400 font-normal">{L.sliderHelp}</span>
                 <span className="font-mono font-black text-brand-600 dark:text-brand-400">
-                  {TARGET_SLIDER_STEPS[activeSliderIndex]?.display}
+                  {currentTargetKb >= 1024 ? `${(currentTargetKb / 1024).toFixed(1)} MB` : `${currentTargetKb} KB`}
                 </span>
               </div>
               <input
                 type="range"
-                min={0}
-                max={TARGET_SLIDER_STEPS.length - 1}
-                step={1}
-                value={activeSliderIndex}
-                onChange={(e) => handleSliderChange(parseInt(e.target.value, 10))}
+                min={20}
+                max={10240}
+                step={10}
+                value={currentTargetKb}
+                onChange={(e) => handleSliderChange(Number(e.target.value))}
                 className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer transition-all"
                 aria-label="Target Size Slider"
               />
@@ -436,9 +377,9 @@ export function ToolOptionControls({
                 <span>20 KB</span>
                 <span>200 KB</span>
                 <span>1 MB</span>
+                <span>3 MB</span>
                 <span>5 MB</span>
-                <span>20 MB</span>
-                <span>50 MB</span>
+                <span>10 MB</span>
               </div>
             </div>
 
@@ -464,22 +405,7 @@ export function ToolOptionControls({
                     <button
                       key={preset.label}
                       type="button"
-                      onClick={() => {
-                        updateOption('targetKb', preset.kb);
-                        const limitStr = preset.kb >= 1024 ? `${preset.kb / 1024}mb` : `${preset.kb}kb`;
-                        updateOption('targetSizeLimit', limitStr);
-                        if (preset.kb >= 1024) {
-                          updateOption('customNumValue', (preset.kb / 1024).toString());
-                          updateOption('customNumUnit', 'mb');
-                        } else {
-                          updateOption('customNumValue', preset.kb.toString());
-                          updateOption('customNumUnit', 'kb');
-                        }
-                        if (totalBytes > 0) {
-                          const targetQuality = Math.max(0.15, Math.min(0.95, (preset.kb * 1024) / totalBytes));
-                          updateOption('quality', targetQuality);
-                        }
-                      }}
+                      onClick={() => handleSliderChange(preset.kb)}
                       className={`py-2 px-1 rounded-xl text-xs font-black border transition-all active:scale-95 text-center ${
                         isSelected
                           ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/20 ring-2 ring-brand-500/30'
@@ -496,18 +422,19 @@ export function ToolOptionControls({
             {/* Custom Numeric KB / MB Input */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-3">
               <span className="text-xs font-bold text-slate-600 dark:text-slate-300 shrink-0">
-                {L.enterTargetValue}
+                Type Exact Size:
               </span>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <input
                   type="number"
                   min="1"
                   step="any"
-                  placeholder="e.g. 350 or 1.5"
+                  placeholder="e.g. 50 or 2"
                   value={options.customNumValue || ''}
                   onChange={(e) => {
-                    const val = parseFloat(e.target.value);
-                    updateOption('customNumValue', e.target.value);
+                    const str = e.target.value;
+                    updateOption('customNumValue', str);
+                    const val = parseFloat(str);
                     if (!isNaN(val) && val > 0) {
                       const unit = options.customNumUnit || 'kb';
                       const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
@@ -518,7 +445,7 @@ export function ToolOptionControls({
                       }
                     }
                   }}
-                  className="w-32 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold"
+                  className="w-32 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
                 />
                 <div className="flex rounded-xl bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
                   {['kb', 'mb'].map((unit) => {

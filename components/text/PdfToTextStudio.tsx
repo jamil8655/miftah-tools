@@ -1,24 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import {
-  FileText,
-  Download,
-  Copy,
-  Check,
-  Sparkles,
-  Upload,
-  Layers,
-  Printer,
-  Trash2,
-  FileCode,
-  Search,
-  Settings2,
-  CheckCircle2,
-  BookOpen,
-  ArrowRight,
-  Eye,
-} from 'lucide-react';
+import { FileText, Download, Copy, Check, Zap, Upload, Layers, Printer, Trash2, FileCode, Search, Settings2, CheckCircle2, BookOpen, ArrowRight, Eye } from 'lucide-react';
 import { extractTextFromPdf } from '@/lib/engines/comprehensive-engines';
 import { textToDocx } from '@/lib/engines/comprehensive-engines';
 import { downloadSingleFile } from '@/lib/utils/download';

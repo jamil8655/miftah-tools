@@ -1,25 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import {
-  Scissors,
-  Crop,
-  Layers,
-  FileText,
-  Upload,
-  Download,
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-  RefreshCw,
-  CheckCircle2,
-  AlertCircle,
-  Eye,
-  Sliders,
-  Sparkles,
-  Split,
-  FileCheck2,
-} from 'lucide-react';
+import { Scissors, Crop, Layers, FileText, Upload, Download, Trash2, ArrowUp, ArrowDown, RefreshCw, CheckCircle2, AlertCircle, Eye, Sliders, Zap, Split, FileCheck2 } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';

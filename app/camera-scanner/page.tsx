@@ -3,7 +3,7 @@
 import React from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { CameraScannerStudio } from '@/components/camera/CameraScannerStudio';
-import { Camera, Sparkles, ShieldCheck, Zap, Lock, Layers } from 'lucide-react';
+import { Camera, Zap, ShieldCheck, Lock, Layers } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
 const PAGE_LOCALES = {
@@ -83,7 +83,7 @@ export default function CameraScannerPage() {
             className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2"
           >
             <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-xs">
-              {idx === 0 ? <Layers className="w-4 h-4" /> : idx === 1 ? <Sparkles className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+              {idx === 0 ? <Layers className="w-4 h-4" /> : idx === 1 ? <Zap className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
             </div>
             <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{feat.title}</h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{feat.desc}</p>

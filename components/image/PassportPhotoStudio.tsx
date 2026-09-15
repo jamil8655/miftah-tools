@@ -1,31 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  Sparkles,
-  Upload,
-  Download,
-  Image as ImageIcon,
-  Sliders,
-  RefreshCw,
-  Eye,
-  Check,
-  Zap,
-  Layers,
-  Palette,
-  Printer,
-  Grid,
-  Crop,
-  Type,
-  User,
-  Sun,
-  Contrast,
-  Wand2,
-  FileCheck,
-  Maximize2,
-  Pipette,
-  SlidersHorizontal,
-} from 'lucide-react';
+import { Zap, Upload, Download, Image as ImageIcon, Sliders, RefreshCw, Eye, Check, Layers, Palette, Printer, Grid, Crop, Type, User, Sun, Contrast, Wand2, FileCheck, Maximize2, Pipette, SlidersHorizontal } from 'lucide-react';
 import { downloadSingleFile } from '@/lib/utils/download';
 
 interface PassportPreset {
@@ -491,7 +467,7 @@ export function PassportPhotoStudio() {
       {/* Header */}
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20 shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-brand-600 animate-pulse" />
+          <Zap className="w-3.5 h-3.5 text-brand-600 animate-pulse" />
           <span>Professional Passport Studio • Multi-Color Backdrops • 300 DPI HD Export</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -846,7 +822,7 @@ export function PassportPhotoStudio() {
                   onClick={handleDownloadTransparentPng}
                   className="py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 active:scale-95 transition-all"
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Zap className="w-4 h-4" />
                   <span>Download Cutout PNG</span>
                 </button>
               </div>

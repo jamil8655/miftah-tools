@@ -1,17 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import {
-  Award,
-  Download,
-  Share2,
-  Sparkles,
-  CheckCircle2,
-  User,
-  Calendar,
-  ShieldCheck,
-  RefreshCw,
-} from 'lucide-react';
+import { Award, Download, Share2, Zap, CheckCircle2, User, Calendar, ShieldCheck, RefreshCw } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';

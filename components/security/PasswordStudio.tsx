@@ -8,7 +8,7 @@ import {
   PasswordOptions,
   PasswordStrength,
 } from '@/lib/security/crypto-engine';
-import { KeyRound, RefreshCw, Copy, Check, ShieldCheck, ShieldAlert, Sparkles } from 'lucide-react';
+import { KeyRound, RefreshCw, Copy, Check, ShieldCheck, ShieldAlert, Zap } from 'lucide-react';
 
 export function PasswordStudio() {
   const [options, setOptions] = useState<PasswordOptions>({

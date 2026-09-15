@@ -1,24 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import {
-  FileText,
-  Layers,
-  RotateCw,
-  Trash2,
-  Copy,
-  Download,
-  Upload,
-  Zap,
-  Sparkles,
-  CheckCircle2,
-  FileDown,
-  Hash,
-  Stamp,
-  Scissors,
-  ArrowRight,
-  ShieldCheck,
-} from 'lucide-react';
+import { FileText, Layers, RotateCw, Trash2, Copy, Download, Upload, Zap, CheckCircle2, FileDown, Hash, Stamp, Scissors, ArrowRight, ShieldCheck } from 'lucide-react';
 import { PDFDocument, degrees, rgb } from 'pdf-lib';
 import { downloadSingleFile } from '@/lib/utils/download';
 import { formatBytes } from '@/lib/utils/formatters';

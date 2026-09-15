@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
+  Wrench,
   ShieldCheck,
   Zap,
   Lock,
@@ -247,7 +247,7 @@ export function Footer() {
           {/* Section 2: Tools & Utilities */}
           <div className="space-y-3">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-brand-600" />
+              <Wrench className="w-3.5 h-3.5 text-brand-600" />
               {t.footer.tools}
             </h4>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">

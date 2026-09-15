@@ -1,28 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  Type,
-  PenTool,
-  Highlighter,
-  Square,
-  Circle,
-  Download,
-  RotateCw,
-  Undo2,
-  Redo2,
-  Trash2,
-  FileUp,
-  ChevronLeft,
-  ChevronRight,
-  Sparkles,
-  ZoomIn,
-  ZoomOut,
-  PenLine,
-  Save,
-  Layers,
-  FileCheck,
-} from 'lucide-react';
+import { Type, PenTool, Highlighter, Square, Circle, Download, RotateCw, Undo2, Redo2, Trash2, FileUp, ChevronLeft, ChevronRight, Zap, ZoomIn, ZoomOut, PenLine, Save, Layers, FileCheck } from 'lucide-react';
 import { downloadSingleFile } from '@/lib/utils/download';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -523,7 +502,7 @@ export function VisualPdfEditor() {
       <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
         <div className="space-y-0.5">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200">
-            <Sparkles className="w-3 h-3 text-brand-600" />
+            <Zap className="w-3 h-3 text-brand-600" />
             <span>{loc.badge}</span>
           </div>
           <h2 className="text-xl font-black text-slate-900 dark:text-white">

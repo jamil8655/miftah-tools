@@ -1,31 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Link as LinkIcon,
-  Download,
-  Video,
-  Music,
-  Image as ImageIcon,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  Play,
-  RefreshCw,
-  Clock,
-  User,
-  ShieldCheck,
-  Zap,
-  Check,
-  Copy,
-  Layers,
-  Settings2,
-  ExternalLink,
-  Share2,
-  ArrowRight,
-  Sliders,
-  CheckCircle,
-} from 'lucide-react';
+import { Link as LinkIcon, Download, Video, Music, Image as ImageIcon, Zap, CheckCircle2, AlertCircle, Play, RefreshCw, Clock, User, ShieldCheck, Check, Copy, Layers, Settings2, ExternalLink, Share2, ArrowRight, Sliders, CheckCircle } from 'lucide-react';
 import {
   MediaMetadata,
   MediaDownloadFormat,
@@ -227,7 +203,7 @@ export function MediaDownloaderStudio() {
       {/* 1. Header Banner */}
       <div className="text-center space-y-3.5">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black bg-gradient-to-r from-red-500/10 via-pink-500/10 to-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20 shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+          <Zap className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
           <span>4K Ultra HD & Studio MP3 Downloader • 100% Free & Unlimited</span>
         </div>
 
@@ -615,7 +591,7 @@ export function MediaDownloaderStudio() {
           <p className="text-[10px] text-slate-500">Extract crystal-clear music tracks</p>
         </div>
         <div className="p-4 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 text-center space-y-1">
-          <Sparkles className="w-5 h-5 text-brand-600 mx-auto" />
+          <Zap className="w-5 h-5 text-brand-600 mx-auto" />
           <h4 className="text-xs font-black text-slate-900 dark:text-white">5+ Platforms</h4>
           <p className="text-[10px] text-slate-500">YouTube, IG, FB, TikTok, X</p>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Printer, Sparkles } from 'lucide-react';
+import { Printer, Zap } from 'lucide-react';
 
 export function DpiCalculator() {
   const [widthPx, setWidthPx] = useState<number>(3000);

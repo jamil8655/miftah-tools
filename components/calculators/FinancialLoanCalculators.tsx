@@ -1,19 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Coins,
-  BadgePercent,
-  TrendingUp,
-  Tag,
-  Receipt,
-  Calculator,
-  RotateCcw,
-  Sparkles,
-  ArrowRight,
-  PieChart as PieIcon,
-  Layers,
-} from 'lucide-react';
+import { Coins, BadgePercent, TrendingUp, Tag, Receipt, Calculator, RotateCcw, Zap, ArrowRight, PieChart as PieIcon, Layers } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 

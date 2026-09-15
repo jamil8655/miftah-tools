@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { executeAiTask, AiTaskType } from '@/lib/ai/ai-engine';
-import { Sparkles, FileText, Check, Copy, Settings, RefreshCw, AlertCircle, Key } from 'lucide-react';
+import { Zap, FileText, Check, Copy, Settings, RefreshCw, AlertCircle, Key } from 'lucide-react';
 import { downloadSingleFile } from '@/lib/utils/download';
 
 export function AiStudio() {
@@ -155,7 +155,7 @@ export function AiStudio() {
             disabled={isProcessing}
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 text-white font-bold text-xs shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2"
           >
-            <Sparkles className="w-4 h-4" />
+            <Zap className="w-4 h-4" />
             <span>{isProcessing ? 'Analyzing...' : 'Generate with AI'}</span>
           </button>
         </div>
@@ -174,7 +174,7 @@ export function AiStudio() {
         <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-brand-500" />
+              <Zap className="w-4 h-4 text-brand-500" />
               <span>AI Output Result</span>
             </span>
 

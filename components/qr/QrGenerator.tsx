@@ -2,24 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
-import {
-  QrCode,
-  Download,
-  Phone,
-  PhoneCall,
-  Globe,
-  MessageSquare,
-  Sparkles,
-  Check,
-  Copy,
-  Share2,
-  Wifi,
-  FileText,
-  Mail,
-  Palette,
-  Eye,
-  Smartphone,
-} from 'lucide-react';
+import { QrCode, Download, Phone, PhoneCall, Globe, MessageSquare, Zap, Check, Copy, Share2, Wifi, FileText, Mail, Palette, Eye, Smartphone } from 'lucide-react';
 import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { base64ToUint8Array } from '@/lib/utils/formatters';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -466,7 +449,7 @@ export function QrGenerator() {
       {/* Live QR Output & Download Column */}
       <div className="lg:col-span-5 p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl flex flex-col items-center justify-center space-y-6 text-center">
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold">
-          <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+          <Zap className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
           <span>Real-time Live Generated</span>
         </div>
 

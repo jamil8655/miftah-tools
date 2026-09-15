@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileCode, Download, Copy, Check, Sparkles, BookOpen, Bold, Italic, List, Code, Heading } from 'lucide-react';
+import { FileCode, Download, Copy, Check, Zap, BookOpen, Bold, Italic, List, Code, Heading } from 'lucide-react';
 import { marked } from 'marked';
 import { sanitizeHtml } from '@/lib/utils/sanitizer';
 import { markdownToPdf } from '@/lib/pdf/pdf-manipulator';

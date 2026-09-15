@@ -1,21 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  Scaling,
-  Upload,
-  Download,
-  Lock,
-  Unlock,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCw,
-  Sliders,
-  Maximize2,
-  FileImage,
-  Layers,
-} from 'lucide-react';
+import { Scaling, Upload, Download, Lock, Unlock, Zap, CheckCircle2, AlertCircle, RefreshCw, Sliders, Maximize2, FileImage, Layers } from 'lucide-react';
 import { resizeImage, compressImageToTargetKB } from '@/lib/image/image-manipulator';
 import { formatBytes } from '@/lib/utils/formatters';
 import { downloadSingleFile } from '@/lib/utils/download';
@@ -409,7 +395,7 @@ export function ImageResizerStudio() {
                 disabled={loading}
                 className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2"
               >
-                <Sparkles className="w-4 h-4" />
+                <Zap className="w-4 h-4" />
                 <span>{loading ? 'Resizing & Processing...' : 'Resize & Download Image'}</span>
               </button>
             </div>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   User,
   Wrench,
-  Star,
+  Bookmark,
   Clock,
   Download,
   Bell,
@@ -17,7 +17,7 @@ import {
   Workflow,
   Camera,
   LayoutDashboard,
-  Sparkles,
+  Zap,
   Languages,
   Sun,
   Moon,
@@ -160,7 +160,7 @@ export function UserMenuDropdown({
     { label: t.nav.myProfile || 'Dashboard & Profile', href: '/account', icon: LayoutDashboard },
     { label: t.nav.workflows || 'Workflows Studio', href: '/workflows', icon: Workflow },
     { label: t.nav.allTools || 'Tools Directory', href: '/tools', icon: Wrench },
-    { label: t.userDashboard.favoritesTitle || 'My Favorites', href: '/favorites', icon: Star },
+    { label: t.userDashboard.favoritesTitle || 'My Favorites', href: '/favorites', icon: Bookmark },
     { label: t.userDashboard.historyTitle || 'Activity History', href: '/history', icon: Clock },
     { label: t.userDashboard.downloadsTitle || 'Downloads', href: '/downloads', icon: Download },
     { label: t.userDashboard.notificationsTitle || 'Notifications', href: '/notifications', icon: Bell },
@@ -264,7 +264,7 @@ export function UserMenuDropdown({
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-500/15 text-brand-700 dark:text-brand-300 text-[10px] font-black border border-brand-500/30">
-                      <Sparkles className="w-3 h-3" />
+                      <Zap className="w-3 h-3" />
                       <span>{loc.proMember}</span>
                     </span>
                   )}

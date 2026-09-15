@@ -4,11 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Search,
-  Sparkles,
+  Zap,
   Command,
   ArrowRight,
   Clock,
-  Zap,
   Layers,
   CheckCircle2,
   X,
@@ -19,7 +18,6 @@ import {
   Shield,
   Calculator,
   Workflow,
-  Star,
   ShieldCheck,
   Mic,
   MicOff,
@@ -576,7 +574,7 @@ export function UnifiedSearchModal({
             <div className="p-4 rounded-2xl bg-gradient-to-r from-brand-50 to-indigo-50 dark:from-brand-950/40 dark:to-indigo-950/40 border border-brand-200 dark:border-brand-800 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black uppercase tracking-wider text-brand-700 dark:text-brand-300 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-brand-600" />
+                  <Zap className="w-3.5 h-3.5 text-brand-600" />
                   <span>{loc.bestMatch}</span>
                 </span>
                 <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-brand-600 text-white">

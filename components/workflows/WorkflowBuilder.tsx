@@ -1,40 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Sparkles,
-  Play,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  ArrowRight,
-  Plus,
-  Trash2,
-  Copy,
-  RefreshCw,
-  Download,
-  Layers,
-  FileText,
-  Image as ImageIcon,
-  Workflow,
-  Sliders,
-  Settings2,
-  RotateCcw,
-  Check,
-  Eye,
-  FolderDown,
-  ShieldCheck,
-  Zap,
-  Cpu,
-  FileCheck2,
-  Wand2,
-  X,
-  ExternalLink,
-  ChevronRight,
-  ChevronDown,
-  ArrowDown,
-  ArrowUp,
-} from 'lucide-react';
+import { Zap, Play, CheckCircle2, AlertCircle, Clock, ArrowRight, Plus, Trash2, Copy, RefreshCw, Download, Layers, FileText, Image as ImageIcon, Workflow, Sliders, Settings2, RotateCcw, Check, Eye, FolderDown, ShieldCheck, Cpu, FileCheck2, Wand2, X, ExternalLink, ChevronRight, ChevronDown, ArrowDown, ArrowUp } from 'lucide-react';
 import {
   SavedWorkflow,
   WorkflowStep,
@@ -1170,7 +1137,7 @@ export function WorkflowBuilder() {
                 {stepResults.length > 0 && (
                   <div className="space-y-4 pt-2">
                     <h4 className="font-black text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-brand-600" />
+                      <Zap className="w-4 h-4 text-brand-600" />
                       <span>{loc.stepPreviewTitle}</span>
                     </h4>
 

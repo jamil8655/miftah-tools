@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, Wrench, Filter, Sparkles, X } from 'lucide-react';
+import { Search, Wrench, Filter, Zap, X } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { ToolCard } from '@/components/shared/ToolCard';
@@ -170,7 +170,7 @@ function ToolsDirectory() {
 
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/30">
-                <Sparkles className="w-3 h-3 text-brand-400" />
+                <Zap className="w-3 h-3 text-brand-400" />
                 <span>{loc.badge}</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">

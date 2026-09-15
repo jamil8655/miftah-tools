@@ -2,29 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import {
-  Sparkles,
-  ArrowRight,
-  Zap,
-  FileText,
-  Minimize2,
-  Combine,
-  Image as ImageIcon,
-  ScanText,
-  QrCode,
-  Layers,
-  FileCheck,
-  Type,
-  Video,
-  Bookmark,
-  Brain,
-  Calculator,
-  Terminal,
-  ShieldCheck,
-  Search,
-  X,
-  ChevronRight,
-} from 'lucide-react';
+import { Zap, ArrowRight, FileText, Minimize2, Combine, Image as ImageIcon, ScanText, QrCode, Layers, FileCheck, Type, Video, Bookmark, Brain, Calculator, Terminal, ShieldCheck, Search, X, ChevronRight } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { ToolCard } from '@/components/shared/ToolCard';
 import { NativeFeedAd } from '@/components/ads/NativeFeedAd';
@@ -258,7 +236,7 @@ export default function HomePage() {
 
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
               <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
-                <Sparkles className="w-4 h-4" />
+                <Zap className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustFree}</p>

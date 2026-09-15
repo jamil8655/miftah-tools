@@ -2,18 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import {
-  FileQuestion,
-  Home,
-  Wrench,
-  Search,
-  ArrowRight,
-  Sparkles,
-  FileText,
-  Minimize2,
-  Video,
-  ImageIcon,
-} from 'lucide-react';
+import { FileQuestion, Home, Wrench, Search, ArrowRight, Zap, FileText, Minimize2, Video, ImageIcon } from 'lucide-react';
 
 export default function NotFound() {
   const popularTools = [

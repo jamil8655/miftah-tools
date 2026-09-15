@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
-import { Download, Trash2, FileText, Sparkles, ArrowRight } from 'lucide-react';
+import { Download, Trash2, FileText, Zap, ArrowRight } from 'lucide-react';
 
 export default function DownloadsPage() {
   const { t } = useI18n();
@@ -51,7 +51,7 @@ export default function DownloadsPage() {
               href="/tools"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-all shadow-md shadow-brand-500/20"
             >
-              <Sparkles className="w-4 h-4" />
+              <Zap className="w-4 h-4" />
               {t.nav.allTools}
             </Link>
           </div>

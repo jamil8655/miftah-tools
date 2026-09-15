@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Gift, Sparkles, ExternalLink, PlayCircle, CheckCircle2, Award } from 'lucide-react';
+import { Gift, Zap, ExternalLink, PlayCircle, CheckCircle2, Award } from 'lucide-react';
 import { adConfig } from '@/config/ads';
 import { adManager } from '@/lib/ads/AdManager';
 import { useI18n } from '@/lib/i18n/i18n-context';

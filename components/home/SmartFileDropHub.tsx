@@ -2,22 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import {
-  Sparkles,
-  UploadCloud,
-  FileText,
-  Image as ImageIcon,
-  FileSpreadsheet,
-  FileCheck,
-  Zap,
-  ArrowRight,
-  X,
-  FileCode,
-  Music,
-  Video,
-  Layers,
-  CheckCircle2,
-} from 'lucide-react';
+import { Zap, UploadCloud, FileText, Image as ImageIcon, FileSpreadsheet, FileCheck, ArrowRight, X, FileCode, Music, Video, Layers, CheckCircle2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { formatBytes } from '@/lib/utils/formatters';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -187,7 +172,7 @@ export function SmartFileDropHub() {
             </div>
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-                <Sparkles className="w-3 h-3" />
+                <Zap className="w-3 h-3" />
                 <span>{loc.badge}</span>
               </div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100">

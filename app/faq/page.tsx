@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { HelpCircle, Search, ChevronDown, ChevronUp, Sparkles, ShieldCheck, FileText, GraduationCap } from 'lucide-react';
+import { HelpCircle, Search, ChevronDown, ChevronUp, Zap, ShieldCheck, FileText, GraduationCap } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
 const FAQ_LOCALES = {

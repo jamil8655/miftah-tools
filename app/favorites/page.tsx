@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
-import { Star, Trash2, ExternalLink, Wrench, Workflow, ArrowRight } from 'lucide-react';
+import { Bookmark, Trash2, ExternalLink, Wrench, Workflow, ArrowRight } from 'lucide-react';
 
 export default function FavoritesPage() {
   const { t } = useI18n();
@@ -26,14 +26,14 @@ export default function FavoritesPage() {
 
       {favorites.length === 0 ? (
         <div className="p-16 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-500 flex items-center justify-center mx-auto">
-            <Star className="w-7 h-7" />
+          <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-950 text-brand-500 flex items-center justify-center mx-auto">
+            <Bookmark className="w-7 h-7" />
           </div>
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
             {t.userDashboard.noFavorites}
           </h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Click the star icon on any tool to save it here for fast one-click access.
+            Bookmark any tool to save it here for fast one-click access.
           </p>
           <div className="flex justify-center gap-3 pt-2">
             <Link

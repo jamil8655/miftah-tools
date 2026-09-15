@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
+  Wrench,
   ShieldCheck,
   Zap,
   Lock,
@@ -134,7 +134,7 @@ export default function AboutPage() {
         {/* Hero Section */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 text-brand-600 dark:text-brand-400 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5" />
+            <Zap className="w-3.5 h-3.5" />
             {loc.badge}
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-3xl mx-auto">
@@ -148,7 +148,7 @@ export default function AboutPage() {
               href="/tools"
               className="px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md shadow-brand-500/20 transition-all flex items-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4" />
+              <Wrench className="w-4 h-4" />
               {loc.allToolsBtn}
             </Link>
             <Link

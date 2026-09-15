@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Upload,
-  Download,
-  Share2,
-  FileText,
-  Image as ImageIcon,
-  Check,
-  Sparkles,
-  Layers,
-  Archive,
-  RefreshCw,
-} from 'lucide-react';
+import { Upload, Download, Share2, FileText, Image as ImageIcon, Check, Zap, Layers, Archive, RefreshCw } from 'lucide-react';
 import { downloadSingleFile, downloadAsZip, shareDownloadedFile } from '@/lib/utils/download';
 import { getPdfJsLib } from '@/lib/utils/formatters';
 
@@ -176,7 +165,7 @@ export function PdfToImagesStudio() {
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-300">
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-red-500/10 to-rose-500/10 text-red-700 dark:text-red-300 border border-red-500/20">
-          <Sparkles className="w-3.5 h-3.5 text-red-600 animate-pulse" />
+          <Zap className="w-3.5 h-3.5 text-red-600 animate-pulse" />
           <span>High-Resolution 300 DPI Page Extractor</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">

@@ -1,21 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  CheckCircle2,
-  Download,
-  ExternalLink,
-  FolderCheck,
-  Share2,
-  X,
-  FileText,
-  FileImage,
-  FileArchive,
-  FileSpreadsheet,
-  FileCode,
-  Sparkles,
-  Eye,
-} from 'lucide-react';
+import { CheckCircle2, Download, ExternalLink, FolderCheck, Share2, X, FileText, FileImage, FileArchive, FileSpreadsheet, FileCode, Zap, Eye } from 'lucide-react';
 import { SavedFileInfo, openDownloadedFile, shareDownloadedFile } from '@/lib/utils/download';
 import { formatBytes } from '@/lib/utils/formatters';
 import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';

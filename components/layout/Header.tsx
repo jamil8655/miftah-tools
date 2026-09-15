@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Search,
-  Sparkles,
+  Wrench,
   Smartphone,
   Workflow,
   Bell,
@@ -20,7 +20,7 @@ import {
   Download,
   History,
   FileText,
-  Star,
+  Bookmark,
   ChevronRight,
   Globe2,
   Share2,
@@ -197,7 +197,7 @@ export function Header() {
   }, []);
 
   const navLinks = [
-    { label: t.nav.allTools || loc.allTools, href: '/tools', icon: Sparkles },
+    { label: t.nav.allTools || loc.allTools, href: '/tools', icon: Wrench },
     { label: t.nav.workflows || loc.workflows, href: '/workflows', icon: Workflow },
     { label: t.footer.aboutPlatform || 'About', href: '/about', icon: Info },
   ];
@@ -391,11 +391,11 @@ export function Header() {
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">{loc.navigationSection}</p>
                 {[
-                  { label: loc.allTools, href: '/tools', icon: Sparkles },
+                  { label: loc.allTools, href: '/tools', icon: Wrench },
                   { label: loc.workflows, href: '/workflows', icon: Workflow },
                   { label: loc.downloads, href: '/downloads', icon: Download },
                   { label: loc.history, href: '/history', icon: History },
-                  { label: 'Saved & Favorites', href: '/favorites', icon: Star },
+                  { label: 'Saved & Favorites', href: '/favorites', icon: Bookmark },
                   { label: loc.settings, href: '/settings', icon: SettingsIcon },
                 ].map((item) => {
                   const Icon = item.icon;

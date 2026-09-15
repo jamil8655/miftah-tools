@@ -6,7 +6,7 @@ import { textToWordDocx } from '@/lib/documents/doc-converter';
 import { getPdfJsLib } from '@/lib/utils/formatters';
 import { FileUploader } from '@/components/shared/FileUploader';
 import { ProgressBar } from '@/components/shared/ProgressBar';
-import { ScanText, Copy, Check, Download, Languages, Sparkles, FileText, Share2 } from 'lucide-react';
+import { ScanText, Copy, Check, Download, Languages, Zap, FileText, Share2 } from 'lucide-react';
 import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { addHistoryItem } from '@/lib/storage/file-store';

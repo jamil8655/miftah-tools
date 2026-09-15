@@ -1,19 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  X,
-  Mail,
-  Lock,
-  User,
-  Sparkles,
-  AlertCircle,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  ArrowLeft,
-  Send,
-} from 'lucide-react';
+import { X, Mail, Lock, User, Zap, AlertCircle, CheckCircle2, Eye, EyeOff, ArrowLeft, Send } from 'lucide-react';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -200,7 +188,7 @@ export function AuthModal({
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-black shadow-md shadow-brand-500/20">
-              <Sparkles className="w-4 h-4" />
+              <Zap className="w-4 h-4" />
             </div>
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white">

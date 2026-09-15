@@ -1,17 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Download,
-  RefreshCw,
-  Copy,
-  Check,
-  CheckCircle2,
-  Share2,
-  Sparkles,
-  Eye,
-  FileCheck2,
-} from 'lucide-react';
+import { Download, RefreshCw, Copy, Check, CheckCircle2, Share2, Zap, Eye, FileCheck2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatBytes, formatBytesDual, calculatePercentageSaved } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -237,7 +227,7 @@ export function ResultPreview({
         </h3>
         {totalSavedPercent > 0 ? (
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold font-mono">
-            <Sparkles className="w-3.5 h-3.5" />
+            <Zap className="w-3.5 h-3.5" />
             <span>
               {loc.reducedBadge(totalSavedPercent, formatBytesDual(totalOriginal), formatBytesDual(totalProcessed))}
             </span>

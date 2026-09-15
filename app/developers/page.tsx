@@ -1,20 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Code,
-  Terminal,
-  Key,
-  Copy,
-  Check,
-  Zap,
-  ShieldCheck,
-  Server,
-  Cpu,
-  BookOpen,
-  Layers,
-  Sparkles,
-} from 'lucide-react';
+import { Code, Terminal, Key, Copy, Check, Zap, ShieldCheck, Server, Cpu, BookOpen, Layers } from 'lucide-react';
 
 export default function DevelopersPage() {
   const [activeLang, setActiveLang] = useState<'curl' | 'js' | 'python'>('curl');

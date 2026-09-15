@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Smartphone, Download, X, Sparkles, Shield, Zap } from 'lucide-react';
+import { Smartphone, Download, X, Zap, Shield } from 'lucide-react';
 
 export function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);

@@ -1,26 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import {
-  Layers,
-  Upload,
-  Download,
-  Trash2,
-  RotateCw,
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle,
-  RefreshCw,
-  Sparkles,
-  Copy,
-  ArrowUpDown,
-  Plus,
-  FilePlus2,
-  FileCheck,
-  CheckSquare,
-  Square,
-  Replace,
-} from 'lucide-react';
+import { Layers, Upload, Download, Trash2, RotateCw, ArrowLeft, ArrowRight, CheckCircle, RefreshCw, Zap, Copy, ArrowUpDown, Plus, FilePlus2, FileCheck, CheckSquare, Square, Replace } from 'lucide-react';
 import { PDFDocument, degrees } from 'pdf-lib';
 import { getPdfJsLib } from '@/lib/utils/formatters';
 import { downloadSingleFile } from '@/lib/utils/download';
@@ -413,7 +394,7 @@ export function PdfOrganizerStudio() {
             </div>
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200">
-                <Sparkles className="w-3 h-3" />
+                <Zap className="w-3 h-3" />
                 <span>{loc.badge}</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{loc.title}</h2>
@@ -440,7 +421,7 @@ export function PdfOrganizerStudio() {
                 disabled={exporting}
                 className="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 text-white font-extrabold rounded-xl text-xs shadow-md shadow-rose-600/25 flex items-center gap-2 active:scale-95 disabled:opacity-50"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Zap className="w-3.5 h-3.5" />
                 <span>{exporting ? loc.savingPdf : loc.saveExport}</span>
               </button>
             </div>

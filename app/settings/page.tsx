@@ -6,34 +6,7 @@ import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useTheme } from '@/components/layout/ThemeContext';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
-import {
-  Settings,
-  Languages,
-  Sun,
-  Moon,
-  Laptop,
-  Bell,
-  Volume2,
-  Vibrate,
-  ShieldCheck,
-  Database,
-  Trash2,
-  CheckCircle2,
-  UserX,
-  ChevronRight,
-  Sparkles,
-  Smartphone,
-  ExternalLink,
-  HelpCircle,
-  Mail,
-  FileText,
-  Lock,
-  Zap,
-  Info,
-  Layers,
-  HeartHandshake,
-  Share2,
-} from 'lucide-react';
+import { Settings, Languages, Sun, Moon, Laptop, Bell, Volume2, Vibrate, ShieldCheck, Database, Trash2, CheckCircle2, UserX, ChevronRight, Zap, Smartphone, ExternalLink, HelpCircle, Mail, FileText, Lock, Info, Layers, HeartHandshake, Share2 } from 'lucide-react';
 import { shareAppNative } from '@/lib/native/android-bridge';
 
 const SETTINGS_LOCALES = {
@@ -630,7 +603,7 @@ export default function SettingsPage() {
           
           <div className="space-y-1.5 relative z-10 max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
+              <Zap className="w-3.5 h-3.5" />
               <span>Community & Sharing</span>
             </div>
             <h2 className="text-base sm:text-lg font-black tracking-tight">

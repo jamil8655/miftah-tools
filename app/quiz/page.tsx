@@ -6,21 +6,7 @@ import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
 import { CertificateGenerator } from '@/components/quiz/CertificateGenerator';
-import {
-  HelpCircle,
-  CheckCircle2,
-  XCircle,
-  RotateCcw,
-  Sparkles,
-  ArrowRight,
-  ArrowLeft,
-  GraduationCap,
-  Award,
-  Code,
-  Terminal,
-  ShieldCheck,
-  FileText,
-} from 'lucide-react';
+import { HelpCircle, CheckCircle2, XCircle, RotateCcw, Zap, ArrowRight, ArrowLeft, GraduationCap, Award, Code, Terminal, ShieldCheck, FileText } from 'lucide-react';
 
 interface QuizQuestion {
   id: string;

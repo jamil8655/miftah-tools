@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Binary, Copy, Check, Sparkles, ArrowRightLeft } from 'lucide-react';
+import { Binary, Copy, Check, Zap, ArrowRightLeft } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
 type UnitType = 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB';
@@ -214,7 +214,7 @@ export function StorageUnitConverter() {
       {/* Formula and Explanation Card */}
       <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-500/5 to-cyan-500/5 border border-blue-500/20 space-y-2 text-xs text-slate-600 dark:text-slate-300">
         <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
-          <Sparkles className="w-4 h-4 text-brand-500" />
+          <Zap className="w-4 h-4 text-brand-500" />
           <span>Mathematical Calculation Formula</span>
         </div>
         <p className="font-mono bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">

@@ -9,7 +9,7 @@ import {
   Download,
   X,
   Clock,
-  Sparkles,
+  Zap,
   ShieldCheck,
   CheckCircle2,
   Trash2,
@@ -279,7 +279,7 @@ export function UniversalFileProcessor({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <Zap className="w-4 h-4" />
                   <span>Start {toolName}</span>
                 </>
               )}

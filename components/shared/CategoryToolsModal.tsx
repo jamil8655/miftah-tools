@@ -2,26 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import {
-  X,
-  Search,
-  ArrowRight,
-  Sparkles,
-  Layers,
-  FileText,
-  FileCheck,
-  Image as ImageIcon,
-  ScanText,
-  Type,
-  Minimize2,
-  ShieldCheck,
-  Video,
-  Calculator,
-  Terminal,
-  QrCode,
-  Brain,
-  ExternalLink,
-} from 'lucide-react';
+import { X, Search, ArrowRight, Zap, Layers, FileText, FileCheck, Image as ImageIcon, ScanText, Type, Minimize2, ShieldCheck, Video, Calculator, Terminal, QrCode, Brain, ExternalLink } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { ToolDefinition } from '@/lib/types';
 import { useI18n } from '@/lib/i18n/i18n-context';

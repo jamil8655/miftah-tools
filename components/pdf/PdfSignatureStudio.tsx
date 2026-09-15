@@ -1,27 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  PenTool,
-  UploadCloud,
-  Download,
-  Trash2,
-  Check,
-  Calendar,
-  ShieldCheck,
-  Sparkles,
-  Layers,
-  RotateCcw,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  Stamp,
-  Type,
-  Maximize2,
-  Image as ImageIcon,
-  Plus,
-  Minus,
-} from 'lucide-react';
+import { PenTool, UploadCloud, Download, Trash2, Check, Calendar, ShieldCheck, Zap, Layers, RotateCcw, ChevronLeft, ChevronRight, FileText, Stamp, Type, Maximize2, Image as ImageIcon, Plus, Minus } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import { getPdfJsLib, base64ToUint8Array } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';

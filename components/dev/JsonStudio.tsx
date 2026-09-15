@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { formatJson, validateJson } from '@/lib/dev/dev-utilities';
-import { Code2, Check, Copy, AlertCircle, Sparkles, Minimize2, CheckCircle2 } from 'lucide-react';
+import { Code2, Check, Copy, AlertCircle, Zap, Minimize2, CheckCircle2 } from 'lucide-react';
 import { downloadSingleFile } from '@/lib/utils/download';
 
 export function JsonStudio() {

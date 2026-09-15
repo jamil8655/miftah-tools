@@ -2,18 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Sparkles,
-  Bot,
-  ArrowRight,
-  Workflow,
-  Zap,
-  CheckCircle2,
-  FileText,
-  Image as ImageIcon,
-  ShieldCheck,
-  Search,
-} from 'lucide-react';
+import { Zap, Bot, ArrowRight, Workflow, CheckCircle2, FileText, Image as ImageIcon, ShieldCheck, Search } from 'lucide-react';
 import { UnifiedSearchModal } from '@/components/search/UnifiedSearchModal';
 
 export function NexoraAiAssistant() {

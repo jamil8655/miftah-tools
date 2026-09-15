@@ -1,24 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import {
-  FileText,
-  UploadCloud,
-  Copy,
-  Check,
-  Download,
-  Share2,
-  Sparkles,
-  Eye,
-  Code2,
-  FileSpreadsheet,
-  FileCode,
-  Layers,
-  FileArchive,
-  RefreshCw,
-  Cpu,
-  BrainCircuit,
-} from 'lucide-react';
+import { FileText, UploadCloud, Copy, Check, Download, Share2, Zap, Eye, Code2, FileSpreadsheet, FileCode, Layers, FileArchive, RefreshCw, Cpu, BrainCircuit } from 'lucide-react';
 import {
   universalMarkItDown,
   generateLlmPrompt,
@@ -361,7 +344,7 @@ export function MarkItDownStudio() {
                 onClick={handleCopyLlmPrompt}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 hover:bg-brand-100 text-brand-700 dark:text-brand-300 flex items-center gap-1.5 shadow-sm transition-all"
               >
-                {copiedPrompt ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Sparkles className="w-3.5 h-3.5 text-brand-600" />}
+                {copiedPrompt ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Zap className="w-3.5 h-3.5 text-brand-600" />}
                 <span>{copiedPrompt ? loc.copied : loc.copyPrompt}</span>
               </button>
 

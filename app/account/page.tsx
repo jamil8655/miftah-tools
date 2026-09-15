@@ -6,10 +6,9 @@ import { useTheme } from '@/components/layout/ThemeContext';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
 import {
-  Sparkles,
+  Bookmark,
   Download,
   History as HistoryIcon,
-  Star,
   Settings as SettingsIcon,
   ShieldCheck,
   Languages,
@@ -105,8 +104,8 @@ export default function AccountPage() {
             className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-500 flex items-center justify-center">
-                <Star className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-500 flex items-center justify-center">
+                <Bookmark className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Saved &amp; Favorites</h3>

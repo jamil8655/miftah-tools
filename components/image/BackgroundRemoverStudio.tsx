@@ -1,20 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  Sparkles,
-  Upload,
-  Download,
-  Image as ImageIcon,
-  Sliders,
-  RefreshCw,
-  Eye,
-  Check,
-  Zap,
-  Layers,
-  Palette,
-  Share2,
-} from 'lucide-react';
+import { Zap, Upload, Download, Image as ImageIcon, Sliders, RefreshCw, Eye, Check, Layers, Palette, Share2 } from 'lucide-react';
 import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 
@@ -171,7 +158,7 @@ export function BackgroundRemoverStudio() {
       {/* Header */}
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+          <Zap className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
           <span>100% In-Browser AI Edge Cutout • Zero Cloud Uploads</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">

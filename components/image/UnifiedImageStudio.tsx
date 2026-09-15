@@ -1,23 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  Image as ImageIcon,
-  Sparkles,
-  Sliders,
-  Crop,
-  RotateCw,
-  Download,
-  Upload,
-  Zap,
-  CheckCircle2,
-  Palette,
-  EyeOff,
-  Sun,
-  Contrast,
-  Layers,
-  Share2,
-} from 'lucide-react';
+import { Image as ImageIcon, Zap, Sliders, Crop, RotateCw, Download, Upload, CheckCircle2, Palette, EyeOff, Sun, Contrast, Layers, Share2 } from 'lucide-react';
 import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { formatBytes } from '@/lib/utils/formatters';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -213,7 +197,7 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
       <div className="flex flex-wrap items-center justify-between gap-4 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
-            <Sparkles className="w-3 h-3 text-blue-600" />
+            <Zap className="w-3 h-3 text-blue-600" />
             <span>Unified Image Studio • Live Filters & Multi-Format Engine</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">

@@ -8,7 +8,7 @@ import { ProgressBar } from './ProgressBar';
 import { ResultPreview } from './ResultPreview';
 import { DownloadSuccessModal } from './DownloadSuccessModal';
 import { ToolOptionControls } from './ToolOptionControls';
-import { Play, Sparkles, HelpCircle } from 'lucide-react';
+import { Play, Zap, HelpCircle } from 'lucide-react';
 import { downloadSingleFile, downloadAsZip, SavedFileInfo } from '@/lib/utils/download';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
@@ -264,7 +264,7 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
               <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-4 border-brand-100 dark:border-brand-950/60" />
                 <div className="w-20 h-20 rounded-full border-4 border-brand-600 border-t-transparent animate-spin" />
-                <Sparkles className="w-6 h-6 text-brand-600 dark:text-brand-400" />
+                <Zap className="w-6 h-6 text-brand-600 dark:text-brand-400" />
               </div>
               <div className="space-y-2.5 max-w-md mx-auto">
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">

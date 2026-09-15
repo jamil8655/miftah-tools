@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, X, Volume2, VolumeX, Play, Award, CheckCircle2, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Zap, X, Volume2, VolumeX, Play, Award, CheckCircle2, ExternalLink, ShieldCheck } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface AdMobModalProps {
@@ -94,7 +94,7 @@ export function AdMobTestModal({ type, unitId, onClose, onReward }: AdMobModalPr
         <div className="relative">
           <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-3xl bg-linear-to-tr from-brand-600 via-indigo-600 to-purple-600 p-0.5 shadow-xl shadow-brand-500/30 flex items-center justify-center mb-4">
             <div className="w-full h-full rounded-[22px] bg-slate-900 flex items-center justify-center text-white">
-              <Sparkles className="w-10 h-10 text-brand-400 animate-pulse" />
+              <Zap className="w-10 h-10 text-brand-400 animate-pulse" />
             </div>
           </div>
 

@@ -1,45 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  FileText,
-  Download,
-  Copy,
-  Check,
-  Sparkles,
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  List,
-  ListOrdered,
-  Heading1,
-  Heading2,
-  Heading3,
-  Quote,
-  Table as TableIcon,
-  Minus,
-  Calendar,
-  RotateCcw,
-  RotateCw,
-  Printer,
-  Upload,
-  Layers,
-  Palette,
-  Eye,
-  Settings2,
-  Maximize2,
-  Minimize2,
-  HelpCircle,
-  FileCode,
-  Languages,
-  Trash2,
-  Plus,
-} from 'lucide-react';
+import { FileText, Download, Copy, Check, Zap, Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify, List, ListOrdered, Heading1, Heading2, Heading3, Quote, Table as TableIcon, Minus, Calendar, RotateCcw, RotateCw, Printer, Upload, Layers, Palette, Eye, Settings2, Maximize2, Minimize2, HelpCircle, FileCode, Languages, Trash2, Plus } from 'lucide-react';
 import { marked } from 'marked';
 import mammoth from 'mammoth';
 import jsPDF from 'jspdf';
@@ -708,7 +670,7 @@ export function RichTextToDocumentStudio({ defaultFormat = 'pdf' }: RichTextToDo
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <Zap className="w-3.5 h-3.5 text-amber-500" />
           <span>Document Templates ({STARTER_TEMPLATES.length})</span>
         </button>
 

@@ -9,7 +9,7 @@ import {
   FileCheck,
   Lock,
   ArrowRight,
-  Sparkles,
+  Wrench,
   Layers,
   FileText,
   Info,
@@ -30,7 +30,7 @@ export function ToolSeoContent({ tool }: ToolSeoContentProps) {
       <section className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-6">
         <div className="space-y-1 text-left rtl:text-right">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/70 text-brand-700 dark:text-brand-300 text-xs font-bold border border-brand-200/60 dark:border-brand-800/60">
-            <Sparkles className="w-3.5 h-3.5" />
+            <Wrench className="w-3.5 h-3.5" />
             <span>Step-by-Step Guide</span>
           </div>
           <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">

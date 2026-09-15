@@ -3,7 +3,7 @@
 import React from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { MarkItDownStudio } from '@/components/tools/MarkItDownStudio';
-import { Sparkles, FileText, Cpu, Lock, Layers, Zap, Bot } from 'lucide-react';
+import { Zap, FileText, Cpu, Lock, Layers, Bot } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
 const PAGE_LOCALES = {
@@ -59,7 +59,7 @@ export default function MarkItDownPage() {
 
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-          <Sparkles className="w-3.5 h-3.5" />
+          <Zap className="w-3.5 h-3.5" />
           <span>{loc.badge}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight flex items-center justify-center gap-2.5">

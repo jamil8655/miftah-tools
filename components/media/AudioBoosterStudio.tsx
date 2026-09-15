@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Volume2, Upload, Download, CheckCircle, AlertCircle, RefreshCw, FileAudio, Sparkles, VolumeX } from 'lucide-react';
+import { Volume2, Upload, Download, CheckCircle, AlertCircle, RefreshCw, FileAudio, Zap, VolumeX } from 'lucide-react';
 import { boostAudioVolume } from '@/lib/media/audio-engine';
 import { downloadSingleFile } from '@/lib/utils/download';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -145,7 +145,7 @@ export function AudioBoosterStudio() {
               disabled={loading}
               className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2"
             >
-              <Sparkles className="w-5 h-5" />
+              <Zap className="w-5 h-5" />
               {loading ? 'Boosting Volume Level...' : 'Boost Audio Volume Now'}
             </button>
           </div>

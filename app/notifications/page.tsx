@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
-import { Bell, CheckCheck, Trash2, ExternalLink, Sparkles } from 'lucide-react';
+import { Bell, CheckCheck, Trash2, ExternalLink, Zap } from 'lucide-react';
 
 export default function NotificationsPage() {
   const { t } = useI18n();

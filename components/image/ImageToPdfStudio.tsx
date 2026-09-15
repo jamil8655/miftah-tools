@@ -1,31 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  FileText,
-  Upload,
-  Download,
-  Trash2,
-  ArrowLeft,
-  ArrowRight,
-  RotateCw,
-  Sparkles,
-  Sliders,
-  Maximize2,
-  Minimize2,
-  Layers,
-  Check,
-  Copy,
-  Printer,
-  Plus,
-  ArrowUpDown,
-  Filter,
-  Eye,
-  CheckCircle2,
-  Image as ImageIcon,
-  HardDrive,
-  FileCheck2,
-} from 'lucide-react';
+import { FileText, Upload, Download, Trash2, ArrowLeft, ArrowRight, RotateCw, Zap, Sliders, Maximize2, Minimize2, Layers, Check, Copy, Printer, Plus, ArrowUpDown, Filter, Eye, CheckCircle2, Image as ImageIcon, HardDrive, FileCheck2 } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { formatBytes } from '@/lib/utils/formatters';
@@ -656,7 +632,7 @@ export function ImageToPdfStudio() {
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
                   <span>Document Enhancement &amp; Scanner Filter (All Pages):</span>
                 </span>
               </div>

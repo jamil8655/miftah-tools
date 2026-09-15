@@ -8,7 +8,7 @@ import { formatBytes } from '@/lib/utils/formatters';
 import { downloadAsZip, downloadSingleFile } from '@/lib/utils/download';
 import { convertImage, compressImage } from '@/lib/image/image-manipulator';
 import { mergePdfs, imagesToPdf } from '@/lib/pdf/pdf-manipulator';
-import { Layers, Play, Download, Trash2, CheckCircle, File, Image as ImageIcon, Sparkles, Award } from 'lucide-react';
+import { Layers, Play, Download, Trash2, CheckCircle, File, Image as ImageIcon, Zap, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { adManager } from '@/lib/ads/AdManager';
 import { AdSlot } from '@/components/ads/AdSlot';
@@ -170,7 +170,7 @@ export default function BatchPage() {
               <div className="p-3.5 sm:p-4 rounded-2xl bg-linear-to-r from-amber-500/10 via-brand-500/10 to-purple-500/10 dark:from-amber-950/30 dark:to-purple-950/30 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-amber-500 text-black font-black flex items-center justify-center shrink-0">
-                    <Sparkles className="w-4 h-4" />
+                    <Zap className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="text-xs font-black text-slate-900 dark:text-white">

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, MessageSquare, Send, CheckCircle2, Clock, ShieldCheck, Sparkles } from 'lucide-react';
+import { Mail, MessageSquare, Send, CheckCircle2, Clock, ShieldCheck, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
 const CONTACT_LOCALES = {

@@ -9,7 +9,7 @@ import { MathCalculators } from '@/components/calculators/MathCalculators';
 import { FinancialLoanCalculators } from '@/components/calculators/FinancialLoanCalculators';
 import { StandardCalculatorStudio } from '@/components/calculators/StandardCalculatorStudio';
 import { GeneralUnitConverter } from '@/components/calculators/GeneralUnitConverter';
-import { Binary, Activity, Printer, Calculator, Scale, Coins, Sparkles } from 'lucide-react';
+import { Binary, Activity, Printer, Calculator, Scale, Coins, Zap } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
 const CALC_PAGE_LOCALES = {
@@ -93,7 +93,7 @@ export default function CalculatorsPage() {
           {[
             { id: 'standard', label: loc.tabs.standard, icon: Calculator },
             { id: 'finance', label: loc.tabs.finance, icon: Coins },
-            { id: 'math', label: loc.tabs.math, icon: Sparkles },
+            { id: 'math', label: loc.tabs.math, icon: Zap },
             { id: 'storage', label: loc.tabs.storage, icon: Binary },
             { id: 'units', label: loc.tabs.units, icon: Scale },
             { id: 'bandwidth', label: loc.tabs.bandwidth, icon: Activity },

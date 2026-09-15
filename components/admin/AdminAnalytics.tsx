@@ -2,48 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  Activity,
-  Users,
-  HardDrive,
-  ShieldCheck,
-  Server,
-  AlertTriangle,
-  CheckCircle2,
-  Settings,
-  Database,
-  Lock,
-  Search,
-  Filter,
-  Cpu,
-  RefreshCw,
-  Trash2,
-  Workflow,
-  Sparkles,
-  Key,
-  CreditCard,
-  Layers,
-  Terminal,
-  Radio,
-  Sliders,
-  Bell,
-  Eye,
-  RotateCcw,
-  Zap,
-  Globe,
-  FileText,
-  UserCheck,
-  ShieldAlert,
-  AlertOctagon,
-  XCircle,
-  Menu,
-  X,
-  ArrowLeft,
-  CloudOff,
-  Cloud,
-  ChevronRight,
-  Info,
-} from 'lucide-react';
+import { Activity, Users, HardDrive, ShieldCheck, Server, AlertTriangle, CheckCircle2, Settings, Database, Lock, Search, Filter, Cpu, RefreshCw, Trash2, Workflow, Zap, Key, CreditCard, Layers, Terminal, Radio, Sliders, Bell, Eye, RotateCcw, Globe, FileText, UserCheck, ShieldAlert, AlertOctagon, XCircle, Menu, X, ArrowLeft, CloudOff, Cloud, ChevronRight, Info } from 'lucide-react';
 import { formatBytes } from '@/lib/utils/formatters';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import {
@@ -559,7 +518,7 @@ export function AdminAnalytics() {
     { id: 'users', label: adminLoc.tabs.users || 'Users & RBAC', icon: Users, badge: cloudUsers.length > 0 ? `${cloudUsers.length}` : undefined },
     { id: 'tools', label: adminLoc.tabs.tools || 'Tool Catalog', icon: Layers, badge: `${TOOLS_LIST.length}` },
     { id: 'jobs', label: adminLoc.tabs.jobs || 'Processing Jobs', icon: Workflow, badge: activeJobs.length + cloudJobs.length > 0 ? `${activeJobs.length + cloudJobs.length}` : undefined },
-    { id: 'ai', label: adminLoc.tabs.ai || 'AI & OCR Engines', icon: Sparkles },
+    { id: 'ai', label: adminLoc.tabs.ai || 'AI & OCR Engines', icon: Zap },
     { id: 'plans', label: adminLoc.tabs.plans || 'Plans & Monetization', icon: CreditCard },
     { id: 'api', label: adminLoc.tabs.api || 'Developer REST API', icon: Terminal },
     { id: 'flags', label: adminLoc.tabs.flags || 'Feature Flags', icon: Sliders },

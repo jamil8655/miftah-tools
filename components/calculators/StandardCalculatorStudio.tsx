@@ -1,25 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Calculator as CalcIcon,
-  Delete,
-  RotateCcw,
-  Copy,
-  Check,
-  History,
-  Trash2,
-  Percent,
-  Plus,
-  Minus,
-  X as Multiply,
-  Divide,
-  Equal,
-  Sparkles,
-  Sliders,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { Calculator as CalcIcon, Delete, RotateCcw, Copy, Check, History, Trash2, Percent, Plus, Minus, X as Multiply, Divide, Equal, Zap, Sliders, ChevronDown, ChevronUp } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 
