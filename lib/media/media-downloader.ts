@@ -12,7 +12,7 @@ export interface MediaDownloadFormat {
 
 export interface MediaMetadata {
   url: string;
-  platform: 'youtube' | 'instagram' | 'facebook' | 'tiktok' | 'twitter' | 'pinterest' | 'whatsapp' | 'generic';
+  platform: 'youtube' | 'instagram' | 'facebook' | 'tiktok' | 'twitter' | 'generic';
   platformName: string;
   title: string;
   author: string;
@@ -105,14 +105,6 @@ export function detectPlatform(url: string): {
 
   if (cleanUrl.includes('twitter.com') || cleanUrl.includes('x.com')) {
     return { platform: 'twitter', platformName: 'X (Twitter)' };
-  }
-
-  if (cleanUrl.includes('pinterest.com') || cleanUrl.includes('pin.it')) {
-    return { platform: 'pinterest', platformName: 'Pinterest' };
-  }
-
-  if (cleanUrl.includes('whatsapp.com') || cleanUrl.includes('wa.me')) {
-    return { platform: 'whatsapp', platformName: 'WhatsApp Status' };
   }
 
   return { platform: 'generic', platformName: 'Web Video' };

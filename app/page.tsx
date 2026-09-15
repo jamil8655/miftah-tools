@@ -148,7 +148,7 @@ const POPULAR_QUICK_ACTIONS = [
   { id: 'pdf-to-docx', name: 'PDF to Word (OCR)', cat: 'pdf', icon: FileText, color: 'bg-indigo-600' },
   { id: 'compress-pdf', name: 'Compress PDF', cat: 'pdf', icon: Minimize2, color: 'bg-rose-600' },
   { id: 'merge-pdf', name: 'Merge PDF', cat: 'pdf', icon: Combine, color: 'bg-blue-600' },
-  { id: 'ocr-image', name: 'OCR Image to Text', cat: 'ocr', icon: ScanText, color: 'bg-purple-600' },
+  { id: 'media-downloader', name: 'Video Downloader', cat: 'media', icon: Video, color: 'bg-rose-600' },
   { id: 'image-resizer', name: 'Image Studio', cat: 'image', icon: ImageIcon, color: 'bg-emerald-600' },
   { id: 'qr-generator', name: 'QR Code Generator', cat: 'qr', icon: QrCode, color: 'bg-cyan-600' },
   { id: 'markitdown', name: 'MarkItDown AI', cat: 'ai', icon: Brain, color: 'bg-amber-600', isDirectPath: '/markitdown' },
