@@ -78,6 +78,24 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
       splitMode: 'all',
       orientation: 'portrait',
     };
+
+    const slugStr = `${tool.id} ${tool.slug || ''}`.toLowerCase();
+    const sizeMatch = slugStr.match(/to-(\d+)\s*(kb|mb)/);
+    if (sizeMatch) {
+      const num = parseInt(sizeMatch[1], 10);
+      const unit = sizeMatch[2];
+      const kb = unit === 'mb' ? num * 1024 : num;
+      initial.targetKb = kb;
+      initial.customNumValue = num.toString();
+      initial.customNumUnit = unit;
+      initial.targetSizeLimit = `${num}${unit}`;
+    } else if (tool.category === 'compress' || slugStr.includes('compress')) {
+      initial.targetKb = 100;
+      initial.customNumValue = '100';
+      initial.customNumUnit = 'kb';
+      initial.targetSizeLimit = '100kb';
+    }
+
     tool.options?.forEach((opt) => {
       initial[opt.id] = opt.defaultValue;
     });

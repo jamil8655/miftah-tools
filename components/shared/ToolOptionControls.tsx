@@ -430,13 +430,19 @@ export function ToolOptionControls({
                   min="1"
                   step="any"
                   placeholder="e.g. 50 or 2"
-                  value={options.customNumValue || ''}
+                  value={
+                    options.customNumValue !== undefined
+                      ? options.customNumValue
+                      : currentTargetKb >= 1024
+                      ? (currentTargetKb / 1024).toFixed(currentTargetKb % 1024 === 0 ? 0 : 1)
+                      : currentTargetKb.toString()
+                  }
                   onChange={(e) => {
                     const str = e.target.value;
                     updateOption('customNumValue', str);
                     const val = parseFloat(str);
                     if (!isNaN(val) && val > 0) {
-                      const unit = options.customNumUnit || 'kb';
+                      const unit = options.customNumUnit || (currentTargetKb >= 1024 ? 'mb' : 'kb');
                       const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
                       updateOption('targetKb', targetKb);
                       updateOption('targetSizeLimit', unit === 'mb' ? `${val}mb` : `${val}kb`);
@@ -449,14 +455,21 @@ export function ToolOptionControls({
                 />
                 <div className="flex rounded-xl bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
                   {['kb', 'mb'].map((unit) => {
-                    const isUnitSelected = (options.customNumUnit || 'kb') === unit;
+                    const activeUnit = options.customNumUnit || (currentTargetKb >= 1024 ? 'mb' : 'kb');
+                    const isUnitSelected = activeUnit === unit;
                     return (
                       <button
                         key={unit}
                         type="button"
                         onClick={() => {
                           updateOption('customNumUnit', unit);
-                          const val = parseFloat(options.customNumValue);
+                          const rawVal =
+                            options.customNumValue !== undefined
+                              ? options.customNumValue
+                              : currentTargetKb >= 1024
+                              ? (currentTargetKb / 1024).toFixed(currentTargetKb % 1024 === 0 ? 0 : 1)
+                              : currentTargetKb.toString();
+                          const val = parseFloat(rawVal);
                           if (!isNaN(val) && val > 0) {
                             const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
                             updateOption('targetKb', targetKb);

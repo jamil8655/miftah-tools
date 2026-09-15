@@ -1,5 +1,5 @@
 // Miftah Tools Service Worker for Full Native PWA Installation & Offline Support
-const CACHE_NAME = 'miftah-pwa-v3';
+const CACHE_NAME = 'miftah-live-v10';
 
 const STATIC_ASSETS = [
   '/manifest.json',
@@ -9,13 +9,6 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('Pre-cache warning:', err);
-      });
-    })
-  );
   self.skipWaiting();
 });
 
@@ -39,38 +32,19 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Network-First for HTML navigation requests to always display the latest live website
-  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          return caches.match(event.request).then((cached) => cached || caches.match('/'));
-        })
-    );
-    return;
-  }
-
-  // Stale-while-revalidate for static assets
+  // Always fetch fresh network response first for HTML, JS scripts, and CSS
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && url.origin === self.location.origin) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => cachedResponse);
-
-      return cachedResponse || fetchPromise;
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && url.origin === self.location.origin) {
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cached) => cached || (event.request.mode === 'navigate' ? caches.match('/') : null));
+      })
   );
 });
+
