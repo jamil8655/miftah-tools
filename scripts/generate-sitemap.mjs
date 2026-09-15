@@ -4,52 +4,70 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const rootDir = path.join(__dirname, '..');
 
 const BASE_URL = 'https://miftahtools.com';
 
-const TOOLS_SLUGS = [
-  'merge-pdf', 'split-pdf', 'compress-pdf', 'pdf-to-word', 'pdf-to-image', 'image-to-pdf',
-  'word-to-pdf', 'excel-to-pdf', 'rotate-pdf', 'pdf-page-numbers', 'pdf-watermark',
-  'edit-pdf-metadata', 'docx-to-pdf', 'pdf-to-docx', 'text-to-pdf', 'markdown-to-pdf',
-  'pdf-organizer', 'jpg-to-png', 'png-to-jpg', 'image-compressor', 'image-resizer',
-  'rotate-image', 'image-metadata', 'image-exif', 'image-palette', 'favicon-generator',
-  'media-downloader', 'video-to-mp3', 'youtube-downloader', 'instagram-downloader',
-  'tiktok-downloader', 'whatsapp-status-saver', 'audio-cutter', 'audio-booster',
-  'audio-speed', 'word-counter', 'case-converter', 'remove-duplicate-lines',
-  'text-diff', 'text-compare', 'ocr-image-to-text', 'ai-summarizer',
-  'file-size-converter', 'general-unit-converter', 'download-time-calculator',
-  'math-calculators', 'percentage-calculator', 'mb-to-kb', 'json-formatter',
-  'base64-encode-decode', 'jwt-decoder', 'timestamp-converter', 'unix-timestamp-converter',
-  'uuid-generator', 'color-converter', 'markdown-editor', 'hash-generator',
-  'password-generator', 'qr-code-generator', 'qr-generator', 'barcode-generator'
+// Extract tools and categories directly from lib/tools-config.ts
+const toolsConfigPath = path.join(rootDir, 'lib', 'tools-config.ts');
+const toolsConfigRaw = fs.readFileSync(toolsConfigPath, 'utf8');
+
+const toolsMatch = toolsConfigRaw.match(/export const TOOLS_LIST[^{]*=\s*(\[[\s\S]*?\]);\s*export const CATEGORIES_CONFIG/);
+let toolsList = [];
+if (toolsMatch) {
+  try {
+    toolsList = JSON.parse(toolsMatch[1]);
+  } catch (e) {
+    console.error('Error parsing tools list:', e);
+  }
+}
+
+const CATEGORIES = [
+  'pdf',
+  'document',
+  'image',
+  'ocr',
+  'text',
+  'compress',
+  'security',
+  'media',
+  'calculator',
+  'dev',
+  'qr',
+  'ai',
 ];
 
-const STATIC_PAGES = [
-  '',
+const STANDALONE_HUBS = [
   '/tools',
-  '/quiz',
-  '/workflows',
-  '/batch',
   '/pdf-editor',
+  '/pdf-signer',
+  '/pdf-workspace',
   '/ocr',
+  '/camera-scanner',
+  '/markitdown',
+  '/auto-crop-images-to-pdf',
+  '/image-studio',
   '/qr-barcode',
   '/calculators',
   '/text-tools',
   '/dev-tools',
   '/security-tools',
   '/ai-tools',
-  '/downloads',
-  '/favorites',
-  '/history',
-  '/settings',
+  '/workflows',
+  '/batch',
+];
+
+const INFORMATIONAL_PAGES = [
   '/about',
   '/faq',
   '/contact',
   '/privacy',
+  '/privacy-center',
   '/terms',
-  '/refund',
+  '/disclaimer',
   '/guidelines',
-  '/disclaimer'
+  '/refund',
+  '/developers',
 ];
 
 const today = new Date().toISOString().split('T')[0];
@@ -58,36 +76,80 @@ let sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `;
 
-// Add static pages
-STATIC_PAGES.forEach((page) => {
-  sitemapXml += `  <url>
-    <loc>${BASE_URL}${page}</loc>
+// 1. Homepage (Priority 1.0, Daily)
+sitemapXml += `  <url>
+    <loc>${BASE_URL}/</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
-    <priority>${page === '' ? '1.0' : '0.8'}</priority>
+    <priority>1.0</priority>
+  </url>
+`;
+
+// 2. Category Pages (Priority 0.9, Daily)
+CATEGORIES.forEach((cat) => {
+  sitemapXml += `  <url>
+    <loc>${BASE_URL}/tools/${cat}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
 `;
 });
 
-// Add tool pages (both root slugs and /tools/slugs)
-TOOLS_SLUGS.forEach((slug) => {
+// 3. Standalone Tool Workspaces & Hubs (Priority 0.9, Weekly)
+STANDALONE_HUBS.forEach((hub) => {
   sitemapXml += `  <url>
-    <loc>${BASE_URL}/${slug}</loc>
+    <loc>${BASE_URL}${hub}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
-  <url>
-    <loc>${BASE_URL}/tools/${slug}</loc>
+`;
+});
+
+// 4. All Canonical Individual Tool Pages (Priority 0.8, Weekly)
+const seenSlugs = new Set();
+toolsList.forEach((tool) => {
+  const canonicalSlug = tool.slug || tool.id;
+  if (!seenSlugs.has(canonicalSlug)) {
+    seenSlugs.add(canonicalSlug);
+    sitemapXml += `  <url>
+    <loc>${BASE_URL}/tools/${canonicalSlug}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
+  </url>
+`;
+  }
+});
+
+// 5. Informational & Legal Pages (Priority 0.6, Monthly)
+INFORMATIONAL_PAGES.forEach((page) => {
+  sitemapXml += `  <url>
+    <loc>${BASE_URL}${page}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 `;
 });
 
 sitemapXml += `</urlset>`;
 
-const publicPath = path.join(__dirname, '..', 'public', 'sitemap.xml');
+// Write to public/sitemap.xml
+const publicPath = path.join(rootDir, 'public', 'sitemap.xml');
 fs.writeFileSync(publicPath, sitemapXml);
-console.log('✅ sitemap.xml generated with ' + (STATIC_PAGES.length + TOOLS_SLUGS.length * 2) + ' routes!');
+
+// Also copy to out/sitemap.xml if build directory exists
+const outDir = path.join(rootDir, 'out');
+if (fs.existsSync(outDir)) {
+  fs.writeFileSync(path.join(outDir, 'sitemap.xml'), sitemapXml);
+}
+
+const totalRoutes = 1 + CATEGORIES.length + STANDALONE_HUBS.length + seenSlugs.size + INFORMATIONAL_PAGES.length;
+console.log(`✅ Production XML Sitemap generated successfully with ${totalRoutes} canonical URLs!`);
+console.log(`   - Homepage: 1`);
+console.log(`   - Category Hubs: ${CATEGORIES.length}`);
+console.log(`   - Standalone Hubs: ${STANDALONE_HUBS.length}`);
+console.log(`   - Individual Canonical Tools: ${seenSlugs.size}`);
+console.log(`   - Informational Pages: ${INFORMATIONAL_PAGES.length}`);

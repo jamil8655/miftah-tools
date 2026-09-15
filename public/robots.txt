@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /account/
+Disallow: /dashboard/
+Disallow: /settings/
+Disallow: /downloads/
+Disallow: /favorites/
+Disallow: /history/
+Disallow: /notifications/
+Disallow: /api/
 
 Sitemap: https://miftahtools.com/sitemap.xml

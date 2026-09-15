@@ -375,32 +375,6 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
 
       {/* Responsive Ad Space for Monetization */}
       <AdSlot placement="tool-bottom" />
-
-      {/* FAQ & Information Section */}
-      {tool.faq && tool.faq.length > 0 && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/90 dark:border-slate-800 space-y-4 shadow-sm">
-          <div className="flex items-center gap-2 text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100">
-            <HelpCircle className="w-5 h-5 text-brand-600 dark:text-brand-400" />
-            <span>{loc.faqTitle}</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {tool.faq.map((item, idx) => (
-              <div
-                key={idx}
-                className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5 shadow-xs"
-              >
-                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
-                  {item.question}
-                </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {item.answer}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

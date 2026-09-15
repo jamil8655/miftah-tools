@@ -3,6 +3,8 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { TOOLS_LIST } from '@/lib/tools-config';
 import { ToolPageClient } from '@/components/shared/ToolPageClient';
+import { ToolSeoContent } from '@/components/shared/ToolSeoContent';
+import { getCompleteToolSeo, SITE_DOMAIN, SITE_BRAND } from '@/lib/seo/seo-engine';
 
 const TOOL_ALIASES: Record<string, string> = {
   'pdf-to-word': 'pdf-to-docx',
@@ -38,28 +40,52 @@ export async function generateMetadata({ params }: { params: { toolSlug: string 
   const tool = resolveTool(params.toolSlug);
   if (!tool) {
     return {
-      title: 'Tool Not Found — Miftah Tools',
+      title: `Tool Not Found | ${SITE_BRAND}`,
+      robots: { index: false, follow: false },
     };
   }
 
-  const title = `${tool.name} — Free Online Tool | Miftah Tools`;
-  const description = tool.fullDesc || tool.shortDesc;
+  const seo = getCompleteToolSeo(tool);
 
   return {
-    title,
-    description,
+    title: seo.title,
+    description: seo.metaDescription,
     keywords: tool.tags?.join(', ') || 'online tools, pdf, image converter, video downloader',
+    alternates: {
+      // Primary canonical URL points to official /tools/[slug]
+      canonical: seo.canonicalUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
     openGraph: {
-      title,
-      description,
+      title: seo.title,
+      description: seo.metaDescription,
       type: 'website',
-      url: `https://miftahtools.com/${tool.slug}`,
-      siteName: 'Miftah Tools',
+      url: seo.canonicalUrl,
+      siteName: SITE_BRAND,
+      images: [
+        {
+          url: `${SITE_DOMAIN}/icon-512.png`,
+          width: 512,
+          height: 512,
+          alt: tool.name,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
+      title: seo.title,
+      description: seo.metaDescription,
+      images: [`${SITE_DOMAIN}/icon-512.png`],
     },
   };
 }
@@ -68,33 +94,23 @@ export default function ToolSlugPage({ params }: { params: { toolSlug: string } 
   const tool = resolveTool(params.toolSlug);
   if (!tool) notFound();
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: tool.name,
-    description: tool.fullDesc || tool.shortDesc,
-    applicationCategory: 'UtilitiesApplication',
-    operatingSystem: 'All',
-    browserRequirements: 'Requires JavaScript. Requires HTML5.',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '1250',
-    },
-  };
+  const seo = getCompleteToolSeo(tool);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <ToolPageClient tool={tool} />
+      {seo.jsonLd.map((schema, index) => (
+        <script
+          key={`schema-slug-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+      <div className="w-full">
+        <ToolPageClient tool={tool} />
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <ToolSeoContent tool={tool} />
+        </div>
+      </div>
     </>
   );
 }
