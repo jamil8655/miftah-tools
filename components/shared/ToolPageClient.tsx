@@ -109,6 +109,7 @@ import { LoremIpsumStudio } from '@/components/dev/LoremIpsumStudio';
 import { HashStudio } from '@/components/security/HashStudio';
 import { PasswordStudio } from '@/components/security/PasswordStudio';
 import { TextStudio } from '@/components/text/TextStudio';
+import { RichTextToDocumentStudio } from '@/components/text/RichTextToDocumentStudio';
 import { TextDiffViewer } from '@/components/text/TextDiffViewer';
 import { GeneralUnitConverter } from '@/components/calculators/GeneralUnitConverter';
 import { StorageUnitConverter } from '@/components/calculators/StorageUnitConverter';
@@ -256,6 +257,22 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'find-replace-text'
   ) {
     customWorkspace = <TextStudio />;
+  } else if (
+    tool.id === 'txt-to-pdf' ||
+    tool.id === 'text-to-pdf' ||
+    tool.slug === 'txt-to-pdf' ||
+    tool.slug === 'text-to-pdf' ||
+    tool.id === 'text-to-word' ||
+    tool.id === 'text-to-docx' ||
+    tool.id === 'text-to-docx-alt' ||
+    tool.id === 'txt-to-docx' ||
+    tool.id === 'txt-to-word' ||
+    tool.slug === 'text-to-word' ||
+    tool.slug === 'text-to-docx' ||
+    tool.slug === 'txt-to-docx' ||
+    tool.slug === 'txt-to-word'
+  ) {
+    customWorkspace = <RichTextToDocumentStudio defaultFormat={tool.outputExtension === 'docx' || tool.slug?.includes('word') || tool.slug?.includes('docx') ? 'docx' : 'pdf'} />;
   } else if (tool.id === 'text-diff') {
     customWorkspace = <TextDiffViewer />;
   } else if (tool.id === 'timestamp-converter') {
