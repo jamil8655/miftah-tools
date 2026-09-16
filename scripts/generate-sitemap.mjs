@@ -72,86 +72,146 @@ const INFORMATIONAL_PAGES = [
 
 const today = new Date().toISOString().split('T')[0];
 
-let sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+function buildUrlEntry(url, priority = '0.8', changefreq = 'weekly') {
+  return `  <url>
+    <loc>${url}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>\n`;
+}
+
+// 1. Pages Sitemap (Homepage, Hubs, Legal)
+let pagesXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `;
+pagesXml += buildUrlEntry(`${BASE_URL}/`, '1.0', 'daily');
 
-// 1. Homepage (Priority 1.0, Daily)
-sitemapXml += `  <url>
-    <loc>${BASE_URL}/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-`;
-
-// 2. Category Pages (Priority 0.9, Daily)
-CATEGORIES.forEach((cat) => {
-  sitemapXml += `  <url>
-    <loc>${BASE_URL}/tools/${cat}/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-`;
-});
-
-// 3. Standalone Tool Workspaces & Hubs (Priority 0.9, Weekly)
 STANDALONE_HUBS.forEach((hub) => {
   const cleanHub = hub.endsWith('/') ? hub : `${hub}/`;
-  sitemapXml += `  <url>
-    <loc>${BASE_URL}${cleanHub}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-`;
+  pagesXml += buildUrlEntry(`${BASE_URL}${cleanHub}`, '0.9', 'weekly');
 });
 
-// 4. All Canonical Individual Tool Pages (Priority 0.8, Weekly)
+INFORMATIONAL_PAGES.forEach((page) => {
+  const cleanPage = page.endsWith('/') ? page : `${page}/`;
+  pagesXml += buildUrlEntry(`${BASE_URL}${cleanPage}`, '0.6', 'monthly');
+});
+pagesXml += `</urlset>`;
+
+// 2. Categories Sitemap
+let categoryXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+CATEGORIES.forEach((cat) => {
+  categoryXml += buildUrlEntry(`${BASE_URL}/tools/${cat}/`, '0.9', 'daily');
+});
+categoryXml += `</urlset>`;
+
+// 3. Tools / Posts Sitemap (All canonical tools)
+let toolsXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
 const seenSlugs = new Set();
 toolsList.forEach((tool) => {
   const canonicalSlug = tool.slug || tool.id;
   if (!seenSlugs.has(canonicalSlug)) {
     seenSlugs.add(canonicalSlug);
-    sitemapXml += `  <url>
-    <loc>${BASE_URL}/tools/${canonicalSlug}/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
+    toolsXml += buildUrlEntry(`${BASE_URL}/tools/${canonicalSlug}/`, '0.8', 'weekly');
+  }
+});
+toolsXml += `</urlset>`;
+
+// 4. Master Sitemap (Combined all URLs)
+let masterSitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `;
+masterSitemapXml += buildUrlEntry(`${BASE_URL}/`, '1.0', 'daily');
+
+CATEGORIES.forEach((cat) => {
+  masterSitemapXml += buildUrlEntry(`${BASE_URL}/tools/${cat}/`, '0.9', 'daily');
+});
+
+STANDALONE_HUBS.forEach((hub) => {
+  const cleanHub = hub.endsWith('/') ? hub : `${hub}/`;
+  masterSitemapXml += buildUrlEntry(`${BASE_URL}${cleanHub}`, '0.9', 'weekly');
+});
+
+toolsList.forEach((tool) => {
+  const canonicalSlug = tool.slug || tool.id;
+  masterSitemapXml += buildUrlEntry(`${BASE_URL}/tools/${canonicalSlug}/`, '0.8', 'weekly');
+});
+
+INFORMATIONAL_PAGES.forEach((page) => {
+  const cleanPage = page.endsWith('/') ? page : `${page}/`;
+  masterSitemapXml += buildUrlEntry(`${BASE_URL}${cleanPage}`, '0.6', 'monthly');
+});
+masterSitemapXml += `</urlset>`;
+
+// 5. Sitemap Index (Standard Index pointing to sub-sitemaps)
+const sitemapIndexXml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${BASE_URL}/page-sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/category-sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/tools-sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/post-sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+</sitemapindex>
+`;
+
+// Define all target sitemap files and aliases
+const sitemapFiles = {
+  'sitemap.xml': masterSitemapXml,
+  'sitemap_index.xml': sitemapIndexXml,
+  'sitemaps.xml': sitemapIndexXml,
+  'sitemap-index.xml': sitemapIndexXml,
+  'index.xml': sitemapIndexXml,
+  'post-sitemap.xml': toolsXml,
+  'posts-sitemap.xml': toolsXml,
+  'posts.sitemap.xml': toolsXml,
+  'post_sitemap.xml': toolsXml,
+  'page-sitemap.xml': pagesXml,
+  'pages-sitemap.xml': pagesXml,
+  'pages.sitemap.xml': pagesXml,
+  'page_sitemap.xml': pagesXml,
+  'tools-sitemap.xml': toolsXml,
+  'tool-sitemap.xml': toolsXml,
+  'category-sitemap.xml': categoryXml,
+  'categories-sitemap.xml': categoryXml,
+};
+
+const publicDir = path.join(rootDir, 'public');
+const outDir = path.join(rootDir, 'out');
+
+// Write each sitemap to public/ and out/ (if exists)
+Object.entries(sitemapFiles).forEach(([fileName, content]) => {
+  const pubPath = path.join(publicDir, fileName);
+  fs.writeFileSync(pubPath, content, 'utf8');
+
+  if (fs.existsSync(outDir)) {
+    const outPath = path.join(outDir, fileName);
+    fs.writeFileSync(outPath, content, 'utf8');
   }
 });
 
-// 5. Informational & Legal Pages (Priority 0.6, Monthly)
-INFORMATIONAL_PAGES.forEach((page) => {
-  const cleanPage = page.endsWith('/') ? page : `${page}/`;
-  sitemapXml += `  <url>
-    <loc>${BASE_URL}${cleanPage}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-`;
-});
-
-sitemapXml += `</urlset>`;
-
-// Write to public/sitemap.xml
-const publicPath = path.join(rootDir, 'public', 'sitemap.xml');
-fs.writeFileSync(publicPath, sitemapXml);
-
-// Also copy to out/sitemap.xml if build directory exists
-const outDir = path.join(rootDir, 'out');
-if (fs.existsSync(outDir)) {
-  fs.writeFileSync(path.join(outDir, 'sitemap.xml'), sitemapXml);
-}
-
 const totalRoutes = 1 + CATEGORIES.length + STANDALONE_HUBS.length + seenSlugs.size + INFORMATIONAL_PAGES.length;
-console.log(`✅ Production XML Sitemap generated successfully with ${totalRoutes} canonical URLs!`);
-console.log(`   - Homepage: 1`);
-console.log(`   - Category Hubs: ${CATEGORIES.length}`);
-console.log(`   - Standalone Hubs: ${STANDALONE_HUBS.length}`);
-console.log(`   - Individual Canonical Tools: ${seenSlugs.size}`);
-console.log(`   - Informational Pages: ${INFORMATIONAL_PAGES.length}`);
+console.log(`✅ Production XML Sitemaps generated successfully with ${totalRoutes} canonical URLs!`);
+console.log(`   - Master: /sitemap.xml & /sitemap_index.xml`);
+console.log(`   - Pages: /page-sitemap.xml & /pages-sitemap.xml (${1 + STANDALONE_HUBS.length + INFORMATIONAL_PAGES.length} URLs)`);
+console.log(`   - Categories: /category-sitemap.xml (${CATEGORIES.length} URLs)`);
+console.log(`   - Tools/Posts: /tools-sitemap.xml & /post-sitemap.xml (${seenSlugs.size} URLs)`);
+console.log(`   - Generated ${Object.keys(sitemapFiles).length} total sitemap endpoints for Google Search Console parity.`);
