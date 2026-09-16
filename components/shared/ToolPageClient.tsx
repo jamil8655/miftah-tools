@@ -264,6 +264,8 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'text-to-pdf' ||
     tool.slug === 'txt-to-pdf' ||
     tool.slug === 'text-to-pdf' ||
+    tool.id === 'rtf-to-pdf' ||
+    tool.slug === 'rtf-to-pdf' ||
     tool.id === 'text-to-word' ||
     tool.id === 'text-to-docx' ||
     tool.id === 'text-to-docx-alt' ||
@@ -272,9 +274,29 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'text-to-word' ||
     tool.slug === 'text-to-docx' ||
     tool.slug === 'txt-to-docx' ||
-    tool.slug === 'txt-to-word'
+    tool.slug === 'txt-to-word' ||
+    tool.id === 'text-to-image' ||
+    tool.slug === 'text-to-image' ||
+    tool.id === 'txt-to-image' ||
+    tool.slug === 'txt-to-image' ||
+    tool.id === 'text-to-img' ||
+    tool.slug === 'text-to-img' ||
+    tool.id === 'txt-to-png' ||
+    tool.slug === 'txt-to-png' ||
+    tool.id === 'txt-to-jpg' ||
+    tool.slug === 'txt-to-jpg'
   ) {
-    customWorkspace = <RichTextToDocumentStudio defaultFormat={tool.outputExtension === 'docx' || tool.slug?.includes('word') || tool.slug?.includes('docx') ? 'docx' : 'pdf'} />;
+    customWorkspace = (
+      <RichTextToDocumentStudio
+        defaultFormat={
+          tool.outputExtension === 'docx' || tool.slug?.includes('word') || tool.slug?.includes('docx')
+            ? 'docx'
+            : tool.slug?.includes('image') || tool.slug?.includes('png') || tool.slug?.includes('jpg')
+            ? 'image'
+            : 'pdf'
+        }
+      />
+    );
   } else if (
     tool.id === 'pdf-to-txt' ||
     tool.id === 'pdf-to-text' ||
