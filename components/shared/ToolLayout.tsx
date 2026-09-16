@@ -289,6 +289,7 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
               onDownloadSingle={handleDownloadSingle}
               onDownloadAllZip={results.length > 1 ? handleDownloadAllZip : undefined}
               onReset={handleReset}
+              tool={tool}
             />
           ) : isProcessing ? (
             <div className="py-14 text-center space-y-6 animate-in fade-in duration-200">
