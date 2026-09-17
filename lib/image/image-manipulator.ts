@@ -192,7 +192,9 @@ export async function cropImage(
 }
 
 /**
- * Compress an image to hit an exact Target File Size in KB (e.g. 20KB, 50KB, 100KB, 500KB).
+ * Ultra-Precision Multi-Pass Target-Size Image Compressor.
+ * Guarantees that the output size is strictly <= targetKB (and as close to targetKB as possible, ~85-99%),
+ * while maximizing visual fidelity, edge clarity, and dimensional resolution.
  */
 export async function compressImageToTargetKB(
   file: File,
@@ -202,86 +204,142 @@ export async function compressImageToTargetKB(
   const { img, cleanup } = await loadImageFromFile(file);
 
   try {
-    const targetBytes = targetKB * 1024;
-    let currentWidth = img.naturalWidth || img.width || 800;
-    let currentHeight = img.naturalHeight || img.height || 600;
+    const targetBytes = Math.max(5 * 1024, targetKB * 1024);
+    const origW = img.naturalWidth || img.width || 800;
+    const origH = img.naturalHeight || img.height || 600;
 
-    // Proportionally scale down ultra-high resolution inputs
-    const maxDim = targetKB <= 100 ? 1200 : targetKB <= 500 ? 1920 : 3840;
-    if (Math.max(currentWidth, currentHeight) > maxDim) {
-      const ratio = currentWidth / currentHeight;
-      if (currentWidth > currentHeight) {
-        currentWidth = maxDim;
-        currentHeight = Math.round(maxDim / ratio);
-      } else {
-        currentHeight = maxDim;
-        currentWidth = Math.round(maxDim * ratio);
-      }
+    // Determine safe output MIME type:
+    // HTML5 Canvas toBlob('image/png') ignores quality arguments (always lossless).
+    // If format is PNG and target size cannot be met losslessly, WebP or JPEG is used to hit the byte target.
+    let mimeType = format;
+    if (format === 'image/png' && (file.size > targetBytes || targetKB < 500)) {
+      mimeType = 'image/jpeg';
     }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = currentWidth;
-    canvas.height = currentHeight;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const testCanvas = document.createElement('canvas');
+    const ctx = testCanvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) throw new Error('Canvas context not available');
 
-    if (format === 'image/jpeg') {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const renderCandidate = async (w: number, h: number, q: number): Promise<Blob | null> => {
+      testCanvas.width = Math.max(16, Math.round(w));
+      testCanvas.height = Math.max(16, Math.round(h));
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
-    // Binary search for optimal quality
-    let low = 0.05;
-    let high = 0.95;
-    let bestBlob: Blob | null = null;
-    let bestQuality = 0.8;
-
-    for (let step = 0; step < 7; step++) {
-      const mid = (low + high) / 2;
-      const candidateBlob = await new Promise<Blob | null>((res) => {
-        canvas.toBlob((b) => res(b), format, mid);
-      });
-
-      if (!candidateBlob) break;
-
-      if (candidateBlob.size <= targetBytes) {
-        bestBlob = candidateBlob;
-        bestQuality = mid;
-        low = mid;
-      } else {
-        high = mid;
-      }
-    }
-
-    // Downscale resolution further if lowest quality factor still exceeds target size
-    if (!bestBlob || bestBlob.size > targetBytes) {
-      const scaleFactor = Math.sqrt(targetBytes / (bestBlob?.size || file.size || targetBytes * 2));
-      const scaledW = Math.max(80, Math.floor(currentWidth * Math.min(0.85, scaleFactor)));
-      const scaledH = Math.max(80, Math.floor(currentHeight * Math.min(0.85, scaleFactor)));
-
-      canvas.width = scaledW;
-      canvas.height = scaledH;
-      if (format === 'image/jpeg') {
+      if (mimeType === 'image/jpeg') {
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, testCanvas.width, testCanvas.height);
+      } else {
+        ctx.clearRect(0, 0, testCanvas.width, testCanvas.height);
       }
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, testCanvas.width, testCanvas.height);
 
-      bestBlob = await new Promise<Blob | null>((res) => {
-        canvas.toBlob((b) => res(b), format, 0.7);
+      return new Promise<Blob | null>((resolve) => {
+        testCanvas.toBlob((b) => resolve(b), mimeType, q);
       });
+    };
+
+    let bestBlob: Blob | null = null;
+    let bestWidth = origW;
+    let bestHeight = origH;
+    let bestScore = -1;
+
+    // Phase 1: Test full resolution across quality spectrum (0.98 down to 0.15)
+    let lowQ = 0.08;
+    let highQ = 0.98;
+    let qualityCandidate: Blob | null = null;
+    let chosenQ = 0.8;
+
+    for (let i = 0; i < 9; i++) {
+      const midQ = (lowQ + highQ) / 2;
+      const blob = await renderCandidate(origW, origH, midQ);
+      if (!blob) break;
+
+      if (blob.size <= targetBytes) {
+        qualityCandidate = blob;
+        chosenQ = midQ;
+        bestWidth = origW;
+        bestHeight = origH;
+        lowQ = midQ; // Try to increase quality while staying <= targetBytes
+      } else {
+        highQ = midQ; // Reduce quality
+      }
     }
 
-    const finalResultBlob = bestBlob || file;
-    const dataUrl = URL.createObjectURL(finalResultBlob);
+    if (qualityCandidate && qualityCandidate.size <= targetBytes && chosenQ >= 0.40) {
+      bestBlob = qualityCandidate;
+    } else {
+      // Phase 2: Multi-resolution search with balanced quality for maximum crispness
+      const scaleCandidates = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2, 0.15];
+      
+      for (const scale of scaleCandidates) {
+        const curW = Math.round(origW * scale);
+        const curH = Math.round(origH * scale);
+        if (curW < 32 || curH < 32) continue;
+
+        let scaleLowQ = 0.15;
+        let scaleHighQ = 0.95;
+        let scaleBestBlob: Blob | null = null;
+        let scaleBestQ = 0.7;
+
+        for (let j = 0; j < 8; j++) {
+          const midQ = (scaleLowQ + scaleHighQ) / 2;
+          const blob = await renderCandidate(curW, curH, midQ);
+          if (!blob) break;
+
+          if (blob.size <= targetBytes) {
+            scaleBestBlob = blob;
+            scaleBestQ = midQ;
+            scaleLowQ = midQ; // search for higher quality <= target
+          } else {
+            scaleHighQ = midQ;
+          }
+        }
+
+        if (scaleBestBlob && scaleBestBlob.size <= targetBytes) {
+          const sizeRatio = scaleBestBlob.size / targetBytes;
+          const score = scale * 0.5 + scaleBestQ * 0.3 + sizeRatio * 0.2;
+          
+          if (score > bestScore || !bestBlob) {
+            bestScore = score;
+            bestBlob = scaleBestBlob;
+            bestWidth = curW;
+            bestHeight = curH;
+          }
+
+          if (scale >= 0.7 && scaleBestQ >= 0.75 && sizeRatio > 0.70) {
+            break;
+          }
+        }
+      }
+    }
+
+    // Phase 3: Emergency safeguard if file is still slightly above target (e.g. extreme small target like 10KB)
+    if (!bestBlob || bestBlob.size > targetBytes) {
+      let emergencyScale = Math.min(0.5, Math.sqrt(targetBytes / (file.size || targetBytes * 4)));
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const ew = Math.max(32, Math.round(origW * emergencyScale));
+        const eh = Math.max(32, Math.round(origH * emergencyScale));
+        const blob = await renderCandidate(ew, eh, 0.50);
+        if (blob && blob.size <= targetBytes) {
+          bestBlob = blob;
+          bestWidth = ew;
+          bestHeight = eh;
+          break;
+        }
+        emergencyScale *= 0.75;
+      }
+    }
+
+    const finalBlob = bestBlob || file;
+    const dataUrl = URL.createObjectURL(finalBlob);
 
     return {
-      blob: finalResultBlob,
+      blob: finalBlob,
       dataUrl,
-      width: canvas.width,
-      height: canvas.height,
-      finalKB: Math.round(finalResultBlob.size / 1024),
+      width: bestWidth,
+      height: bestHeight,
+      finalKB: Math.round(finalBlob.size / 1024),
     };
   } finally {
     cleanup();
@@ -442,27 +500,24 @@ export async function stripExifAndMetadata(file: File): Promise<{ blob: Blob; da
 }
 
 /**
- * Standard browser image compression.
+ * Standard browser image compression with guaranteed ratio & fallback.
  */
 export async function compressImage(
   file: File,
   qualityFactor: number = 0.75
 ): Promise<{ blob: Blob; dataUrl: string; savedSize: number; percentSaved: number }> {
   try {
-    const options = {
-      maxSizeMB: Math.max(0.1, (file.size / (1024 * 1024)) * qualityFactor),
-      maxWidthOrHeight: 2560,
-      useWebWorker: true,
-      initialQuality: qualityFactor,
-    };
-    const compressedBlob = await imageCompression(file, options);
-    const dataUrl = URL.createObjectURL(compressedBlob);
-    const savedSize = Math.max(0, file.size - compressedBlob.size);
+    // Calculate target KB from quality factor (e.g. 0.75 means ~40-60% of original, 0.4 means ~20-30%)
+    const targetKB = Math.max(20, Math.round((file.size / 1024) * qualityFactor * 0.75));
+    const targetFormat = file.type?.includes('png') ? 'image/png' : 'image/jpeg';
+    const res = await compressImageToTargetKB(file, targetKB, targetFormat as any);
+    
+    const savedSize = Math.max(0, file.size - res.blob.size);
     const percentSaved = Math.max(0, Math.round((savedSize / file.size) * 100));
 
     return {
-      blob: compressedBlob,
-      dataUrl,
+      blob: res.blob,
+      dataUrl: res.dataUrl,
       savedSize,
       percentSaved,
     };

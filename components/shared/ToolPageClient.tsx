@@ -826,7 +826,20 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       tool.slug === 'pdf-resolution-reducer'
     ) {
       const results = [];
-      const targetLimit = tool.id === 'pdf-extreme-compress' ? '200kb' : options.targetSizeLimit || 'auto';
+      let targetLimit = options.targetSizeLimit || 'auto';
+      let targetKb = options.targetKb;
+      if (!targetKb) {
+        const slugMatch = (tool.slug + ' ' + tool.id).match(/(\d+)\s*kb/i);
+        const slugMatchMb = (tool.slug + ' ' + tool.id).match(/(\d+)\s*mb/i);
+        if (slugMatch) {
+          targetKb = parseInt(slugMatch[1]);
+        } else if (slugMatchMb) {
+          targetKb = parseInt(slugMatchMb[1]) * 1024;
+        } else if (tool.id === 'pdf-extreme-compress') {
+          targetKb = 200;
+        }
+      }
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const buffer = await file.arrayBuffer();
@@ -835,7 +848,7 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
           {
             level: options.level || 'medium',
             targetSizeLimit: targetLimit,
-            targetKb: options.targetKb,
+            targetKb: targetKb,
             quality: options.quality,
           },
           (pct, status) => {
@@ -1149,7 +1162,16 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     ) {
       const results = [];
       const targetFormat = options.outputFormat || 'image/jpeg';
-      const targetKb = options.targetKb;
+      let targetKb = options.targetKb;
+      if (!targetKb) {
+        const slugMatch = (tool.slug + ' ' + tool.id).match(/(\d+)\s*kb/i);
+        const slugMatchMb = (tool.slug + ' ' + tool.id).match(/(\d+)\s*mb/i);
+        if (slugMatch) {
+          targetKb = parseInt(slugMatch[1]);
+        } else if (slugMatchMb) {
+          targetKb = parseInt(slugMatchMb[1]) * 1024;
+        }
+      }
       const qualityFactor = options.quality ?? 0.75;
 
       for (let i = 0; i < files.length; i++) {
