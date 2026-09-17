@@ -23,14 +23,25 @@ export interface CompressResult {
 /**
  * High-Ratio Real Multi-Stage PDF Compressor
  * Evaluates document type (scanned image-heavy vs vector/text), applies optimal strategy,
- * and strictly verifies output size against original input.
+ * and strictly verifies output size against original input with complete protection against detached ArrayBuffers.
  */
 export async function compressPdfAdvanced(
-  pdfBuffer: ArrayBuffer,
+  pdfBuffer: ArrayBuffer | Uint8Array,
   options: CompressOptions = {},
   onProgress?: (percent: number, status: string) => void
 ): Promise<CompressResult> {
-  const originalSize = pdfBuffer.byteLength;
+  // Create an immutable master byte array copy to prevent Web Worker transfer buffer detachment
+  const rawInput = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer);
+  const masterCopy = new Uint8Array(rawInput.length);
+  masterCopy.set(rawInput);
+  const originalSize = masterCopy.byteLength;
+
+  const getIsolatedBytes = (): Uint8Array => {
+    const copy = new Uint8Array(masterCopy.length);
+    copy.set(masterCopy);
+    return copy;
+  };
+
   const level = options.level || 'medium';
   const target = options.targetSizeLimit || 'auto';
 
@@ -51,10 +62,10 @@ export async function compressPdfAdvanced(
 
   onProgress?.(5, 'Analyzing PDF structure and streams...');
 
-  // Step 1: Run structural stream deduplication first
+  // Step 1: Run structural stream deduplication first on an isolated copy
   let structuralBytes: Uint8Array | null = null;
   try {
-    structuralBytes = await compressPdfStructural(pdfBuffer);
+    structuralBytes = await compressPdfStructural(getIsolatedBytes());
   } catch (e) {
     console.warn('Structural PDF compression skipped:', e);
   }
@@ -86,8 +97,10 @@ export async function compressPdfAdvanced(
     if (pdfjsLib) {
       onProgress?.(12, 'Inspecting pages and embedded graphics...');
 
+      // PDF.js worker transfers the buffer, so pass a dedicated isolated copy
+      const workerSafeData = getIsolatedBytes();
       const loadingTask = pdfjsLib.getDocument({
-        data: new Uint8Array(pdfBuffer),
+        data: workerSafeData,
         useSystemFonts: true,
         disableFontFace: false,
       });
@@ -97,11 +110,9 @@ export async function compressPdfAdvanced(
 
       if (pageCount > 0) {
         // Calculate per-page byte budget when targetKb is specified
-        // Reserve 12% overhead for PDF headers, catalog, and xref streams
         const totalBudget = hasTargetKb ? targetBytes : originalSize * (level === 'extreme' ? 0.35 : level === 'medium' ? 0.55 : 0.75);
         const perPageBudget = Math.max(2048, Math.floor((totalBudget * 0.88) / pageCount));
 
-        // Derive initial scale & quality based on per-page byte budget to preserve maximum sharpness
         let baseScale = 1.25;
         let baseQuality = 0.70;
 
@@ -125,7 +136,6 @@ export async function compressPdfAdvanced(
           baseQuality = 0.88;
         }
 
-        // Apply manual quality overrides if explicitly supplied without targetKb
         if (options.quality && !hasTargetKb) {
           baseQuality = options.quality;
           baseScale = options.scale || (options.quality < 0.4 ? 0.9 : options.quality < 0.7 ? 1.2 : 1.45);
@@ -160,7 +170,6 @@ export async function compressPdfAdvanced(
               viewport: viewport,
             }).promise;
 
-            // Render JPEG with binary verification against per-page budget if targetKb is set
             let jpegQuality = baseQuality;
             let jpegBytes: Uint8Array | null = null;
 
@@ -178,7 +187,6 @@ export async function compressPdfAdvanced(
 
             jpegBytes = extractJpegBytes(jpegQuality);
 
-            // If page exceeds per-page budget significantly and targetKb was requested, step down quality
             if (hasTargetKb && jpegBytes.byteLength > perPageBudget * 1.15 && jpegQuality > 0.20) {
               const calibratedQ = Math.max(0.18, jpegQuality * (perPageBudget / jpegBytes.byteLength));
               jpegBytes = extractJpegBytes(calibratedQ);
@@ -220,13 +228,12 @@ export async function compressPdfAdvanced(
     bestBytes = structuralBytes;
   } else if (!bestBytes) {
     onProgress?.(85, 'Running structural stream optimization...');
-    bestBytes = await compressPdfStructural(pdfBuffer);
+    bestBytes = await compressPdfStructural(getIsolatedBytes());
   }
 
   // If structural compression is smaller AND meets target requirements, prefer structural
   if (structuralBytes && bestBytes) {
     if (hasTargetKb) {
-      // If structural meets targetKb, use structural; otherwise use raster if raster <= targetBytes
       if (structuralBytes.byteLength <= targetBytes && structuralBytes.byteLength <= bestBytes.byteLength) {
         bestBytes = structuralBytes;
       }
@@ -237,7 +244,8 @@ export async function compressPdfAdvanced(
     }
   }
 
-  const compressedSize = bestBytes.byteLength;
+  const finalOutputBytes = bestBytes || getIsolatedBytes();
+  const compressedSize = finalOutputBytes.byteLength;
   const savedBytes = originalSize - compressedSize;
   const savedPercentage = originalSize > 0 ? (savedBytes / originalSize) * 100 : 0;
   const isReduced = savedBytes > 0;
@@ -253,7 +261,7 @@ export async function compressPdfAdvanced(
   onProgress?.(100, isReduced ? 'Compression successful!' : 'File already optimized!');
 
   return {
-    bytes: isReduced ? bestBytes : new Uint8Array(pdfBuffer),
+    bytes: finalOutputBytes,
     originalSize,
     compressedSize: isReduced ? compressedSize : originalSize,
     savedBytes: Math.max(0, savedBytes),
@@ -267,8 +275,12 @@ export async function compressPdfAdvanced(
 /**
  * Structural PDF stream deduplication using object streams and unreferenced object purging.
  */
-export async function compressPdfStructural(pdfBuffer: ArrayBuffer): Promise<Uint8Array> {
-  const srcDoc = await PDFDocument.load(pdfBuffer, {
+export async function compressPdfStructural(pdfBuffer: ArrayBuffer | Uint8Array): Promise<Uint8Array> {
+  const raw = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer);
+  const safeCopy = new Uint8Array(raw.length);
+  safeCopy.set(raw);
+
+  const srcDoc = await PDFDocument.load(safeCopy, {
     ignoreEncryption: true,
     updateMetadata: false,
   });

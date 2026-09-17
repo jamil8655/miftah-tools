@@ -210,7 +210,10 @@ export async function protectPdfWithPassword(
   try {
     const pdfjsLib = await getPdfJsLib();
     if (pdfjsLib) {
-      const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(pdfBuffer) });
+      const rawArr = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer);
+      const safeData = new Uint8Array(rawArr.length);
+      safeData.set(rawArr);
+      const loadingTask = pdfjsLib.getDocument({ data: safeData });
       const pdfDoc = await loadingTask.promise;
       const numPages = pdfDoc.numPages;
 
@@ -295,8 +298,11 @@ export async function unlockPdf(
     // Method 2: Try pdf.js with password decryption
     const pdfjsLib = await getPdfJsLib();
     if (pdfjsLib) {
+      const rawArr = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer);
+      const safeData = new Uint8Array(rawArr.length);
+      safeData.set(rawArr);
       const loadingTask = pdfjsLib.getDocument({
-        data: new Uint8Array(pdfBuffer),
+        data: safeData,
         password: password || '',
       });
       const pdfDoc = await loadingTask.promise;
