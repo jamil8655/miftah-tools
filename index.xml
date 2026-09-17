@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://miftahtools.com/page-sitemap.xml</loc>
+    <lastmod>2026-09-17</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://miftahtools.com/category-sitemap.xml</loc>
+    <lastmod>2026-09-17</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://miftahtools.com/tools-sitemap.xml</loc>
+    <lastmod>2026-09-17</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://miftahtools.com/post-sitemap.xml</loc>
+    <lastmod>2026-09-17</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://miftahtools.com/sitemap.xml</loc>
+    <lastmod>2026-09-17</lastmod>
+  </sitemap>
+</sitemapindex>
