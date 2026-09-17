@@ -58,7 +58,7 @@ export function calculatePercentageSaved(originalSize: number, newSize: number):
 let pdfjsPromise: Promise<any> | null = null;
 
 /**
- * Universal PDF.js engine loader with multi-CDN and dynamic bundle fallback.
+ * Universal PDF.js engine loader with bundle priority and multi-CDN fallback.
  */
 export async function getPdfJsLib(): Promise<any> {
   if (typeof window === 'undefined') return null;
@@ -70,6 +70,21 @@ export async function getPdfJsLib(): Promise<any> {
   if (pdfjsPromise) return pdfjsPromise;
 
   pdfjsPromise = (async () => {
+    // 1. Try bundled pdfjs-dist first for instant offline/zero-latency execution
+    try {
+      const pdfjs = await import('pdfjs-dist');
+      if (pdfjs) {
+        try {
+          pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version || '3.11.174'}/pdf.worker.min.js`;
+        } catch (_) {}
+        (window as any).pdfjsLib = pdfjs;
+        return pdfjs;
+      }
+    } catch (bundleErr) {
+      console.warn('Bundled pdfjs-dist import fallback, attempting CDN...', bundleErr);
+    }
+
+    // 2. Multi-CDN fallback if dynamic bundle is not loaded
     const CDNS = [
       {
         main: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
@@ -94,7 +109,7 @@ export async function getPdfJsLib(): Promise<any> {
           const timeout = setTimeout(() => {
             script.remove();
             reject(new Error('CDN timeout'));
-          }, 7000);
+          }, 3500);
 
           script.onload = () => {
             clearTimeout(timeout);
@@ -120,18 +135,6 @@ export async function getPdfJsLib(): Promise<any> {
       } catch (err) {
         console.warn(`PDF.js CDN failed (${cdn.main}), trying fallback...`, err);
       }
-    }
-
-    // Dynamic bundle import fallback
-    try {
-      const pdfjs = await import('pdfjs-dist');
-      if (pdfjs) {
-        pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version || '3.11.174'}/pdf.worker.min.js`;
-        (window as any).pdfjsLib = pdfjs;
-        return pdfjs;
-      }
-    } catch (importErr) {
-      console.error('All PDF.js sources failed:', importErr);
     }
 
     throw new Error('Could not initialize PDF rendering engine. Please check your internet connection.');
