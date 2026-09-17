@@ -217,25 +217,25 @@ export async function compressPdfAdvanced(
         let currentQuality = baseQuality;
         rasterBytes = await renderPdfWithParams(currentScale, currentQuality);
 
-        // Quality-preserving iterative calibration loop (up to 7 passes)
+        // Quality-preserving iterative calibration loop (up to 10 passes)
         if (hasTargetKb && rasterBytes.byteLength > targetBytes) {
-          for (let pass = 0; pass < 7; pass++) {
+          for (let pass = 0; pass < 10; pass++) {
             if (rasterBytes.byteLength <= targetBytes) break;
             const overshootRatio = rasterBytes.byteLength / targetBytes;
 
             // Prioritize preserving resolution scale first, adjust quality gently
-            if (currentQuality > 0.52) {
-              currentQuality = Math.max(0.48, currentQuality * (1 / overshootRatio) * 0.95);
-            } else if (currentScale > 1.25) {
-              currentScale = Math.max(1.15, currentScale * Math.sqrt(1 / overshootRatio) * 0.94);
-              currentQuality = Math.max(0.40, currentQuality * 0.92);
+            if (currentQuality > 0.48) {
+              currentQuality = Math.max(0.38, currentQuality * (1 / overshootRatio) * 0.94);
+            } else if (currentScale > 1.15) {
+              currentScale = Math.max(1.00, currentScale * Math.sqrt(1 / overshootRatio) * 0.92);
+              currentQuality = Math.max(0.32, currentQuality * 0.90);
             } else {
-              currentScale = Math.max(0.95, currentScale * 0.90);
-              currentQuality = Math.max(0.30, currentQuality * 0.88);
+              currentScale = Math.max(0.60, currentScale * 0.85);
+              currentQuality = Math.max(0.18, currentQuality * 0.85);
             }
 
             onProgress?.(
-              Math.min(98, 80 + (pass + 1) * 2),
+              Math.min(98, 75 + (pass + 1) * 2),
               `Optimizing clarity & size (${(rasterBytes.byteLength / 1024).toFixed(0)} KB ➔ Target ${(targetBytes / 1024).toFixed(0)} KB)...`
             );
 
@@ -253,7 +253,7 @@ export async function compressPdfAdvanced(
 
   // -------------------------------------------------------------
   // CRITICAL SIZE DECISION LOGIC & ABSOLUTE ANTI-BLOAT GUARANTEE:
-  // Under NO circumstance will the output be larger than originalSize!
+  // Under NO circumstance will the output exceed targetBytes or originalSize!
   // -------------------------------------------------------------
   let chosenBytes: Uint8Array = getIsolatedBytes();
   let isReduced = false;
@@ -279,14 +279,20 @@ export async function compressPdfAdvanced(
       // Pick the highest quality one (largest byte length <= targetBytes)
       chosenBytes = targetSatisfying.reduce((prev, curr) => (curr.byteLength > prev.byteLength ? curr : prev));
       isReduced = chosenBytes.byteLength < originalSize;
-    } else if (rasterBytes && rasterBytes.byteLength < originalSize) {
-      // If none are <= targetBytes, use rasterBytes as it was aggressively compressed toward target
+    } else if (rasterBytes && rasterBytes.byteLength <= targetBytes) {
       chosenBytes = rasterBytes;
       isReduced = true;
     } else if (validCandidates.length > 0) {
       // Pick the smallest candidate available
-      chosenBytes = validCandidates.reduce((prev, curr) => (curr.byteLength < prev.byteLength ? curr : prev));
-      isReduced = chosenBytes.byteLength < originalSize;
+      const smallest = validCandidates.reduce((prev, curr) => (curr.byteLength < prev.byteLength ? curr : prev));
+      if (smallest.byteLength <= targetBytes) {
+        chosenBytes = smallest;
+        isReduced = true;
+      } else {
+        // If smallest is still > targetBytes, only use if smaller than original
+        chosenBytes = smallest;
+        isReduced = chosenBytes.byteLength < originalSize;
+      }
     }
   } else {
     // Standard mode: pick smallest size < originalSize

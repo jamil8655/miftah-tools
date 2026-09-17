@@ -866,7 +866,21 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
             onProgress(overallPct, status);
           }
         );
-        const blob = new Blob([compressRes.bytes as any], { type: 'application/pdf' });
+
+        let finalBytes = compressRes.bytes;
+        if (targetKb && targetKb > 0 && finalBytes.byteLength > targetKb * 1024) {
+          const reattempt = await compressPdfAdvanced(
+            buffer,
+            {
+              level: 'extreme',
+              targetKb: Math.floor(targetKb * 0.90),
+            }
+          );
+          if (reattempt.bytes && reattempt.bytes.byteLength < finalBytes.byteLength) {
+            finalBytes = reattempt.bytes;
+          }
+        }
+        const blob = new Blob([finalBytes as any], { type: 'application/pdf' });
         results.push({
           name: `compressed-${file.name}`,
           originalSize: file.size,
@@ -1195,6 +1209,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
           const res = await compressImageToTargetKB(file, targetKb, targetFormat);
           outputBlob = res.blob;
           dataUrl = res.dataUrl;
+
+          // Secondary verification safeguard
+          if (outputBlob.size > targetKb * 1024) {
+            const reattempt = await compressImageToTargetKB(file, Math.floor(targetKb * 0.92), targetFormat);
+            if (reattempt.blob.size < outputBlob.size) {
+              outputBlob = reattempt.blob;
+              dataUrl = reattempt.dataUrl;
+            }
+          }
         } else {
           const res = await compressImage(file, qualityFactor);
           outputBlob = res.blob;
