@@ -808,6 +808,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     // 9. PDF COMPRESSOR & OPTIMIZATION
     if (
       tool.id === 'pdf-compress' ||
+      tool.slug === 'compress-pdf' ||
+      tool.slug === 'pdf-compress' ||
+      tool.id.includes('compress-pdf') ||
+      tool.slug.includes('compress-pdf') ||
+      tool.id.includes('pdf-compress') ||
+      tool.slug.includes('pdf-compress') ||
+      tool.id.includes('pdf-to-smaller') ||
+      tool.slug.includes('reduce-pdf-size') ||
+      tool.slug.includes('shrink-pdf') ||
       tool.id === 'pdf-extreme-compress' ||
       tool.id === 'pdf-balanced-compress' ||
       tool.id === 'pdf-hq-compress' ||
@@ -823,7 +832,8 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       tool.slug === 'pdf-font-optimization' ||
       tool.slug === 'remove-unused-pdf-objects' ||
       tool.slug === 'optimize-image-heavy-pdf' ||
-      tool.slug === 'pdf-resolution-reducer'
+      tool.slug === 'pdf-resolution-reducer' ||
+      ((tool.category === 'pdf' || tool.outputExtension === 'pdf') && (tool.id.includes('compress') || tool.slug.includes('compress')))
     ) {
       const results = [];
       let targetLimit = options.targetSizeLimit || 'auto';
@@ -1158,7 +1168,7 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
         tool.slug === 'jpg-compressor' ||
         tool.slug === 'png-compressor' ||
         tool.slug === 'webp-compressor') &&
-      (tool.category === 'image' || tool.category === 'compress')
+      (tool.category === 'image' || (tool.category === 'compress' && !tool.id.includes('pdf') && !tool.slug.includes('pdf') && tool.outputExtension !== 'pdf'))
     ) {
       const results = [];
       const targetFormat = options.outputFormat || 'image/jpeg';

@@ -112,33 +112,33 @@ export async function compressPdfAdvanced(
       if (pageCount > 0) {
         // Target budget calculation
         const totalBudget = hasTargetKb
-          ? Math.min(originalSize * 0.95, targetBytes * 0.94)
+          ? Math.min(originalSize * 0.95, targetBytes * 0.90)
           : originalSize * (level === 'extreme' ? 0.35 : level === 'medium' ? 0.55 : 0.75);
 
         const perPageBudget = Math.max(1000, Math.floor(totalBudget / pageCount));
 
         // Derive scale and quality from per-page budget
-        let baseScale = 1.05;
-        let baseQuality = 0.58;
+        let baseScale = 1.0;
+        let baseQuality = 0.55;
 
-        if (perPageBudget < 15 * 1024) {
+        if (perPageBudget < 25 * 1024) {
           baseScale = 0.60;
           baseQuality = 0.25;
-        } else if (perPageBudget < 35 * 1024) {
+        } else if (perPageBudget < 50 * 1024) {
           baseScale = 0.75;
-          baseQuality = 0.36;
-        } else if (perPageBudget < 75 * 1024) {
+          baseQuality = 0.35;
+        } else if (perPageBudget < 100 * 1024) {
           baseScale = 0.90;
           baseQuality = 0.48;
-        } else if (perPageBudget < 150 * 1024) {
+        } else if (perPageBudget < 200 * 1024) {
           baseScale = 1.05;
           baseQuality = 0.60;
-        } else if (perPageBudget < 300 * 1024) {
-          baseScale = 1.20;
-          baseQuality = 0.72;
+        } else if (perPageBudget < 400 * 1024) {
+          baseScale = 1.15;
+          baseQuality = 0.70;
         } else {
-          baseScale = 1.35;
-          baseQuality = 0.82;
+          baseScale = 1.30;
+          baseQuality = 0.80;
         }
 
         if (options.quality && !hasTargetKb) {
@@ -215,18 +215,20 @@ export async function compressPdfAdvanced(
         let currentQuality = baseQuality;
         rasterBytes = await renderPdfWithParams(currentScale, currentQuality);
 
-        // Iterative calibration loop: If rasterization exceeds target budget, iteratively calibrate (up to 4 passes)
+        // Iterative calibration loop: If rasterization exceeds target budget, iteratively calibrate (up to 5 passes)
         if (hasTargetKb && rasterBytes.byteLength > targetBytes) {
-          for (let pass = 0; pass < 4; pass++) {
+          for (let pass = 0; pass < 5; pass++) {
             if (rasterBytes.byteLength <= targetBytes) break;
             const overshootRatio = rasterBytes.byteLength / targetBytes;
             // Progressively reduce scale and quality proportionally
-            currentScale = Math.max(0.35, currentScale * Math.min(0.92, Math.sqrt(1 / overshootRatio)));
-            currentQuality = Math.max(0.10, currentQuality * Math.min(0.85, 1 / overshootRatio));
+            const scaleFactor = Math.min(0.88, Math.sqrt(1 / overshootRatio));
+            const qualityFactor = Math.min(0.82, 1 / overshootRatio);
+            currentScale = Math.max(0.30, currentScale * scaleFactor);
+            currentQuality = Math.max(0.08, currentQuality * qualityFactor);
 
             onProgress?.(
-              Math.min(96, 80 + pass * 4),
-              `Calibrating compression pass ${pass + 1} to hit ${(targetBytes / 1024).toFixed(0)} KB...`
+              Math.min(98, 80 + (pass + 1) * 3),
+              `Calibrating size (${(rasterBytes.byteLength / 1024).toFixed(0)} KB ➔ Target ${(targetBytes / 1024).toFixed(0)} KB)...`
             );
 
             const nextBytes = await renderPdfWithParams(currentScale, currentQuality);
@@ -255,29 +257,31 @@ export async function compressPdfAdvanced(
     validCandidates.push(structuralBytes);
   }
 
-  // Check raster candidate (only valid if it actually reduced size OR met the requested targetKb)
-  if (rasterBytes) {
-    if (hasTargetKb && rasterBytes.byteLength <= targetBytes) {
-      validCandidates.push(rasterBytes);
-    } else if (rasterBytes.byteLength < originalSize) {
-      validCandidates.push(rasterBytes);
-    }
+  // Check raster candidate
+  if (rasterBytes && rasterBytes.byteLength < originalSize) {
+    validCandidates.push(rasterBytes);
   }
 
   if (hasTargetKb) {
-    // If target KB was requested, prioritize the candidate that satisfies <= targetBytes
+    // If target KB was requested:
+    // 1. Find candidates that strictly satisfy <= targetBytes
     const targetSatisfying = validCandidates.filter((c) => c.byteLength <= targetBytes);
+
     if (targetSatisfying.length > 0) {
-      // Pick the largest candidate among target-satisfying ones to preserve highest quality
+      // Pick the highest quality one (largest byte length <= targetBytes)
       chosenBytes = targetSatisfying.reduce((prev, curr) => (curr.byteLength > prev.byteLength ? curr : prev));
       isReduced = chosenBytes.byteLength < originalSize;
+    } else if (rasterBytes && rasterBytes.byteLength < originalSize) {
+      // If none are <= targetBytes, use rasterBytes as it was aggressively compressed toward target
+      chosenBytes = rasterBytes;
+      isReduced = true;
     } else if (validCandidates.length > 0) {
       // Pick the smallest candidate available
       chosenBytes = validCandidates.reduce((prev, curr) => (curr.byteLength < prev.byteLength ? curr : prev));
       isReduced = chosenBytes.byteLength < originalSize;
     }
   } else {
-    // Standard compression: pick the candidate with maximum compression (< originalSize)
+    // Standard mode: pick smallest size < originalSize
     if (validCandidates.length > 0) {
       chosenBytes = validCandidates.reduce((prev, curr) => (curr.byteLength < prev.byteLength ? curr : prev));
       isReduced = chosenBytes.byteLength < originalSize;
