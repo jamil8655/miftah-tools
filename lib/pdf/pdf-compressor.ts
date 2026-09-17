@@ -110,16 +110,16 @@ export async function compressPdfAdvanced(
       pageCount = pdfDoc.numPages;
 
       if (pageCount > 0) {
-        // Target budget calculation
+        // Target budget calculation with smart internal safety buffer
         const totalBudget = hasTargetKb
-          ? Math.min(originalSize * 0.96, targetBytes * 0.92)
+          ? Math.min(originalSize * 0.96, targetBytes * 0.96)
           : originalSize * (level === 'extreme' ? 0.35 : level === 'medium' ? 0.55 : 0.75);
 
         const perPageBudget = Math.max(1000, Math.floor(totalBudget / pageCount));
 
         // High-DPI baseline to guarantee 100% crisp, readable text (130 - 200+ DPI equivalent)
-        let baseScale = 1.60;
-        let baseQuality = 0.78;
+        let baseScale = 1.65;
+        let baseQuality = 0.80;
 
         if (perPageBudget < 20 * 1024) {
           baseScale = 1.15;
@@ -217,22 +217,25 @@ export async function compressPdfAdvanced(
         let currentQuality = baseQuality;
         rasterBytes = await renderPdfWithParams(currentScale, currentQuality);
 
-        // Quality-preserving iterative calibration loop (up to 5 passes)
+        // Quality-preserving iterative calibration loop (up to 7 passes)
         if (hasTargetKb && rasterBytes.byteLength > targetBytes) {
-          for (let pass = 0; pass < 5; pass++) {
+          for (let pass = 0; pass < 7; pass++) {
             if (rasterBytes.byteLength <= targetBytes) break;
             const overshootRatio = rasterBytes.byteLength / targetBytes;
 
             // Prioritize preserving resolution scale first, adjust quality gently
-            if (currentQuality > 0.55) {
-              currentQuality = Math.max(0.52, currentQuality * (1 / overshootRatio) * 0.94);
+            if (currentQuality > 0.52) {
+              currentQuality = Math.max(0.48, currentQuality * (1 / overshootRatio) * 0.95);
+            } else if (currentScale > 1.25) {
+              currentScale = Math.max(1.15, currentScale * Math.sqrt(1 / overshootRatio) * 0.94);
+              currentQuality = Math.max(0.40, currentQuality * 0.92);
             } else {
-              currentScale = Math.max(1.10, currentScale * Math.sqrt(1 / overshootRatio) * 0.94);
-              currentQuality = Math.max(0.40, currentQuality * 0.90);
+              currentScale = Math.max(0.95, currentScale * 0.90);
+              currentQuality = Math.max(0.30, currentQuality * 0.88);
             }
 
             onProgress?.(
-              Math.min(98, 80 + (pass + 1) * 3),
+              Math.min(98, 80 + (pass + 1) * 2),
               `Optimizing clarity & size (${(rasterBytes.byteLength / 1024).toFixed(0)} KB ➔ Target ${(targetBytes / 1024).toFixed(0)} KB)...`
             );
 
@@ -294,7 +297,7 @@ export async function compressPdfAdvanced(
   }
 
   // Final absolute guarantee: if chosenBytes is >= originalSize, revert to original
-  if (chosenBytes.byteLength >= originalSize) {
+  if (chosenBytes.byteLength >= originalSize && !hasTargetKb) {
     chosenBytes = getIsolatedBytes();
     isReduced = false;
   }

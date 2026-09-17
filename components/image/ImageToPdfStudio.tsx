@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Upload, Download, Trash2, ArrowLeft, ArrowRight, RotateCw, Zap, Sliders, Maximize2, Minimize2, Layers, Check, Copy, Printer, Plus, ArrowUpDown, Filter, Eye, CheckCircle2, Image as ImageIcon, HardDrive, FileCheck2 } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { compressPdfAdvanced } from '@/lib/pdf/pdf-compressor';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { formatBytes } from '@/lib/utils/formatters';
 import { downloadSingleFile, SavedFileInfo } from '@/lib/utils/download';
@@ -419,7 +420,14 @@ export function ImageToPdfStudio() {
       setProgress(90);
       setStatusText('Assembling document metadata...');
 
-      const pdfBytes = await pdfDoc.save({ useObjectStreams: true });
+      let pdfBytes = await pdfDoc.save({ useObjectStreams: true });
+      if (targetSizeKB > 0 && pdfBytes.byteLength > targetSizeKB * 1024) {
+        setStatusText(`Optimizing PDF to hit strictly ≤ ${targetSizeKB} KB target...`);
+        const optRes = await compressPdfAdvanced(pdfBytes, { targetKb: targetSizeKB });
+        if (optRes.bytes && optRes.bytes.byteLength <= targetSizeKB * 1024) {
+          pdfBytes = optRes.bytes;
+        }
+      }
       const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
       const safeName = outputFileName.endsWith('.pdf') ? outputFileName : `${outputFileName}.pdf`;
 

@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { FileText, Layers, RotateCw, Trash2, Copy, Download, Upload, Zap, CheckCircle2, FileDown, Hash, Stamp, Scissors, ArrowRight, ShieldCheck } from 'lucide-react';
 import { PDFDocument, degrees, rgb } from 'pdf-lib';
+import { compressPdfAdvanced } from '@/lib/pdf/pdf-compressor';
 import { downloadSingleFile } from '@/lib/utils/download';
 import { formatBytes } from '@/lib/utils/formatters';
 
@@ -103,15 +104,21 @@ export function UnifiedPdfWorkspace() {
         });
       }
 
-      const modifiedBytes = await doc.save();
-      const outputBlob = new Blob([modifiedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
-
-      // Intelligent Compression Verification (Preserve original if output grew larger)
+      let outputBlob: Blob;
       const originalSize = pdfFile.size;
-      const newSize = outputBlob.size;
 
+      if (activeTab === 'compress') {
+        const compLevel = compressionPreset === 'max' ? 'extreme' : compressionPreset === 'high' ? 'light' : 'medium';
+        const compressRes = await compressPdfAdvanced(pdfBytes, { level: compLevel });
+        outputBlob = new Blob([compressRes.bytes as any], { type: 'application/pdf' });
+      } else {
+        const modifiedBytes = await doc.save();
+        outputBlob = new Blob([modifiedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+      }
+
+      const newSize = outputBlob.size;
       if (activeTab === 'compress' && newSize >= originalSize) {
-        setResultSummary(`Compression preserved original file size (${formatBytes(originalSize)}) without quality loss.`);
+        setResultSummary(`Compression preserved original file size (${formatBytes(originalSize)}) with optimal quality.`);
       } else {
         const savedPct = Math.max(0, Math.round(((originalSize - newSize) / originalSize) * 100));
         setResultSummary(`Successfully processed! Original: ${formatBytes(originalSize)} ➔ Output: ${formatBytes(newSize)} (-${savedPct}%)`);

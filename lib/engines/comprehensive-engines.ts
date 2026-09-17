@@ -852,8 +852,43 @@ export async function findAndReplaceInDocx(file: File, search: string, replaceme
 }
 
 export async function compressDocx(file: File): Promise<Blob> {
-  const rawText = await docxToTxt(file);
-  return await textToDocx(rawText, file.name.replace(/\.[^/.]+$/, ''));
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    
+    // Iterate through all files in docx package
+    // 1. Re-encode/compress embedded media images in word/media/ if applicable
+    const mediaFiles = Object.keys(zip.files).filter((p) => p.startsWith('word/media/'));
+    for (const mediaPath of mediaFiles) {
+      const mediaEntry = zip.files[mediaPath];
+      if (!mediaEntry.dir) {
+        const ext = mediaPath.split('.').pop()?.toLowerCase();
+        if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'bmp') {
+          try {
+            const imgData = await mediaEntry.async('uint8array');
+            // Re-store with maximum compression
+            zip.file(mediaPath, imgData, { compression: 'DEFLATE', compressionOptions: { level: 9 } });
+          } catch (_) {}
+        }
+      }
+    }
+
+    // Rebuild package with Maximum Deflate Level 9
+    const compressedBlob = await zip.generateAsync({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 9 },
+    });
+
+    if (compressedBlob.size < file.size) {
+      return compressedBlob;
+    }
+    return file;
+  } catch (err) {
+    console.warn('DOCX zip optimization fallback, preserving original:', err);
+    return file;
+  }
 }
 
 export async function textToDocx(text: string, title?: string): Promise<Blob> {
