@@ -12,6 +12,7 @@ import { ServiceWorkerRegister } from '@/components/layout/ServiceWorkerRegister
 import { NativeAndroidRuntime } from '@/components/layout/NativeAndroidRuntime';
 import { StickyBottomAd } from '@/components/ads/StickyBottomAd';
 import { AppOpenAd } from '@/components/ads/AppOpenAd';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import { siteConfig } from '@/config/site';
 import { adConfig } from '@/config/ads';
 
@@ -151,24 +152,8 @@ export default function RootLayout({
           rel="stylesheet"
         />
 
-        {/* Google Analytics 4 (GA4) */}
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-RDSHMCW7VB"
-        />
-        <script
-          id="google-analytics"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-RDSHMCW7VB', {
-                page_path: window.location.pathname,
-              });
-            `,
-          }}
-        />
+        {/* Google Analytics 4 (GA4) with SPA Route Tracking */}
+        <GoogleAnalytics />
 
         {adConfig.enabled && adConfig.adsense.client && (
           <script
