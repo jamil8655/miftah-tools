@@ -112,48 +112,48 @@ export async function compressPdfAdvanced(
       if (pageCount > 0) {
         // Target budget calculation
         const totalBudget = hasTargetKb
-          ? Math.min(originalSize * 0.95, targetBytes * 0.90)
+          ? Math.min(originalSize * 0.96, targetBytes * 0.92)
           : originalSize * (level === 'extreme' ? 0.35 : level === 'medium' ? 0.55 : 0.75);
 
         const perPageBudget = Math.max(1000, Math.floor(totalBudget / pageCount));
 
-        // Derive scale and quality from per-page budget
-        let baseScale = 1.0;
-        let baseQuality = 0.55;
+        // High-DPI baseline to guarantee 100% crisp, readable text (130 - 200+ DPI equivalent)
+        let baseScale = 1.60;
+        let baseQuality = 0.78;
 
-        if (perPageBudget < 25 * 1024) {
-          baseScale = 0.60;
-          baseQuality = 0.25;
-        } else if (perPageBudget < 50 * 1024) {
-          baseScale = 0.75;
-          baseQuality = 0.35;
-        } else if (perPageBudget < 100 * 1024) {
-          baseScale = 0.90;
-          baseQuality = 0.48;
-        } else if (perPageBudget < 200 * 1024) {
-          baseScale = 1.05;
-          baseQuality = 0.60;
-        } else if (perPageBudget < 400 * 1024) {
+        if (perPageBudget < 20 * 1024) {
           baseScale = 1.15;
-          baseQuality = 0.70;
-        } else {
+          baseQuality = 0.55;
+        } else if (perPageBudget < 40 * 1024) {
           baseScale = 1.30;
-          baseQuality = 0.80;
+          baseQuality = 0.65;
+        } else if (perPageBudget < 80 * 1024) {
+          baseScale = 1.45;
+          baseQuality = 0.72;
+        } else if (perPageBudget < 160 * 1024) {
+          baseScale = 1.65;
+          baseQuality = 0.78;
+        } else if (perPageBudget < 350 * 1024) {
+          baseScale = 1.85;
+          baseQuality = 0.82;
+        } else {
+          baseScale = 2.00;
+          baseQuality = 0.88;
         }
 
         if (options.quality && !hasTargetKb) {
-          baseQuality = options.quality;
-          baseScale = options.scale || (options.quality < 0.4 ? 0.85 : options.quality < 0.7 ? 1.05 : 1.30);
+          baseQuality = Math.max(0.40, options.quality);
+          baseScale = options.scale || (options.quality < 0.4 ? 1.25 : options.quality < 0.7 ? 1.55 : 1.85);
         }
 
-        onProgress?.(15, `Compressing ${pageCount} pages (Target budget: ${(totalBudget / 1024).toFixed(0)} KB)...`);
+        onProgress?.(15, `Compressing ${pageCount} pages with high text clarity (Target: ${(totalBudget / 1024).toFixed(0)} KB)...`);
 
         const renderPdfWithParams = async (scale: number, quality: number): Promise<Uint8Array> => {
           const newPdf = await PDFDocument.create();
 
           for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
             const pct = Math.round(15 + (pageNum / pageCount) * 78);
-            onProgress?.(pct, `Optimizing page ${pageNum} of ${pageCount}...`);
+            onProgress?.(pct, `Rendering page ${pageNum} of ${pageCount} with sharp clarity...`);
 
             if (pageNum % 2 === 0 || pageCount > 15) {
               await new Promise((resolve) => setTimeout(resolve, 8));
@@ -168,6 +168,8 @@ export async function compressPdfAdvanced(
 
             const ctx = canvas.getContext('2d', { alpha: false });
             if (ctx) {
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'high';
               ctx.fillStyle = '#ffffff';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -201,7 +203,7 @@ export async function compressPdfAdvanced(
             canvas.height = 0;
           }
 
-          newPdf.setProducer('Miftah Precision Engine');
+          newPdf.setProducer('Miftah Precision Clarity Engine');
           newPdf.setCreator('Miftah Tools');
 
           return await newPdf.save({
@@ -215,20 +217,23 @@ export async function compressPdfAdvanced(
         let currentQuality = baseQuality;
         rasterBytes = await renderPdfWithParams(currentScale, currentQuality);
 
-        // Iterative calibration loop: If rasterization exceeds target budget, iteratively calibrate (up to 5 passes)
+        // Quality-preserving iterative calibration loop (up to 5 passes)
         if (hasTargetKb && rasterBytes.byteLength > targetBytes) {
           for (let pass = 0; pass < 5; pass++) {
             if (rasterBytes.byteLength <= targetBytes) break;
             const overshootRatio = rasterBytes.byteLength / targetBytes;
-            // Progressively reduce scale and quality proportionally
-            const scaleFactor = Math.min(0.88, Math.sqrt(1 / overshootRatio));
-            const qualityFactor = Math.min(0.82, 1 / overshootRatio);
-            currentScale = Math.max(0.30, currentScale * scaleFactor);
-            currentQuality = Math.max(0.08, currentQuality * qualityFactor);
+
+            // Prioritize preserving resolution scale first, adjust quality gently
+            if (currentQuality > 0.55) {
+              currentQuality = Math.max(0.52, currentQuality * (1 / overshootRatio) * 0.94);
+            } else {
+              currentScale = Math.max(1.10, currentScale * Math.sqrt(1 / overshootRatio) * 0.94);
+              currentQuality = Math.max(0.40, currentQuality * 0.90);
+            }
 
             onProgress?.(
               Math.min(98, 80 + (pass + 1) * 3),
-              `Calibrating size (${(rasterBytes.byteLength / 1024).toFixed(0)} KB ➔ Target ${(targetBytes / 1024).toFixed(0)} KB)...`
+              `Optimizing clarity & size (${(rasterBytes.byteLength / 1024).toFixed(0)} KB ➔ Target ${(targetBytes / 1024).toFixed(0)} KB)...`
             );
 
             const nextBytes = await renderPdfWithParams(currentScale, currentQuality);

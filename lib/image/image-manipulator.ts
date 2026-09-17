@@ -244,11 +244,11 @@ export async function compressImageToTargetKB(
     let bestHeight = origH;
     let bestScore = -1;
 
-    // Phase 1: Test full resolution across quality spectrum (0.98 down to 0.15)
-    let lowQ = 0.08;
+    // Phase 1: Test full 100% resolution across quality spectrum (0.98 down to 0.18)
+    let lowQ = 0.15;
     let highQ = 0.98;
     let qualityCandidate: Blob | null = null;
-    let chosenQ = 0.8;
+    let chosenQ = 0.85;
 
     for (let i = 0; i < 9; i++) {
       const midQ = (lowQ + highQ) / 2;
@@ -266,21 +266,22 @@ export async function compressImageToTargetKB(
       }
     }
 
-    if (qualityCandidate && qualityCandidate.size <= targetBytes && chosenQ >= 0.40) {
+    // Always prefer 100% full resolution when quality is usable (>= 0.20)
+    if (qualityCandidate && qualityCandidate.size <= targetBytes && chosenQ >= 0.20) {
       bestBlob = qualityCandidate;
     } else {
-      // Phase 2: Multi-resolution search with balanced quality for maximum crispness
-      const scaleCandidates = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2, 0.15];
+      // Phase 2: Gentle multi-resolution search (prioritizing highest resolution first)
+      const scaleCandidates = [0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.55, 0.45];
       
       for (const scale of scaleCandidates) {
         const curW = Math.round(origW * scale);
         const curH = Math.round(origH * scale);
         if (curW < 32 || curH < 32) continue;
 
-        let scaleLowQ = 0.15;
+        let scaleLowQ = 0.25;
         let scaleHighQ = 0.95;
         let scaleBestBlob: Blob | null = null;
-        let scaleBestQ = 0.7;
+        let scaleBestQ = 0.75;
 
         for (let j = 0; j < 8; j++) {
           const midQ = (scaleLowQ + scaleHighQ) / 2;
@@ -298,7 +299,7 @@ export async function compressImageToTargetKB(
 
         if (scaleBestBlob && scaleBestBlob.size <= targetBytes) {
           const sizeRatio = scaleBestBlob.size / targetBytes;
-          const score = scale * 0.5 + scaleBestQ * 0.3 + sizeRatio * 0.2;
+          const score = scale * 0.6 + scaleBestQ * 0.25 + sizeRatio * 0.15;
           
           if (score > bestScore || !bestBlob) {
             bestScore = score;
@@ -307,7 +308,7 @@ export async function compressImageToTargetKB(
             bestHeight = curH;
           }
 
-          if (scale >= 0.7 && scaleBestQ >= 0.75 && sizeRatio > 0.70) {
+          if (scale >= 0.75 && scaleBestQ >= 0.70 && sizeRatio > 0.75) {
             break;
           }
         }
