@@ -353,8 +353,8 @@ export async function compressImageToTargetKB(
       bestCandidate = validCandidates.reduce((best, curr) => (curr.score > best.score ? curr : best));
     }
 
-    // Step 5: Strict Hard Limit Verification Loop (Ensure NEVER exceeds targetBytes)
-    let finalBlob: Blob;
+    // Step 5: Strict Hard Limit Verification Loop (Ensure NEVER exceeds hardMaxBytes)
+    let finalBlob: Blob | null = null;
     let finalW = origW;
     let finalH = origH;
 
@@ -364,38 +364,46 @@ export async function compressImageToTargetKB(
       finalH = bestCandidate.height;
     } else {
       // Fallback emergency compression loop
-      let eScale = Math.min(0.5, Math.sqrt(safetyTargetBytes / (file.size || safetyTargetBytes * 4)));
+      let eScale = Math.min(0.60, Math.sqrt(safetyTargetBytes / (file.size || safetyTargetBytes * 2)) * 0.92);
       let eQuality = 0.50;
-      let eBlob: Blob | null = null;
 
-      for (let attempt = 0; attempt < 8; attempt++) {
-        const ew = Math.max(24, Math.round(origW * eScale));
-        const eh = Math.max(24, Math.round(origH * eScale));
-        eBlob = await renderCandidate(ew, eh, eQuality);
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const ew = Math.max(16, Math.round(origW * eScale));
+        const eh = Math.max(16, Math.round(origH * eScale));
+        const eBlob = await renderCandidate(ew, eh, eQuality);
         if (eBlob && eBlob.size <= hardMaxBytes) {
           finalBlob = eBlob;
           finalW = ew;
           finalH = eh;
           break;
         }
-        eQuality = Math.max(0.20, eQuality * 0.85);
-        eScale = Math.max(0.15, eScale * 0.85);
+        const overshoot = eBlob ? eBlob.size / safetyTargetBytes : 1.35;
+        eQuality = Math.max(0.15, eQuality / Math.max(1.05, overshoot) * 0.90);
+        eScale = Math.max(0.08, eScale / Math.sqrt(Math.max(1.05, overshoot)) * 0.92);
       }
-
-      finalBlob = eBlob || file;
     }
 
-    // Final safety check: if still above hardMaxBytes due to extreme target, run single fine-tuning pass
-    if (finalBlob.size > hardMaxBytes) {
-      const reductionRatio = Math.sqrt(hardMaxBytes / finalBlob.size) * 0.92;
-      const tightW = Math.max(20, Math.round(finalW * reductionRatio));
-      const tightH = Math.max(20, Math.round(finalH * reductionRatio));
-      const tightBlob = await renderCandidate(tightW, tightH, 0.45);
-      if (tightBlob && tightBlob.size <= hardMaxBytes) {
-        finalBlob = tightBlob;
-        finalW = tightW;
-        finalH = tightH;
+    // Final safety verification: if still above hardMaxBytes, run tight fine-tuning passes
+    if (!finalBlob || finalBlob.size > hardMaxBytes) {
+      let forcedScale = Math.min(0.35, Math.sqrt(safetyTargetBytes / (file.size || safetyTargetBytes * 4)) * 0.85);
+      let forcedQ = 0.35;
+      for (let fPass = 0; fPass < 8; fPass++) {
+        const fw = Math.max(16, Math.round(origW * forcedScale));
+        const fh = Math.max(16, Math.round(origH * forcedScale));
+        const fb = await renderCandidate(fw, fh, forcedQ);
+        if (fb && fb.size <= hardMaxBytes) {
+          finalBlob = fb;
+          finalW = fw;
+          finalH = fh;
+          break;
+        }
+        forcedScale *= 0.80;
+        forcedQ *= 0.80;
       }
+    }
+
+    if (!finalBlob || finalBlob.size > hardMaxBytes) {
+      throw new Error(`Unable to compress image to under ${(hardMaxBytes / 1024).toFixed(0)} KB (${targetKB >= 1024 ? (targetKB / 1024).toFixed(1) + ' MB' : targetKB + ' KB'}). Please try a slightly higher target size.`);
     }
 
     const dataUrl = URL.createObjectURL(finalBlob);
