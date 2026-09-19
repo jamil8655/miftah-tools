@@ -118,7 +118,7 @@ export async function fetchBinaryStreamBlob(
   onProgress?: (percent: number, status: string) => void
 ): Promise<Blob | null> {
   const proxyEndpoints = [
-    streamUrl, // Direct
+    streamUrl, // Direct fetch
     `https://corsproxy.io/?${encodeURIComponent(streamUrl)}`,
     `https://api.allorigins.win/raw?url=${encodeURIComponent(streamUrl)}`,
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(streamUrl)}`,
@@ -127,7 +127,7 @@ export async function fetchBinaryStreamBlob(
   for (let i = 0; i < proxyEndpoints.length; i++) {
     const target = proxyEndpoints[i];
     try {
-      onProgress?.(50 + i * 12, i === 0 ? 'Streaming media bytes directly...' : `Routing via high-speed relay tunnel ${i}...`);
+      onProgress?.(85 + i * 3, i === 0 ? 'Downloading audio/video stream...' : `Connecting via failover relay ${i}...`);
       const res = await fetch(target, {
         headers: {
           Accept: '*/*',
@@ -156,7 +156,52 @@ export async function fetchBinaryStreamBlob(
 }
 
 // ----------------------------------------------------
-// ENGINE 1: RapidAPI Auto-Rotating Key Stream Resolver
+// ENGINE 1: Loader.to High-Speed Transcoding Cluster (Real Video & Real MP3)
+// ----------------------------------------------------
+export async function resolveLoaderToStream(
+  url: string,
+  formatCode: 'mp3' | '360' | '480' | '720' | '1080',
+  onProgress?: (percent: number, status: string) => void
+): Promise<string | null> {
+  try {
+    onProgress?.(20, 'Connecting to High-Speed Stream Transcoder...');
+    const initRes = await fetch(`https://loader.to/ajax/download.php?format=${formatCode}&url=${encodeURIComponent(url)}`);
+    if (!initRes.ok) return null;
+
+    const initData = await initRes.json();
+    if (!initData || !initData.success || !initData.id) return null;
+
+    const progUrl = initData.progress_url || `https://loader.to/ajax/progress.php?id=${initData.id}`;
+    onProgress?.(35, 'Transcoding high-definition stream...');
+
+    // Poll until stream transcoding finishes (up to 25 attempts, ~30s max)
+    for (let attempt = 1; attempt <= 25; attempt++) {
+      await new Promise((res) => setTimeout(res, 1200));
+      try {
+        const pRes = await fetch(progUrl);
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          const rawProg = typeof pData.progress === 'number' ? pData.progress : 50;
+          const displayPct = Math.min(85, Math.max(35, Math.floor(rawProg / 12)));
+          onProgress?.(displayPct, pData.text || 'Processing high-fidelity stream...');
+
+          if (pData.download_url && (pData.progress === 1000 || pData.success === 1 || pData.text === 'Finished')) {
+            onProgress?.(90, 'Stream ready! Transferring binary file...');
+            return pData.download_url;
+          }
+        }
+      } catch (pollErr) {
+        // continue polling
+      }
+    }
+  } catch (err) {
+    console.warn('Loader.to stream notice:', err);
+  }
+  return null;
+}
+
+// ----------------------------------------------------
+// ENGINE 2: RapidAPI Auto-Rotating Key Stream Resolver
 // ----------------------------------------------------
 export async function resolveRapidApiYouTubeStream(
   videoId: string,
@@ -169,7 +214,7 @@ export async function resolveRapidApiYouTubeStream(
   for (let k = 0; k < keysToTry.length; k++) {
     const currentKey = keysToTry[k];
     try {
-      onProgress?.(15 + k * 5, `Connecting to high-speed stream engine ${k + 1}...`);
+      onProgress?.(25 + k * 5, `Engaging Dedicated API Node ${k + 1}...`);
       const initRes = await fetch(
         `https://${RAPIDAPI_HOST_PRIMARY}/api/v1/download?format=${formatType}&id=${videoId}&audioQuality=128&addInfo=false&allowExtendedDuration=false`,
         {
@@ -185,10 +230,10 @@ export async function resolveRapidApiYouTubeStream(
       if (!initData.success || !initData.progressId) continue;
 
       const progressId = initData.progressId;
-      onProgress?.(35, 'Transcoding high-definition stream...');
+      onProgress?.(40, 'Transcoding high-definition stream...');
 
       // Poll progress endpoint
-      for (let attempt = 1; attempt <= 15; attempt++) {
+      for (let attempt = 1; attempt <= 20; attempt++) {
         await new Promise((res) => setTimeout(res, 1200));
         const progRes = await fetch(`https://${RAPIDAPI_HOST_PRIMARY}/api/v1/progress?id=${progressId}`, {
           headers: {
@@ -199,10 +244,11 @@ export async function resolveRapidApiYouTubeStream(
 
         if (progRes.ok) {
           const progData = await progRes.json();
-          const pct = Math.min(85, 35 + attempt * 4);
-          onProgress?.(pct, progData.status || 'Preparing high-speed download...');
+          const rawProg = typeof progData.progress === 'number' ? progData.progress : 50;
+          const displayPct = Math.min(85, Math.max(40, Math.floor(rawProg / 12)));
+          onProgress?.(displayPct, progData.status || 'Preparing high-speed download...');
 
-          if (progData.finished && progData.downloadUrl) {
+          if (progData.downloadUrl && (progData.finished || progData.progress === 1000 || progData.status === 'Finished')) {
             onProgress?.(90, 'Stream ready, fetching binary file...');
             return progData.downloadUrl;
           }
@@ -216,7 +262,38 @@ export async function resolveRapidApiYouTubeStream(
 }
 
 // ----------------------------------------------------
-// ENGINE 2: Cobalt Multi-Node Global API Network
+// ENGINE 3: TikWM Public HD Multi-Cluster (TikTok)
+// ----------------------------------------------------
+export async function resolveTikTokStream(url: string): Promise<{ title: string; author: string; cover: string; playUrl: string; musicUrl?: string } | null> {
+  const endpoints = [
+    `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`,
+    `https://api.tikwm.com/api/?url=${encodeURIComponent(url)}`,
+  ];
+
+  for (const ep of endpoints) {
+    try {
+      const res = await fetch(ep);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.code === 0 && data.data) {
+          return {
+            title: data.data.title || 'TikTok Video (No Watermark)',
+            author: data.data.author?.nickname || 'TikTok Creator',
+            cover: data.data.cover || '',
+            playUrl: data.data.play || data.data.wmplay,
+            musicUrl: data.data.music,
+          };
+        }
+      }
+    } catch (e) {
+      // try next
+    }
+  }
+  return null;
+}
+
+// ----------------------------------------------------
+// ENGINE 4: Cobalt Multi-Node Global API Network
 // ----------------------------------------------------
 export async function resolveCobaltStream(
   url: string,
@@ -254,37 +331,6 @@ export async function resolveCobaltStream(
       }
     } catch (e) {
       // try next node
-    }
-  }
-  return null;
-}
-
-// ----------------------------------------------------
-// ENGINE 3: TikWM Public HD Multi-Cluster (TikTok)
-// ----------------------------------------------------
-export async function resolveTikTokStream(url: string): Promise<{ title: string; author: string; cover: string; playUrl: string; musicUrl?: string } | null> {
-  const endpoints = [
-    `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`,
-    `https://api.tikwm.com/api/?url=${encodeURIComponent(url)}`,
-  ];
-
-  for (const ep of endpoints) {
-    try {
-      const res = await fetch(ep);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.code === 0 && data.data) {
-          return {
-            title: data.data.title || 'TikTok Video (No Watermark)',
-            author: data.data.author?.nickname || 'TikTok Creator',
-            cover: data.data.cover || '',
-            playUrl: data.data.play || data.data.wmplay,
-            musicUrl: data.data.music,
-          };
-        }
-      }
-    } catch (e) {
-      // try next
     }
   }
   return null;
@@ -483,33 +529,47 @@ export async function downloadInSiteMedia(
   }
 
   let directStreamUrl: string | null = null;
+  const isAudio = format.type === 'audio';
+  const formatCode: 'mp3' | '360' | '480' | '720' | '1080' = isAudio
+    ? 'mp3'
+    : format.quality.includes('1080')
+    ? '1080'
+    : format.quality.includes('720')
+    ? '720'
+    : '480';
 
-  // ENGINE STEP 1: RapidAPI Auto-Rotating Key Engine (for YouTube)
-  if (metadata.platform === 'youtube' && metadata.videoId) {
-    const formatCode = format.type === 'audio' ? 'mp3' : format.quality.includes('1080') ? '1080' : format.quality.includes('720') ? '720' : '480';
-    directStreamUrl = await resolveRapidApiYouTubeStream(metadata.videoId, formatCode as any, onProgress);
-  }
-
-  // ENGINE STEP 2: TikTok Public Cluster
-  if (!directStreamUrl && metadata.platform === 'tiktok') {
-    directStreamUrl = metadata.realStreamUrl || format.directUrl || null;
-  }
-
-  // ENGINE STEP 3: Cobalt Multi-Node Global Network
+  // ENGINE STEP 1: Loader.to Multi-Format High-Speed Transcoding Cluster (YouTube, Social Media)
   if (!directStreamUrl) {
-    const isAudio = format.type === 'audio';
+    directStreamUrl = await resolveLoaderToStream(metadata.url, formatCode, onProgress);
+  }
+
+  // ENGINE STEP 2: RapidAPI Multi-Key Pool Failover
+  if (!directStreamUrl && metadata.platform === 'youtube' && metadata.videoId) {
+    directStreamUrl = await resolveRapidApiYouTubeStream(metadata.videoId, formatCode, onProgress);
+  }
+
+  // ENGINE STEP 3: TikTok Direct Stream Cluster
+  if (!directStreamUrl && metadata.platform === 'tiktok') {
+    const tik = await resolveTikTokStream(metadata.url);
+    if (tik) {
+      directStreamUrl = isAudio && tik.musicUrl ? tik.musicUrl : tik.playUrl;
+    }
+  }
+
+  // ENGINE STEP 4: Cobalt Multi-Node Global Network
+  if (!directStreamUrl) {
     const requestedQuality = format.quality.includes('1080') ? '1080' : format.quality.includes('720') ? '720' : '480';
     directStreamUrl = await resolveCobaltStream(metadata.url, isAudio, requestedQuality, onProgress);
   }
 
-  // ENGINE STEP 4: Direct URL if provided
+  // ENGINE STEP 5: Direct URL if provided
   if (!directStreamUrl && format.directUrl) {
     directStreamUrl = format.directUrl;
   }
 
-  // ENGINE STEP 5: Process Stream into In-Memory Blob
+  // ENGINE STEP 6: Process Stream into In-Memory Real Blob
   if (directStreamUrl) {
-    onProgress?.(60, 'Downloading media binary bytes directly in app...');
+    onProgress?.(80, 'Streaming media binary bytes directly...');
     const expectedMime = format.type === 'audio' ? 'audio/mpeg' : 'video/mp4';
     const blob = await fetchBinaryStreamBlob(directStreamUrl, expectedMime, onProgress);
     if (blob && blob.size > 2048) {
@@ -518,65 +578,7 @@ export async function downloadInSiteMedia(
     }
   }
 
-  // ENGINE STEP 6: High-Fidelity Audio Synthesis Fallback (for Audio Only)
-  if (format.type === 'audio') {
-    onProgress?.(70, 'Rendering studio audio stream in memory...');
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const durationSec = 15;
-    const sampleRate = audioContext.sampleRate;
-    const buffer = audioContext.createBuffer(2, sampleRate * durationSec, sampleRate);
-    const left = buffer.getChannelData(0);
-    const right = buffer.getChannelData(1);
-
-    for (let i = 0; i < buffer.length; i++) {
-      const t = i / sampleRate;
-      const val = Math.sin(2 * Math.PI * 440 * t) * Math.exp(-t / 3);
-      left[i] = val * 0.3;
-      right[i] = val * 0.3;
-    }
-
-    const numChannels = 2;
-    const bitDepth = 16;
-    const bytesPerSample = bitDepth / 8;
-    const blockAlign = numChannels * bytesPerSample;
-    const dataByteLength = buffer.length * blockAlign;
-    const arrayBuffer = new ArrayBuffer(44 + dataByteLength);
-    const view = new DataView(arrayBuffer);
-
-    writeAscii(view, 0, 'RIFF');
-    view.setUint32(4, 36 + dataByteLength, true);
-    writeAscii(view, 8, 'WAVE');
-    writeAscii(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * blockAlign, true);
-    view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bitDepth, true);
-    writeAscii(view, 36, 'data');
-    view.setUint32(40, dataByteLength, true);
-
-    let offset = 44;
-    for (let i = 0; i < buffer.length; i++, offset += 4) {
-      view.setInt16(offset, left[i] * 0x7fff, true);
-      view.setInt16(offset + 2, right[i] * 0x7fff, true);
-    }
-
-    audioContext.close();
-    onProgress?.(100, 'Audio stream downloaded successfully!');
-    return {
-      blob: new Blob([view], { type: 'audio/wav' }),
-      fileName: fileName.replace(/\.mp3$/, '.wav'),
-    };
-  }
-
-  throw new Error('Video stream is protected or restricted by the platform. Please verify the URL or try another link.');
+  throw new Error('Video/audio stream is protected or restricted by the platform. Please verify the URL or try another link.');
 }
 
-function writeAscii(view: DataView, offset: number, string: string) {
-  for (let i = 0; i < string.length; i++) {
-    view.setUint8(offset + i, string.charCodeAt(i));
-  }
-}
 
