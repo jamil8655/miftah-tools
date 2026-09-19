@@ -8,6 +8,7 @@ import {
   fetchMediaMetadata,
   detectPlatform,
   downloadInSiteMedia,
+  triggerDirectUrlDownload,
   getCustomRapidApiKey,
   setCustomRapidApiKey,
 } from '@/lib/media/media-downloader';
@@ -93,7 +94,8 @@ export function MediaDownloaderStudio() {
 
   const [downloadSuccessFile, setDownloadSuccessFile] = useState<{
     fileName: string;
-    blob: Blob;
+    blob?: Blob | null;
+    directUrl?: string;
     format: MediaDownloadFormat;
   } | null>(null);
 
@@ -123,6 +125,18 @@ export function MediaDownloaderStudio() {
           blob: result.blob,
           format,
         });
+      } else if (result.directUrl) {
+        // Direct Stream URL Trigger (Android native DownloadManager / direct browser trigger)
+        triggerDirectUrlDownload(
+          result.directUrl,
+          result.fileName,
+          format.type === 'audio' ? 'audio/mpeg' : 'video/mp4'
+        );
+        setDownloadSuccessFile({
+          fileName: result.fileName,
+          directUrl: result.directUrl,
+          format,
+        });
       }
     } catch (err: any) {
       console.error(err);
@@ -138,23 +152,38 @@ export function MediaDownloaderStudio() {
 
   const handleOpenDownloaded = async () => {
     if (downloadSuccessFile) {
-      const { openDownloadedFile } = await import('@/lib/utils/download');
-      openDownloadedFile({
-        name: downloadSuccessFile.fileName,
-        blob: downloadSuccessFile.blob,
-        mimeType: downloadSuccessFile.blob.type,
-      });
+      if (downloadSuccessFile.blob) {
+        const { openDownloadedFile } = await import('@/lib/utils/download');
+        openDownloadedFile({
+          name: downloadSuccessFile.fileName,
+          blob: downloadSuccessFile.blob,
+          mimeType: downloadSuccessFile.blob.type,
+        });
+      } else if (downloadSuccessFile.directUrl) {
+        window.open(downloadSuccessFile.directUrl, '_blank');
+      }
     }
   };
 
   const handleShareDownloaded = async () => {
     if (downloadSuccessFile) {
-      const { shareDownloadedFile } = await import('@/lib/utils/download');
-      shareDownloadedFile({
-        name: downloadSuccessFile.fileName,
-        blob: downloadSuccessFile.blob,
-        mimeType: downloadSuccessFile.blob.type,
-      });
+      if (downloadSuccessFile.blob) {
+        const { shareDownloadedFile } = await import('@/lib/utils/download');
+        shareDownloadedFile({
+          name: downloadSuccessFile.fileName,
+          blob: downloadSuccessFile.blob,
+          mimeType: downloadSuccessFile.blob.type,
+        });
+      } else if (downloadSuccessFile.directUrl && navigator.share) {
+        try {
+          await navigator.share({
+            title: downloadSuccessFile.fileName,
+            url: downloadSuccessFile.directUrl,
+          });
+        } catch (e) {
+          // User closed share dialog
+        }
+      }
     }
   };
 
@@ -568,10 +597,15 @@ export function MediaDownloaderStudio() {
             <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500/40 space-y-3 animate-in zoom-in-95">
               <div className="flex items-center gap-2.5 text-emerald-800 dark:text-emerald-300 font-black text-sm">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>Download Complete! Saved directly to your device Downloads folder.</span>
+                <span>Download Triggered! Saved directly to your device Downloads folder.</span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 font-mono break-all">
-                {downloadSuccessFile.fileName} ({(downloadSuccessFile.blob.size / (1024 * 1024)).toFixed(2)} MB)
+                {downloadSuccessFile.fileName}
+                {downloadSuccessFile.blob
+                  ? ` (${(downloadSuccessFile.blob.size / (1024 * 1024)).toFixed(2)} MB)`
+                  : downloadSuccessFile.format?.sizeEstimate
+                  ? ` (${downloadSuccessFile.format.sizeEstimate})`
+                  : ''}
               </p>
               <div className="flex flex-wrap items-center gap-2.5 pt-1">
                 <button
@@ -590,6 +624,24 @@ export function MediaDownloaderStudio() {
                   <Share2 className="w-3.5 h-3.5" />
                   <span>Share</span>
                 </button>
+                {downloadSuccessFile.directUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (downloadSuccessFile.directUrl) {
+                        triggerDirectUrlDownload(
+                          downloadSuccessFile.directUrl,
+                          downloadSuccessFile.fileName,
+                          downloadSuccessFile.format.type === 'audio' ? 'audio/mpeg' : 'video/mp4'
+                        );
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Again</span>
+                  </button>
+                )}
               </div>
             </div>
           )}

@@ -128,11 +128,16 @@ export async function fetchBinaryStreamBlob(
     const target = proxyEndpoints[i];
     try {
       onProgress?.(85 + i * 3, i === 0 ? 'Downloading audio/video stream...' : `Connecting via failover relay ${i}...`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s max per relay
+      
       const res = await fetch(target, {
+        signal: controller.signal,
         headers: {
           Accept: '*/*',
         },
       });
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const contentType = res.headers.get('content-type') || '';
@@ -466,6 +471,53 @@ export async function fetchMediaMetadata(url: string): Promise<MediaMetadata> {
 }
 
 /**
+ * Trigger direct download from verified CDN stream URL without CORS restrictions and without opening external popup tabs.
+ */
+export function triggerDirectUrlDownload(url: string, filename: string, mimeType: string = 'video/mp4') {
+  if (typeof window === 'undefined') return;
+
+  // 1. Android Native DownloadManager interface
+  if ((window as any).AndroidDownloader?.downloadUrl) {
+    try {
+      (window as any).AndroidDownloader.downloadUrl(url, filename, mimeType);
+      return;
+    } catch (e) {
+      console.warn('AndroidDownloader downloadUrl notice:', e);
+    }
+  }
+
+  // 2. Browser direct anchor download trigger
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.setAttribute('download', filename);
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try {
+        document.body.removeChild(a);
+      } catch (_) {}
+    }, 1000);
+    return;
+  } catch (err) {
+    console.warn('Anchor trigger failed, using iframe:', err);
+  }
+
+  // 3. Hidden iframe trigger
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      try {
+        document.body.removeChild(iframe);
+      } catch (_) {}
+    }, 15000);
+  } catch (_) {}
+}
+
+/**
  * Direct In-Site Video & Audio Stream Generator with Automatic Multi-Engine Failover.
  * NEVER REDIRECTS TO ANY EXTERNAL WEBSITE OR TAB.
  */
@@ -473,7 +525,7 @@ export async function downloadInSiteMedia(
   metadata: MediaMetadata,
   format: MediaDownloadFormat,
   onProgress?: (percent: number, status: string) => void
-): Promise<{ blob: Blob | null; fileName: string }> {
+): Promise<{ blob: Blob | null; directUrl?: string; fileName: string }> {
   const cleanTitle = (metadata.title || 'media')
     .replace(/[^a-zA-Z0-9_\-\s]/g, '')
     .trim()
@@ -567,15 +619,24 @@ export async function downloadInSiteMedia(
     directStreamUrl = format.directUrl;
   }
 
-  // ENGINE STEP 6: Process Stream into In-Memory Real Blob
+  // ENGINE STEP 6: Process Stream into In-Memory Real Blob or Direct Stream Trigger
   if (directStreamUrl) {
     onProgress?.(80, 'Streaming media binary bytes directly...');
     const expectedMime = format.type === 'audio' ? 'audio/mpeg' : 'video/mp4';
-    const blob = await fetchBinaryStreamBlob(directStreamUrl, expectedMime, onProgress);
-    if (blob && blob.size > 2048) {
-      onProgress?.(100, 'Direct file download complete!');
-      return { blob, fileName };
+    
+    try {
+      const blob = await fetchBinaryStreamBlob(directStreamUrl, expectedMime, onProgress);
+      if (blob && blob.size > 2048) {
+        onProgress?.(100, 'Direct file download complete!');
+        return { blob, fileName };
+      }
+    } catch (e) {
+      console.warn('Binary fetch notice, falling back to direct stream download:', e);
     }
+
+    // Direct Stream URL Trigger (bypasses browser CORS restrictions while downloading real media file)
+    onProgress?.(100, 'Download stream ready! Saving directly...');
+    return { blob: null, directUrl: directStreamUrl, fileName };
   }
 
   throw new Error('Video/audio stream is protected or restricted by the platform. Please verify the URL or try another link.');
