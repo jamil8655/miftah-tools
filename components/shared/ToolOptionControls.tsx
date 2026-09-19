@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import { ToolDefinition } from '@/lib/types';
-import { Sliders, Zap, Layers, RotateCw, Stamp, Hash, Scissors, FileImage, Maximize2, Lock, Unlock, Settings2, HelpCircle, FileText, Image as ImageIcon, UploadCloud, X, AlignLeft, AlignCenter, AlignRight, Palette, Type } from 'lucide-react';
+import { Sliders, Zap, Layers, RotateCw, Stamp, Hash, Scissors, FileImage, Maximize2, Lock, Unlock, Settings2, HelpCircle, FileText, Image as ImageIcon, UploadCloud, X, AlignLeft, AlignCenter, AlignRight, Palette, Type, Target, Check, SlidersHorizontal, ChevronDown, Info } from 'lucide-react';
 import { formatBytes, formatBytesDual } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
@@ -374,40 +374,36 @@ export function ToolOptionControls({
             : null;
 
         return (
-          <div className="space-y-4 p-5 rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 shadow-sm">
-            {/* Header & Target Size Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-700/60">
-              <label className="text-xs sm:text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Zap className="w-4 h-4 text-brand-600" />
-                <span>{L.sliderHeading}</span>
-              </label>
-              <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm font-mono font-black text-brand-600 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/80 px-3 py-1 rounded-xl border border-brand-200 dark:border-brand-800 shadow-xs">
-                  {currentTargetKb >= 1024
-                    ? `🎯 Target: ${(currentTargetKb / 1024).toFixed(currentTargetKb % 1024 === 0 ? 0 : 1)} MB`
-                    : `🎯 Target: ${currentTargetKb} KB`}
-                </span>
+          <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
+            {/* 1. Header with Circular Target Icon */}
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900/50 flex items-center justify-center text-[#0052cc] dark:text-blue-400 shrink-0">
+                <Target className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black tracking-wider text-slate-800 dark:text-white uppercase">
+                  TARGET SIZE
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  Choose your preferred output size
+                </p>
               </div>
             </div>
 
-            {/* Estimated Reduction Info Banner */}
-            {estimatedReduction !== null && (
-              <div className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/60 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-                <span>{L.estReduction}</span>
-                <span className="font-mono">
-                  {formatBytesDual(totalBytes)} ➔ ~{formatBytesDual(targetBytes)} ({estimatedReduction}% Reduction)
-                </span>
+            {/* 2. Hero Target Size Box */}
+            <div className="bg-blue-50/40 dark:bg-slate-800/50 border border-blue-100/90 dark:border-slate-700/80 rounded-2xl py-6 px-4 text-center">
+              <div className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                Target Size
               </div>
-            )}
+              <div className="text-4xl sm:text-5xl font-black text-[#0052cc] dark:text-blue-400 tracking-tight font-sans">
+                {currentTargetKb >= 1024
+                  ? `${(currentTargetKb / 1024).toFixed(currentTargetKb % 1024 === 0 ? 0 : 2)} MB`
+                  : `${currentTargetKb} KB`}
+              </div>
+            </div>
 
-            {/* Horizontal Range Slider (Always LTR to prevent RTL browser locking) */}
-            <div dir="ltr" className="space-y-2 pt-1">
-              <div className="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-300">
-                <span className="text-[11px] text-slate-400 font-normal">{L.sliderHelp}</span>
-                <span className="font-mono font-black text-brand-600 dark:text-brand-400">
-                  {currentTargetKb >= 1024 ? `${(currentTargetKb / 1024).toFixed(1)} MB` : `${currentTargetKb} KB`}
-                </span>
-              </div>
+            {/* 3. Slider with 5 Spaced Tick Labels */}
+            <div dir="ltr" className="space-y-2.5">
               <input
                 type="range"
                 dir="ltr"
@@ -419,28 +415,24 @@ export function ToolOptionControls({
                   const newKb = sliderPosToKb(Number(e.target.value));
                   handleSliderChange(newKb);
                 }}
-                className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer transition-all"
+                className="w-full accent-[#0052cc] h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer transition-all"
                 aria-label="Target Size Slider"
               />
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono font-medium px-0.5 select-none">
-                <span>20 KB</span>
-                <span>50 KB</span>
-                <span>100 KB</span>
-                <span>200 KB</span>
-                <span>500 KB</span>
-                <span>1 MB</span>
-                <span>2 MB</span>
-                <span>5 MB</span>
-                <span>10 MB</span>
+              <div className="flex justify-between text-[11px] text-slate-400 dark:text-slate-500 font-semibold px-1 select-none">
+                <span className={currentTargetKb <= 35 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>20 KB</span>
+                <span className={currentTargetKb >= 400 && currentTargetKb <= 600 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>500 KB</span>
+                <span className={currentTargetKb >= 900 && currentTargetKb <= 1200 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>1 MB</span>
+                <span className={currentTargetKb >= 4500 && currentTargetKb <= 5500 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>5 MB</span>
+                <span className={currentTargetKb >= 9500 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>10 MB</span>
               </div>
             </div>
 
-            {/* Quick KB & MB Target Chips */}
-            <div className="space-y-1.5 pt-2">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                {L.targetSizePreset}
-              </span>
-              <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5">
+            {/* 4. Quick Size (3x2 clean grid of pills) */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-slate-800 dark:text-white">
+                Quick Size
+              </h4>
+              <div className="grid grid-cols-3 gap-2.5">
                 {[
                   { label: '50 KB', kb: 50 },
                   { label: '100 KB', kb: 100 },
@@ -448,9 +440,6 @@ export function ToolOptionControls({
                   { label: '500 KB', kb: 500 },
                   { label: '1 MB', kb: 1024 },
                   { label: '2 MB', kb: 2048 },
-                  { label: '3 MB', kb: 3072 },
-                  { label: '5 MB', kb: 5120 },
-                  { label: '10 MB', kb: 10240 },
                 ].map((preset) => {
                   const isSelected = currentTargetKb === preset.kb;
                   return (
@@ -458,42 +447,43 @@ export function ToolOptionControls({
                       key={preset.label}
                       type="button"
                       onClick={() => handleSliderChange(preset.kb)}
-                      className={`py-2 px-1 rounded-xl text-xs font-black border transition-all active:scale-95 text-center cursor-pointer ${
+                      className={`py-3 px-3 rounded-full text-xs sm:text-sm font-bold border transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer ${
                         isSelected
-                          ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/20 ring-2 ring-brand-500/30'
-                          : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-brand-500'
+                          ? 'bg-[#0052cc] text-white border-[#0052cc] shadow-md shadow-blue-500/20'
+                          : 'bg-slate-50/70 dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300'
                       }`}
                     >
-                      {preset.label}
+                      {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
+                      <span>{preset.label}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Custom Numeric KB / MB Input */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <span className="text-xs font-bold text-slate-600 dark:text-slate-300 shrink-0">
-                Type Exact Size:
-              </span>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* 5. Custom Size Section */}
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-white">
+                <SlidersHorizontal className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                <span>Custom Size</span>
+              </div>
+              <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-900 overflow-hidden focus-within:ring-2 focus-within:ring-[#0052cc]">
                 <input
                   type="number"
                   min="1"
                   step="any"
-                  placeholder="e.g. 50 or 2"
                   value={
                     options.customNumValue !== undefined
                       ? options.customNumValue
                       : currentTargetKb >= 1024
-                      ? (currentTargetKb / 1024).toFixed(currentTargetKb % 1024 === 0 ? 0 : 1)
+                      ? (currentTargetKb / 1024).toFixed(currentTargetKb % 1024 === 0 ? 0 : 2)
                       : currentTargetKb.toString()
                   }
                   onChange={(e) => {
                     const str = e.target.value;
                     const val = parseFloat(str);
+                    const unit = options.customNumUnit || (currentTargetKb >= 1024 ? 'mb' : 'kb');
                     if (!isNaN(val) && val > 0) {
-                      const unit = options.customNumUnit || (currentTargetKb >= 1024 ? 'mb' : 'kb');
                       const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
                       const limitStr = `${val}${unit}`;
                       const targetQuality = totalBytes > 0 ? Math.max(0.15, Math.min(0.95, (targetKb * 1024) / totalBytes)) : 0.75;
@@ -511,89 +501,60 @@ export function ToolOptionControls({
                       });
                     }
                   }}
-                  className="w-32 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500"
+                  className="flex-1 px-4 py-3 text-sm sm:text-base font-bold text-slate-800 dark:text-white bg-transparent outline-none"
+                  placeholder="1.00"
                 />
-                <div className="flex rounded-xl bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
-                  {['kb', 'mb'].map((unit) => {
-                    const activeUnit = options.customNumUnit || (currentTargetKb >= 1024 ? 'mb' : 'kb');
-                    const isUnitSelected = activeUnit === unit;
-                    return (
-                      <button
-                        key={unit}
-                        type="button"
-                        onClick={() => {
-                          const rawVal =
-                            options.customNumValue !== undefined
-                              ? options.customNumValue
-                              : currentTargetKb >= 1024
-                              ? (currentTargetKb / 1024).toFixed(currentTargetKb % 1024 === 0 ? 0 : 1)
-                              : currentTargetKb.toString();
-                          const val = parseFloat(rawVal);
-                          if (!isNaN(val) && val > 0) {
-                            const targetKb = unit === 'mb' ? Math.round(val * 1024) : Math.round(val);
-                            const limitStr = `${val}${unit}`;
-                            onOptionsChange({
-                              ...options,
-                              customNumUnit: unit,
-                              targetKb,
-                              targetSizeLimit: limitStr,
-                            });
-                          } else {
-                            onOptionsChange({
-                              ...options,
-                              customNumUnit: unit,
-                            });
-                          }
-                        }}
-                        className={`px-3 py-1 text-xs font-extrabold uppercase rounded-lg transition-all cursor-pointer ${
-                          isUnitSelected ? 'bg-brand-600 text-white shadow-xs' : 'text-slate-500'
-                        }`}
-                      >
-                        {unit}
-                      </button>
-                    );
-                  })}
+                <div className="border-l border-slate-200 dark:border-slate-700 relative">
+                  <select
+                    value={(options.customNumUnit || (currentTargetKb >= 1024 ? 'mb' : 'kb')).toUpperCase()}
+                    onChange={(e) => {
+                      const newUnit = e.target.value.toLowerCase();
+                      const currentVal =
+                        parseFloat(
+                          options.customNumValue !== undefined
+                            ? options.customNumValue
+                            : currentTargetKb >= 1024
+                            ? (currentTargetKb / 1024).toString()
+                            : currentTargetKb.toString()
+                        ) || 1;
+                      const targetKb = newUnit === 'mb' ? Math.round(currentVal * 1024) : Math.round(currentVal);
+                      const limitStr = `${currentVal}${newUnit}`;
+                      onOptionsChange({
+                        ...options,
+                        customNumUnit: newUnit,
+                        targetKb,
+                        targetSizeLimit: limitStr,
+                      });
+                    }}
+                    className="appearance-none bg-transparent pl-4 pr-9 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
+                  >
+                    <option value="KB" className="dark:bg-slate-900 text-slate-900 dark:text-white">KB</option>
+                    <option value="MB" className="dark:bg-slate-900 text-slate-900 dark:text-white">MB</option>
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
+            </div>
+
+            {/* 6. Info Banner */}
+            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+              <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p>Smaller size = stronger compression</p>
+                <p>Larger size = better quality</p>
+              </div>
+            </div>
+
+            {/* 7. Footer File Count */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <FileText className="w-4 h-4 text-slate-400" />
+              <span>
+                {files.length} {files.length === 1 ? 'file' : 'files'} • {formatBytesDual(totalBytes)}
+              </span>
             </div>
           </div>
         );
       })()}
-
-      {/* 2. COMPRESSION QUALITY & RATIO SLIDER */}
-      {(isImageCompress || isPdfCompress) && (
-        <div className="space-y-2 p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
-          <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
-            <span>{L.compressionStrength}</span>
-            <span className="font-mono text-brand-600 dark:text-brand-400 font-extrabold text-sm">
-              {Math.round((1 - (options.quality ?? 0.75)) * 100)}% {L.compressed} ({Math.round((options.quality ?? 0.75) * 100)}% {L.quality})
-            </span>
-          </div>
-          <div dir="ltr" className="space-y-1">
-            <input
-              type="range"
-              dir="ltr"
-              min={0.1}
-              max={0.95}
-              step={0.05}
-              value={options.quality ?? 0.75}
-              onChange={(e) => {
-                onOptionsChange({
-                  ...options,
-                  quality: parseFloat(e.target.value),
-                  targetKb: null,
-                });
-              }}
-              className="w-full accent-brand-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
-            />
-            <div className="flex justify-between text-[10px] text-slate-400 font-mono font-medium select-none">
-              <span>{L.maxCompression}</span>
-              <span>{L.balanced}</span>
-              <span>{L.highQuality}</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 3. ADVANCED HEADER & FOOTER STUDIO CONTROLS (TEXT + IMAGE LOGO) */}
       {isPdfHeaderFooter && (
