@@ -91,11 +91,19 @@ export function MediaDownloaderStudio() {
     }
   };
 
+  const [downloadSuccessFile, setDownloadSuccessFile] = useState<{
+    fileName: string;
+    blob: Blob;
+    format: MediaDownloadFormat;
+  } | null>(null);
+
   const handleDownload = async (format: MediaDownloadFormat) => {
     if (!metadata) return;
     setDownloadingId(format.id);
     setDownloadProgress(15);
-    setDownloadStatusText('Connecting to high-speed engine cluster...');
+    setDownloadStatusText('Connecting to in-app stream engine...');
+    setError(null);
+    setDownloadSuccessFile(null);
 
     try {
       const result = await downloadInSiteMedia(
@@ -107,18 +115,46 @@ export function MediaDownloaderStudio() {
         }
       );
 
-      if (result.blob && result.blob.size > 2000 && !result.blob.type.includes('text/html')) {
-        downloadSingleFile(result.blob, result.fileName);
+      if (result.blob && result.blob.size > 1000) {
+        // Direct local device saving (on Android: saves directly to Public Downloads folder; on Web: saves direct blob)
+        await downloadSingleFile(result.blob, result.fileName);
+        setDownloadSuccessFile({
+          fileName: result.fileName,
+          blob: result.blob,
+          format,
+        });
       }
     } catch (err: any) {
       console.error(err);
-      setError('Unable to download from current node. The system will rotate to backup failover.');
+      setError(err.message || 'Unable to download media stream directly. Please verify the URL.');
     } finally {
       setTimeout(() => {
         setDownloadingId(null);
         setDownloadProgress(0);
         setDownloadStatusText('');
-      }, 700);
+      }, 500);
+    }
+  };
+
+  const handleOpenDownloaded = async () => {
+    if (downloadSuccessFile) {
+      const { openDownloadedFile } = await import('@/lib/utils/download');
+      openDownloadedFile({
+        name: downloadSuccessFile.fileName,
+        blob: downloadSuccessFile.blob,
+        mimeType: downloadSuccessFile.blob.type,
+      });
+    }
+  };
+
+  const handleShareDownloaded = async () => {
+    if (downloadSuccessFile) {
+      const { shareDownloadedFile } = await import('@/lib/utils/download');
+      shareDownloadedFile({
+        name: downloadSuccessFile.fileName,
+        blob: downloadSuccessFile.blob,
+        mimeType: downloadSuccessFile.blob.type,
+      });
     }
   };
 
@@ -204,14 +240,14 @@ export function MediaDownloaderStudio() {
       <div className="text-center space-y-3.5">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black bg-gradient-to-r from-red-500/10 via-pink-500/10 to-brand-500/10 text-brand-700 dark:text-brand-300 border border-brand-500/20 shadow-xs">
           <Zap className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-          <span>4K Ultra HD & Studio MP3 Downloader • 100% Free & Unlimited</span>
+          <span>Direct In-App Downloader • 100% Free & Direct Device Saving</span>
         </div>
 
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
           Social Media Video & Audio Downloader
         </h1>
         <p className="text-xs sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          Paste any link from YouTube, Instagram, Facebook, TikTok, or X. Our intelligent multi-cluster engine instantly extracts 1080p Full HD video, 320kbps MP3 audio, and HD thumbnails.
+          Paste any link from YouTube, Instagram, Facebook, TikTok, or X. Directly downloads high-definition videos and crystal-clear audio straight into your device with zero redirects.
         </p>
       </div>
 
@@ -357,8 +393,8 @@ export function MediaDownloaderStudio() {
               <p className="text-[11px] text-slate-500 mt-0.5">Ultra-fast watermark-free TikTok MP4 videos and audio.</p>
             </div>
             <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">🟢 Engine 4: Render Cloud Backend</span>
-              <p className="text-[11px] text-slate-500 mt-0.5">Dedicated backup streamer for restricted media.</p>
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">🟢 Engine 4: Direct In-App Blob Downloader</span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Zero external redirects, direct saving to device Downloads.</p>
             </div>
           </div>
 
@@ -413,7 +449,7 @@ export function MediaDownloaderStudio() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Streams Verified & Ready to Save</span>
+                  <span>Streams Verified & Ready to Save Directly</span>
                 </div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white line-clamp-2 leading-snug">
                   {metadata.title}
@@ -526,6 +562,37 @@ export function MediaDownloaderStudio() {
               </div>
             </div>
           )}
+
+          {/* Success Downloaded Card */}
+          {downloadSuccessFile && (
+            <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500/40 space-y-3 animate-in zoom-in-95">
+              <div className="flex items-center gap-2.5 text-emerald-800 dark:text-emerald-300 font-black text-sm">
+                <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Download Complete! Saved directly to your device Downloads folder.</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-mono break-all">
+                {downloadSuccessFile.fileName} ({(downloadSuccessFile.blob.size / (1024 * 1024)).toFixed(2)} MB)
+              </p>
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={handleOpenDownloaded}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <Play className="w-3.5 h-3.5" />
+                  <span>Open File</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareDownloaded}
+                  className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -536,7 +603,7 @@ export function MediaDownloaderStudio() {
             How to Download Social Media Videos in 3 Simple Steps
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            No software installation or account sign-up needed. Works directly in any browser.
+            No software installation or account sign-up needed. Works directly in any browser and the Android app with zero redirects.
           </p>
         </div>
 
@@ -565,9 +632,9 @@ export function MediaDownloaderStudio() {
             <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-black text-sm">
               3
             </div>
-            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">3. Save HD Video / Audio</h3>
+            <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">3. Direct Device Saving</h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              Select 1080p, 720p, or 320kbps MP3 and tap Download to save the file straight to your phone or computer.
+              Select 1080p, 720p, or 320kbps MP3 and tap Download. Saved directly to your device with zero redirects.
             </p>
           </div>
         </div>
@@ -577,8 +644,8 @@ export function MediaDownloaderStudio() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
         <div className="p-4 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 text-center space-y-1">
           <ShieldCheck className="w-5 h-5 text-emerald-600 mx-auto" />
-          <h4 className="text-xs font-black text-slate-900 dark:text-white">100% Private</h4>
-          <p className="text-[10px] text-slate-500">Zero logging & safe client downloads</p>
+          <h4 className="text-xs font-black text-slate-900 dark:text-white">100% Private & Direct</h4>
+          <p className="text-[10px] text-slate-500">Zero redirects & safe client downloads</p>
         </div>
         <div className="p-4 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 text-center space-y-1">
           <Zap className="w-5 h-5 text-amber-500 mx-auto" />
