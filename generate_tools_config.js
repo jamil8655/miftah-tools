@@ -251,6 +251,9 @@ const ALL_TOOLS = [
   { id: 'audio-booster', slug: 'audio-volume-booster', name: 'Audio Volume Booster', category: 'media', icon: 'Volume2', ext: '.mp3,.wav,.m4a,.aac', outExt: 'wav', desc: 'Amplify quiet MP3, WAV, and lecture audio recordings up to 300%.' },
   { id: 'audio-cutter', slug: 'audio-cutter', name: 'Audio Cutter', category: 'media', icon: 'Scissors', ext: '.mp3,.wav,.ogg,.m4a', outExt: 'mp3', desc: 'Trim and cut audio tracks with visual waveform selection.' },
   { id: 'audio-speed', slug: 'audio-speed', name: 'Audio Speed Changer', category: 'media', icon: 'FastForward', ext: '.mp3,.wav,.m4a', outExt: 'wav', desc: 'Speed up or slow down MP3 and WAV playback from 0.5x to 2.5x.' },
+  { id: 'voice-to-text', slug: 'voice-to-text', name: 'Voice to Text', category: 'text', icon: 'Mic', ext: '.mp3,.wav,.m4a,.aac,.ogg,.webm', outExt: 'txt', desc: 'Free Whisper AI speech-to-text transcription with noise reduction and multi-language support.' },
+  { id: 'speech-to-text', slug: 'speech-to-text', name: 'Speech to Text', category: 'text', icon: 'Mic', ext: '.mp3,.wav,.m4a,.aac,.ogg,.webm', outExt: 'txt', desc: 'Convert live speech and voice recordings into editable documents using local Whisper AI.' },
+  { id: 'audio-to-text', slug: 'audio-to-text', name: 'Audio to Text Converter', category: 'media', icon: 'FileAudio', ext: '.mp3,.wav,.m4a,.aac,.ogg,.webm', outExt: 'txt', desc: 'Transcribe audio recordings and voice notes into formatted text with Whisper AI.' },
 ];
 
 console.log('Total verified tools:', ALL_TOOLS.length);

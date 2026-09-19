@@ -230,6 +230,8 @@ const UR_FORMAT_TERMS: Record<string, string> = {
   'mp3': 'آڈیو MP3',
   'audio': 'آڈیو',
   'video': 'ویڈیو',
+  'voice': 'آواز',
+  'speech': 'تقریر / آواز',
 };
 
 // ==================== HINDI TRANSLATION DICTIONARIES ====================
@@ -454,7 +456,7 @@ export function generateArabicToolName(id: string, name: string): string {
   if (lowerId.includes('counter')) return 'عداد الكلمات والإحصائيات';
   if (lowerId.includes('reverse')) return 'عكس النصوص والأسطر';
   if (lowerId.includes('duplicate')) return 'إزالة الأسطر والنصوص المكررة';
-  if (lowerId.includes('clean')) return 'تنظيف وتنسيق الملفات';
+  if (lowerId.includes('voice') || lowerId.includes('speech')) return 'تحويل الصوت إلى نص (Whisper AI)';
   if (lowerId.includes('calculator') || lowerId.includes('calc')) return 'حاسبة ذكية ومحولة رياضية';
   if (lowerId.includes('emi') || lowerId.includes('loan')) return 'حاسبة القروض والأقساط الشهرية (EMI)';
   if (lowerId.includes('gst')) return 'حاسبة ضريبة القيمة المضافة (GST)';
@@ -527,6 +529,7 @@ export function generateUrduToolName(id: string, name: string): string {
   if (lowerId.includes('watermark')) return 'واٹر مارک لگائیں';
   if (lowerId.includes('json')) return 'جے سن (JSON) فارمیٹر';
   if (lowerId.includes('hash')) return 'ہیش چیک سم جنریٹر';
+  if (lowerId.includes('voice') || lowerId.includes('speech')) return 'آواز سے ٹیکسٹ (وائس ٹو ٹیکسٹ)';
   if (lowerId.includes('password')) return 'مضبوط پاس ورڈ جنریٹر';
 
   const tokens = lowerId.split('-');
@@ -584,6 +587,7 @@ export function generateHindiToolName(id: string, name: string): string {
   if (lowerId.includes('watermark')) return 'वॉटरमार्क लगाएं';
   if (lowerId.includes('json')) return 'JSON फॉर्मेटर';
   if (lowerId.includes('hash')) return 'हैश चेकसम जनरेटर';
+  if (lowerId.includes('voice') || lowerId.includes('speech')) return 'आवाज़ से टेक्स्ट (Voice to Text)';
   if (lowerId.includes('password')) return 'मजबूत पासवर्ड जनरेटर';
 
   const tokens = lowerId.split('-');

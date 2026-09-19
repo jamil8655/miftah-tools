@@ -139,6 +139,7 @@ import { MarkItDownStudio } from '@/components/tools/MarkItDownStudio';
 import { WorkflowBuilder } from '@/components/workflows/WorkflowBuilder';
 import { TextCipherStudio } from '@/components/security/TextCipherStudio';
 import { AiStudio } from '@/components/ai/AiStudio';
+import { VoiceToTextStudio } from '@/components/voice/VoiceToTextStudio';
 
 interface ToolPageClientProps {
   tool: ToolDefinition;
@@ -545,6 +546,19 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'ai-document-intelligence'
   ) {
     customWorkspace = <AiStudio />;
+  } else if (
+    tool.id === 'voice-to-text' ||
+    tool.slug === 'voice-to-text' ||
+    tool.id === 'speech-to-text' ||
+    tool.slug === 'speech-to-text' ||
+    tool.id === 'audio-to-text' ||
+    tool.slug === 'audio-to-text' ||
+    tool.id === 'voice-typing' ||
+    tool.slug === 'voice-typing' ||
+    tool.id === 'whisper-voice-to-text' ||
+    tool.slug === 'whisper-voice-to-text'
+  ) {
+    customWorkspace = <VoiceToTextStudio />;
   }
 
   // Centralized real processing dispatcher
