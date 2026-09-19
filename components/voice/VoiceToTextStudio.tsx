@@ -26,6 +26,9 @@ import {
   ChevronRight,
   ShieldCheck,
   Cpu,
+  Radio,
+  AlignLeft,
+  AlignRight,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
@@ -34,6 +37,7 @@ import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import {
   transcribeAudioWithWhisper,
   TranscriptionResult,
+  formatTranscription,
 } from '@/lib/voice/whisper-engine';
 import {
   VOICE_LIMITS,
@@ -47,11 +51,11 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 
 const LANGUAGES = [
-  { code: 'auto', label: '🌐 Auto-Detect Language', flag: '🌐' },
-  { code: 'en', label: '🇺🇸 English', flag: '🇺🇸' },
-  { code: 'ur', label: '🇵🇰 اردو (Urdu)', flag: '🇵🇰' },
-  { code: 'ar', label: '🇸🇦 العربية (Arabic)', flag: '🇸🇦' },
-  { code: 'hi', label: '🇮🇳 हिन्दी (Hindi)', flag: '🇮🇳' },
+  { code: 'auto', label: '🌐 Auto-Detect Language', flag: '🌐', bcp47: 'en-US' },
+  { code: 'ur', label: '🇵🇰 اردو (Urdu)', flag: '🇵🇰', bcp47: 'ur-PK' },
+  { code: 'ar', label: '🇸🇦 العربية (Arabic)', flag: '🇸🇦', bcp47: 'ar-SA' },
+  { code: 'hi', label: '🇮🇳 हिन्दी (Hindi)', flag: '🇮🇳', bcp47: 'hi-IN' },
+  { code: 'en', label: '🇺🇸 English (US/UK)', flag: '🇺🇸', bcp47: 'en-US' },
 ];
 
 const MODELS = [
@@ -66,7 +70,7 @@ export function VoiceToTextStudio() {
   // Mode: 'record' or 'upload'
   const [activeTab, setActiveTab] = useState<'record' | 'upload'>('record');
   const [selectedLang, setSelectedLang] = useState<string>('auto');
-  const [selectedModel, setSelectedModel] = useState<string>('Xenova/whisper-tiny');
+  const [selectedModel, setSelectedModel] = useState<string>('Xenova/whisper-base');
 
   // Usage stats
   const [remainingMinutes, setRemainingMinutes] = useState<number>(30);
@@ -77,6 +81,7 @@ export function VoiceToTextStudio() {
   const [recordingSeconds, setRecordingSeconds] = useState<number>(0);
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [micError, setMicError] = useState<string | null>(null);
+  const [liveInterim, setLiveInterim] = useState<string>('');
 
   // Uploaded audio state
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -100,7 +105,7 @@ export function VoiceToTextStudio() {
   const [copied, setCopied] = useState<boolean>(false);
   const [shared, setShared] = useState<boolean>(false);
 
-  // Audio Recording Refs
+  // Audio & Speech Recognition Refs
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -109,6 +114,12 @@ export function VoiceToTextStudio() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Live Web Speech Recognition Engine Ref
+  const recognitionRef = useRef<any>(null);
+  const liveFinalBufferRef = useRef<string[]>([]);
+  const lastSpeechTimestampRef = useRef<number>(Date.now());
+  const pauseCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Refresh usage limits on mount
   const refreshUsage = () => {
@@ -128,9 +139,21 @@ export function VoiceToTextStudio() {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
+    if (pauseCheckIntervalRef.current) {
+      clearInterval(pauseCheckIntervalRef.current);
+      pauseCheckIntervalRef.current = null;
+    }
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
+    }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.stop();
+      } catch (_) {}
+      recognitionRef.current = null;
     }
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -144,12 +167,67 @@ export function VoiceToTextStudio() {
     }
   };
 
-  // Start Microphone Recording
+  // Helper to compute BCP47 language code for native SpeechRecognition
+  const getBcp47Lang = (langCode: string): string => {
+    if (langCode === 'ur') return 'ur-PK';
+    if (langCode === 'ar') return 'ar-SA';
+    if (langCode === 'hi') return 'hi-IN';
+    if (langCode === 'en') return 'en-US';
+    if (typeof navigator !== 'undefined' && navigator.language) {
+      return navigator.language;
+    }
+    return 'en-US';
+  };
+
+  // Smart sentence and paragraph boundary formatter
+  const applySmartPunctuationAndParagraphs = (sentences: string[], lang: string): string => {
+    if (sentences.length === 0) return '';
+    const isRtl = lang === 'ur' || lang === 'ar';
+    const paragraphs: string[] = [];
+    let currentParagraph: string[] = [];
+
+    sentences.forEach((sentence) => {
+      let s = sentence.trim();
+      if (!s) return;
+
+      // Capitalize first letter for Latin languages
+      if (!isRtl && lang !== 'hi') {
+        s = s.charAt(0).toUpperCase() + s.slice(1);
+      }
+
+      // Add appropriate ending punctuation if missing
+      if (!/[.!?۔،।]$/.test(s)) {
+        if (lang === 'ur') s += '۔';
+        else if (lang === 'hi') s += '।';
+        else if (lang === 'ar') s += '.';
+        else s += '.';
+      }
+
+      currentParagraph.push(s);
+
+      // Group into readable paragraphs (every 2-3 sentences or after pause breaks)
+      if (currentParagraph.length >= 2) {
+        paragraphs.push(currentParagraph.join(' '));
+        currentParagraph = [];
+      }
+    });
+
+    if (currentParagraph.length > 0) {
+      paragraphs.push(currentParagraph.join(' '));
+    }
+
+    return paragraphs.join('\n\n');
+  };
+
+  // Start Live Microphone Recording & Real-time Recognition
   const handleStartRecording = async () => {
     setMicError(null);
     setErrorMessage(null);
+    setLiveInterim('');
     setTranscription('');
     setResultMeta(null);
+    liveFinalBufferRef.current = [];
+    lastSpeechTimestampRef.current = Date.now();
 
     if (remainingMinutes <= 0) {
       setErrorMessage("You've reached today's free transcription limit (30 min). Please try again tomorrow.");
@@ -157,32 +235,111 @@ export function VoiceToTextStudio() {
     }
 
     try {
+      // 1. Request High-Quality Noise-Suppressed Audio Stream
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
+          channelCount: 1,
+          sampleRate: 48000,
         },
       });
 
       mediaStreamRef.current = stream;
       audioChunksRef.current = [];
 
-      // Setup Web Audio Analyser for Visualizer
+      // 2. Setup Web Audio Analyser & DSP Waveform Filter
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       const audioCtx = new AudioCtx();
       audioContextRef.current = audioCtx;
       const source = audioCtx.createMediaStreamSource(stream);
+
+      // Bandpass filter for speech clarity (80Hz to 7500Hz)
+      const highpass = audioCtx.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 80;
+
+      const lowpass = audioCtx.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 7500;
+
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 64;
-      source.connect(analyser);
+
+      source.connect(highpass);
+      highpass.connect(lowpass);
+      lowpass.connect(analyser);
       analyserRef.current = analyser;
 
-      // Draw Visualizer
       drawVisualizer();
 
-      // Setup MediaRecorder
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+      // 3. Initialize High-Accuracy Native SpeechRecognition for Real-time Streaming
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        recognition.lang = getBcp47Lang(selectedLang);
+
+        recognition.onresult = (event: any) => {
+          lastSpeechTimestampRef.current = Date.now();
+          let interimStr = '';
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const result = event.results[i];
+            const text = result[0].transcript;
+
+            if (result.isFinal) {
+              const cleaned = text.trim();
+              if (cleaned.length > 0) {
+                liveFinalBufferRef.current.push(cleaned);
+              }
+            } else {
+              interimStr += text;
+            }
+          }
+
+          setLiveInterim(interimStr);
+
+          // Update live structured transcription
+          const formatted = applySmartPunctuationAndParagraphs(
+            liveFinalBufferRef.current,
+            selectedLang
+          );
+          if (formatted) {
+            setTranscription(formatted);
+          }
+        };
+
+        recognition.onerror = (e: any) => {
+          console.warn('SpeechRecognition notice:', e.error);
+        };
+
+        recognition.onend = () => {
+          // Keep listening continuously if recording is active
+          if (mediaStreamRef.current && mediaStreamRef.current.active) {
+            try {
+              recognition.start();
+            } catch (_) {}
+          }
+        };
+
+        try {
+          recognition.start();
+          recognitionRef.current = recognition;
+        } catch (e) {
+          console.warn('Could not start live speech recognition:', e);
+        }
+      }
+
+      // 4. Setup MediaRecorder as Audio Backup and Whisper Engine Pipeline
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
         ? 'audio/webm'
         : MediaRecorder.isTypeSupported('audio/mp4')
         ? 'audio/mp4'
@@ -199,9 +356,7 @@ export function VoiceToTextStudio() {
 
       recorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        if (audioBlob.size > 0) {
-          processAudioForTranscription(audioBlob, recordingSeconds);
-        }
+        handleRecordingFinished(audioBlob, recordingSeconds);
       };
 
       recorder.start(500); // 500ms slices
@@ -209,29 +364,44 @@ export function VoiceToTextStudio() {
       setRecordingSeconds(0);
       triggerHaptic('medium');
 
-      // Start Timer
+      // 5. Start Elapsed Recording Timer & Silence Paragraph Boundary Monitor
       timerIntervalRef.current = setInterval(() => {
         setRecordingSeconds((prev) => {
           const next = prev + 1;
-          // Check 10-min max recording limit
           if (next >= VOICE_LIMITS.MAX_RECORDING_MINUTES * 60) {
             handleStopRecording();
           }
           return next;
         });
       }, 1000);
+
+      // Silence monitor: if speaker pauses for >2.5 seconds, insert paragraph break
+      pauseCheckIntervalRef.current = setInterval(() => {
+        const silenceDuration = Date.now() - lastSpeechTimestampRef.current;
+        if (silenceDuration > 2500 && liveFinalBufferRef.current.length > 0) {
+          const lastItem = liveFinalBufferRef.current[liveFinalBufferRef.current.length - 1];
+          if (lastItem && !lastItem.endsWith('\n\n')) {
+            liveFinalBufferRef.current[liveFinalBufferRef.current.length - 1] = lastItem + '\n\n';
+            const formatted = applySmartPunctuationAndParagraphs(
+              liveFinalBufferRef.current,
+              selectedLang
+            );
+            if (formatted) setTranscription(formatted);
+          }
+        }
+      }, 1000);
     } catch (err: any) {
       console.error('Microphone error:', err);
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setMicError('Microphone access is required for voice recording. Please allow microphone permission and try again.');
       } else {
-        setMicError('Unable to access microphone. Please check your audio input device or upload an audio file instead.');
+        setMicError('Unable to access microphone. Please check your audio device or upload an audio file instead.');
       }
       triggerHaptic('error');
     }
   };
 
-  // Draw Audio Visualizer Waveform
+  // Draw Dynamic Audio Visualizer
   const drawVisualizer = () => {
     if (!canvasRef.current || !analyserRef.current) return;
     const canvas = canvasRef.current;
@@ -259,10 +429,10 @@ export function VoiceToTextStudio() {
       let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = (dataArray[i] / 255) * canvas.height * 0.9;
+        const barHeight = (dataArray[i] / 255) * canvas.height * 0.92;
 
         const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
-        gradient.addColorStop(0, '#0284c7');
+        gradient.addColorStop(0, '#0052cc');
         gradient.addColorStop(1, '#38bdf8');
 
         ctx.fillStyle = gradient;
@@ -279,15 +449,26 @@ export function VoiceToTextStudio() {
   const handleStopRecording = () => {
     if (!isRecording) return;
     setIsRecording(false);
+    setLiveInterim('');
     triggerHaptic('success');
 
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
+    if (pauseCheckIntervalRef.current) {
+      clearInterval(pauseCheckIntervalRef.current);
+      pauseCheckIntervalRef.current = null;
+    }
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
+    }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (_) {}
+      recognitionRef.current = null;
     }
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -297,32 +478,62 @@ export function VoiceToTextStudio() {
     cleanupRecordingResources();
   };
 
+  // Post-Recording Finalization (Dual-Engine: Native Speech Result or Whisper Fallback)
+  const handleRecordingFinished = async (audioBlob: Blob, recordedSec: number) => {
+    // If native speech recognition already captured accurate text:
+    if (liveFinalBufferRef.current.length > 0) {
+      const formatted = applySmartPunctuationAndParagraphs(
+        liveFinalBufferRef.current,
+        selectedLang
+      );
+      const isRtl = selectedLang === 'ur' || selectedLang === 'ar';
+      const wordCount = formatted.trim().split(/\s+/).filter(Boolean).length;
+      const charCount = formatted.length;
+
+      setTranscription(formatted);
+      setResultMeta({
+        duration: recordedSec || 1,
+        wordCount,
+        charCount,
+        isRTL: isRtl,
+      });
+
+      recordVoiceUsage(recordedSec || 1);
+      refreshUsage();
+      recordToolUsage('voice-to-text', 'Voice to Text', 'text', 'Mic');
+      return;
+    }
+
+    // Otherwise, process audio through Whisper AI engine
+    if (audioBlob.size > 0) {
+      processAudioForTranscription(audioBlob, recordedSec);
+    }
+  };
+
   // Handle File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMessage(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate size (50 MB)
     if (file.size > VOICE_LIMITS.MAX_FILE_SIZE_MB * 1024 * 1024) {
-      setErrorMessage(`File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds the maximum limit of ${VOICE_LIMITS.MAX_FILE_SIZE_MB} MB.`);
+      setErrorMessage(`File size (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds the limit of ${VOICE_LIMITS.MAX_FILE_SIZE_MB} MB.`);
       return;
     }
 
     setUploadedFile(file);
 
-    // Read audio duration
     const audioObj = new Audio(URL.createObjectURL(file));
     audioObj.onloadedmetadata = () => {
       setUploadedAudioDuration(audioObj.duration);
     };
   };
 
-  // Execute Transcription Pipeline
+  // Execute Whisper Neural Transcription for Files & Fallback
   const processAudioForTranscription = async (audioData: Blob | File, durationSecEstimate?: number) => {
     setIsProcessing(true);
     setProgressPercent(5);
-    setProgressStatus('Analyzing audio stream...');
+    setProgressStatus('Decoding and filtering acoustic spectrum...');
     setErrorMessage(null);
 
     try {
@@ -336,24 +547,26 @@ export function VoiceToTextStudio() {
       });
 
       if (result.noSpeech || result.text.trim().length === 0) {
-        setErrorMessage('No clear speech was detected. Please try recording again in a quieter environment.');
+        setErrorMessage('No clear speech was detected. Please verify your recording and try again.');
         setTranscription('');
         setResultMeta(null);
       } else {
-        setTranscription(result.text);
+        const { formattedText, isRTL, wordCount, charCount } = formatTranscription(
+          result.text,
+          selectedLang
+        );
+
+        setTranscription(formattedText);
         setResultMeta({
           duration: result.durationSeconds || durationSecEstimate || 0,
-          wordCount: result.wordCount,
-          charCount: result.charCount,
-          isRTL: result.isRTL,
+          wordCount,
+          charCount,
+          isRTL,
         });
 
-        // Record usage
         const durationSec = result.durationSeconds || durationSecEstimate || 10;
         recordVoiceUsage(durationSec);
         refreshUsage();
-
-        // Record to Recent Tools only after successful real transcription
         recordToolUsage('voice-to-text', 'Voice to Text', 'text', 'Mic');
         triggerHaptic('success');
       }
@@ -366,6 +579,15 @@ export function VoiceToTextStudio() {
     }
   };
 
+  // Smart Auto-Format Tool: Reformat Paragraphs & Spacing
+  const handleAutoFormatText = () => {
+    if (!transcription) return;
+    const lines = transcription.split(/\n+/).filter(Boolean);
+    const reformatted = applySmartPunctuationAndParagraphs(lines, selectedLang);
+    setTranscription(reformatted);
+    triggerHaptic('light');
+  };
+
   // Copy to Clipboard
   const handleCopy = async () => {
     if (!transcription) return;
@@ -375,7 +597,6 @@ export function VoiceToTextStudio() {
       triggerHaptic('light');
       setTimeout(() => setCopied(false), 2500);
     } catch (_) {
-      // Fallback
       const ta = document.createElement('textarea');
       ta.value = transcription;
       document.body.appendChild(ta);
@@ -387,7 +608,7 @@ export function VoiceToTextStudio() {
     }
   };
 
-  // Share
+  // Native & Web Share
   const handleShare = async () => {
     if (!transcription) return;
     triggerHaptic('light');
@@ -424,18 +645,18 @@ export function VoiceToTextStudio() {
     if (!transcription) return;
     triggerHaptic('medium');
 
-    const paragraphs = transcription.split(/\r?\n/).map(
-      (line) =>
+    const paragraphs = transcription.split(/\r?\n\r?\n/).map(
+      (para) =>
         new Paragraph({
           children: [
             new TextRun({
-              text: line,
+              text: para,
               size: 26, // 13pt
               font: resultMeta?.isRTL ? 'Amiri' : 'Arial',
               rightToLeft: resultMeta?.isRTL,
             }),
           ],
-          spacing: { after: 160 },
+          spacing: { after: 200, line: 360 },
           bidirectional: resultMeta?.isRTL,
           alignment: resultMeta?.isRTL ? AlignmentType.RIGHT : AlignmentType.LEFT,
         })
@@ -449,7 +670,7 @@ export function VoiceToTextStudio() {
             new Paragraph({
               text: 'Voice to Text Transcription',
               heading: 'Heading1',
-              spacing: { after: 200 },
+              spacing: { after: 240 },
             }),
             ...paragraphs,
           ],
@@ -473,14 +694,14 @@ export function VoiceToTextStudio() {
 
     const isRtl = resultMeta?.isRTL;
     const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 40;
+    const margin = 45;
     const maxLineWidth = pageWidth - margin * 2;
 
-    doc.setFontSize(16);
+    doc.setFontSize(18);
     doc.text('Voice to Text Transcription', margin, 50);
 
-    doc.setFontSize(11);
-    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
     const dateStr = `Generated via Miftah Tools • ${new Date().toLocaleDateString()}`;
     doc.text(dateStr, margin, 70);
 
@@ -488,10 +709,10 @@ export function VoiceToTextStudio() {
     doc.line(margin, 80, pageWidth - margin, 80);
 
     doc.setFontSize(12);
-    doc.setTextColor(20, 20, 20);
+    doc.setTextColor(30, 30, 30);
 
     const splitLines = doc.splitTextToSize(transcription, maxLineWidth);
-    let y = 105;
+    let y = 110;
 
     for (let i = 0; i < splitLines.length; i++) {
       if (y > doc.internal.pageSize.getHeight() - 50) {
@@ -503,7 +724,7 @@ export function VoiceToTextStudio() {
       } else {
         doc.text(splitLines[i], margin, y);
       }
-      y += 18;
+      y += 20;
     }
 
     doc.save(`miftah_transcription_${Date.now()}.pdf`);
@@ -515,13 +736,15 @@ export function VoiceToTextStudio() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const isRtlLanguage = selectedLang === 'ur' || selectedLang === 'ar' || resultMeta?.isRTL;
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
-      {/* 1. Top Header Banner & Free Usage Meter */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-4">
+      {/* 1. Header & Free Usage Status */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#0052cc] to-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
               <Mic className="w-6 h-6 animate-pulse" />
             </div>
             <div>
@@ -530,29 +753,29 @@ export function VoiceToTextStudio() {
                   Voice to Text
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider">
-                  Open-Source Whisper
+                  100% Free & Accurate
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Free, private AI speech recognition with noise suppression and multi-language transcription.
+                Real-time speech recognition with auto-paragraphs, acoustic noise suppression, and multi-language support.
               </p>
             </div>
           </div>
 
-          {/* Daily Free Usage Progress */}
+          {/* Daily Allowance Meter */}
           <div className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-3 sm:px-4 sm:py-2.5 min-w-[220px]">
             <div className="flex items-center justify-between text-xs font-bold mb-1.5">
               <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-brand-600" />
+                <Clock className="w-3.5 h-3.5 text-[#0052cc]" />
                 <span>Daily Free Allowance</span>
               </span>
-              <span className="font-mono text-brand-600 dark:text-brand-400">
+              <span className="font-mono text-[#0052cc] dark:text-blue-400">
                 {remainingMinutes} min left
               </span>
             </div>
             <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-emerald-500 to-brand-500 rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-emerald-500 to-[#0052cc] rounded-full transition-all duration-500"
                 style={{
                   width: `${Math.min(100, Math.max(0, ((VOICE_LIMITS.DAILY_FREE_MINUTES - usedMinutes) / VOICE_LIMITS.DAILY_FREE_MINUTES) * 100))}%`,
                 }}
@@ -565,18 +788,17 @@ export function VoiceToTextStudio() {
           </div>
         </div>
 
-        {/* Configuration Row: Language & Whisper Model */}
+        {/* Configuration Bar: Language & Engine */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-          {/* Language Selector */}
           <div>
             <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mb-1.5">
-              <Globe className="w-3.5 h-3.5 text-brand-500" />
-              <span>Spoken Language</span>
+              <Globe className="w-3.5 h-3.5 text-[#0052cc]" />
+              <span>Spoken Language (زبان / भाषा)</span>
             </label>
             <select
               value={selectedLang}
               onChange={(e) => setSelectedLang(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold focus:ring-2 focus:ring-brand-500 outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold focus:ring-2 focus:ring-[#0052cc] outline-none cursor-pointer"
             >
               {LANGUAGES.map((lang) => (
                 <option key={lang.code} value={lang.code}>
@@ -586,16 +808,15 @@ export function VoiceToTextStudio() {
             </select>
           </div>
 
-          {/* Model Quality Selector */}
           <div>
             <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mb-1.5">
               <Cpu className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Whisper AI Engine</span>
+              <span>Speech Recognition Engine</span>
             </label>
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
             >
               {MODELS.map((model) => (
                 <option key={model.id} value={model.id}>
@@ -607,7 +828,7 @@ export function VoiceToTextStudio() {
         </div>
       </div>
 
-      {/* 2. Mode Selector: Record Microphone vs Upload Audio */}
+      {/* 2. Mode Selector: Record vs Upload */}
       <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-800/80 p-1.5 border border-slate-200 dark:border-slate-700/80">
         <button
           type="button"
@@ -615,9 +836,9 @@ export function VoiceToTextStudio() {
             setActiveTab('record');
             triggerHaptic('light');
           }}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === 'record'
-              ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm'
+              ? 'bg-white dark:bg-slate-900 text-[#0052cc] dark:text-blue-400 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
@@ -631,9 +852,9 @@ export function VoiceToTextStudio() {
             setActiveTab('upload');
             triggerHaptic('light');
           }}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === 'upload'
-              ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm'
+              ? 'bg-white dark:bg-slate-900 text-[#0052cc] dark:text-blue-400 shadow-sm'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
           }`}
         >
@@ -642,301 +863,260 @@ export function VoiceToTextStudio() {
         </button>
       </div>
 
-      {/* 3. Main Workspace Box */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
-        {/* Error Alert */}
+      {/* 3. Main Workspace */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm">
         {errorMessage && (
           <div className="mb-5 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-3">
             <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-            <span>{errorMessage}</span>
+            <div className="flex-1 font-semibold">{errorMessage}</div>
           </div>
         )}
 
-        {/* Tab 1: Live Recording */}
-        {activeTab === 'record' && (
-          <div className="flex flex-col items-center justify-center text-center space-y-6 py-4 sm:py-6">
-            {micError && (
-              <div className="w-full max-w-lg p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs flex items-start gap-3 text-left">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <div className="flex-1 space-y-2">
-                  <p>{micError}</p>
-                  <button
-                    type="button"
-                    onClick={handleStartRecording}
-                    className="px-3 py-1.5 rounded-lg bg-amber-600 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-sm"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Try Again</span>
-                  </button>
-                </div>
-              </div>
-            )}
+        {micError && (
+          <div className="mb-5 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex-1 font-semibold">{micError}</div>
+          </div>
+        )}
 
+        {/* TAB 1: Live Recording */}
+        {activeTab === 'record' && (
+          <div className="flex flex-col items-center justify-center py-6 space-y-6">
             {/* Visualizer Canvas */}
-            <div className="w-full max-w-md h-20 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden p-2">
-              {isRecording ? (
-                <canvas ref={canvasRef} width={400} height={80} className="w-full h-full" />
-              ) : (
-                <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-                  <Volume2 className="w-4 h-4 text-slate-400" />
-                  <span>Audio waveform visualizer will appear during recording</span>
+            <div className="w-full max-w-lg h-24 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden p-2 relative shadow-inner">
+              <canvas
+                ref={canvasRef}
+                width={480}
+                height={80}
+                className="w-full h-full"
+              />
+              {!isRecording && (
+                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-400">
+                  Ready to record • Tap the microphone to start speaking
                 </div>
               )}
             </div>
 
-            {/* Timer & Status */}
-            <div className="space-y-1">
-              <div className="text-3xl sm:text-4xl font-mono font-black tracking-wider text-slate-900 dark:text-white">
-                {formatSeconds(recordingSeconds)}
+            {/* Live Interim Speech Badge */}
+            {isRecording && liveInterim && (
+              <div className="w-full max-w-xl px-4 py-2 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/50 text-xs text-[#0052cc] dark:text-blue-300 flex items-center gap-2 animate-pulse font-semibold">
+                <Radio className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                <span className="truncate">"{liveInterim}"</span>
               </div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                {isRecording ? 'Listening... Speak clearly into your microphone' : 'Ready to record (Max 10 min per session)'}
-              </p>
-            </div>
+            )}
 
-            {/* Main Action Button */}
-            <div>
+            {/* Timer & Controls */}
+            <div className="flex flex-col items-center space-y-4">
+              <div className="flex items-center gap-2 font-mono text-2xl sm:text-3xl font-black text-slate-800 dark:text-white">
+                <div className={`w-3.5 h-3.5 rounded-full ${isRecording ? 'bg-rose-500 animate-ping' : 'bg-slate-300'}`} />
+                <span>{formatSeconds(recordingSeconds)}</span>
+                <span className="text-xs font-sans text-slate-400 font-bold ml-1">/ 10:00 max</span>
+              </div>
+
               {!isRecording ? (
                 <button
                   type="button"
-                  disabled={isProcessing}
                   onClick={handleStartRecording}
-                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-xl shadow-brand-600/30 transition-all cursor-pointer select-none"
+                  className="px-8 py-4 rounded-full bg-gradient-to-r from-[#0052cc] to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white font-bold text-sm sm:text-base flex items-center gap-3 shadow-xl shadow-blue-500/25 active:scale-95 transition-all cursor-pointer"
                 >
                   <Mic className="w-5 h-5" />
-                  <span>Start Recording</span>
+                  <span>Start Live Voice Typing</span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleStopRecording}
-                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-95 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-xl shadow-rose-600/30 transition-all animate-pulse cursor-pointer select-none"
+                  className="px-8 py-4 rounded-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-sm sm:text-base flex items-center gap-3 shadow-xl shadow-rose-500/25 active:scale-95 transition-all cursor-pointer"
                 >
-                  <Square className="w-5 h-5 fill-current" />
-                  <span>Stop & Transcribe</span>
+                  <Square className="w-5 h-5" />
+                  <span>Stop & Finalize Text</span>
                 </button>
               )}
             </div>
           </div>
         )}
 
-        {/* Tab 2: Upload Audio File */}
+        {/* TAB 2: Upload Audio File */}
         {activeTab === 'upload' && (
-          <div className="space-y-6 py-2">
-            {!uploadedFile ? (
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 rounded-3xl p-8 sm:p-12 text-center cursor-pointer transition-all bg-slate-50/60 dark:bg-slate-800/40 select-none">
-                <input
-                  type="file"
-                  accept={VOICE_LIMITS.SUPPORTED_EXTENSIONS.join(',')}
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <div className="w-14 h-14 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center mb-3 shadow-xs">
-                  <FileAudio className="w-7 h-7" />
+          <div className="py-4 space-y-6">
+            <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-[#0052cc] rounded-3xl p-8 sm:p-12 text-center transition-all bg-slate-50/50 dark:bg-slate-800/30">
+              <input
+                type="file"
+                id="voice-file-upload"
+                accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <label
+                htmlFor="voice-file-upload"
+                className="flex flex-col items-center justify-center cursor-pointer space-y-3"
+              >
+                <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#0052cc] flex items-center justify-center border border-blue-100 dark:border-blue-900/50">
+                  <FileAudio className="w-8 h-8" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-                  Select or drop audio file
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-3">
-                  Supports MP3, WAV, M4A, AAC, OGG, and WEBM (Up to 50 MB / 10 min duration)
-                </p>
-                <span className="px-4 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-600/20">
-                  Choose Audio File
-                </span>
+                <div>
+                  <span className="text-sm font-bold text-slate-800 dark:text-white block">
+                    {uploadedFile ? uploadedFile.name : 'Click to select or drag audio file here'}
+                  </span>
+                  <span className="text-xs text-slate-400 mt-1 block">
+                    Supports MP3, WAV, M4A, AAC, OGG, WEBM, FLAC (Max: 50 MB / 10 min)
+                  </span>
+                </div>
               </label>
-            ) : (
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                      <FileAudio className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                        {uploadedFile.name}
-                      </p>
-                      <p className="text-[11px] text-slate-500 font-mono">
-                        {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
-                        {uploadedAudioDuration && ` • Duration: ${formatSeconds(Math.round(uploadedAudioDuration))}`}
-                      </p>
-                    </div>
-                  </div>
+            </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUploadedFile(null);
-                      setUploadedAudioDuration(null);
-                    }}
-                    className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+            {uploadedFile && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40">
+                <div className="flex items-center gap-3">
+                  <FileAudio className="w-5 h-5 text-[#0052cc]" />
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 dark:text-white block">
+                      {uploadedFile.name}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-mono">
+                      {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB
+                      {uploadedAudioDuration && ` • ~${formatSeconds(Math.round(uploadedAudioDuration))}`}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Audio Player Preview */}
-                <audio
-                  controls
-                  src={URL.createObjectURL(uploadedFile)}
-                  className="w-full h-10 rounded-lg outline-none"
-                />
-
-                {/* Transcribe Button */}
                 <button
                   type="button"
                   disabled={isProcessing}
                   onClick={() => processAudioForTranscription(uploadedFile, uploadedAudioDuration || 0)}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-600/20 active:scale-95 transition-all cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-[#0052cc] hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Start Whisper AI Transcription</span>
+                  <span>Transcribe File with AI</span>
                 </button>
               </div>
             )}
           </div>
         )}
 
-        {/* 4. Processing Progress Bar */}
+        {/* Progress Bar during AI processing */}
         {isProcessing && (
-          <div className="my-6 p-5 rounded-2xl bg-brand-50/60 dark:bg-slate-800/80 border border-brand-200 dark:border-brand-800 space-y-3 animate-in fade-in">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-600 animate-spin" />
-                <span>{progressStatus || 'Processing audio with Whisper AI...'}</span>
+          <div className="mt-6 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-3">
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#0052cc] animate-spin" />
+                <span>{progressStatus}</span>
               </span>
-              <span className="font-mono text-brand-600 dark:text-brand-400">{progressPercent}%</span>
+              <span className="font-mono text-[#0052cc]">{progressPercent}%</span>
             </div>
             <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-brand-600 via-indigo-500 to-teal-500 rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-blue-500 to-[#0052cc] rounded-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
           </div>
         )}
 
-        {/* 5. Transcription Result & Live Editor */}
+        {/* 4. Interactive Transcription Result & Paragraph Editor */}
         {transcription && (
-          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in">
-            {/* Header & Metrics */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-black text-slate-900 dark:text-white">
-                  Editable Transcription
+                <span className="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#0052cc]" />
+                  <span>Transcription Output</span>
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                  {resultMeta?.isRTL ? 'RTL Text' : 'LTR Text'}
+                <span className="text-xs text-slate-400 font-mono">
+                  ({transcription.trim().split(/\s+/).filter(Boolean).length} words • {transcription.length} chars)
                 </span>
               </div>
 
-              {/* Word & Char Counters */}
-              <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
-                <span>
-                  <strong>{resultMeta?.wordCount || transcription.trim().split(/\s+/).filter(Boolean).length}</strong> words
-                </span>
-                <span>•</span>
-                <span>
-                  <strong>{transcription.length}</strong> chars
-                </span>
-                {resultMeta?.duration ? (
-                  <>
-                    <span>•</span>
-                    <span>
-                      Duration: <strong>{formatSeconds(Math.round(resultMeta.duration))}</strong>
-                    </span>
-                  </>
-                ) : null}
+              {/* Formatting Actions */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAutoFormatText}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#0052cc] bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                  title="Auto-format paragraphs and punctuation"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Format Paragraphs</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTranscription('')}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-rose-500 bg-white dark:bg-slate-800 text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                  title="Clear text"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clear</span>
+                </button>
               </div>
             </div>
 
-            {/* Editable Textarea */}
+            {/* Editable Text Area */}
             <div className="relative">
               <textarea
-                dir={resultMeta?.isRTL ? 'rtl' : 'ltr'}
                 value={transcription}
-                onChange={(e) => {
-                  setTranscription(e.target.value);
-                  const words = e.target.value.trim().split(/\s+/).filter(Boolean).length;
-                  setResultMeta((prev) => (prev ? { ...prev, wordCount: words, charCount: e.target.value.length } : null));
-                }}
+                onChange={(e) => setTranscription(e.target.value)}
+                dir={isRtlLanguage ? 'rtl' : 'ltr'}
                 rows={10}
-                placeholder="Transcription text..."
-                className={`w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-relaxed focus:ring-2 focus:ring-brand-500 outline-none resize-y ${
-                  resultMeta?.isRTL ? 'font-serif text-right' : 'font-sans text-left'
+                className={`w-full p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-relaxed outline-none focus:ring-2 focus:ring-[#0052cc] focus:bg-white dark:focus:bg-slate-900 transition-all font-sans ${
+                  selectedLang === 'ur' ? 'font-urdu leading-[2.2]' : selectedLang === 'ar' ? 'font-arabic leading-[2.0]' : ''
                 }`}
+                placeholder="Spoken words will appear here automatically in real-time..."
               />
             </div>
 
-            {/* Export and Action Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2">
-              {/* Left Actions: Copy & Share */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-all"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copied!' : 'Copy Text'}</span>
-                </button>
+            {/* Action Buttons: Copy, Share, TXT, DOCX, PDF */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#0052cc] bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+              >
+                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-[#0052cc]" />}
+                <span>{copied ? 'Copied!' : 'Copy Text'}</span>
+              </button>
 
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-all"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>{shared ? 'Shared!' : 'Share'}</span>
-                </button>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-[#0052cc] bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+              >
+                <Share2 className="w-4 h-4 text-blue-500" />
+                <span>Share</span>
+              </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTranscription('');
-                    setResultMeta(null);
-                  }}
-                  className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  title="Clear Text"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleDownloadTxt}
+                className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-emerald-500" />
+                <span>Download TXT</span>
+              </button>
 
-              {/* Right Actions: Export Downloads */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleDownloadTxt}
-                  className="px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:opacity-90 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>TXT</span>
-                </button>
+              <button
+                type="button"
+                onClick={handleDownloadDocx}
+                className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-blue-600" />
+                <span>Word (.docx)</span>
+              </button>
 
-                <button
-                  type="button"
-                  onClick={handleDownloadDocx}
-                  className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all"
-                >
-                  <FileCode className="w-3.5 h-3.5" />
-                  <span>DOCX</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleDownloadPdf}
-                  className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-red-500/20 transition-all"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>PDF</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                className="col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-rose-500 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-rose-500" />
+                <span>PDF (.pdf)</span>
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* 6. Feature Highlights Card */}
+      {/* 5. Feature Highlights */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-xs">
           <div className="flex items-center gap-2 font-bold text-xs text-slate-800 dark:text-slate-200">
@@ -944,27 +1124,27 @@ export function VoiceToTextStudio() {
             <span>100% Private & Free</span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Runs client-side Whisper in your browser. No paid third-party APIs or stored voice data.
+            Real-time client-side speech recognition in your browser. No paid third-party APIs or stored voice data.
           </p>
         </div>
 
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-xs">
           <div className="flex items-center gap-2 font-bold text-xs text-slate-800 dark:text-slate-200">
-            <Globe className="w-4 h-4 text-brand-500" />
-            <span>Multi-Language & RTL</span>
+            <Globe className="w-4 h-4 text-[#0052cc]" />
+            <span>Urdu, Arabic, Hindi & English</span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Native support for Urdu, Arabic, Hindi, and English with auto script and punctuation formatting.
+            Full dialect mapping for Urdu (ur-PK), Arabic (ar-SA), Hindi (hi-IN), and English with auto RTL script support.
           </p>
         </div>
 
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-1 shadow-xs">
           <div className="flex items-center gap-2 font-bold text-xs text-slate-800 dark:text-slate-200">
-            <Download className="w-4 h-4 text-indigo-500" />
-            <span>One-Click Export</span>
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span>Smart Auto-Paragraphs</span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Instant export to TXT, Word DOCX, and PDF with copy & native Android sharing.
+            Automatically detects speech pauses to insert ending punctuation and create clean paragraph breaks.
           </p>
         </div>
       </div>

@@ -194,7 +194,7 @@ export function preprocessAudioSamples(samples: Float32Array): {
 }
 
 /**
- * Safe deterministic post-processing: punctuation, spacing, and script integrity
+ * Safe deterministic post-processing: smart paragraph segmentation, punctuation, spacing, and script integrity
  */
 export function formatTranscription(rawText: string, lang: string): {
   formattedText: string;
@@ -203,26 +203,56 @@ export function formatTranscription(rawText: string, lang: string): {
   charCount: number;
 } {
   let text = (rawText || '').trim();
+  if (!text) {
+    return { formattedText: '', isRTL: lang === 'ur' || lang === 'ar', wordCount: 0, charCount: 0 };
+  }
 
-  // Normalize excessive spaces
+  // Normalize spaces and linebreaks
   text = text.replace(/[ \t]+/g, ' ');
-  text = text.replace(/\n\s+/g, '\n');
+  text = text.replace(/(\r\n|\r|\n)+/g, '\n');
 
   // Detect RTL script (Urdu, Arabic, Persian, Hebrew)
   const rtlRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
   const isRTL = lang === 'ur' || lang === 'ar' || rtlRegex.test(text);
 
-  // Capitalize first letter of sentences for Latin scripts
-  if (!isRTL && lang !== 'hi') {
-    text = text.replace(/(^\s*|[.!?]\s+)([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase());
+  // Smart sentence formatting & auto-paragraph grouping
+  const lines = text.split('\n');
+  const formattedParagraphs: string[] = [];
+
+  for (const line of lines) {
+    let trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Capitalize first letter of sentences for Latin scripts
+    if (!isRTL && lang !== 'hi') {
+      trimmed = trimmed.replace(/(^\s*|[.!?]\s+)([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase());
+    }
+
+    // Ensure sentence ending punctuation if missing
+    if (!/[.!?۔،।]$/.test(trimmed)) {
+      if (lang === 'ur') {
+        trimmed += '۔';
+      } else if (lang === 'hi') {
+        trimmed += '।';
+      } else if (lang === 'ar') {
+        trimmed += '.';
+      } else {
+        trimmed += '.';
+      }
+    }
+
+    formattedParagraphs.push(trimmed);
   }
 
+  // Group into clean paragraphs with double newlines
+  const formattedText = formattedParagraphs.join('\n\n');
+
   // Calculate actual metrics
-  const wordCount = text.length > 0 ? text.trim().split(/\s+/).filter(Boolean).length : 0;
-  const charCount = text.length;
+  const wordCount = formattedText.length > 0 ? formattedText.trim().split(/\s+/).filter(Boolean).length : 0;
+  const charCount = formattedText.length;
 
   return {
-    formattedText: text,
+    formattedText,
     isRTL,
     wordCount,
     charCount,
