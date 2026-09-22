@@ -124,7 +124,7 @@ export function AudioSpeedStudio() {
             </div>
 
             {/* Custom Speed Slider */}
-            <div className="space-y-2 bg-white border border-slate-200 rounded-xl p-4">
+            <div dir="ltr" className="space-y-2 bg-white border border-slate-200 rounded-xl p-4">
               <div className="flex justify-between items-center text-xs font-bold text-slate-800">
                 <span className="flex items-center gap-1.5">
                   <Gauge className="w-4 h-4 text-cyan-600" />
@@ -134,13 +134,20 @@ export function AudioSpeedStudio() {
               </div>
               <input
                 type="range"
-                min={0.5}
-                max={2.5}
+                dir="ltr"
+                min={0.25}
+                max={3.0}
                 step={0.05}
                 value={speed}
                 onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                className="w-full accent-cyan-500"
+                className="w-full accent-cyan-500 cursor-pointer"
               />
+              <div className="flex justify-between text-[10px] text-slate-400 font-semibold">
+                <span>0.25x (Slow)</span>
+                <span>1.0x (Normal)</span>
+                <span>2.0x (Double)</span>
+                <span>3.0x (Fast)</span>
+              </div>
             </div>
 
             <button

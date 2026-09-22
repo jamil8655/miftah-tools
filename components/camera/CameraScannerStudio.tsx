@@ -1,26 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  Camera,
-  UploadCloud,
-  FileText,
-  Sparkles,
-  RefreshCw,
-  RotateCw,
-  Trash2,
-  Download,
-  Plus,
-  Sliders,
-  Check,
-  Zap,
-  Layers,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  FileDown,
-  Share2,
-} from 'lucide-react';
+import { Camera, UploadCloud, FileText, Zap, RefreshCw, RotateCw, Trash2, Download, Plus, Sliders, Check, Layers, ChevronLeft, ChevronRight, Eye, FileDown, Share2, Wrench } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
 import { Document, Paragraph, ImageRun, Packer } from 'docx';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -543,7 +524,7 @@ export function CameraScannerStudio() {
               {/* Filter Selection Buttons */}
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { id: 'magic', label: loc.filterMagic, icon: Sparkles },
+                  { id: 'magic', label: loc.filterMagic, icon: Wrench },
                   { id: 'bw', label: loc.filterBw, icon: Zap },
                   { id: 'grayscale', label: loc.filterGray, icon: Layers },
                   { id: 'original', label: loc.filterOriginal, icon: Eye },

@@ -20,6 +20,8 @@ const nextConfig = {
       ...config.resolve.alias,
       canvas: false,
       encoding: false,
+      'onnxruntime-node': false,
+      sharp: false,
     };
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -28,6 +30,8 @@ const nextConfig = {
       crypto: false,
       canvas: false,
       encoding: false,
+      'onnxruntime-node': false,
+      sharp: false,
     };
     return config;
   },

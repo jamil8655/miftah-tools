@@ -1,31 +1,19 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  Image as ImageIcon,
-  Sparkles,
-  Sliders,
-  Crop,
-  RotateCw,
-  Download,
-  Upload,
-  Zap,
-  CheckCircle2,
-  Palette,
-  EyeOff,
-  Sun,
-  Contrast,
-  Layers,
-  Share2,
-} from 'lucide-react';
+import { Image as ImageIcon, Zap, Sliders, Crop, RotateCw, Download, Upload, CheckCircle2, Palette, EyeOff, Sun, Contrast, Layers, Share2 } from 'lucide-react';
 import { downloadSingleFile, shareDownloadedFile } from '@/lib/utils/download';
 import { formatBytes } from '@/lib/utils/formatters';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 
-export function UnifiedImageStudio() {
+interface UnifiedImageStudioProps {
+  initialTab?: 'filter' | 'resize' | 'compress' | 'convert';
+}
+
+export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudioProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'filter' | 'resize' | 'compress' | 'convert'>('filter');
+  const [activeTab, setActiveTab] = useState<'filter' | 'resize' | 'compress' | 'convert'>(initialTab);
 
   // Sliders State
   const [brightness, setBrightness] = useState(100);
@@ -42,10 +30,70 @@ export function UnifiedImageStudio() {
 
   // Compression & Format
   const [targetKb, setTargetKb] = useState<number>(100);
+  const [customNumInput, setCustomNumInput] = useState<string>('100');
+  const [customUnit, setCustomUnit] = useState<'kb' | 'mb'>('kb');
   const [targetFormat, setTargetFormat] = useState<string>('image/jpeg');
+  const [isCompressing, setIsCompressing] = useState<boolean>(false);
+  const [compressedResult, setCompressedResult] = useState<{ blob: Blob; dataUrl: string; finalKB: number } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const originalImageRef = useRef<HTMLImageElement | null>(null);
+
+  const SLIDER_STOPS = [
+    { pos: 0, kb: 20 },
+    { pos: 12, kb: 50 },
+    { pos: 25, kb: 100 },
+    { pos: 38, kb: 200 },
+    { pos: 52, kb: 500 },
+    { pos: 66, kb: 1024 },  // 1 MB
+    { pos: 78, kb: 2048 },  // 2 MB
+    { pos: 88, kb: 5120 },  // 5 MB
+    { pos: 100, kb: 10240 },// 10 MB
+  ];
+
+  const kbToSliderPos = (kb: number): number => {
+    if (!kb || kb <= SLIDER_STOPS[0].kb) return 0;
+    if (kb >= SLIDER_STOPS[SLIDER_STOPS.length - 1].kb) return 100;
+    for (let i = 0; i < SLIDER_STOPS.length - 1; i++) {
+      const s1 = SLIDER_STOPS[i];
+      const s2 = SLIDER_STOPS[i + 1];
+      if (kb >= s1.kb && kb <= s2.kb) {
+        const ratio = (kb - s1.kb) / (s2.kb - s1.kb);
+        return Math.round(s1.pos + ratio * (s2.pos - s1.pos));
+      }
+    }
+    return 25;
+  };
+
+  const sliderPosToKb = (pos: number): number => {
+    if (pos <= 0) return 20;
+    if (pos >= 100) return 10240;
+    for (let i = 0; i < SLIDER_STOPS.length - 1; i++) {
+      const s1 = SLIDER_STOPS[i];
+      const s2 = SLIDER_STOPS[i + 1];
+      if (pos >= s1.pos && pos <= s2.pos) {
+        const ratio = (pos - s1.pos) / (s2.pos - s1.pos);
+        const rawKb = s1.kb + ratio * (s2.kb - s1.kb);
+        if (rawKb < 200) return Math.round(rawKb / 5) * 5;
+        if (rawKb < 1000) return Math.round(rawKb / 25) * 25;
+        return Math.round(rawKb / 100) * 100;
+      }
+    }
+    return 100;
+  };
+
+  const updateTargetKbWithSync = (kb: number) => {
+    const validKb = Math.max(10, kb);
+    setTargetKb(validKb);
+    if (validKb >= 1024) {
+      const mbVal = (validKb / 1024).toFixed(validKb % 1024 === 0 ? 0 : 1);
+      setCustomNumInput(mbVal);
+      setCustomUnit('mb');
+    } else {
+      setCustomNumInput(validKb.toString());
+      setCustomUnit('kb');
+    }
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -94,14 +142,60 @@ export function UnifiedImageStudio() {
   };
 
   useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
     renderPreview();
   }, [brightness, contrast, grayscale, sepia, rotation]);
 
-  const handleDownloadOutput = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !imageFile) return;
+  // Live real-time compression recalculation whenever targetKb or targetFormat changes
+  useEffect(() => {
+    if (!imageFile) return;
+    let isCancelled = false;
 
+    const runCompression = async () => {
+      setIsCompressing(true);
+      try {
+        const { compressImageToTargetKB } = await import('@/lib/image/image-manipulator');
+        const res = await compressImageToTargetKB(imageFile, targetKb, targetFormat as any);
+        if (!isCancelled) {
+          setCompressedResult({
+            blob: res.blob,
+            dataUrl: res.dataUrl,
+            finalKB: Math.round(res.blob.size / 1024),
+          });
+        }
+      } catch (err) {
+        console.error('Compression preview error:', err);
+      } finally {
+        if (!isCancelled) setIsCompressing(false);
+      }
+    };
+
+    const timer = setTimeout(runCompression, 150);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [imageFile, targetKb, targetFormat]);
+
+  const handleDownloadOutput = async () => {
+    if (!imageFile) return;
     triggerHaptic('medium');
+
+    if (activeTab === 'compress') {
+      if (compressedResult) {
+        const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
+        const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_compressed_${targetKb}kb.${ext}`;
+        downloadSingleFile(compressedResult.blob, outName);
+        return;
+      }
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -115,10 +209,19 @@ export function UnifiedImageStudio() {
   };
 
   const handleShareOutput = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !imageFile) return;
-
+    if (!imageFile) return;
     triggerHaptic('light');
+
+    if (activeTab === 'compress' && compressedResult) {
+      const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
+      const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_compressed_${targetKb}kb.${ext}`;
+      shareDownloadedFile({ name: outName, blob: compressedResult.blob, mimeType: targetFormat });
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     canvas.toBlob(
       (blob) => {
         if (!blob) return;
@@ -137,7 +240,7 @@ export function UnifiedImageStudio() {
       <div className="flex flex-wrap items-center justify-between gap-4 p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200">
-            <Sparkles className="w-3 h-3 text-blue-600" />
+            <Zap className="w-3 h-3 text-blue-600" />
             <span>Unified Image Studio • Live Filters & Multi-Format Engine</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
@@ -297,25 +400,143 @@ export function UnifiedImageStudio() {
               </div>
             )}
 
-            {/* C. Exact KB Panel */}
+            {/* C. Exact KB & MB Target Size Panel */}
             {activeTab === 'compress' && (
-              <div className="space-y-3 pt-2">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Target Size Limit:</label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[20, 50, 100, 200, 500, 1000].map((kb) => (
+              <div className="space-y-4 pt-2">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span>Target Size Limit:</span>
+                  <span className="font-mono text-brand-600 dark:text-brand-400 font-extrabold text-xs px-2.5 py-0.5 rounded-lg bg-brand-50 dark:bg-brand-950 border border-brand-200 dark:border-brand-800">
+                    🎯 {targetKb >= 1024 ? `${(targetKb / 1024).toFixed(targetKb % 1024 === 0 ? 0 : 1)} MB` : `${targetKb} KB`}
+                  </span>
+                </div>
+
+                {/* Left-to-Right Range Slider (Left to Right / बाएं से दाएं) */}
+                <div className="space-y-1.5">
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={kbToSliderPos(targetKb)}
+                    onChange={(e) => {
+                      const newKb = sliderPosToKb(Number(e.target.value));
+                      updateTargetKbWithSync(newKb);
+                    }}
+                    className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer transition-all"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                    <span>20 KB</span>
+                    <span>50 KB</span>
+                    <span>100 KB</span>
+                    <span>200 KB</span>
+                    <span>500 KB</span>
+                    <span>1 MB</span>
+                    <span>2 MB</span>
+                    <span>5 MB</span>
+                    <span>10 MB</span>
+                  </div>
+                </div>
+
+                {/* Direct Editable Type-in Box for KB / MB */}
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                    Type Exact Size:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      step="any"
+                      placeholder="e.g. 50 or 2"
+                      value={customNumInput}
+                      onChange={(e) => {
+                        const str = e.target.value;
+                        setCustomNumInput(str);
+                        const val = parseFloat(str);
+                        if (!isNaN(val) && val > 0) {
+                          const kb = customUnit === 'mb' ? Math.round(val * 1024) : Math.round(val);
+                          setTargetKb(Math.max(10, kb));
+                        }
+                      }}
+                      className="w-24 sm:w-28 px-3 py-1.5 text-xs font-mono font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                    <div className="flex rounded-xl bg-slate-200/80 dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-slate-700">
+                      {(['kb', 'mb'] as const).map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          onClick={() => {
+                            setCustomUnit(u);
+                            const val = parseFloat(customNumInput);
+                            if (!isNaN(val) && val > 0) {
+                              const kb = u === 'mb' ? Math.round(val * 1024) : Math.round(val);
+                              setTargetKb(Math.max(10, kb));
+                            }
+                          }}
+                          className={`px-2.5 py-1 text-xs font-extrabold uppercase rounded-lg transition-all ${
+                            customUnit === u
+                              ? 'bg-brand-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400'
+                          }`}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[20, 50, 100, 200, 500, 1024, 2048, 5120].map((kb) => (
                     <button
                       key={kb}
                       type="button"
-                      onClick={() => setTargetKb(kb)}
-                      className={`py-2 text-[11px] font-bold rounded-xl border ${
+                      onClick={() => updateTargetKbWithSync(kb)}
+                      className={`py-1.5 text-[11px] font-bold rounded-xl border transition-all ${
                         targetKb === kb
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 text-slate-600'
+                          ? 'bg-brand-600 text-white border-brand-600 shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100'
                       }`}
                     >
-                      {kb >= 1000 ? `${kb / 1000} MB` : `${kb} KB`}
+                      {kb >= 1024 ? `${kb / 1024} MB` : `${kb} KB`}
                     </button>
                   ))}
+                </div>
+
+                {/* Live Real-Time Compression Stats Result */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Original:</span>
+                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                      {imageFile ? formatBytes(imageFile.size) : '0 KB'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Compressed:</span>
+                    <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                      {isCompressing ? (
+                        <span className="animate-pulse text-amber-500">Calculating...</span>
+                      ) : compressedResult ? (
+                        `${compressedResult.finalKB} KB`
+                      ) : (
+                        `≤ ${targetKb} KB`
+                      )}
+                    </span>
+                  </div>
+
+                  {compressedResult && imageFile && imageFile.size > 0 && (
+                    <div className="pt-1 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-[11px]">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Saved {Math.max(0, Math.round((1 - (compressedResult.finalKB * 1024) / imageFile.size) * 100))}%
+                      </span>
+                      <span className="text-slate-400 font-medium text-[10px]">
+                        Web & Portal Ready
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

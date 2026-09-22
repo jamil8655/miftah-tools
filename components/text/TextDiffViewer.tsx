@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { compareTextDiff, DiffLineResult } from '@/lib/text/text-engine';
-import { GitCompare, ArrowRightLeft, Sparkles } from 'lucide-react';
+import { GitCompare, ArrowRightLeft, Zap } from 'lucide-react';
 
 export function TextDiffViewer() {
   const [textA, setTextA] = useState<string>(

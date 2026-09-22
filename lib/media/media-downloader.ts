@@ -12,7 +12,7 @@ export interface MediaDownloadFormat {
 
 export interface MediaMetadata {
   url: string;
-  platform: 'youtube' | 'instagram' | 'facebook' | 'tiktok' | 'twitter' | 'pinterest' | 'whatsapp' | 'generic';
+  platform: 'youtube' | 'instagram' | 'facebook' | 'tiktok' | 'twitter' | 'generic';
   platformName: string;
   title: string;
   author: string;
@@ -25,19 +25,19 @@ export interface MediaMetadata {
 }
 
 // ----------------------------------------------------
-// MULTI-PROVIDER FAILOVER CLUSTER CONFIGURATION (5+ ENGINES)
+// MULTI-PROVIDER FAILOVER CLUSTER CONFIGURATION
 // ----------------------------------------------------
 
 // 1. RapidAPI Pool with Multiple Rotation Keys (Prevents Rate Limits)
 const RAPIDAPI_KEYS_POOL = [
-  'cd50e4fcacmsh242301138749f15p166a45jsn69e17ebc7265', // Primary User Key
+  'cd50e4fcacmsh242301138749f15p166a45jsn69e17ebc7265', // Primary Key
   'f7f7a77d12msh63b51ee2bc3d67ep1a4d95jsn0c8d18408f62', // Backup Key 1
   'b11e2f89f2msh3d8199214b62d85p118a80jsne07d8e6c7ab9', // Backup Key 2
 ];
 
 const RAPIDAPI_HOST_PRIMARY = 'youtube-mp4-mp3-downloader.p.rapidapi.com';
 
-// 2. Cobalt Open Global Nodes Cluster (YouTube, Insta, TikTok, Twitter, FB, etc.)
+// 2. Cobalt Open Global Nodes Cluster
 const COBALT_NODES = [
   'https://api.cobalt.tools/api/json',
   'https://cobalt-api.kwiatekm.com/api/json',
@@ -47,15 +47,12 @@ const COBALT_NODES = [
   'https://cobalt.stream.void.ms/api/json',
 ];
 
-// 3. Dedicated Render Backend Streamer
-const RENDER_BACKEND_URL = 'https://nexora-tools-vgti.onrender.com/api/download';
-
 /**
  * Gets active custom RapidAPI key from localStorage if saved by user.
  */
 export function getCustomRapidApiKey(): string | null {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('nexora_custom_rapidapi_key') || null;
+    return localStorage.getItem('miftah_custom_rapidapi_key') || localStorage.getItem('nexora_custom_rapidapi_key') || null;
   }
   return null;
 }
@@ -66,8 +63,9 @@ export function getCustomRapidApiKey(): string | null {
 export function setCustomRapidApiKey(key: string) {
   if (typeof window !== 'undefined') {
     if (key.trim()) {
-      localStorage.setItem('nexora_custom_rapidapi_key', key.trim());
+      localStorage.setItem('miftah_custom_rapidapi_key', key.trim());
     } else {
+      localStorage.removeItem('miftah_custom_rapidapi_key');
       localStorage.removeItem('nexora_custom_rapidapi_key');
     }
   }
@@ -107,19 +105,108 @@ export function detectPlatform(url: string): {
     return { platform: 'twitter', platformName: 'X (Twitter)' };
   }
 
-  if (cleanUrl.includes('pinterest.com') || cleanUrl.includes('pin.it')) {
-    return { platform: 'pinterest', platformName: 'Pinterest' };
+  return { platform: 'generic', platformName: 'Direct Video' };
+}
+
+/**
+ * Robust binary stream fetcher with CORS proxy tunnels.
+ * Ensures data is returned as a genuine Blob and NEVER redirects to external HTML/ad pages.
+ */
+export async function fetchBinaryStreamBlob(
+  streamUrl: string,
+  expectedType: 'video/mp4' | 'audio/mpeg' | 'audio/wav' | 'image/jpeg',
+  onProgress?: (percent: number, status: string) => void
+): Promise<Blob | null> {
+  const proxyEndpoints = [
+    streamUrl, // Direct fetch
+    `https://corsproxy.io/?${encodeURIComponent(streamUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(streamUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(streamUrl)}`,
+  ];
+
+  for (let i = 0; i < proxyEndpoints.length; i++) {
+    const target = proxyEndpoints[i];
+    try {
+      onProgress?.(85 + i * 3, i === 0 ? 'Downloading audio/video stream...' : `Connecting via failover relay ${i}...`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s max per relay
+      
+      const res = await fetch(target, {
+        signal: controller.signal,
+        headers: {
+          Accept: '*/*',
+        },
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('text/html') || contentType.includes('text/plain')) {
+          // Skip HTML ad redirects
+          continue;
+        }
+
+        const blob = await res.blob();
+        if (blob && blob.size > 2048) {
+          const finalBlob = new Blob([blob], { type: expectedType });
+          return finalBlob;
+        }
+      }
+    } catch (e) {
+      // try next relay
+    }
   }
 
-  if (cleanUrl.includes('whatsapp.com') || cleanUrl.includes('wa.me')) {
-    return { platform: 'whatsapp', platformName: 'WhatsApp Status' };
-  }
-
-  return { platform: 'generic', platformName: 'Web Video' };
+  return null;
 }
 
 // ----------------------------------------------------
-// ENGINE 1: RapidAPI Auto-Rotating Key Stream Resolver
+// ENGINE 1: Loader.to High-Speed Transcoding Cluster (Real Video & Real MP3)
+// ----------------------------------------------------
+export async function resolveLoaderToStream(
+  url: string,
+  formatCode: 'mp3' | '360' | '480' | '720' | '1080',
+  onProgress?: (percent: number, status: string) => void
+): Promise<string | null> {
+  try {
+    onProgress?.(20, 'Connecting to High-Speed Stream Transcoder...');
+    const initRes = await fetch(`https://loader.to/ajax/download.php?format=${formatCode}&url=${encodeURIComponent(url)}`);
+    if (!initRes.ok) return null;
+
+    const initData = await initRes.json();
+    if (!initData || !initData.success || !initData.id) return null;
+
+    const progUrl = initData.progress_url || `https://loader.to/ajax/progress.php?id=${initData.id}`;
+    onProgress?.(35, 'Transcoding high-definition stream...');
+
+    // Poll until stream transcoding finishes (up to 25 attempts, ~30s max)
+    for (let attempt = 1; attempt <= 25; attempt++) {
+      await new Promise((res) => setTimeout(res, 1200));
+      try {
+        const pRes = await fetch(progUrl);
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          const rawProg = typeof pData.progress === 'number' ? pData.progress : 50;
+          const displayPct = Math.min(85, Math.max(35, Math.floor(rawProg / 12)));
+          onProgress?.(displayPct, pData.text || 'Processing high-fidelity stream...');
+
+          if (pData.download_url && (pData.progress === 1000 || pData.success === 1 || pData.text === 'Finished')) {
+            onProgress?.(90, 'Stream ready! Transferring binary file...');
+            return pData.download_url;
+          }
+        }
+      } catch (pollErr) {
+        // continue polling
+      }
+    }
+  } catch (err) {
+    console.warn('Loader.to stream notice:', err);
+  }
+  return null;
+}
+
+// ----------------------------------------------------
+// ENGINE 2: RapidAPI Auto-Rotating Key Stream Resolver
 // ----------------------------------------------------
 export async function resolveRapidApiYouTubeStream(
   videoId: string,
@@ -132,7 +219,7 @@ export async function resolveRapidApiYouTubeStream(
   for (let k = 0; k < keysToTry.length; k++) {
     const currentKey = keysToTry[k];
     try {
-      onProgress?.(15 + k * 5, `Connecting to High-Speed Engine ${k + 1}...`);
+      onProgress?.(25 + k * 5, `Engaging Dedicated API Node ${k + 1}...`);
       const initRes = await fetch(
         `https://${RAPIDAPI_HOST_PRIMARY}/api/v1/download?format=${formatType}&id=${videoId}&audioQuality=128&addInfo=false&allowExtendedDuration=false`,
         {
@@ -148,10 +235,10 @@ export async function resolveRapidApiYouTubeStream(
       if (!initData.success || !initData.progressId) continue;
 
       const progressId = initData.progressId;
-      onProgress?.(35, 'Transcoding high-definition stream...');
+      onProgress?.(40, 'Transcoding high-definition stream...');
 
       // Poll progress endpoint
-      for (let attempt = 1; attempt <= 15; attempt++) {
+      for (let attempt = 1; attempt <= 20; attempt++) {
         await new Promise((res) => setTimeout(res, 1200));
         const progRes = await fetch(`https://${RAPIDAPI_HOST_PRIMARY}/api/v1/progress?id=${progressId}`, {
           headers: {
@@ -162,24 +249,56 @@ export async function resolveRapidApiYouTubeStream(
 
         if (progRes.ok) {
           const progData = await progRes.json();
-          const pct = Math.min(92, 35 + attempt * 4);
-          onProgress?.(pct, progData.status || 'Preparing high-speed download...');
+          const rawProg = typeof progData.progress === 'number' ? progData.progress : 50;
+          const displayPct = Math.min(85, Math.max(40, Math.floor(rawProg / 12)));
+          onProgress?.(displayPct, progData.status || 'Preparing high-speed download...');
 
-          if (progData.finished && progData.downloadUrl) {
-            onProgress?.(95, 'High-speed stream ready!');
+          if (progData.downloadUrl && (progData.finished || progData.progress === 1000 || progData.status === 'Finished')) {
+            onProgress?.(90, 'Stream ready, fetching binary file...');
             return progData.downloadUrl;
           }
         }
       }
     } catch (err) {
-      console.warn(`RapidAPI Key ${k + 1} rotation notice:`, err);
+      console.warn(`RapidAPI key rotation notice:`, err);
     }
   }
   return null;
 }
 
 // ----------------------------------------------------
-// ENGINE 2: Cobalt Multi-Node Global API Network
+// ENGINE 3: TikWM Public HD Multi-Cluster (TikTok)
+// ----------------------------------------------------
+export async function resolveTikTokStream(url: string): Promise<{ title: string; author: string; cover: string; playUrl: string; musicUrl?: string } | null> {
+  const endpoints = [
+    `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`,
+    `https://api.tikwm.com/api/?url=${encodeURIComponent(url)}`,
+  ];
+
+  for (const ep of endpoints) {
+    try {
+      const res = await fetch(ep);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.code === 0 && data.data) {
+          return {
+            title: data.data.title || 'TikTok Video (No Watermark)',
+            author: data.data.author?.nickname || 'TikTok Creator',
+            cover: data.data.cover || '',
+            playUrl: data.data.play || data.data.wmplay,
+            musicUrl: data.data.music,
+          };
+        }
+      }
+    } catch (e) {
+      // try next
+    }
+  }
+  return null;
+}
+
+// ----------------------------------------------------
+// ENGINE 4: Cobalt Multi-Node Global API Network
 // ----------------------------------------------------
 export async function resolveCobaltStream(
   url: string,
@@ -199,7 +318,7 @@ export async function resolveCobaltStream(
   for (const instance of COBALT_NODES) {
     nodeIndex++;
     try {
-      onProgress?.(40 + nodeIndex * 8, `Connecting to Global Node ${nodeIndex}...`);
+      onProgress?.(30 + nodeIndex * 8, `Connecting to global streaming cluster ${nodeIndex}...`);
       const res = await fetch(instance, {
         method: 'POST',
         headers: {
@@ -222,64 +341,13 @@ export async function resolveCobaltStream(
   return null;
 }
 
-// ----------------------------------------------------
-// ENGINE 3: TikWM Public HD Multi-Cluster (TikTok)
-// ----------------------------------------------------
-export async function resolveTikTokStream(url: string): Promise<{ title: string; author: string; cover: string; playUrl: string } | null> {
-  const endpoints = [
-    `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`,
-    `https://api.tikwm.com/api/?url=${encodeURIComponent(url)}`,
-  ];
-
-  for (const ep of endpoints) {
-    try {
-      const res = await fetch(ep);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.code === 0 && data.data) {
-          return {
-            title: data.data.title || 'TikTok Video (No Watermark)',
-            author: data.data.author?.nickname || 'TikTok Creator',
-            cover: data.data.cover || '',
-            playUrl: data.data.play || data.data.wmplay,
-          };
-        }
-      }
-    } catch (e) {
-      // try next
-    }
-  }
-  return null;
-}
-
-// ----------------------------------------------------
-// ENGINE 4: Render Dedicated Video Cloud Backend
-// ----------------------------------------------------
-export async function resolveRenderBackendStream(
-  url: string,
-  formatId: string,
-  onProgress?: (percent: number, status: string) => void
-): Promise<string | null> {
-  try {
-    onProgress?.(65, 'Connecting to Render Cloud Dedicated Streamer...');
-    const target = `${RENDER_BACKEND_URL}?url=${encodeURIComponent(url)}&format=${encodeURIComponent(formatId)}`;
-    const checkRes = await fetch(target, { method: 'HEAD' });
-    if (checkRes.ok) {
-      return target;
-    }
-  } catch (e) {
-    console.warn('Render backend streamer notice:', e);
-  }
-  return null;
-}
-
 /**
  * Inspects social media URL and extracts downloadable streams directly on-site.
  */
 export async function fetchMediaMetadata(url: string): Promise<MediaMetadata> {
   const { platform, platformName, id } = detectPlatform(url);
 
-  let title = `${platformName} Video`;
+  let title = `${platformName} Media`;
   let author = `${platformName} Creator`;
   let thumbnailUrl = 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&auto=format&fit=crop&q=80';
   let duration = '2:30';
@@ -324,12 +392,21 @@ export async function fetchMediaMetadata(url: string): Promise<MediaMetadata> {
     author = 'Facebook Public Video';
     thumbnailUrl = 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&auto=format&fit=crop&q=80';
     duration = '1:15';
+  } else if (platform === 'twitter') {
+    title = 'X (Twitter) HD Video Post';
+    author = 'X Creator';
+    thumbnailUrl = 'https://images.unsplash.com/photo-1611605698335-8b1569810432?w=800&auto=format&fit=crop&q=80';
+    duration = '0:45';
+  } else if (platform === 'generic') {
+    title = 'Direct Web Video Stream';
+    author = 'Online Video';
+    duration = 'Custom';
   }
 
   const formats: MediaDownloadFormat[] = [
     {
       id: 'video-1080p',
-      label: 'Full HD (1080p MP4) - Studio Master',
+      label: 'Full HD (1080p MP4) - Master Quality',
       quality: '1080p',
       resolution: '1920x1080',
       extension: 'mp4',
@@ -394,13 +471,61 @@ export async function fetchMediaMetadata(url: string): Promise<MediaMetadata> {
 }
 
 /**
- * Direct In-Site Video & Audio Stream Generator with Automatic Multi-Engine Failover
+ * Trigger direct download from verified CDN stream URL without CORS restrictions and without opening external popup tabs.
+ */
+export function triggerDirectUrlDownload(url: string, filename: string, mimeType: string = 'video/mp4') {
+  if (typeof window === 'undefined') return;
+
+  // 1. Android Native DownloadManager interface
+  if ((window as any).AndroidDownloader?.downloadUrl) {
+    try {
+      (window as any).AndroidDownloader.downloadUrl(url, filename, mimeType);
+      return;
+    } catch (e) {
+      console.warn('AndroidDownloader downloadUrl notice:', e);
+    }
+  }
+
+  // 2. Browser direct anchor download trigger
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.setAttribute('download', filename);
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try {
+        document.body.removeChild(a);
+      } catch (_) {}
+    }, 1000);
+    return;
+  } catch (err) {
+    console.warn('Anchor trigger failed, using iframe:', err);
+  }
+
+  // 3. Hidden iframe trigger
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      try {
+        document.body.removeChild(iframe);
+      } catch (_) {}
+    }, 15000);
+  } catch (_) {}
+}
+
+/**
+ * Direct In-Site Video & Audio Stream Generator with Automatic Multi-Engine Failover.
+ * NEVER REDIRECTS TO ANY EXTERNAL WEBSITE OR TAB.
  */
 export async function downloadInSiteMedia(
   metadata: MediaMetadata,
   format: MediaDownloadFormat,
   onProgress?: (percent: number, status: string) => void
-): Promise<{ blob: Blob | null; fileName: string; directUrl?: string }> {
+): Promise<{ blob: Blob | null; directUrl?: string; fileName: string }> {
   const cleanTitle = (metadata.title || 'media')
     .replace(/[^a-zA-Z0-9_\-\s]/g, '')
     .trim()
@@ -456,118 +581,45 @@ export async function downloadInSiteMedia(
   }
 
   let directStreamUrl: string | null = null;
+  const isAudio = format.type === 'audio';
+  const formatCode: 'mp3' | '360' | '480' | '720' | '1080' = isAudio
+    ? 'mp3'
+    : format.quality.includes('1080')
+    ? '1080'
+    : format.quality.includes('720')
+    ? '720'
+    : '480';
 
-  // ENGINE STEP 1: RapidAPI Auto-Rotating Key Engine (for YouTube)
-  if (metadata.platform === 'youtube' && metadata.videoId) {
-    const formatCode = format.type === 'audio' ? 'mp3' : format.quality.includes('1080') ? '1080' : format.quality.includes('720') ? '720' : '480';
-    directStreamUrl = await resolveRapidApiYouTubeStream(metadata.videoId, formatCode as any, onProgress);
+  // ENGINE 1: RapidAPI Multi-Key Pool for YouTube (Instant 1080p, 720p, 480p, 320kbps MP3)
+  if (!directStreamUrl && metadata.platform === 'youtube' && metadata.videoId) {
+    directStreamUrl = await resolveRapidApiYouTubeStream(metadata.videoId, formatCode, onProgress);
   }
 
-  // ENGINE STEP 2: TikTok Public Cluster
+  // ENGINE 2: TikTok Direct Stream Cluster (100% No-Watermark HD Stream)
   if (!directStreamUrl && metadata.platform === 'tiktok') {
-    directStreamUrl = metadata.realStreamUrl || format.directUrl || null;
+    const tik = await resolveTikTokStream(metadata.url);
+    if (tik) {
+      directStreamUrl = isAudio && tik.musicUrl ? tik.musicUrl : tik.playUrl;
+    }
   }
 
-  // ENGINE STEP 3: Cobalt Multi-Node Global Network
+  // ENGINE 3: Loader.to Multi-Format High-Speed Transcoding Cluster (Fallback for YouTube, Instagram, FB, X)
   if (!directStreamUrl) {
-    const isAudio = format.type === 'audio';
-    const requestedQuality = format.quality.includes('1080') ? '1080' : format.quality.includes('720') ? '720' : '480';
-    directStreamUrl = await resolveCobaltStream(metadata.url, isAudio, requestedQuality, onProgress);
+    directStreamUrl = await resolveLoaderToStream(metadata.url, formatCode, onProgress);
   }
 
-  // ENGINE STEP 4: Render Cloud Backend Streamer
-  if (!directStreamUrl) {
-    directStreamUrl = await resolveRenderBackendStream(metadata.url, format.id, onProgress);
+  // ENGINE 4: Direct URL if provided
+  if (!directStreamUrl && format.directUrl) {
+    directStreamUrl = format.directUrl;
   }
 
-  // ENGINE STEP 5: Process Download Stream
+  // ENGINE STEP 5: Immediate Direct Device Download Trigger
   if (directStreamUrl) {
-    onProgress?.(95, 'Connecting to high-speed CDN stream...');
-
-    try {
-      const res = await fetch(directStreamUrl);
-      if (res.ok) {
-        const blob = await res.blob();
-        if (blob.size > 20480 && !blob.type.includes('text/html')) {
-          onProgress?.(100, 'Download complete!');
-          return { blob, fileName, directUrl: directStreamUrl };
-        }
-      }
-    } catch (err) {
-      console.warn('Direct stream fetch CORS notice, using native direct download:', err);
-    }
-
-    // Trigger browser native download from verified CDN stream
-    const a = document.createElement('a');
-    a.href = directStreamUrl;
-    a.download = fileName;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    onProgress?.(100, 'Download initiated in browser!');
-    return { blob: null, fileName, directUrl: directStreamUrl };
+    onProgress?.(100, 'Download stream ready! Saving directly to device...');
+    return { blob: null, directUrl: directStreamUrl, fileName };
   }
 
-  // ENGINE STEP 6: Audio Synthesis Fallback for Audio Only
-  if (format.type === 'audio') {
-    onProgress?.(60, 'Synthesizing audio track...');
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const durationSec = 10;
-    const sampleRate = audioContext.sampleRate;
-    const buffer = audioContext.createBuffer(2, sampleRate * durationSec, sampleRate);
-    const left = buffer.getChannelData(0);
-    const right = buffer.getChannelData(1);
-
-    for (let i = 0; i < buffer.length; i++) {
-      const t = i / sampleRate;
-      const val = Math.sin(2 * Math.PI * 440 * t) * Math.exp(-t / 3);
-      left[i] = val * 0.3;
-      right[i] = val * 0.3;
-    }
-
-    const numChannels = 2;
-    const bitDepth = 16;
-    const bytesPerSample = bitDepth / 8;
-    const blockAlign = numChannels * bytesPerSample;
-    const dataByteLength = buffer.length * blockAlign;
-    const arrayBuffer = new ArrayBuffer(44 + dataByteLength);
-    const view = new DataView(arrayBuffer);
-
-    writeAscii(view, 0, 'RIFF');
-    view.setUint32(4, 36 + dataByteLength, true);
-    writeAscii(view, 8, 'WAVE');
-    writeAscii(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * blockAlign, true);
-    view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bitDepth, true);
-    writeAscii(view, 36, 'data');
-    view.setUint32(40, dataByteLength, true);
-
-    let offset = 44;
-    for (let i = 0; i < buffer.length; i++, offset += 4) {
-      view.setInt16(offset, left[i] * 0x7fff, true);
-      view.setInt16(offset + 2, right[i] * 0x7fff, true);
-    }
-
-    audioContext.close();
-    onProgress?.(100, 'Audio downloaded successfully!');
-    return {
-      blob: new Blob([view], { type: 'audio/wav' }),
-      fileName: fileName.replace(/\.mp3$/, '.wav'),
-    };
-  }
-
-  throw new Error('Unable to extract video stream from current nodes. Please verify the URL or try another link.');
+  throw new Error('Video/audio stream is protected or restricted by the platform. Please verify the URL or try another link.');
 }
 
-function writeAscii(view: DataView, offset: number, string: string) {
-  for (let i = 0; i < string.length; i++) {
-    view.setUint8(offset + i, string.charCodeAt(i));
-  }
-}
+

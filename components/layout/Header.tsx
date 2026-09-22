@@ -284,14 +284,14 @@ export function Header() {
               <span className="hidden md:inline font-bold">{loc.search}</span>
             </button>
 
-            {/* Quick Share App Button */}
+            {/* Quick Share App Button (Desktop only, available in drawer on mobile) */}
             <button
               type="button"
               onClick={() => {
                 triggerHaptic('light');
                 shareAppNative(language);
               }}
-              className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 text-xs font-medium shrink-0 shadow-xs active:scale-95"
+              className="hidden md:inline-flex p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all items-center gap-1.5 text-xs font-medium shrink-0 shadow-xs active:scale-95"
               title={loc.shareApp}
               aria-label={loc.shareApp}
             >

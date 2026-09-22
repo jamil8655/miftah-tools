@@ -6179,6 +6179,102 @@ export const TOOLS_LIST: ToolDefinition[] = [
       "media",
       "audio speed"
     ]
+  },
+  {
+    "id": "voice-to-text",
+    "slug": "voice-to-text",
+    "name": "Voice to Text",
+    "shortDesc": "Free Whisper AI speech-to-text transcription with noise reduction and multi-language support.",
+    "fullDesc": "Free Whisper AI speech-to-text transcription with noise reduction and multi-language support.",
+    "category": "text",
+    "icon": "Mic",
+    "popular": true,
+    "featured": true,
+    "isClientSide": true,
+    "acceptedMimeTypes": [
+      "*/*"
+    ],
+    "acceptedExtensions": [
+      ".mp3",
+      ".wav",
+      ".m4a",
+      ".aac",
+      ".ogg",
+      ".webm"
+    ],
+    "maxFiles": 50,
+    "maxFileSizeMB": 500,
+    "outputExtension": "txt",
+    "outputMimeType": "text/plain",
+    "tags": [
+      "voice to text",
+      "text",
+      "voice to text"
+    ]
+  },
+  {
+    "id": "speech-to-text",
+    "slug": "speech-to-text",
+    "name": "Speech to Text",
+    "shortDesc": "Convert live speech and voice recordings into editable documents using local Whisper AI.",
+    "fullDesc": "Convert live speech and voice recordings into editable documents using local Whisper AI.",
+    "category": "text",
+    "icon": "Mic",
+    "popular": true,
+    "featured": true,
+    "isClientSide": true,
+    "acceptedMimeTypes": [
+      "*/*"
+    ],
+    "acceptedExtensions": [
+      ".mp3",
+      ".wav",
+      ".m4a",
+      ".aac",
+      ".ogg",
+      ".webm"
+    ],
+    "maxFiles": 50,
+    "maxFileSizeMB": 500,
+    "outputExtension": "txt",
+    "outputMimeType": "text/plain",
+    "tags": [
+      "speech to text",
+      "text",
+      "speech to text"
+    ]
+  },
+  {
+    "id": "audio-to-text",
+    "slug": "audio-to-text",
+    "name": "Audio to Text Converter",
+    "shortDesc": "Transcribe audio recordings and voice notes into formatted text with Whisper AI.",
+    "fullDesc": "Transcribe audio recordings and voice notes into formatted text with Whisper AI.",
+    "category": "media",
+    "icon": "FileAudio",
+    "popular": true,
+    "featured": true,
+    "isClientSide": true,
+    "acceptedMimeTypes": [
+      "*/*"
+    ],
+    "acceptedExtensions": [
+      ".mp3",
+      ".wav",
+      ".m4a",
+      ".aac",
+      ".ogg",
+      ".webm"
+    ],
+    "maxFiles": 50,
+    "maxFileSizeMB": 500,
+    "outputExtension": "txt",
+    "outputMimeType": "text/plain",
+    "tags": [
+      "audio to text converter",
+      "media",
+      "audio to text"
+    ]
   }
 ];
 

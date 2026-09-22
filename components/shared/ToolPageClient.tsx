@@ -109,6 +109,8 @@ import { LoremIpsumStudio } from '@/components/dev/LoremIpsumStudio';
 import { HashStudio } from '@/components/security/HashStudio';
 import { PasswordStudio } from '@/components/security/PasswordStudio';
 import { TextStudio } from '@/components/text/TextStudio';
+import { RichTextToDocumentStudio } from '@/components/text/RichTextToDocumentStudio';
+import { PdfToTextStudio } from '@/components/text/PdfToTextStudio';
 import { TextDiffViewer } from '@/components/text/TextDiffViewer';
 import { GeneralUnitConverter } from '@/components/calculators/GeneralUnitConverter';
 import { StorageUnitConverter } from '@/components/calculators/StorageUnitConverter';
@@ -128,6 +130,7 @@ import { PassportPhotoStudio } from '@/components/image/PassportPhotoStudio';
 import { BackgroundRemoverStudio } from '@/components/image/BackgroundRemoverStudio';
 import { FaviconStudio } from '@/components/image/FaviconStudio';
 import { AutoCropImagesToPdfStudio } from '@/components/image/AutoCropImagesToPdfStudio';
+import { ImageToPdfStudio } from '@/components/image/ImageToPdfStudio';
 import { UnifiedImageStudio } from '@/components/image/UnifiedImageStudio';
 import { OcrStudio } from '@/components/ocr/OcrStudio';
 import { CameraScannerStudio } from '@/components/camera/CameraScannerStudio';
@@ -136,6 +139,7 @@ import { MarkItDownStudio } from '@/components/tools/MarkItDownStudio';
 import { WorkflowBuilder } from '@/components/workflows/WorkflowBuilder';
 import { TextCipherStudio } from '@/components/security/TextCipherStudio';
 import { AiStudio } from '@/components/ai/AiStudio';
+import { VoiceToTextStudio } from '@/components/voice/VoiceToTextStudio';
 
 interface ToolPageClientProps {
   tool: ToolDefinition;
@@ -256,6 +260,54 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'find-replace-text'
   ) {
     customWorkspace = <TextStudio />;
+  } else if (
+    tool.id === 'txt-to-pdf' ||
+    tool.id === 'text-to-pdf' ||
+    tool.slug === 'txt-to-pdf' ||
+    tool.slug === 'text-to-pdf' ||
+    tool.id === 'rtf-to-pdf' ||
+    tool.slug === 'rtf-to-pdf' ||
+    tool.id === 'text-to-word' ||
+    tool.id === 'text-to-docx' ||
+    tool.id === 'text-to-docx-alt' ||
+    tool.id === 'txt-to-docx' ||
+    tool.id === 'txt-to-word' ||
+    tool.slug === 'text-to-word' ||
+    tool.slug === 'text-to-docx' ||
+    tool.slug === 'txt-to-docx' ||
+    tool.slug === 'txt-to-word' ||
+    tool.id === 'text-to-image' ||
+    tool.slug === 'text-to-image' ||
+    tool.id === 'txt-to-image' ||
+    tool.slug === 'txt-to-image' ||
+    tool.id === 'text-to-img' ||
+    tool.slug === 'text-to-img' ||
+    tool.id === 'txt-to-png' ||
+    tool.slug === 'txt-to-png' ||
+    tool.id === 'txt-to-jpg' ||
+    tool.slug === 'txt-to-jpg'
+  ) {
+    customWorkspace = (
+      <RichTextToDocumentStudio
+        defaultFormat={
+          tool.outputExtension === 'docx' || tool.slug?.includes('word') || tool.slug?.includes('docx')
+            ? 'docx'
+            : tool.slug?.includes('image') || tool.slug?.includes('png') || tool.slug?.includes('jpg')
+            ? 'image'
+            : 'pdf'
+        }
+      />
+    );
+  } else if (
+    tool.id === 'pdf-to-txt' ||
+    tool.id === 'pdf-to-text' ||
+    tool.id === 'extract-text-pdf' ||
+    tool.id === 'extract-text-from-pdf' ||
+    tool.slug === 'pdf-to-txt' ||
+    tool.slug === 'pdf-to-text' ||
+    tool.slug === 'extract-text-from-pdf'
+  ) {
+    customWorkspace = <PdfToTextStudio />;
   } else if (tool.id === 'text-diff') {
     customWorkspace = <TextDiffViewer />;
   } else if (tool.id === 'timestamp-converter') {
@@ -332,9 +384,30 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'photo-editor' ||
     tool.slug === 'photo-editor' ||
     tool.id === 'image-cropper' ||
-    tool.slug === 'image-cropper'
+    tool.slug === 'image-cropper' ||
+    tool.id === 'image-compress' ||
+    tool.slug === 'image-compress' ||
+    tool.id === 'image-compressor' ||
+    tool.slug === 'image-compressor' ||
+    tool.id === 'compress-image' ||
+    tool.slug === 'compress-image' ||
+    tool.id === 'compress-images' ||
+    tool.slug === 'compress-images' ||
+    tool.id === 'jpg-compressor' ||
+    tool.slug === 'jpg-compressor' ||
+    tool.id === 'png-compressor' ||
+    tool.slug === 'png-compressor' ||
+    tool.id === 'webp-compressor' ||
+    tool.slug === 'webp-compressor' ||
+    tool.id === 'reduce-image-size' ||
+    tool.slug === 'reduce-image-size'
   ) {
-    customWorkspace = <UnifiedImageStudio />;
+    const isCompress =
+      tool.id.includes('compress') ||
+      tool.slug?.includes('compress') ||
+      tool.id.includes('reduce') ||
+      tool.slug?.includes('reduce');
+    customWorkspace = <UnifiedImageStudio initialTab={isCompress ? 'compress' : 'filter'} />;
   } else if (
     tool.id === 'auto-crop-images-to-pdf' ||
     tool.slug === 'auto-crop-images-to-pdf' ||
@@ -342,6 +415,37 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'crop-images-to-pdf'
   ) {
     customWorkspace = <AutoCropImagesToPdfStudio />;
+  } else if (
+    tool.id === 'jpg-to-pdf' ||
+    tool.id === 'jpeg-to-pdf' ||
+    tool.id === 'png-to-pdf' ||
+    tool.id === 'image-to-pdf' ||
+    tool.id === 'images-to-pdf' ||
+    tool.id === 'webp-to-pdf' ||
+    tool.id === 'bmp-to-pdf' ||
+    tool.id === 'tiff-to-pdf' ||
+    tool.id === 'heic-to-pdf' ||
+    tool.id === 'photo-to-pdf' ||
+    tool.id === 'photos-to-pdf' ||
+    tool.id === 'screenshot-to-pdf' ||
+    tool.slug === 'jpg-to-pdf' ||
+    tool.slug === 'jpeg-to-pdf' ||
+    tool.slug === 'png-to-pdf' ||
+    tool.slug === 'image-to-pdf' ||
+    tool.slug === 'images-to-pdf' ||
+    tool.slug === 'webp-to-pdf' ||
+    tool.slug === 'bmp-to-pdf' ||
+    tool.slug === 'tiff-to-pdf' ||
+    tool.slug === 'heic-to-pdf' ||
+    tool.slug === 'photo-to-pdf' ||
+    tool.slug === 'photos-to-pdf' ||
+    tool.slug === 'screenshot-to-pdf' ||
+    tool.slug === 'convert-jpg-to-pdf' ||
+    tool.slug === 'convert-png-to-pdf' ||
+    tool.slug === 'convert-image-to-pdf' ||
+    tool.slug === 'images-to-pdf-converter'
+  ) {
+    customWorkspace = <ImageToPdfStudio />;
   } else if (
     tool.id === 'ocr-pdf' ||
     tool.id === 'ocr-image' ||
@@ -442,6 +546,19 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'ai-document-intelligence'
   ) {
     customWorkspace = <AiStudio />;
+  } else if (
+    tool.id === 'voice-to-text' ||
+    tool.slug === 'voice-to-text' ||
+    tool.id === 'speech-to-text' ||
+    tool.slug === 'speech-to-text' ||
+    tool.id === 'audio-to-text' ||
+    tool.slug === 'audio-to-text' ||
+    tool.id === 'voice-typing' ||
+    tool.slug === 'voice-typing' ||
+    tool.id === 'whisper-voice-to-text' ||
+    tool.slug === 'whisper-voice-to-text'
+  ) {
+    customWorkspace = <VoiceToTextStudio />;
   }
 
   // Centralized real processing dispatcher
@@ -705,6 +822,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     // 9. PDF COMPRESSOR & OPTIMIZATION
     if (
       tool.id === 'pdf-compress' ||
+      tool.slug === 'compress-pdf' ||
+      tool.slug === 'pdf-compress' ||
+      tool.id.includes('compress-pdf') ||
+      tool.slug.includes('compress-pdf') ||
+      tool.id.includes('pdf-compress') ||
+      tool.slug.includes('pdf-compress') ||
+      tool.id.includes('pdf-to-smaller') ||
+      tool.slug.includes('reduce-pdf-size') ||
+      tool.slug.includes('shrink-pdf') ||
       tool.id === 'pdf-extreme-compress' ||
       tool.id === 'pdf-balanced-compress' ||
       tool.id === 'pdf-hq-compress' ||
@@ -720,10 +846,24 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       tool.slug === 'pdf-font-optimization' ||
       tool.slug === 'remove-unused-pdf-objects' ||
       tool.slug === 'optimize-image-heavy-pdf' ||
-      tool.slug === 'pdf-resolution-reducer'
+      tool.slug === 'pdf-resolution-reducer' ||
+      ((tool.category === 'pdf' || tool.outputExtension === 'pdf') && (tool.id.includes('compress') || tool.slug.includes('compress')))
     ) {
       const results = [];
-      const targetLimit = tool.id === 'pdf-extreme-compress' ? '200kb' : options.targetSizeLimit || 'auto';
+      let targetLimit = options.targetSizeLimit || 'auto';
+      let targetKb = options.targetKb;
+      if (!targetKb) {
+        const slugMatch = (tool.slug + ' ' + tool.id).match(/(\d+)\s*kb/i);
+        const slugMatchMb = (tool.slug + ' ' + tool.id).match(/(\d+)\s*mb/i);
+        if (slugMatch) {
+          targetKb = parseInt(slugMatch[1]);
+        } else if (slugMatchMb) {
+          targetKb = parseInt(slugMatchMb[1]) * 1024;
+        } else if (tool.id === 'pdf-extreme-compress') {
+          targetKb = 200;
+        }
+      }
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const buffer = await file.arrayBuffer();
@@ -732,13 +872,29 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
           {
             level: options.level || 'medium',
             targetSizeLimit: targetLimit,
+            targetKb: targetKb,
+            quality: options.quality,
           },
           (pct, status) => {
             const overallPct = Math.round(((i + pct / 100) / files.length) * 100);
             onProgress(overallPct, status);
           }
         );
-        const blob = new Blob([compressRes.bytes as any], { type: 'application/pdf' });
+
+        let finalBytes = compressRes.bytes;
+        if (targetKb && targetKb > 0 && finalBytes.byteLength > targetKb * 1024) {
+          const reattempt = await compressPdfAdvanced(
+            buffer,
+            {
+              level: 'extreme',
+              targetKb: Math.floor(targetKb * 0.90),
+            }
+          );
+          if (reattempt.bytes && reattempt.bytes.byteLength < finalBytes.byteLength) {
+            finalBytes = reattempt.bytes;
+          }
+        }
+        const blob = new Blob([finalBytes as any], { type: 'application/pdf' });
         results.push({
           name: `compressed-${file.name}`,
           originalSize: file.size,
@@ -1040,11 +1196,20 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
         tool.slug === 'jpg-compressor' ||
         tool.slug === 'png-compressor' ||
         tool.slug === 'webp-compressor') &&
-      (tool.category === 'image' || tool.category === 'compress')
+      (tool.category === 'image' || (tool.category === 'compress' && !tool.id.includes('pdf') && !tool.slug.includes('pdf') && tool.outputExtension !== 'pdf'))
     ) {
       const results = [];
       const targetFormat = options.outputFormat || 'image/jpeg';
-      const targetKb = options.targetKb;
+      let targetKb = options.targetKb;
+      if (!targetKb) {
+        const slugMatch = (tool.slug + ' ' + tool.id).match(/(\d+)\s*kb/i);
+        const slugMatchMb = (tool.slug + ' ' + tool.id).match(/(\d+)\s*mb/i);
+        if (slugMatch) {
+          targetKb = parseInt(slugMatch[1]);
+        } else if (slugMatchMb) {
+          targetKb = parseInt(slugMatchMb[1]) * 1024;
+        }
+      }
       const qualityFactor = options.quality ?? 0.75;
 
       for (let i = 0; i < files.length; i++) {
@@ -1058,6 +1223,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
           const res = await compressImageToTargetKB(file, targetKb, targetFormat);
           outputBlob = res.blob;
           dataUrl = res.dataUrl;
+
+          // Secondary verification safeguard
+          if (outputBlob.size > targetKb * 1024) {
+            const reattempt = await compressImageToTargetKB(file, Math.floor(targetKb * 0.92), targetFormat);
+            if (reattempt.blob.size < outputBlob.size) {
+              outputBlob = reattempt.blob;
+              dataUrl = reattempt.dataUrl;
+            }
+          }
         } else {
           const res = await compressImage(file, qualityFactor);
           outputBlob = res.blob;

@@ -109,34 +109,56 @@ export function AudioCutterStudio() {
             </div>
 
             {/* Time Sliders */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div dir="ltr" className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div className="space-y-2 bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-                <label className="text-xs font-semibold text-slate-300">Start Time: {startSec} seconds</label>
+                <div className="flex justify-between items-center text-xs font-semibold text-slate-300">
+                  <span>Start Time:</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={Math.max(0, endSec - 1)}
+                    value={startSec}
+                    onChange={(e) => setStartSec(Math.min(Math.max(0, Number(e.target.value) || 0), endSec - 1))}
+                    className="w-16 px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-right font-mono text-xs text-white"
+                  />
+                </div>
                 <input
                   type="range"
+                  dir="ltr"
                   min={0}
                   max={Math.max(0, duration - 1)}
                   value={startSec}
                   onChange={(e) => setStartSec(Math.min(Number(e.target.value), endSec - 1))}
-                  className="w-full accent-violet-500"
+                  className="w-full accent-violet-500 cursor-pointer"
                 />
               </div>
 
               <div className="space-y-2 bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-                <label className="text-xs font-semibold text-slate-300">End Time: {endSec} seconds</label>
+                <div className="flex justify-between items-center text-xs font-semibold text-slate-300">
+                  <span>End Time:</span>
+                  <input
+                    type="number"
+                    min={startSec + 1}
+                    max={duration}
+                    value={endSec}
+                    onChange={(e) => setEndSec(Math.min(Math.max(startSec + 1, Number(e.target.value) || duration), duration))}
+                    className="w-16 px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-right font-mono text-xs text-white"
+                  />
+                </div>
                 <input
                   type="range"
+                  dir="ltr"
                   min={1}
                   max={duration}
                   value={endSec}
                   onChange={(e) => setEndSec(Math.max(Number(e.target.value), startSec + 1))}
-                  className="w-full accent-violet-500"
+                  className="w-full accent-violet-500 cursor-pointer"
                 />
               </div>
             </div>
 
             <div className="text-xs text-center text-slate-400">
-              Selected Clip Length: <span className="text-violet-400 font-semibold">{endSec - startSec} seconds</span>
+              Selected Clip Length: <span className="text-violet-400 font-semibold">{Math.max(0, endSec - startSec)} seconds</span>
             </div>
 
             <button

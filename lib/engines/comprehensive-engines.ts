@@ -404,6 +404,112 @@ export async function sanitizePdfMetadata(buffer: ArrayBuffer): Promise<Uint8Arr
   return await doc.save({ useObjectStreams: true });
 }
 
+export function reconstructPdfLayoutText(items: any[]): string {
+  if (!items || items.length === 0) return '';
+
+  const validItems = items.filter(
+    (it) => it && typeof it.str === 'string' && it.str.length > 0
+  );
+  if (validItems.length === 0) return '';
+
+  // Extract geometric coordinates
+  const elements = validItems.map((it) => {
+    const x = it.transform ? it.transform[4] : 0;
+    const y = it.transform ? it.transform[5] : 0;
+    const height = Math.abs(it.height || (it.transform ? it.transform[0] : 12)) || 12;
+    const width = it.width || it.str.length * (height * 0.5);
+    return {
+      str: it.str,
+      x,
+      y,
+      width,
+      height,
+    };
+  });
+
+  // Group items into lines based on Y proximity
+  elements.sort((a, b) => b.y - a.y);
+
+  interface LineGroup {
+    y: number;
+    avgHeight: number;
+    items: typeof elements;
+  }
+
+  const lines: LineGroup[] = [];
+  const lineTolerance = 4;
+
+  for (const el of elements) {
+    let matchedLine = lines.find((l) => Math.abs(l.y - el.y) <= Math.max(lineTolerance, el.height * 0.4));
+    if (matchedLine) {
+      matchedLine.items.push(el);
+      matchedLine.y = (matchedLine.y * (matchedLine.items.length - 1) + el.y) / matchedLine.items.length;
+      matchedLine.avgHeight = Math.max(matchedLine.avgHeight, el.height);
+    } else {
+      lines.push({
+        y: el.y,
+        avgHeight: el.height,
+        items: [el],
+      });
+    }
+  }
+
+  // Sort lines top to bottom (Y descending)
+  lines.sort((a, b) => b.y - a.y);
+
+  // For each line, sort items left to right (X ascending)
+  const lineStrings: { text: string; y: number; height: number }[] = [];
+
+  for (const line of lines) {
+    line.items.sort((a, b) => a.x - b.x);
+
+    let lineText = '';
+    let lastXEnd = -1;
+
+    for (let i = 0; i < line.items.length; i++) {
+      const it = line.items[i];
+      if (lastXEnd >= 0) {
+        const gap = it.x - lastXEnd;
+        const charWidthEst = it.height * 0.35;
+
+        if (gap > charWidthEst * 4) {
+          lineText += '    '; // Preserve table column spacing
+        } else if (gap > charWidthEst * 0.3 && !lineText.endsWith(' ') && !it.str.startsWith(' ')) {
+          lineText += ' ';
+        }
+      }
+
+      lineText += it.str;
+      lastXEnd = it.x + it.width;
+    }
+
+    if (lineText.trim()) {
+      lineStrings.push({ text: lineText.trimEnd(), y: line.y, height: line.avgHeight });
+    }
+  }
+
+  // Assemble full text with smart paragraph breaks
+  let result = '';
+  for (let i = 0; i < lineStrings.length; i++) {
+    const cur = lineStrings[i];
+    result += cur.text;
+
+    if (i < lineStrings.length - 1) {
+      const next = lineStrings[i + 1];
+      const verticalGap = cur.y - next.y;
+      const expectedLineGap = cur.height * 1.6;
+
+      if (verticalGap > expectedLineGap) {
+        result += '\n\n';
+      } else {
+        result += '\n';
+      }
+    }
+  }
+
+  return result.trim();
+}
+
 export async function extractTextFromPdf(
   buffer: ArrayBuffer,
   onProgress?: (pct: number, status: string) => void
@@ -419,14 +525,14 @@ export async function extractTextFromPdf(
   let fullText = '';
 
   for (let i = 1; i <= numPages; i++) {
-    onProgress?.(15 + Math.round((i / numPages) * 75), `Extracting text from page ${i} of ${numPages}...`);
+    onProgress?.(15 + Math.round((i / numPages) * 75), `Extracting structured text from page ${i} of ${numPages}...`);
     const page = await pdfDoc.getPage(i);
     const textContent = await page.getTextContent();
     const items = (textContent.items || []) as any[];
-    const pageText = items.map((item) => item.str || '').join(' ').trim();
+    const structuredPageText = reconstructPdfLayoutText(items);
 
-    if (pageText && pageText.length > 20) {
-      fullText += `--- Page ${i} ---\n${pageText}\n\n`;
+    if (structuredPageText && structuredPageText.length > 10) {
+      fullText += `--- Page ${i} ---\n${structuredPageText}\n\n`;
     } else {
       // Scanned page fallback with OCR
       try {
@@ -746,8 +852,43 @@ export async function findAndReplaceInDocx(file: File, search: string, replaceme
 }
 
 export async function compressDocx(file: File): Promise<Blob> {
-  const rawText = await docxToTxt(file);
-  return await textToDocx(rawText, file.name.replace(/\.[^/.]+$/, ''));
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    
+    // Iterate through all files in docx package
+    // 1. Re-encode/compress embedded media images in word/media/ if applicable
+    const mediaFiles = Object.keys(zip.files).filter((p) => p.startsWith('word/media/'));
+    for (const mediaPath of mediaFiles) {
+      const mediaEntry = zip.files[mediaPath];
+      if (!mediaEntry.dir) {
+        const ext = mediaPath.split('.').pop()?.toLowerCase();
+        if (ext === 'png' || ext === 'jpg' || ext === 'jpeg' || ext === 'bmp') {
+          try {
+            const imgData = await mediaEntry.async('uint8array');
+            // Re-store with maximum compression
+            zip.file(mediaPath, imgData, { compression: 'DEFLATE', compressionOptions: { level: 9 } });
+          } catch (_) {}
+        }
+      }
+    }
+
+    // Rebuild package with Maximum Deflate Level 9
+    const compressedBlob = await zip.generateAsync({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 9 },
+    });
+
+    if (compressedBlob.size < file.size) {
+      return compressedBlob;
+    }
+    return file;
+  } catch (err) {
+    console.warn('DOCX zip optimization fallback, preserving original:', err);
+    return file;
+  }
 }
 
 export async function textToDocx(text: string, title?: string): Promise<Blob> {
@@ -980,7 +1121,19 @@ export async function pdfToCsv(file: File): Promise<Blob> {
 
 export async function applyImageFilter(
   file: File,
-  filterType: 'grayscale' | 'bw' | 'sharpen' | 'blur' | 'brightness' | 'contrast',
+  filterType:
+    | 'grayscale'
+    | 'bw'
+    | 'sharpen'
+    | 'blur'
+    | 'brightness'
+    | 'contrast'
+    | 'sepia'
+    | 'vintage'
+    | 'invert'
+    | 'warm'
+    | 'cool'
+    | 'vibrant',
   intensity: number = 1
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -1013,6 +1166,18 @@ export async function applyImageFilter(
           ctx.filter = `brightness(${intensity * 100}%)`;
         } else if (filterType === 'contrast') {
           ctx.filter = `contrast(${intensity * 100}%)`;
+        } else if (filterType === 'sepia') {
+          ctx.filter = `sepia(${Math.min(100, intensity * 100)}%)`;
+        } else if (filterType === 'vintage') {
+          ctx.filter = `sepia(${Math.min(80, intensity * 60)}%) contrast(110%) brightness(95%)`;
+        } else if (filterType === 'invert') {
+          ctx.filter = `invert(${Math.min(100, intensity * 100)}%)`;
+        } else if (filterType === 'vibrant') {
+          ctx.filter = `saturate(${Math.min(250, intensity * 180)}%) contrast(110%)`;
+        } else if (filterType === 'warm') {
+          ctx.filter = `sepia(30%) saturate(120%) brightness(105%)`;
+        } else if (filterType === 'cool') {
+          ctx.filter = `hue-rotate(180deg) saturate(90%) contrast(105%)`;
         }
 
         ctx.drawImage(img, 0, 0);
@@ -1026,13 +1191,15 @@ export async function applyImageFilter(
           const output = ctx.createImageData(w, h);
           const dst = output.data;
 
-          // 3x3 Sharpen Kernel
-          const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
-          const kWeight = 1;
+          // 3x3 High-Pass Sharpen Kernel
+          const amount = Math.min(2.5, Math.max(0.5, intensity));
+          const kernel = [0, -amount, 0, -amount, 1 + 4 * amount, -amount, 0, -amount, 0];
 
           for (let y = 1; y < h - 1; y++) {
             for (let x = 1; x < w - 1; x++) {
-              let r = 0, g = 0, b = 0;
+              let r = 0,
+                g = 0,
+                b = 0;
               for (let ky = -1; ky <= 1; ky++) {
                 for (let kx = -1; kx <= 1; kx++) {
                   const pos = ((y + ky) * w + (x + kx)) * 4;
@@ -1043,9 +1210,9 @@ export async function applyImageFilter(
                 }
               }
               const dstPos = (y * w + x) * 4;
-              dst[dstPos] = Math.min(255, Math.max(0, r / kWeight));
-              dst[dstPos + 1] = Math.min(255, Math.max(0, g / kWeight));
-              dst[dstPos + 2] = Math.min(255, Math.max(0, b / kWeight));
+              dst[dstPos] = Math.min(255, Math.max(0, r));
+              dst[dstPos + 1] = Math.min(255, Math.max(0, g));
+              dst[dstPos + 2] = Math.min(255, Math.max(0, b));
               dst[dstPos + 3] = src[dstPos + 3];
             }
           }
@@ -1059,7 +1226,7 @@ export async function applyImageFilter(
             else reject(new Error('Image filtering failed'));
           },
           file.type.includes('png') ? 'image/png' : 'image/jpeg',
-          0.92
+          0.95
         );
       } catch (err) {
         cleanup();
