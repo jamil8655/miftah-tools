@@ -51,16 +51,17 @@ export function ToolSeoContent({ tool }: ToolSeoContentProps) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {/* Horizontal Swipeable Card Carousel (Left to Right) */}
+        <div className="flex flex-row items-stretch gap-3 overflow-x-auto no-scrollbar pb-1.5 pt-0.5 scroll-smooth snap-x">
           {seo.relatedTools.map((rel) => (
             <Link
               key={rel.id}
               href={`/tools/${rel.slug}/`}
-              className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800/90 shadow-xs hover:border-brand-500 dark:hover:border-brand-500 hover:shadow-md hover:bg-white dark:hover:bg-slate-900 transition-all group flex flex-col justify-between space-y-2"
+              className="shrink-0 w-64 sm:w-72 p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950/80 border border-slate-200/80 dark:border-slate-800/90 shadow-xs hover:border-brand-500 dark:hover:border-brand-500 hover:shadow-md hover:bg-white dark:hover:bg-slate-900 transition-all group flex flex-col justify-between space-y-2 snap-start"
             >
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                  <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate">
                     {rel.name}
                   </span>
                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-200/70 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase shrink-0">

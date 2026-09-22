@@ -115,6 +115,36 @@ interface UserStoreContextType {
 
 const UserStoreContext = createContext<UserStoreContextType | undefined>(undefined);
 
+const DEFAULT_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'notif_welcome',
+    title: 'Welcome to Miftah Tools v1.0.3',
+    message: 'Enjoy 220+ free client-side PDF, image, video, and audio tools with 100% on-device private processing.',
+    type: 'system',
+    timestamp: Date.now() - 1000 * 60 * 60 * 2,
+    read: false,
+    link: '/tools',
+  },
+  {
+    id: 'notif_whisper',
+    title: 'New: Whisper AI Voice-to-Text',
+    message: 'Try our high-accuracy Whisper speech recognition engine with live microphone dictation and audio file transcription.',
+    type: 'tool',
+    timestamp: Date.now() - 1000 * 60 * 30,
+    read: false,
+    link: '/voice-to-text',
+  },
+  {
+    id: 'notif_media_saver',
+    title: 'New: High-Speed Video & Audio Saver',
+    message: 'Download HD videos and clean MP3 audio tracks directly without external redirects.',
+    type: 'tool',
+    timestamp: Date.now() - 1000 * 60 * 10,
+    read: false,
+    link: '/video-to-mp3',
+  },
+];
+
 export function UserStoreProvider({ children }: { children: React.ReactNode }) {
   const { user, firebaseUser } = useAuth();
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -125,7 +155,7 @@ export function UserStoreProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [history, setHistory] = useState<ActivityHistoryItem[]>([]);
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>(DEFAULT_NOTIFICATIONS);
 
   // 1. Initialize local cache on mount
   useEffect(() => {
@@ -153,6 +183,13 @@ export function UserStoreProvider({ children }: { children: React.ReactNode }) {
 
       const savedDownloads = localStorage.getItem('nexora_downloads');
       if (savedDownloads) setDownloads(JSON.parse(savedDownloads));
+
+      const savedNotifs = localStorage.getItem('nexora_notifications');
+      if (savedNotifs) {
+        setNotifications(JSON.parse(savedNotifs));
+      } else {
+        localStorage.setItem('nexora_notifications', JSON.stringify(DEFAULT_NOTIFICATIONS));
+      }
     } catch (e) {
       console.warn('Failed to load local user cache:', e);
     }
@@ -420,16 +457,22 @@ export function UserStoreProvider({ children }: { children: React.ReactNode }) {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markNotificationRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    setNotifications((prev) => {
+      const next = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
+      localStorage.setItem('nexora_notifications', JSON.stringify(next));
+      return next;
+    });
     if (user?.uid) {
       markNotificationReadFirestore(user.uid, id);
     }
   };
 
   const markAllNotificationsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setNotifications((prev) => {
+      const next = prev.map((n) => ({ ...n, read: true }));
+      localStorage.setItem('nexora_notifications', JSON.stringify(next));
+      return next;
+    });
     if (user?.uid) {
       notifications.forEach((n) => markNotificationReadFirestore(user.uid, n.id));
     }
@@ -437,6 +480,7 @@ export function UserStoreProvider({ children }: { children: React.ReactNode }) {
 
   const clearNotifications = () => {
     setNotifications([]);
+    localStorage.removeItem('nexora_notifications');
   };
 
   return (

@@ -273,32 +273,21 @@ export function Header() {
               </button>
             )}
 
-            {/* Global Search Button */}
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 text-xs font-medium shrink-0 shadow-xs active:scale-95"
-              title={loc.searchTooltip}
-              aria-label={loc.search}
-            >
-              <Search className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              <span className="hidden md:inline font-bold">{loc.search}</span>
-            </button>
+            {/* Global Search Button (Hidden on Home page to prevent double search bars) */}
+            {pathname !== '/' && (
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 text-xs font-medium shrink-0 shadow-xs active:scale-95"
+                title={loc.searchTooltip}
+                aria-label={loc.search}
+              >
+                <Search className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                <span className="hidden md:inline font-bold">{loc.search}</span>
+              </button>
+            )}
 
-            {/* Quick Share App Button */}
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                shareAppNative(language);
-              }}
-              className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 text-xs font-medium shrink-0 shadow-xs active:scale-95"
-              title={loc.shareApp}
-              aria-label={loc.shareApp}
-            >
-              <Share2 className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              <span className="hidden xl:inline font-bold">{loc.shareApp}</span>
-            </button>
+
 
             {/* Notification Bell */}
             <Link
