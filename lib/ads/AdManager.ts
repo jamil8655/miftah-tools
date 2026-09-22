@@ -178,21 +178,37 @@ export class AdManager {
    * 2. ADAPTIVE BANNER ADS: Show adaptive banner at bottom of suitable browsing screens
    */
   public async showBanner(): Promise<void> {
-    if (!adConfig.enabled || this.isPremium || !this.isNative || !this.isAdMobAvailable) return;
+    if (!adConfig.enabled || this.isPremium) return;
+
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (!this.isNative || !this.isAdMobAvailable) return;
 
     try {
       const { AdMob, BannerAdPosition, BannerAdSize } = await import('@capacitor-community/admob');
-      const adId = process.env.NODE_ENV === 'production' && !adConfig.admob.adaptiveBannerId.includes('3940256099942544')
-        ? adConfig.admob.adaptiveBannerId
-        : 'ca-app-pub-3940256099942544/9214589741';
+      const liveAdId = adConfig.admob.adaptiveBannerId || 'ca-app-pub-3660764533582226/7382282057';
 
-      await AdMob.showBanner({
-        adId,
-        adSize: BannerAdSize.ADAPTIVE_BANNER,
-        position: BannerAdPosition.BOTTOM_CENTER,
-        margin: 0,
-        isTesting: process.env.NODE_ENV !== 'production',
-      });
+      try {
+        await AdMob.showBanner({
+          adId: liveAdId,
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER,
+          margin: 0,
+          isTesting: false,
+        });
+        console.log('[AdMob] Live Adaptive Banner displayed successfully.');
+      } catch (liveErr) {
+        console.warn('[AdMob] Live banner returned no-fill/unverified, falling back to test banner:', liveErr);
+        await AdMob.showBanner({
+          adId: 'ca-app-pub-3940256099942544/9214589741',
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER,
+          margin: 0,
+          isTesting: true,
+        });
+      }
     } catch (e) {
       console.warn('[AdMob] Adaptive Banner show failed:', e);
     }
@@ -202,21 +218,35 @@ export class AdManager {
    * 8. FIXED SIZE BANNER: Show fixed size banner only when required
    */
   public async showFixedBanner(): Promise<void> {
-    if (!adConfig.enabled || this.isPremium || !this.isNative || !this.isAdMobAvailable) return;
+    if (!adConfig.enabled || this.isPremium) return;
+
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (!this.isNative || !this.isAdMobAvailable) return;
 
     try {
       const { AdMob, BannerAdPosition, BannerAdSize } = await import('@capacitor-community/admob');
-      const adId = process.env.NODE_ENV === 'production' && !adConfig.admob.fixedBannerId.includes('3940256099942544')
-        ? adConfig.admob.fixedBannerId
-        : 'ca-app-pub-3940256099942544/6300978111';
+      const liveAdId = adConfig.admob.fixedBannerId || 'ca-app-pub-3660764533582226/7382282057';
 
-      await AdMob.showBanner({
-        adId,
-        adSize: BannerAdSize.BANNER,
-        position: BannerAdPosition.BOTTOM_CENTER,
-        margin: 0,
-        isTesting: process.env.NODE_ENV !== 'production',
-      });
+      try {
+        await AdMob.showBanner({
+          adId: liveAdId,
+          adSize: BannerAdSize.BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER,
+          margin: 0,
+          isTesting: false,
+        });
+      } catch (liveErr) {
+        await AdMob.showBanner({
+          adId: 'ca-app-pub-3940256099942544/6300978111',
+          adSize: BannerAdSize.BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER,
+          margin: 0,
+          isTesting: true,
+        });
+      }
     } catch (e) {
       console.warn('[AdMob] Fixed Banner show failed:', e);
     }
@@ -244,14 +274,21 @@ export class AdManager {
     this.isInterstitialLoading = true;
     try {
       const { AdMob } = await import('@capacitor-community/admob');
-      const adId = process.env.NODE_ENV === 'production' && !adConfig.admob.interstitialId.includes('3940256099942544')
-        ? adConfig.admob.interstitialId
-        : 'ca-app-pub-3940256099942544/1033173712';
+      const liveAdId = adConfig.admob.interstitialId || 'ca-app-pub-3660764533582226/8769822246';
 
-      await AdMob.prepareInterstitial({
-        adId,
-        isTesting: process.env.NODE_ENV !== 'production',
-      });
+      try {
+        await AdMob.prepareInterstitial({
+          adId: liveAdId,
+          isTesting: false,
+        });
+        console.log('[AdMob] Live Interstitial preloaded successfully.');
+      } catch (liveErr) {
+        console.warn('[AdMob] Live interstitial preload fallback to test unit:', liveErr);
+        await AdMob.prepareInterstitial({
+          adId: 'ca-app-pub-3940256099942544/1033173712',
+          isTesting: true,
+        });
+      }
     } catch (e) {
       console.warn('[AdMob] Interstitial preload failed:', e);
     } finally {
@@ -265,10 +302,14 @@ export class AdManager {
   public async showInterstitial(): Promise<boolean> {
     if (!adConfig.enabled || this.isPremium) return false;
 
-    // Check frequency cooldown (at least 60 seconds between interstitials)
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    // Check frequency cooldown (at least 30 seconds between interstitials)
     const now = Date.now();
-    if (now - this.lastInterstitialTime < this.INTERSTITIAL_COOLDOWN_MS) {
-      console.log('[AdMob] Interstitial skipped due to 60s cooldown limit.');
+    if (now - this.lastInterstitialTime < 30000) {
+      console.log('[AdMob] Interstitial skipped due to 30s cooldown limit.');
       return false;
     }
 
@@ -279,7 +320,7 @@ export class AdManager {
         this.lastInterstitialTime = Date.now();
         return true;
       } catch (e) {
-        console.warn('[AdMob] Native interstitial unavailable. Continuing navigation gracefully:', e);
+        console.warn('[AdMob] Native interstitial unavailable, preparing next preload:', e);
         this.preloadInterstitial();
         return false;
       }
@@ -297,14 +338,21 @@ export class AdManager {
     this.isRewardedLoading = true;
     try {
       const { AdMob } = await import('@capacitor-community/admob');
-      const adId = process.env.NODE_ENV === 'production' && !adConfig.admob.rewardedId.includes('3940256099942544')
-        ? adConfig.admob.rewardedId
-        : 'ca-app-pub-3940256099942544/5224354917';
+      const liveAdId = adConfig.admob.rewardedId || 'ca-app-pub-3660764533582226/4639005542';
 
-      await AdMob.prepareRewardVideoAd({
-        adId,
-        isTesting: process.env.NODE_ENV !== 'production',
-      });
+      try {
+        await AdMob.prepareRewardVideoAd({
+          adId: liveAdId,
+          isTesting: false,
+        });
+        console.log('[AdMob] Live Rewarded Ad preloaded successfully.');
+      } catch (liveErr) {
+        console.warn('[AdMob] Live rewarded preload fallback to test unit:', liveErr);
+        await AdMob.prepareRewardVideoAd({
+          adId: 'ca-app-pub-3940256099942544/5224354917',
+          isTesting: true,
+        });
+      }
     } catch (e) {
       console.warn('[AdMob] Rewarded Ad preload failed:', e);
     } finally {
