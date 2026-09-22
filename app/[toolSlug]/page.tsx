@@ -18,6 +18,13 @@ const TOOL_ALIASES: Record<string, string> = {
   'sign-pdf': 'pdf-signer',
   'scanner': 'camera-scanner',
   'doc-scanner': 'camera-scanner',
+  'video-downloader': 'media-downloader',
+  'social-video-downloader': 'media-downloader',
+  'social-media-video-downloader': 'media-downloader',
+  'video-saver': 'media-downloader',
+  'voice-to-text': 'voice-to-text',
+  'speech-to-text': 'voice-to-text',
+  'audio-to-text': 'voice-to-text',
 };
 
 function resolveTool(identifier: string) {
