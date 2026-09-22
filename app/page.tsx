@@ -11,6 +11,7 @@ import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { getLocalizedTool, getLocalizedCategory } from '@/lib/i18n/catalog-translations';
+import { isNativeAndroid } from '@/lib/native/android-bridge';
 
 const categoryIconMap: Record<string, React.ElementType> = {
   pdf: FileText,
@@ -142,7 +143,12 @@ export default function HomePage() {
   const { favorites, pinnedTools } = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [isNativeApp, setIsNativeApp] = useState(false);
   const loc = PAGE_LOCALES[language] || PAGE_LOCALES.en;
+
+  React.useEffect(() => {
+    setIsNativeApp(isNativeAndroid());
+  }, []);
 
   const favoriteTools = useMemo(() => {
     return TOOLS_LIST.filter(
@@ -171,85 +177,112 @@ export default function HomePage() {
 
   return (
     <div className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen pb-12 transition-colors">
-      {/* 1. HERO BANNER (WEBSITE HEADER) */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-500/10 via-brand-500/5 to-transparent dark:from-brand-950/40 dark:via-slate-900/20 dark:to-transparent border-b border-slate-200/80 dark:border-slate-800/80 pt-8 pb-12 sm:pt-14 sm:pb-16 px-4 sm:px-6 lg:px-8">
-        {/* Subtle background glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-brand-500/10 dark:bg-brand-500/5 blur-3xl rounded-full pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto text-center space-y-5 sm:space-y-6 relative z-10">
-          {/* Eyebrow Pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs sm:text-sm font-black shadow-xs">
-            <span>{loc.heroBadge}</span>
-          </div>
-
-          {/* Main Hero Headline */}
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-4xl mx-auto">
-            {loc.heroTitle}
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-xs sm:text-base md:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            {loc.heroSubtitle}
-          </p>
-
-          {/* Live Search Input Bar */}
-          <div className="max-w-2xl mx-auto pt-2">
-            <div className="relative flex items-center shadow-lg shadow-slate-900/5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-brand-500/30 dark:border-brand-500/40 focus-within:border-brand-600 dark:focus-within:border-brand-400 transition-all">
-              <Search className="w-5 h-5 text-brand-600 dark:text-brand-400 absolute left-4 rtl:left-auto rtl:right-4 pointer-events-none" />
+      {/* 1. HERO BANNER / NATIVE APP HEADER */}
+      {isNativeApp ? (
+        <section className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-3 pb-3 px-3.5 shadow-xs">
+          <div className="max-w-xl mx-auto">
+            <div className="relative flex items-center shadow-xs rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 focus-within:border-brand-500 transition-all">
+              <Search className="w-4 h-4 text-brand-600 dark:text-brand-400 absolute left-3 rtl:left-auto rtl:right-3 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={loc.searchPlaceholder}
-                className="w-full py-3.5 sm:py-4 pl-12 pr-12 rtl:pl-12 rtl:pr-12 bg-transparent text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none rounded-2xl font-medium"
+                className="w-full py-2.5 pl-9 pr-9 rtl:pl-9 rtl:pr-9 bg-transparent text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none rounded-xl font-medium"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3.5 rtl:right-auto rtl:left-3.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-2.5 rtl:right-auto rtl:left-2.5 p-1 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
                   title={loc.clearSearch}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
           </div>
+        </section>
+      ) : (
+        <section className="relative overflow-hidden bg-gradient-to-b from-brand-500/10 via-brand-500/5 to-transparent dark:from-brand-950/40 dark:via-slate-900/20 dark:to-transparent border-b border-slate-200/80 dark:border-slate-800/80 pt-8 pb-12 sm:pt-14 sm:pb-16 px-4 sm:px-6 lg:px-8">
+          {/* Subtle background glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-brand-500/10 dark:bg-brand-500/5 blur-3xl rounded-full pointer-events-none" />
 
-          {/* 3 Core Trust Highlight Badges */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 max-w-3xl mx-auto text-left rtl:text-right">
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustPrivate}</p>
-                <p className="text-[10px] text-slate-500 truncate">{loc.trustPrivateDesc}</p>
+          <div className="max-w-5xl mx-auto text-center space-y-5 sm:space-y-6 relative z-10">
+            {/* Eyebrow Pill */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs sm:text-sm font-black shadow-xs">
+              <span>{loc.heroBadge}</span>
+            </div>
+
+            {/* Main Hero Headline */}
+            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-4xl mx-auto">
+              {loc.heroTitle}
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-xs sm:text-base md:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+              {loc.heroSubtitle}
+            </p>
+
+            {/* Live Search Input Bar */}
+            <div className="max-w-2xl mx-auto pt-2">
+              <div className="relative flex items-center shadow-lg shadow-slate-900/5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-brand-500/30 dark:border-brand-500/40 focus-within:border-brand-600 dark:focus-within:border-brand-400 transition-all">
+                <Search className="w-5 h-5 text-brand-600 dark:text-brand-400 absolute left-4 rtl:left-auto rtl:right-4 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={loc.searchPlaceholder}
+                  className="w-full py-3.5 sm:py-4 pl-12 pr-12 rtl:pl-12 rtl:pr-12 bg-transparent text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none rounded-2xl font-medium"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3.5 rtl:right-auto rtl:left-3.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+                    title={loc.clearSearch}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-800">
-                <Zap className="w-4 h-4" />
+            {/* 3 Core Trust Highlight Badges */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 max-w-3xl mx-auto text-left rtl:text-right">
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustPrivate}</p>
+                  <p className="text-[10px] text-slate-500 truncate">{loc.trustPrivateDesc}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustEngine}</p>
-                <p className="text-[10px] text-slate-500 truncate">{loc.trustEngineDesc}</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
-                <Zap className="w-4 h-4" />
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-800">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustEngine}</p>
+                  <p className="text-[10px] text-slate-500 truncate">{loc.trustEngineDesc}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustFree}</p>
-                <p className="text-[10px] text-slate-500 truncate">{loc.trustFreeDesc}</p>
+
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustFree}</p>
+                  <p className="text-[10px] text-slate-500 truncate">{loc.trustFreeDesc}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 2. CATEGORY PILLS (RESPONSIVE HORIZONTAL SCROLL BAR) */}
       <section className="sticky top-14 sm:top-16 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs py-2.5 px-4 sm:px-6 lg:px-8">

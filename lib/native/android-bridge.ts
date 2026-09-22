@@ -16,6 +16,7 @@ export const isNativeAndroid = (): boolean => {
     !!(window as any).AndroidDownloader ||
     !!(window as any).Capacitor?.isNativePlatform?.() ||
     window.location.protocol === 'capacitor:' ||
+    window.location.hostname === 'localhost' ||
     (typeof navigator !== 'undefined' && /Capacitor|AndroidWebview|wv/i.test(navigator.userAgent))
   );
 };

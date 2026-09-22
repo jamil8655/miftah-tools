@@ -19,7 +19,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
-import { shareAppNative } from '@/lib/native/android-bridge';
+import { shareAppNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 
 const FOOTER_LOCALES = {
@@ -112,6 +112,20 @@ const FOOTER_LOCALES = {
 export function Footer() {
   const { t, language, setLanguage, isRTL } = useI18n();
   const loc = FOOTER_LOCALES[language] || FOOTER_LOCALES.en;
+  const [isNativeApp, setIsNativeApp] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsNativeApp(isNativeAndroid());
+  }, []);
+
+  if (isNativeApp) {
+    return (
+      <div className="w-full py-6 pb-24 text-center text-xs text-slate-400 dark:text-slate-600 border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950">
+        <p className="font-semibold text-slate-500 dark:text-slate-400">Miftah Tools v1.0.3</p>
+        <p className="text-[11px] mt-0.5 text-slate-400 dark:text-slate-500">100% On-Device Private Processing</p>
+      </div>
+    );
+  }
 
   return (
     <footer
