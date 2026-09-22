@@ -590,17 +590,12 @@ export async function downloadInSiteMedia(
     ? '720'
     : '480';
 
-  // ENGINE STEP 1: Loader.to Multi-Format High-Speed Transcoding Cluster (YouTube, Social Media)
-  if (!directStreamUrl) {
-    directStreamUrl = await resolveLoaderToStream(metadata.url, formatCode, onProgress);
-  }
-
-  // ENGINE STEP 2: RapidAPI Multi-Key Pool Failover
+  // ENGINE 1: RapidAPI Multi-Key Pool for YouTube (Instant 1080p, 720p, 480p, 320kbps MP3)
   if (!directStreamUrl && metadata.platform === 'youtube' && metadata.videoId) {
     directStreamUrl = await resolveRapidApiYouTubeStream(metadata.videoId, formatCode, onProgress);
   }
 
-  // ENGINE STEP 3: TikTok Direct Stream Cluster
+  // ENGINE 2: TikTok Direct Stream Cluster (100% No-Watermark HD Stream)
   if (!directStreamUrl && metadata.platform === 'tiktok') {
     const tik = await resolveTikTokStream(metadata.url);
     if (tik) {
@@ -608,34 +603,19 @@ export async function downloadInSiteMedia(
     }
   }
 
-  // ENGINE STEP 4: Cobalt Multi-Node Global Network
+  // ENGINE 3: Loader.to Multi-Format High-Speed Transcoding Cluster (Fallback for YouTube, Instagram, FB, X)
   if (!directStreamUrl) {
-    const requestedQuality = format.quality.includes('1080') ? '1080' : format.quality.includes('720') ? '720' : '480';
-    directStreamUrl = await resolveCobaltStream(metadata.url, isAudio, requestedQuality, onProgress);
+    directStreamUrl = await resolveLoaderToStream(metadata.url, formatCode, onProgress);
   }
 
-  // ENGINE STEP 5: Direct URL if provided
+  // ENGINE 4: Direct URL if provided
   if (!directStreamUrl && format.directUrl) {
     directStreamUrl = format.directUrl;
   }
 
-  // ENGINE STEP 6: Process Stream into In-Memory Real Blob or Direct Stream Trigger
+  // ENGINE STEP 5: Immediate Direct Device Download Trigger
   if (directStreamUrl) {
-    onProgress?.(80, 'Streaming media binary bytes directly...');
-    const expectedMime = format.type === 'audio' ? 'audio/mpeg' : 'video/mp4';
-    
-    try {
-      const blob = await fetchBinaryStreamBlob(directStreamUrl, expectedMime, onProgress);
-      if (blob && blob.size > 2048) {
-        onProgress?.(100, 'Direct file download complete!');
-        return { blob, fileName };
-      }
-    } catch (e) {
-      console.warn('Binary fetch notice, falling back to direct stream download:', e);
-    }
-
-    // Direct Stream URL Trigger (bypasses browser CORS restrictions while downloading real media file)
-    onProgress?.(100, 'Download stream ready! Saving directly...');
+    onProgress?.(100, 'Download stream ready! Saving directly to device...');
     return { blob: null, directUrl: directStreamUrl, fileName };
   }
 
