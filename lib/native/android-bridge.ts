@@ -10,7 +10,14 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
 
 export const isNativeAndroid = (): boolean => {
-  return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+  if (typeof window === 'undefined') return false;
+  return (
+    Capacitor.isNativePlatform() ||
+    !!(window as any).AndroidDownloader ||
+    !!(window as any).Capacitor?.isNativePlatform?.() ||
+    window.location.protocol === 'capacitor:' ||
+    (typeof navigator !== 'undefined' && /Capacitor|AndroidWebview|wv/i.test(navigator.userAgent))
+  );
 };
 
 /**

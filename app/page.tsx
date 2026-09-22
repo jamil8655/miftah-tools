@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Zap, ArrowRight, FileText, Minimize2, Combine, Image as ImageIcon, ScanText, QrCode, Layers, FileCheck, Type, Video, Bookmark, Brain, Calculator, Terminal, ShieldCheck, Search, X, ChevronRight } from 'lucide-react';
+import { Zap, ArrowRight, FileText, Minimize2, Combine, Image as ImageIcon, ScanText, QrCode, Layers, FileCheck, Type, Video, Bookmark, Brain, Calculator, Terminal, ShieldCheck, Search, X, ChevronRight, Mic, Camera, Wand2, Workflow } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { ToolCard } from '@/components/shared/ToolCard';
 import { NativeFeedAd } from '@/components/ads/NativeFeedAd';
@@ -123,14 +123,18 @@ const PAGE_LOCALES = {
 };
 
 const POPULAR_QUICK_ACTIONS = [
+  { id: 'voice-to-text', name: 'Voice to Text (AI)', cat: 'voice', icon: Mic, color: 'bg-purple-600', isDirectPath: '/voice-to-text' },
+  { id: 'media-downloader', name: 'Video & Audio Saver', cat: 'media', icon: Video, color: 'bg-rose-600', isDirectPath: '/video-to-mp3' },
   { id: 'pdf-to-docx', name: 'PDF to Word (OCR)', cat: 'pdf', icon: FileText, color: 'bg-indigo-600' },
-  { id: 'compress-pdf', name: 'Compress PDF', cat: 'pdf', icon: Minimize2, color: 'bg-rose-600' },
+  { id: 'compress-pdf', name: 'Compress PDF', cat: 'pdf', icon: Minimize2, color: 'bg-emerald-600' },
   { id: 'merge-pdf', name: 'Merge PDF', cat: 'pdf', icon: Combine, color: 'bg-blue-600' },
-  { id: 'media-downloader', name: 'Video Downloader', cat: 'media', icon: Video, color: 'bg-rose-600' },
-  { id: 'image-resizer', name: 'Image Studio', cat: 'image', icon: ImageIcon, color: 'bg-emerald-600' },
-  { id: 'qr-generator', name: 'QR Code Generator', cat: 'qr', icon: QrCode, color: 'bg-cyan-600' },
-  { id: 'markitdown', name: 'MarkItDown AI', cat: 'ai', icon: Brain, color: 'bg-amber-600', isDirectPath: '/markitdown' },
+  { id: 'camera-scanner', name: 'Camera Scanner', cat: 'ocr', icon: Camera, color: 'bg-teal-600', isDirectPath: '/camera-scanner' },
   { id: 'pdf-editor', name: 'PDF Editor Studio', cat: 'pdf', icon: FileCheck, color: 'bg-violet-600', isDirectPath: '/pdf-editor' },
+  { id: 'markitdown', name: 'MarkItDown AI', cat: 'ai', icon: Brain, color: 'bg-amber-600', isDirectPath: '/markitdown' },
+  { id: 'image-resizer', name: 'Image Studio', cat: 'image', icon: ImageIcon, color: 'bg-cyan-600' },
+  { id: 'background-remover', name: 'Remove BG', cat: 'image', icon: Wand2, color: 'bg-pink-600' },
+  { id: 'qr-generator', name: 'QR Code Generator', cat: 'qr', icon: QrCode, color: 'bg-slate-800 dark:bg-slate-700' },
+  { id: 'workflows', name: 'Workflows Studio', cat: 'ai', icon: Workflow, color: 'bg-orange-600', isDirectPath: '/workflows' },
 ];
 
 export default function HomePage() {

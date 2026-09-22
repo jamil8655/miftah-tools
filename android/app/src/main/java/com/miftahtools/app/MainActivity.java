@@ -293,6 +293,33 @@ public class MainActivity extends BridgeActivity {
             return false;
         }
 
+        @JavascriptInterface
+        public boolean downloadUrl(String url, String fileName, String mimeType) {
+            try {
+                if (url == null || url.isEmpty()) return false;
+                android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(Uri.parse(url));
+                String effectiveMime = resolveMimeType(fileName, mimeType);
+                request.setMimeType(effectiveMime);
+                request.setTitle(fileName != null ? fileName : "Downloading File");
+                request.setDescription("Miftah Tools");
+                request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                if (fileName != null && !fileName.isEmpty()) {
+                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+                }
+
+                android.app.DownloadManager dm = (android.app.DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
+                if (dm != null) {
+                    dm.enqueue(request);
+                    showToast("Download started: " + (fileName != null ? fileName : "media file"));
+                    return true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                showToast("Download notice: " + e.getLocalizedMessage());
+            }
+            return false;
+        }
+
         private void showToast(final String message) {
             runOnUiThread(() -> Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show());
         }
@@ -310,6 +337,15 @@ public class MainActivity extends BridgeActivity {
             WebView webView = this.bridge.getWebView();
             webView.addJavascriptInterface(new AndroidDownloaderInterface(this), "AndroidDownloader");
 
+            webView.setWebChromeClient(new android.webkit.WebChromeClient() {
+                @Override
+                public void onPermissionRequest(final android.webkit.PermissionRequest request) {
+                    runOnUiThread(() -> {
+                        request.grant(request.getResources());
+                    });
+                }
+            });
+
             webView.setDownloadListener(new DownloadListener() {
                 @Override
                 public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
@@ -321,6 +357,9 @@ public class MainActivity extends BridgeActivity {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                    } else if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+                        String filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
+                        new AndroidDownloaderInterface(MainActivity.this).downloadUrl(url, filename, mimetype);
                     }
                 }
             });
