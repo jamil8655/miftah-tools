@@ -77,10 +77,10 @@ export class AdManager {
         const { AdMob, InterstitialAdPluginEvents, RewardAdPluginEvents } = await import('@capacitor-community/admob');
         this.isAdMobAvailable = true;
 
-        // Initialize Google Mobile Ads SDK
+        // Initialize Google Mobile Ads SDK with test device support
         await AdMob.initialize({
           testingDevices: ['EMULATOR'],
-          initializeForTesting: process.env.NODE_ENV !== 'production',
+          initializeForTesting: true,
         });
 
         // Setup User Messaging Platform (UMP) Consent if available
@@ -187,8 +187,25 @@ export class AdManager {
     if (!this.isNative || !this.isAdMobAvailable) return;
 
     try {
-      const { AdMob, BannerAdPosition, BannerAdSize } = await import('@capacitor-community/admob');
+      const { AdMob, BannerAdPosition, BannerAdSize, BannerAdPluginEvents } = await import('@capacitor-community/admob');
       const liveAdId = adConfig.admob.adaptiveBannerId || 'ca-app-pub-3660764533582226/7382282057';
+      const testAdId = 'ca-app-pub-3940256099942544/9214589741';
+
+      // Auto-fallback listener if live ad yields no-fill on unverified/dev devices
+      AdMob.addListener(BannerAdPluginEvents.FailedToLoad, async (err) => {
+        console.warn('[AdMob Banner] Live banner failed to load, switching to test banner:', err);
+        try {
+          await AdMob.showBanner({
+            adId: testAdId,
+            adSize: BannerAdSize.ADAPTIVE_BANNER,
+            position: BannerAdPosition.BOTTOM_CENTER,
+            margin: 0,
+            isTesting: true,
+          });
+        } catch (retryErr) {
+          console.warn('[AdMob Banner] Test banner fallback notice:', retryErr);
+        }
+      });
 
       try {
         await AdMob.showBanner({
@@ -200,9 +217,9 @@ export class AdManager {
         });
         console.log('[AdMob] Live Adaptive Banner displayed successfully.');
       } catch (liveErr) {
-        console.warn('[AdMob] Live banner returned no-fill/unverified, falling back to test banner:', liveErr);
+        console.warn('[AdMob] Live banner returned error, falling back to test banner:', liveErr);
         await AdMob.showBanner({
-          adId: 'ca-app-pub-3940256099942544/9214589741',
+          adId: testAdId,
           adSize: BannerAdSize.ADAPTIVE_BANNER,
           position: BannerAdPosition.BOTTOM_CENTER,
           margin: 0,

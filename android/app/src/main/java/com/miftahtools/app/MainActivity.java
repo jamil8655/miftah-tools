@@ -293,6 +293,39 @@ public class MainActivity extends BridgeActivity {
             return false;
         }
 
+        @JavascriptInterface
+        public void downloadUrl(String fileUrl, String fileName, String mimeType) {
+            try {
+                if (fileUrl == null || fileUrl.isEmpty()) {
+                    showToast("Download failed: empty URL.");
+                    return;
+                }
+                Uri uri = Uri.parse(fileUrl);
+                android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(uri);
+                String cleanName = (fileName != null && !fileName.isEmpty()) ? fileName : URLUtil.guessFileName(fileUrl, null, mimeType);
+                String effectiveMime = resolveMimeType(cleanName, mimeType);
+
+                request.setTitle(cleanName);
+                request.setDescription("Downloading " + cleanName);
+                request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, cleanName);
+                request.setMimeType(effectiveMime);
+                request.setAllowedOverMetered(true);
+                request.setAllowedOverRoaming(true);
+
+                android.app.DownloadManager dm = (android.app.DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
+                if (dm != null) {
+                    dm.enqueue(request);
+                    showToast("Download started: " + cleanName);
+                } else {
+                    showToast("DownloadManager unavailable.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                showToast("Download error: " + e.getLocalizedMessage());
+            }
+        }
+
         private void showToast(final String message) {
             runOnUiThread(() -> Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show());
         }
@@ -313,13 +346,18 @@ public class MainActivity extends BridgeActivity {
             webView.setDownloadListener(new DownloadListener() {
                 @Override
                 public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                    if (url != null && url.startsWith("data:")) {
-                        try {
-                            String base64 = url.substring(url.indexOf(",") + 1);
+                    if (url != null) {
+                        if (url.startsWith("data:")) {
+                            try {
+                                String base64 = url.substring(url.indexOf(",") + 1);
+                                String filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
+                                new AndroidDownloaderInterface(MainActivity.this).saveBase64File(base64, filename, mimetype);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        } else if (url.startsWith("http://") || url.startsWith("https://")) {
                             String filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
-                            new AndroidDownloaderInterface(MainActivity.this).saveBase64File(base64, filename, mimetype);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                            new AndroidDownloaderInterface(MainActivity.this).downloadUrl(url, filename, mimetype);
                         }
                     }
                 }

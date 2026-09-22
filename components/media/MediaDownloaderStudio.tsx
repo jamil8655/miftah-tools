@@ -160,7 +160,14 @@ export function MediaDownloaderStudio() {
           mimeType: downloadSuccessFile.blob.type,
         });
       } else if (downloadSuccessFile.directUrl) {
-        window.open(downloadSuccessFile.directUrl, '_blank');
+        if ((window as any).AndroidDownloader?.openFileInSystem) {
+          (window as any).AndroidDownloader.openFileInSystem(
+            downloadSuccessFile.fileName,
+            downloadSuccessFile.format?.type === 'audio' ? 'audio/mpeg' : 'video/mp4'
+          );
+        } else {
+          window.open(downloadSuccessFile.directUrl, '_blank');
+        }
       }
     }
   };
@@ -174,14 +181,16 @@ export function MediaDownloaderStudio() {
           blob: downloadSuccessFile.blob,
           mimeType: downloadSuccessFile.blob.type,
         });
-      } else if (downloadSuccessFile.directUrl && navigator.share) {
-        try {
-          await navigator.share({
-            title: downloadSuccessFile.fileName,
-            url: downloadSuccessFile.directUrl,
-          });
-        } catch (e) {
-          // User closed share dialog
+      } else if (downloadSuccessFile.directUrl) {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: downloadSuccessFile.fileName,
+              url: downloadSuccessFile.directUrl,
+            });
+          } catch (e) {
+            // User closed share dialog
+          }
         }
       }
     }
