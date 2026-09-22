@@ -77,10 +77,9 @@ export class AdManager {
         const { AdMob, InterstitialAdPluginEvents, RewardAdPluginEvents } = await import('@capacitor-community/admob');
         this.isAdMobAvailable = true;
 
-        // Initialize Google Mobile Ads SDK with test device support
+        // Initialize Google Mobile Ads SDK strictly with Real Production IDs
         await AdMob.initialize({
-          testingDevices: ['EMULATOR'],
-          initializeForTesting: true,
+          initializeForTesting: false,
         });
 
         // Setup User Messaging Platform (UMP) Consent if available
@@ -90,7 +89,7 @@ export class AdManager {
             await AdMob.showConsentForm();
           }
         } catch (consentError) {
-          console.warn('[AdMob UMP] Consent check skipped or handled:', consentError);
+          console.warn('[AdMob UMP] Consent check handled:', consentError);
         }
 
         // Register Global Listeners for Lifecycle Monitoring
@@ -111,9 +110,9 @@ export class AdManager {
       }
 
       this.isInitialized = true;
-      console.log('[AdMob] AdManager initialized successfully.');
+      console.log('[AdMob] Real AdManager initialized successfully.');
     } catch (e) {
-      console.warn('[AdMob] Native initialization fallback to web mock:', e);
+      console.warn('[AdMob] Native initialization notice:', e);
       this.isInitialized = true;
     }
   }
@@ -133,7 +132,7 @@ export class AdManager {
   }
 
   /**
-   * 1. APP OPEN AD: Trigger native app open ad on app start / resume
+   * 1. APP OPEN AD: Trigger native app open ad on app start / resume (Real AdMob ID)
    */
   public async showAppOpenAd(): Promise<boolean> {
     if (!adConfig.enabled || this.isPremium) return false;
@@ -154,7 +153,7 @@ export class AdManager {
         await AdMob.showInterstitial();
         return true;
       } catch (e) {
-        console.warn('[AdMob] App Open Ad failed natively, attempting Interstitial fallback:', e);
+        console.warn('[AdMob] App Open Ad notice:', e);
         try {
           const { AdMob } = await import('@capacitor-community/admob');
           const fallbackId = adConfig.admob.interstitialId || 'ca-app-pub-3660764533582226/8769822246';
@@ -165,7 +164,6 @@ export class AdManager {
           await AdMob.showInterstitial();
           return true;
         } catch (err2) {
-          console.warn('[AdMob] Interstitial fallback also failed natively:', err2);
           return false;
         }
       }
@@ -175,7 +173,7 @@ export class AdManager {
   }
 
   /**
-   * 2. ADAPTIVE BANNER ADS: Show adaptive banner at bottom of suitable browsing screens
+   * 2. ADAPTIVE BANNER ADS: Show real adaptive banner at bottom of suitable browsing screens
    */
   public async showBanner(): Promise<void> {
     if (!adConfig.enabled || this.isPremium) return;
@@ -187,52 +185,24 @@ export class AdManager {
     if (!this.isNative || !this.isAdMobAvailable) return;
 
     try {
-      const { AdMob, BannerAdPosition, BannerAdSize, BannerAdPluginEvents } = await import('@capacitor-community/admob');
+      const { AdMob, BannerAdPosition, BannerAdSize } = await import('@capacitor-community/admob');
       const liveAdId = adConfig.admob.adaptiveBannerId || 'ca-app-pub-3660764533582226/7382282057';
-      const testAdId = 'ca-app-pub-3940256099942544/9214589741';
 
-      // Auto-fallback listener if live ad yields no-fill on unverified/dev devices
-      AdMob.addListener(BannerAdPluginEvents.FailedToLoad, async (err) => {
-        console.warn('[AdMob Banner] Live banner failed to load, switching to test banner:', err);
-        try {
-          await AdMob.showBanner({
-            adId: testAdId,
-            adSize: BannerAdSize.ADAPTIVE_BANNER,
-            position: BannerAdPosition.BOTTOM_CENTER,
-            margin: 0,
-            isTesting: true,
-          });
-        } catch (retryErr) {
-          console.warn('[AdMob Banner] Test banner fallback notice:', retryErr);
-        }
+      await AdMob.showBanner({
+        adId: liveAdId,
+        adSize: BannerAdSize.ADAPTIVE_BANNER,
+        position: BannerAdPosition.BOTTOM_CENTER,
+        margin: 0,
+        isTesting: false,
       });
-
-      try {
-        await AdMob.showBanner({
-          adId: liveAdId,
-          adSize: BannerAdSize.ADAPTIVE_BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
-          margin: 0,
-          isTesting: false,
-        });
-        console.log('[AdMob] Live Adaptive Banner displayed successfully.');
-      } catch (liveErr) {
-        console.warn('[AdMob] Live banner returned error, falling back to test banner:', liveErr);
-        await AdMob.showBanner({
-          adId: testAdId,
-          adSize: BannerAdSize.ADAPTIVE_BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
-          margin: 0,
-          isTesting: true,
-        });
-      }
+      console.log('[AdMob] Real Adaptive Banner displayed successfully.');
     } catch (e) {
-      console.warn('[AdMob] Adaptive Banner show failed:', e);
+      console.warn('[AdMob] Real Adaptive Banner show notice:', e);
     }
   }
 
   /**
-   * 8. FIXED SIZE BANNER: Show fixed size banner only when required
+   * 8. FIXED SIZE BANNER: Show real fixed size banner
    */
   public async showFixedBanner(): Promise<void> {
     if (!adConfig.enabled || this.isPremium) return;
@@ -247,25 +217,15 @@ export class AdManager {
       const { AdMob, BannerAdPosition, BannerAdSize } = await import('@capacitor-community/admob');
       const liveAdId = adConfig.admob.fixedBannerId || 'ca-app-pub-3660764533582226/7382282057';
 
-      try {
-        await AdMob.showBanner({
-          adId: liveAdId,
-          adSize: BannerAdSize.BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
-          margin: 0,
-          isTesting: false,
-        });
-      } catch (liveErr) {
-        await AdMob.showBanner({
-          adId: 'ca-app-pub-3940256099942544/6300978111',
-          adSize: BannerAdSize.BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
-          margin: 0,
-          isTesting: true,
-        });
-      }
+      await AdMob.showBanner({
+        adId: liveAdId,
+        adSize: BannerAdSize.BANNER,
+        position: BannerAdPosition.BOTTOM_CENTER,
+        margin: 0,
+        isTesting: false,
+      });
     } catch (e) {
-      console.warn('[AdMob] Fixed Banner show failed:', e);
+      console.warn('[AdMob] Real Fixed Banner show notice:', e);
     }
   }
 
@@ -278,12 +238,12 @@ export class AdManager {
       const { AdMob } = await import('@capacitor-community/admob');
       await AdMob.hideBanner();
     } catch (e) {
-      console.warn('[AdMob] Banner hide failed:', e);
+      console.warn('[AdMob] Banner hide notice:', e);
     }
   }
 
   /**
-   * Preload Interstitial Ad asynchronously
+   * Preload Real Interstitial Ad asynchronously
    */
   public async preloadInterstitial(): Promise<void> {
     if (!adConfig.enabled || this.isPremium || !this.isNative || !this.isAdMobAvailable || this.isInterstitialLoading) return;
@@ -293,28 +253,20 @@ export class AdManager {
       const { AdMob } = await import('@capacitor-community/admob');
       const liveAdId = adConfig.admob.interstitialId || 'ca-app-pub-3660764533582226/8769822246';
 
-      try {
-        await AdMob.prepareInterstitial({
-          adId: liveAdId,
-          isTesting: false,
-        });
-        console.log('[AdMob] Live Interstitial preloaded successfully.');
-      } catch (liveErr) {
-        console.warn('[AdMob] Live interstitial preload fallback to test unit:', liveErr);
-        await AdMob.prepareInterstitial({
-          adId: 'ca-app-pub-3940256099942544/1033173712',
-          isTesting: true,
-        });
-      }
+      await AdMob.prepareInterstitial({
+        adId: liveAdId,
+        isTesting: false,
+      });
+      console.log('[AdMob] Real Interstitial preloaded successfully.');
     } catch (e) {
-      console.warn('[AdMob] Interstitial preload failed:', e);
+      console.warn('[AdMob] Real Interstitial preload notice:', e);
     } finally {
       this.isInterstitialLoading = false;
     }
   }
 
   /**
-   * 3. INTERSTITIAL ADS: Show only at natural navigation boundaries with frequency cooldown
+   * 3. INTERSTITIAL ADS: Show real interstitial only at natural navigation boundaries
    */
   public async showInterstitial(): Promise<boolean> {
     if (!adConfig.enabled || this.isPremium) return false;
@@ -337,7 +289,7 @@ export class AdManager {
         this.lastInterstitialTime = Date.now();
         return true;
       } catch (e) {
-        console.warn('[AdMob] Native interstitial unavailable, preparing next preload:', e);
+        console.warn('[AdMob] Real interstitial unavailable, preparing preload:', e);
         this.preloadInterstitial();
         return false;
       }
@@ -347,7 +299,7 @@ export class AdManager {
   }
 
   /**
-   * Preload Rewarded Ad asynchronously
+   * Preload Real Rewarded Ad asynchronously
    */
   public async preloadRewarded(): Promise<void> {
     if (!adConfig.enabled || this.isPremium || !this.isNative || !this.isAdMobAvailable || this.isRewardedLoading) return;
@@ -357,32 +309,23 @@ export class AdManager {
       const { AdMob } = await import('@capacitor-community/admob');
       const liveAdId = adConfig.admob.rewardedId || 'ca-app-pub-3660764533582226/4639005542';
 
-      try {
-        await AdMob.prepareRewardVideoAd({
-          adId: liveAdId,
-          isTesting: false,
-        });
-        console.log('[AdMob] Live Rewarded Ad preloaded successfully.');
-      } catch (liveErr) {
-        console.warn('[AdMob] Live rewarded preload fallback to test unit:', liveErr);
-        await AdMob.prepareRewardVideoAd({
-          adId: 'ca-app-pub-3940256099942544/5224354917',
-          isTesting: true,
-        });
-      }
+      await AdMob.prepareRewardVideoAd({
+        adId: liveAdId,
+        isTesting: false,
+      });
+      console.log('[AdMob] Real Rewarded Ad preloaded successfully.');
     } catch (e) {
-      console.warn('[AdMob] Rewarded Ad preload failed:', e);
+      console.warn('[AdMob] Real Rewarded Ad preload notice:', e);
     } finally {
       this.isRewardedLoading = false;
     }
   }
 
   /**
-   * 4. REWARDED ADS: Show only for genuine optional features and grant reward strictly upon verified SDK callback
+   * 4. REWARDED ADS: Show real rewarded ad
    */
   public async showRewardedAd(onRewardVerified: (rewardItem: AdRewardResult) => void): Promise<boolean> {
     if (!adConfig.enabled || this.isPremium) {
-      // If user is premium or ads disabled, grant perk directly
       onRewardVerified({ type: 'batch_unlocked', amount: 1 });
       return true;
     }
@@ -398,26 +341,24 @@ export class AdManager {
 
         await AdMob.showRewardVideoAd();
 
-        // Cleanup listener after presentation
         setTimeout(() => {
           rewardListener.remove();
         }, 30000);
 
         return true;
       } catch (e) {
-        console.warn('[AdMob] Rewarded ad failed to show. Continuing gracefully:', e);
+        console.warn('[AdMob] Real Rewarded ad failed to show. Continuing gracefully:', e);
         this.preloadRewarded();
         return false;
       }
     }
 
-    // Web simulation fallback for testing
     onRewardVerified({ type: 'batch_unlocked', amount: 1 });
     return true;
   }
 
   /**
-   * Preload Rewarded Interstitial Ad asynchronously
+   * Preload Real Rewarded Interstitial Ad asynchronously
    */
   public async preloadRewardedInterstitial(): Promise<void> {
     if (!adConfig.enabled || this.isPremium || !this.isNative || !this.isAdMobAvailable || this.isRewardedInterstitialLoading) return;
@@ -425,23 +366,21 @@ export class AdManager {
     this.isRewardedInterstitialLoading = true;
     try {
       const { AdMob } = await import('@capacitor-community/admob');
-      const adId = process.env.NODE_ENV === 'production' && !adConfig.admob.rewardedInterstitialId.includes('3940256099942544')
-        ? adConfig.admob.rewardedInterstitialId
-        : 'ca-app-pub-3940256099942544/5354046379';
+      const adId = adConfig.admob.rewardedInterstitialId || 'ca-app-pub-3660764533582226/4639005542';
 
       await AdMob.prepareRewardVideoAd({
         adId,
-        isTesting: process.env.NODE_ENV !== 'production',
+        isTesting: false,
       });
     } catch (e) {
-      console.warn('[AdMob] Rewarded Interstitial preload skipped:', e);
+      console.warn('[AdMob] Real Rewarded Interstitial preload notice:', e);
     } finally {
       this.isRewardedInterstitialLoading = false;
     }
   }
 
   /**
-   * 5. REWARDED INTERSTITIAL ADS: Show for heavy processing perk with verified SDK callback
+   * 5. REWARDED INTERSTITIAL ADS: Show real rewarded interstitial
    */
   public async showRewardedInterstitial(onRewardVerified: (rewardItem: AdRewardResult) => void): Promise<boolean> {
     if (!adConfig.enabled || this.isPremium) {
@@ -466,7 +405,7 @@ export class AdManager {
 
         return true;
       } catch (e) {
-        console.warn('[AdMob] Rewarded Interstitial unavailable:', e);
+        console.warn('[AdMob] Real Rewarded Interstitial notice:', e);
         this.preloadRewardedInterstitial();
         return false;
       }
@@ -478,3 +417,4 @@ export class AdManager {
 }
 
 export const adManager = AdManager.getInstance();
+
