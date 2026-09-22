@@ -1,5 +1,9 @@
 package com.miftahtools.app;
 
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -13,26 +17,92 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.webkit.DownloadListener;
 import android.webkit.JavascriptInterface;
+import android.webkit.PermissionRequest;
 import android.webkit.URLUtil;
 import android.webkit.WebView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebChromeClient;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends BridgeActivity {
+
+    private static final String NOTIFICATION_CHANNEL_ID = "miftah_tools_notifications";
+    private static final int RUNTIME_PERMISSIONS_REQ_CODE = 1001;
 
     public class AndroidDownloaderInterface {
         private final Context mContext;
 
         public AndroidDownloaderInterface(Context context) {
             this.mContext = context;
+        }
+
+        @JavascriptInterface
+        public void requestAppPermissions() {
+            runOnUiThread(() -> requestNativePermissions());
+        }
+
+        @JavascriptInterface
+        public boolean isCameraPermissionGranted() {
+            return ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        }
+
+        @JavascriptInterface
+        public boolean isMicrophonePermissionGranted() {
+            return ContextCompat.checkSelfPermission(mContext, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+        }
+
+        @JavascriptInterface
+        public boolean isNotificationPermissionGranted() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                return ContextCompat.checkSelfPermission(mContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+            }
+            return true;
+        }
+
+        @JavascriptInterface
+        public void showNotification(String title, String message, String routeUrl) {
+            try {
+                createNotificationChannel();
+                Intent intent = new Intent(mContext, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                if (routeUrl != null && !routeUrl.isEmpty()) {
+                    intent.putExtra("route", routeUrl);
+                }
+
+                PendingIntent pendingIntent = PendingIntent.getActivity(
+                    mContext,
+                    (int) System.currentTimeMillis(),
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+                );
+
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext, NOTIFICATION_CHANNEL_ID)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(title != null && !title.isEmpty() ? title : "Miftah Tools")
+                    .setContentText(message != null ? message : "Notification from Miftah Tools")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true)
+                    .setContentIntent(pendingIntent);
+
+                NotificationManager manager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+                if (manager != null) {
+                    manager.notify((int) System.currentTimeMillis(), builder.build());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         private String resolveMimeType(String fileName, String providedMime) {
@@ -331,9 +401,45 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Miftah Tools Notifications";
+            String description = "Updates and notifications for downloads, courses, and tools";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private void requestNativePermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            List<String> list = new ArrayList<>();
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                list.add(Manifest.permission.CAMERA);
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                list.add(Manifest.permission.RECORD_AUDIO);
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    list.add(Manifest.permission.POST_NOTIFICATIONS);
+                }
+            }
+            if (!list.isEmpty()) {
+                ActivityCompat.requestPermissions(this, list.toArray(new String[0]), RUNTIME_PERMISSIONS_REQ_CODE);
+            }
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        createNotificationChannel();
+        requestNativePermissions();
     }
 
     @Override
@@ -341,6 +447,18 @@ public class MainActivity extends BridgeActivity {
         super.onStart();
         if (this.bridge != null && this.bridge.getWebView() != null) {
             WebView webView = this.bridge.getWebView();
+            webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
+
+            // Grant Camera and Microphone access to HTML5 getUserMedia and Speech APIs
+            webView.setWebChromeClient(new BridgeWebChromeClient(this.bridge) {
+                @Override
+                public void onPermissionRequest(final PermissionRequest request) {
+                    runOnUiThread(() -> {
+                        request.grant(request.getResources());
+                    });
+                }
+            });
+
             webView.addJavascriptInterface(new AndroidDownloaderInterface(this), "AndroidDownloader");
 
             webView.setDownloadListener(new DownloadListener() {

@@ -227,3 +227,39 @@ export const checkNetworkStatusNative = async (): Promise<boolean> => {
     return true;
   }
 };
+
+/**
+ * Dispatch Real Native Android Notification into Status Bar
+ */
+export const showNativeNotification = (title: string, message: string, routeUrl: string = ''): boolean => {
+  if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.showNotification) {
+    try {
+      (window as any).AndroidDownloader.showNotification(title, message, routeUrl);
+      return true;
+    } catch (e) {
+      console.warn('Native notification notice:', e);
+    }
+  }
+
+  // Fallback: Web Notification API
+  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification(title, { body: message, icon: '/icon-192.png' });
+      return true;
+    } catch (e) {}
+  }
+
+  return false;
+};
+
+/**
+ * Request Real Native Permissions (Camera, Microphone, Notifications)
+ */
+export const requestNativeAppPermissions = (): void => {
+  if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.requestAppPermissions) {
+    try {
+      (window as any).AndroidDownloader.requestAppPermissions();
+    } catch (e) {}
+  }
+};
+
