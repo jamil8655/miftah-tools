@@ -200,6 +200,12 @@ const POPULAR_CATEGORY_SECTIONS = [
     badgeStyle: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
   },
   {
+    id: 'text',
+    icon: Type,
+    color: 'text-violet-600 dark:text-violet-400',
+    badgeStyle: 'bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800',
+  },
+  {
     id: 'qr',
     icon: QrCode,
     color: 'text-slate-700 dark:text-slate-300',
@@ -222,12 +228,6 @@ const POPULAR_CATEGORY_SECTIONS = [
     icon: ShieldCheck,
     color: 'text-red-600 dark:text-red-400',
     badgeStyle: 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
-  },
-  {
-    id: 'text',
-    icon: Type,
-    color: 'text-violet-600 dark:text-violet-400',
-    badgeStyle: 'bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800',
   },
 ];
 
