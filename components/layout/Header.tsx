@@ -20,6 +20,8 @@ import {
   Info,
   ShieldCheck,
   Check,
+  Home,
+  Layers,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { UnifiedSearchModal } from '@/components/search/UnifiedSearchModal';
@@ -32,6 +34,10 @@ const HEADER_LOCALES = {
     searchTooltip: 'Search tools (⌘K)',
     navigationSection: 'Navigation',
     supportSection: 'Support & Legal',
+    home: 'Home',
+    tools: 'Tools',
+    categories: 'Categories',
+    about: 'About',
     allTools: 'All 220+ Tools',
     workflows: 'Workflows Studio',
     downloads: 'Downloads Storage',
@@ -50,6 +56,10 @@ const HEADER_LOCALES = {
     searchTooltip: 'فوری تلاش (⌘K)',
     navigationSection: 'نیویگیشن',
     supportSection: 'معاونت اور قانونی',
+    home: 'ہوم',
+    tools: 'ٹولز',
+    categories: 'کیٹیگریز',
+    about: 'تعارف',
     allTools: 'تمام 220+ ٹولز',
     workflows: 'ورک فلوز اسٹوڈیو',
     downloads: 'ڈاؤن لوڈز اسٹوریج',
@@ -68,6 +78,10 @@ const HEADER_LOCALES = {
     searchTooltip: 'بحث سريع (⌘K)',
     navigationSection: 'التنقل',
     supportSection: 'الدعم والمعلومات القانونية',
+    home: 'الرئيسية',
+    tools: 'الأدوات',
+    categories: 'التصنيفات',
+    about: 'عن المنصة',
     allTools: 'جميع الأدوات 220+',
     workflows: 'استوديو سير العمل',
     downloads: 'مساحة التنزيلات',
@@ -86,6 +100,10 @@ const HEADER_LOCALES = {
     searchTooltip: 'त्वरित खोज (⌘K)',
     navigationSection: 'नेविगेशन',
     supportSection: 'सहायता व कानूनी',
+    home: 'होम',
+    tools: 'टूल्स',
+    categories: 'श्रेणियां',
+    about: 'परिचय',
     allTools: 'सभी 220+ टूल्स',
     workflows: 'वर्कफ़्लो स्टूडियो',
     downloads: 'डाउनलोड स्टोरेज',
@@ -151,10 +169,10 @@ export function Header() {
   }, []);
 
   const navLinks = [
-    { label: loc.allTools, href: '/tools', icon: Sparkles },
-    { label: loc.workflows, href: '/workflows', icon: Workflow },
-    { label: loc.faq, href: '/faq', icon: HelpCircle },
-    { label: loc.contact, href: '/contact', icon: Info },
+    { label: loc.home, href: '/', icon: Home },
+    { label: loc.tools, href: '/tools', icon: Sparkles },
+    { label: loc.categories, href: '/tools', icon: Layers },
+    { label: loc.about, href: '/about', icon: Info },
   ];
 
   return (

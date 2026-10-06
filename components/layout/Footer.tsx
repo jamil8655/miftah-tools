@@ -17,13 +17,13 @@ import { useI18n } from '@/lib/i18n/i18n-context';
 
 const FOOTER_LOCALES = {
   en: {
-    brandDesc: '220+ fast, useful and privacy-focused digital tools running directly in your browser.',
+    brandDesc: '220+ useful digital tools for everyday work running directly in your browser with privacy protection.',
     engineTitle: '500 MB Client-Side Engine',
     engineDesc: 'Transform massive documents & media smoothly in-browser.',
-    privacyTitle: '100% In-Browser Privacy',
-    privacyDesc: 'Files never touch external servers or get stored remotely.',
+    privacyTitle: 'Privacy-Focused',
+    privacyDesc: 'Files process locally on device where supported.',
     toolsTitle: '220+ Free Digital Tools',
-    toolsDesc: 'Fast, unlimited & 100% private in-browser utilities.',
+    toolsDesc: 'Fast, unlimited & private in-browser utilities.',
     pdfDocsHeading: 'PDF & Documents',
     popularHeading: 'Popular Utilities',
     supportHeading: 'Help & Support',
@@ -48,16 +48,16 @@ const FOOTER_LOCALES = {
     refund: 'Refund Policy',
     disclaimer: 'Legal Disclaimer',
     rights: 'All rights reserved.',
-    poweredBy: '100% Client-Side In-Memory Engine.',
+    poweredBy: 'Client-Side In-Memory Engine.',
   },
   ur: {
-    brandDesc: 'براؤزر کے اندر براہ راست چلنے والے 220 سے زائد تیز، مفید اور پرائیویٹ ڈیجیٹل ٹولز۔',
+    brandDesc: 'روزمرہ کے کام کے لیے 220 سے زائد مفید ڈیجیٹل ٹولز جو پرائیویسی تحفظ کے ساتھ براہ راست براؤزر میں چلتے ہیں۔',
     engineTitle: '500 ایم بی کلائنٹ سائیڈ انجن',
     engineDesc: 'بڑی دستاویزات اور میڈیا کو براؤزر کے اندر آسانی سے پروسیس کریں۔',
-    privacyTitle: '100% مکمل رازداری کی ضمانت',
-    privacyDesc: 'آپ کی فائلیں کبھی بھی بیرونی سرور پر اپلوڈ نہیں ہوتیں۔',
+    privacyTitle: 'پرائیویسی پر مبنی',
+    privacyDesc: 'جہاں ممکن ہو فائلیں آپ کے ڈیوائس پر ہی پروسیس ہوتی ہیں۔',
     toolsTitle: '220+ مفت ڈیجیٹل ٹولز',
-    toolsDesc: 'براؤزر میں تیز رفتار، لامحدود اور مکمل نجی استعمال۔',
+    toolsDesc: 'براؤزر میں تیز رفتار، لامحدود اور نجی استعمال۔',
     pdfDocsHeading: 'پی ڈی ایف اور دستاویزات',
     popularHeading: 'مقبول ٹولز',
     supportHeading: 'مدد اور رہنمائی',
@@ -82,14 +82,14 @@ const FOOTER_LOCALES = {
     refund: 'ریفنڈ پالیسی',
     disclaimer: 'قانونی اعلان',
     rights: 'جملہ حقوق محفوظ ہیں۔',
-    poweredBy: '100% کلائنٹ سائیڈ محفوظ انجن۔',
+    poweredBy: 'کلائنٹ سائیڈ محفوظ انجن۔',
   },
   ar: {
-    brandDesc: 'أكثر من 220 أداة رقمية سريعة ومجانية تعمل مباشرة في متصفحك بخصوصية تامة.',
+    brandDesc: 'أكثر من 220 أداة رقمية مفيدة للعمل اليومي تعمل مباشرة داخل متصفحك مع حماية الخصوصية.',
     engineTitle: 'محرك محلي فائق بسعة 500 ميجابايت',
     engineDesc: 'معالجة المستندات والوسائط الضخمة مباشرة وبسلاسة في المتصفح.',
-    privacyTitle: 'خصوصية وأمان محلي بنسبة 100%',
-    privacyDesc: 'ملفاتك لا تغادر جهازك ولا يتم تخزينها على أي خادم خارجي.',
+    privacyTitle: 'خصوصية وأمان',
+    privacyDesc: 'تتم معالجة الملفات محلياً على جهازك حيثما أمكن.',
     toolsTitle: '220+ أداة رقمية مجانية',
     toolsDesc: 'معالجة فورية وغير محدودة بخصوصية تامة في المتصفح.',
     pdfDocsHeading: 'PDF والمستندات',
@@ -116,16 +116,16 @@ const FOOTER_LOCALES = {
     refund: 'سياسة الاسترجاع',
     disclaimer: 'إخلاء المسؤولية القانوني',
     rights: 'جميع الحقوق محفوظة.',
-    poweredBy: 'محرك معالجة محلي خاص بنسبة 100%.',
+    poweredBy: 'محرك معالجة محلي خاص.',
   },
   hi: {
-    brandDesc: 'ब्राउज़र में सीधे चलने वाले 220+ तेज़, उपयोगी और 100% प्राइवेट डिजिटल टूल्स।',
+    brandDesc: 'रोज़मर्रा के काम के लिए 220+ उपयोगी डिजिटल टूल्स जो गोपनीयता सुरक्षा के साथ सीधे आपके ब्राउज़र में चलते हैं।',
     engineTitle: '500 MB क्लाइंट-साइड इंजन',
     engineDesc: 'ब्राउज़र में सीधे भारी दस्तावेज़ और मीडिया फ़ाइलें प्रोसेस करें।',
-    privacyTitle: '100% इन-ब्राउज़र गोपनीयता',
-    privacyDesc: 'आपकी फ़ाइलें कभी किसी बाहरी सर्वर पर अपलोड नहीं होती हैं।',
+    privacyTitle: 'गोपनीयता-केंद्रित',
+    privacyDesc: 'जहां संभव हो फ़ाइलें डिवाइस पर प्रोसेस होती हैं।',
     toolsTitle: '220+ मुफ़्त डिजिटल टूल्स',
-    toolsDesc: 'असीमित, तेज़ और 100% प्राइवेट इन-ब्राउज़र यूटिलिटीज।',
+    toolsDesc: 'असीमित, तेज़ और सुरक्षित इन-ब्राउज़र यूटिलिटीज।',
     pdfDocsHeading: 'PDF व दस्तावेज़',
     popularHeading: 'लोकप्रिय टूल्स',
     supportHeading: 'मदद और सहायता',
@@ -150,7 +150,7 @@ const FOOTER_LOCALES = {
     refund: 'रिफंड नीति',
     disclaimer: 'कानूनी अस्वीकरण',
     rights: 'सर्वाधिकार सुरक्षित।',
-    poweredBy: '100% क्लाइंट-साइड सुरक्षित इंजन।',
+    poweredBy: 'क्लाइंट-साइड सुरक्षित इंजन।',
   },
 };
 
@@ -158,7 +158,7 @@ export function Footer() {
   const { language, isRTL } = useI18n();
   const loc = FOOTER_LOCALES[language] || FOOTER_LOCALES.en;
 
-  // Mobile Accordion open state (collapsed by default as requested in prompt)
+  // Mobile Accordion open state (collapsed by default)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     pdf: false,
     tools: false,
@@ -316,8 +316,47 @@ export function Footer() {
           })}
         </div>
 
-        {/* TABLET / DESKTOP VIEW: Multi-Column Grid (>= md) */}
-        <div className="hidden md:grid md:grid-cols-4 gap-8">
+        {/* DESKTOP VIEW: 5 Organized Columns (>= md) */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-5 gap-8">
+          
+          {/* Column 1: Brand Info & Google Play Badge */}
+          <div className="lg:col-span-1 space-y-4">
+            <Link href="/" className="inline-flex items-center gap-1.5 select-none">
+              <span className="font-black text-xl tracking-tight text-[#0B79B7] dark:text-[#38a8f8]">
+                MIFTAH
+              </span>
+              <span className="px-1.5 py-0.5 rounded-md bg-[#0B79B7] text-white text-[9px] font-black uppercase">
+                TOOLS
+              </span>
+            </Link>
+            <p className="text-xs text-[#687587] dark:text-slate-400 leading-relaxed">
+              {loc.brandDesc}
+            </p>
+
+            {/* Google Play Button */}
+            <div className="pt-1">
+              <a
+                href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700/80 transition-all shadow-xs active:scale-95 group select-none"
+                aria-label="Get Miftah Tools on Google Play"
+              >
+                <svg className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 512 512">
+                  <path fill="#00D3FF" d="M30.4 17.8c-7.7 8.2-12.4 20.3-12.4 35.5v405.4c0 15.2 4.7 27.3 12.4 35.5l2.4 2.2 231-231v-5.8L32.8 15.6l-2.4 2.2z" />
+                  <path fill="#FF3A44" d="M340.5 341.2l-76.7-76.7v-5.8l76.7-76.7 1.8 1 90.7 51.5c25.9 14.7 25.9 38.8 0 53.6l-90.7 51.5-1.8 1.6z" />
+                  <path fill="#00E676" d="M342.3 342.8L263.8 264 32.8 495.2c8.5 9 22.7 10.1 38.6 1.1l270.9-153.5z" />
+                  <path fill="#FFD400" d="M342.3 169.2L71.4 15.7C55.5 6.7 41.3 7.8 32.8 16.8L263.8 248l78.5-78.8z" />
+                </svg>
+                <div className="text-left rtl:text-right">
+                  <div className="text-[7px] uppercase tracking-wider text-slate-300 font-bold leading-none">GET IT ON</div>
+                  <div className="text-[11px] font-black tracking-tight text-white leading-none mt-0.5">Google Play</div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          {/* Columns 2-5: The 4 Categories */}
           {sections.map((sec) => {
             const Icon = sec.icon;
             return (
@@ -347,61 +386,22 @@ export function Footer() {
           })}
         </div>
 
-        {/* Section 14: FOOTER BRAND AREA */}
-        <div className="pt-8 border-t border-[#E1E7EC] dark:border-slate-800 space-y-5">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left rtl:sm:text-right">
-            
-            {/* Brand Title & Statement */}
-            <div className="space-y-1">
-              <Link href="/" className="inline-flex items-center gap-1.5 select-none">
-                <span className="font-black text-lg tracking-tight text-[#0B79B7] dark:text-[#38a8f8]">
-                  MIFTAH
-                </span>
-                <span className="px-1.5 py-0.5 rounded-md bg-[#0B79B7] text-white text-[9px] font-black uppercase">
-                  TOOLS
-                </span>
-              </Link>
-              <p className="text-xs text-[#687587] dark:text-slate-400 max-w-md">
-                {loc.brandDesc}
-              </p>
-            </div>
-
-            {/* Official Google Play Store Button */}
-            <div className="shrink-0">
-              <a
-                href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700/80 transition-all shadow-xs active:scale-95 group select-none"
-                aria-label="Get Miftah Tools on Google Play"
-              >
-                <svg className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 512 512">
-                  <path fill="#00D3FF" d="M30.4 17.8c-7.7 8.2-12.4 20.3-12.4 35.5v405.4c0 15.2 4.7 27.3 12.4 35.5l2.4 2.2 231-231v-5.8L32.8 15.6l-2.4 2.2z" />
-                  <path fill="#FF3A44" d="M340.5 341.2l-76.7-76.7v-5.8l76.7-76.7 1.8 1 90.7 51.5c25.9 14.7 25.9 38.8 0 53.6l-90.7 51.5-1.8 1.6z" />
-                  <path fill="#00E676" d="M342.3 342.8L263.8 264 32.8 495.2c8.5 9 22.7 10.1 38.6 1.1l270.9-153.5z" />
-                  <path fill="#FFD400" d="M342.3 169.2L71.4 15.7C55.5 6.7 41.3 7.8 32.8 16.8L263.8 248l78.5-78.8z" />
-                </svg>
-                <div className="text-left rtl:text-right">
-                  <div className="text-[8px] uppercase tracking-wider text-slate-300 font-bold leading-none">GET IT ON</div>
-                  <div className="text-xs font-black tracking-tight text-white leading-none mt-0.5">Google Play</div>
-                </div>
-              </a>
-            </div>
-          </div>
-
-          {/* Minimal Bottom Bar */}
-          <div className="pt-4 border-t border-[#E1E7EC]/60 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#687587] dark:text-slate-500 text-center sm:text-left rtl:sm:text-right">
+        {/* Section 18: FOOTER BRAND & LEGAL BOTTOM BAR */}
+        <div className="pt-8 border-t border-[#E1E7EC] dark:border-slate-800 space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#687587] dark:text-slate-500 text-center sm:text-left rtl:sm:text-right">
             <p>© 2026 Miftah Tools. {loc.rights}</p>
-            <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-medium">
               <Link href="/privacy" className="hover:text-[#0B79B7] transition-colors">{loc.privacy}</Link>
               <span>•</span>
               <Link href="/terms" className="hover:text-[#0B79B7] transition-colors">{loc.terms}</Link>
               <span>•</span>
+              <Link href="/disclaimer" className="hover:text-[#0B79B7] transition-colors">{loc.disclaimer}</Link>
+              <span>•</span>
               <Link href="/contact" className="hover:text-[#0B79B7] transition-colors">{loc.contact}</Link>
             </div>
           </div>
-
         </div>
+
       </div>
     </footer>
   );
