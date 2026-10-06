@@ -282,6 +282,8 @@ function RealCalcCategoryIcon({ className = "w-6 h-6" }: { className?: string })
 const PAGE_LOCALES = {
   en: {
     heroEyebrow: 'MIFTAH TOOLS',
+    ratingScore: '4.9 / 5.0',
+    ratingLabel: '100,000+ Happy Users',
     heroHeading1: '220+ Digital Tools.',
     heroHeading2: 'One Simple Workspace.',
     heroSupporting: 'Convert, edit, compress and create with fast, privacy-focused tools designed for everyday digital work.',
@@ -305,7 +307,9 @@ const PAGE_LOCALES = {
     whySubheading: 'Explore our core architectural advantages: privacy, performance, and simplicity.',
     faqHeading: 'Frequently Asked Questions',
     faqSubheading: 'Everything you need to know about Miftah Tools capabilities and security.',
-    recentToolsHeading: 'Recent Tools',
+    recentToolsHeading: 'Recently Used Tools',
+    recentToolsClear: 'Clear History',
+    recentToolsViewAll: 'View All →',
     allToolsTab: 'All Tools (220+)',
     toolsCount: (count: number) => `${count} tools`,
     noToolsFound: 'No tools found matching your search.',
@@ -482,6 +486,8 @@ const PAGE_LOCALES = {
   },
   ur: {
     heroEyebrow: 'مفتاح ٹولز',
+    ratingScore: '4.9 / 5.0',
+    ratingLabel: '100,000+ مطمئن صارفین',
     heroHeading1: '220+ ڈیجیٹل ٹولز۔',
     heroHeading2: 'ایک سادہ ورک اسپیس۔',
     heroSupporting: 'روزمرہ ڈیجیٹل کام کے لیے تیز رفتار، نجی اور جدید ٹولز کے ذریعے فائلیں تبدیل کریں، ترمیم کریں، کمپریس کریں اور بنائیں بغیر سرور اپلوڈ کے۔',
@@ -506,6 +512,8 @@ const PAGE_LOCALES = {
     faqHeading: 'عام پوچھے جانے والے سوالات',
     faqSubheading: 'مفتاح ٹولز کی خصوصیات اور پرائیویسی سے متعلق اہم سوالات و جوابات۔',
     recentToolsHeading: 'حالیہ استعمال شدہ ٹولز',
+    recentToolsClear: 'صاف کریں',
+    recentToolsViewAll: 'تمام دیکھیں ←',
     allToolsTab: 'تمام ٹولز (220+)',
     toolsCount: (count: number) => `${count} ٹولز`,
     noToolsFound: 'آپ کی تلاش کے مطابق کوئی ٹول نہیں ملا۔',
@@ -682,6 +690,8 @@ const PAGE_LOCALES = {
   },
   ar: {
     heroEyebrow: 'مفتاح تولز',
+    ratingScore: '4.9 / 5.0',
+    ratingLabel: 'أكثر من 100,000 مستخدم',
     heroHeading1: '220+ أداة رقمية.',
     heroHeading2: 'في مساحة عمل واحدة.',
     heroSupporting: 'قم بتحويل المستندات، وتعديلها، وضغطها، وإنشائها باستخدام أدوات سريعة وآمنة ومصممة للعمل اليومي المتقن.',
@@ -706,6 +716,8 @@ const PAGE_LOCALES = {
     faqHeading: 'الأسئلة الشائعة',
     faqSubheading: 'كل ما تحتاج لمعرفته حول إمكانيات وأمان منصة مفتاح تولز.',
     recentToolsHeading: 'الأدوات المستخدمة مؤخراً',
+    recentToolsClear: 'مسح السجل',
+    recentToolsViewAll: 'عرض الكل ←',
     allToolsTab: 'جميع الأدوات (220+)',
     toolsCount: (count: number) => `${count} أداة`,
     noToolsFound: 'لم يتم العثور على أي أداة مطابقة لبحثك.',
@@ -882,6 +894,8 @@ const PAGE_LOCALES = {
   },
   hi: {
     heroEyebrow: 'मिफ़्ताह टूल्स',
+    ratingScore: '4.9 / 5.0',
+    ratingLabel: '100,000+ संतुष्ट उपयोगकर्ता',
     heroHeading1: '220+ डिजिटल टूल्स।',
     heroHeading2: 'एक सरल वर्कस्पेस।',
     heroSupporting: 'फ़ाइलें कन्वर्ट, एडिट, कंप्रेस और क्रिएट करें — रोज़मर्रा के डिजिटल काम के लिए तेज़ और 100% सुरक्षित टूल्स।',
@@ -900,12 +914,14 @@ const PAGE_LOCALES = {
     popularHeading: 'लोकप्रिय टूल्स',
     popularSubheading: 'सभी श्रेणियों में सबसे अधिक उपयोग किए जाने वाले प्रमुख टूल्स।',
     exploreCategoryHeading: 'श्रेणी के अनुसार खोजें',
-    exploreCategorySubheading: 'अपने काम کے लिए सही टूल तुरंत प्राप्त करें।',
+    exploreCategorySubheading: 'अपने काम के लिए सही टूल तुरंत प्राप्त करें।',
     whyHeading: 'मिफ़्ताह टूल्स क्यों चुनें?',
     whySubheading: 'हमारी कोर विशेषताओं, सुरक्षा और हाई-स्पीड आर्किटेक्चर को विस्तार से समझें।',
     faqHeading: 'अक्सर पूछे जाने वाले प्रश्न',
     faqSubheading: 'मिफ़्ताह टूल्स की क्षमताओं और डेटा सुरक्षा से जुड़े सभी उत्तर।',
     recentToolsHeading: 'हाल ही में उपयोग किए गए टूल्स',
+    recentToolsClear: 'साफ़ करें',
+    recentToolsViewAll: 'सभी देखें →',
     allToolsTab: 'सभी टूल्स (220+)',
     toolsCount: (count: number) => `${count} टूल्स`,
     noToolsFound: 'आपकी खोज से मेल खाता कोई टूल नहीं मिला।',
@@ -1083,7 +1099,7 @@ const PAGE_LOCALES = {
 };
 export default function HomePage() {
   const { language, isRTL } = useI18n();
-  const { recentTools: storeRecentTools } = useUserStore();
+  const { recentTools: storeRecentTools, clearRecentTools } = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [openWhyIndex, setOpenWhyIndex] = useState<number | null>(0);
@@ -1130,10 +1146,23 @@ export default function HomePage() {
 
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
           
-          {/* Eyebrow Badge with Micro Pulse */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 border border-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] text-[11px] sm:text-xs font-bold uppercase tracking-widest select-none shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#0B79B7] animate-pulse" />
-            <span>{loc.heroEyebrow}</span>
+          {/* Eyebrow Badge & Rating Stars Pill */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            {/* Eyebrow Badge with Micro Pulse */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 border border-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] text-[11px] sm:text-xs font-bold uppercase tracking-widest select-none shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-[#0B79B7] animate-pulse" />
+              <span>{loc.heroEyebrow}</span>
+            </div>
+
+            {/* Rating Stars & Trust Pill */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-amber-800 dark:text-amber-200 text-[11px] sm:text-xs font-bold select-none shadow-xs">
+              <div className="flex items-center text-amber-500 gap-0.5 text-xs">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              </div>
+              <span className="font-black text-[#182230] dark:text-white">{loc.ratingScore}</span>
+              <span className="text-amber-500/40 font-normal">|</span>
+              <span className="text-[#687587] dark:text-slate-300 font-semibold">{loc.ratingLabel}</span>
+            </div>
           </div>
 
           {/* Main Heading */}
@@ -1272,30 +1301,65 @@ export default function HomePage() {
       </section>
 
       {/* ==================================================
-          3. RECENT TOOLS (ONLY IF USER HAS ACTUAL HISTORY)
+          3. RECENT TOOLS (HIGH-END MODERN SLEEK CARDS)
           ================================================== */}
       {recentTools.length > 0 && !searchQuery && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs space-y-2.5">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold text-[#182230] dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
-                <History className="w-3.5 h-3.5 text-[#0B79B7] dark:text-[#38a8f8]" />
-                <span>{loc.recentToolsHeading}</span>
-              </h2>
-              <Link href="/history" className="text-[11px] font-bold text-[#0B79B7] dark:text-[#38a8f8] hover:underline">
-                View All →
-              </Link>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] flex items-center justify-center shrink-0">
+                  <History className="w-3.5 h-3.5" />
+                </div>
+                <h2 className="text-xs sm:text-sm font-black text-[#182230] dark:text-white uppercase tracking-wider">
+                  {loc.recentToolsHeading}
+                </h2>
+                <span className="px-2 py-0.5 rounded-full bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-extrabold">
+                  {recentTools.length}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    clearRecentTools?.();
+                  }}
+                  className="text-[11px] font-bold text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                >
+                  {loc.recentToolsClear}
+                </button>
+                <Link
+                  href="/history"
+                  className="text-[11px] font-bold text-[#0B79B7] dark:text-[#38a8f8] hover:underline flex items-center gap-0.5"
+                >
+                  <span>{loc.recentToolsViewAll}</span>
+                </Link>
+              </div>
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
               {recentTools.map((tool) => {
                 const localized = getLocalizedTool(tool, language);
                 return (
                   <Link
                     key={`recent-${tool.id}`}
                     href={`/tools/${tool.slug || tool.id}`}
-                    className="px-3 py-1.5 rounded-xl bg-[#F5F7F9] dark:bg-slate-800 hover:bg-[#0B79B7]/10 text-xs font-bold text-[#182230] dark:text-slate-200 border border-[#E1E7EC] dark:border-slate-700 whitespace-nowrap transition-colors shrink-0"
+                    onClick={() => triggerHaptic('selection')}
+                    className="p-3 rounded-xl bg-[#F5F7F9] dark:bg-slate-800/80 hover:bg-[#0B79B7]/10 hover:border-[#0B79B7]/40 border border-[#E1E7EC] dark:border-slate-700/80 transition-all duration-200 flex items-center gap-2.5 group select-none shadow-xs"
                   >
-                    {localized.name}
+                    <div className="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-700 text-[#0B79B7] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-xs font-black">
+                      ⚡
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-[#182230] dark:text-white truncate group-hover:text-[#0B79B7] transition-colors">
+                        {localized?.name || tool.name}
+                      </p>
+                      <p className="text-[10px] text-[#687587] dark:text-slate-400 truncate uppercase font-semibold">
+                        {tool.category || 'Tool'}
+                      </p>
+                    </div>
                   </Link>
                 );
               })}
@@ -1546,65 +1610,7 @@ export default function HomePage() {
       )}
 
       {/* ==================================================
-          8. FREQUENTLY ASKED QUESTIONS (EXPANDABLE DROPDOWN FAQ)
-          ================================================== */}
-      {!searchQuery && activeCategory === 'all' && (
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 space-y-5">
-          <div className="text-center space-y-1">
-            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-bold uppercase tracking-wider">
-              <HelpCircle className="w-3 h-3" />
-              <span>FAQ</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black text-[#182230] dark:text-white tracking-tight">
-              {loc.faqHeading}
-            </h2>
-            <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400">
-              {loc.faqSubheading}
-            </p>
-          </div>
-
-          <div className="space-y-2.5">
-            {loc.faqItems.map((item, idx) => {
-              const isFaqOpen = openFaqIndex === idx;
-              return (
-                <div
-                  key={idx}
-                  className={`rounded-2xl border transition-all duration-200 overflow-hidden bg-white dark:bg-slate-900 ${
-                    isFaqOpen
-                      ? 'border-[#0B79B7]/60 shadow-xs'
-                      : 'border-[#E1E7EC] dark:border-slate-800 hover:border-[#0B79B7]/30'
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setOpenFaqIndex(isFaqOpen ? null : idx);
-                    }}
-                    className="w-full p-4 sm:p-4.5 text-left rtl:text-right flex items-center justify-between gap-3 cursor-pointer"
-                  >
-                    <span className="text-xs sm:text-sm font-bold text-[#182230] dark:text-white">
-                      {item.q}
-                    </span>
-                    <div className={`p-1 rounded-lg text-[#687587] transition-transform shrink-0 ${isFaqOpen ? 'rotate-180 text-[#0B79B7]' : ''}`}>
-                      <ChevronDown className="w-4 h-4" />
-                    </div>
-                  </button>
-
-                  {isFaqOpen && (
-                    <div className="px-4.5 pb-4 pt-1 border-t border-[#E1E7EC]/60 dark:border-slate-800 text-xs sm:text-sm text-[#687587] dark:text-slate-300 leading-relaxed animate-in fade-in duration-150">
-                      {item.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ==================================================
-          9. ANDROID APP PROMOTION SECTION
+          8. ANDROID APP PROMOTION SECTION
           ================================================== */}
       <section id="android-app" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16">
         <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
@@ -1666,9 +1672,9 @@ export default function HomePage() {
       </section>
 
       {/* ==================================================
-          10. ALL TOOLS DIRECTORY CTA BANNER
+          9. ALL TOOLS DIRECTORY CTA BANNER
           ================================================== */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6">
         <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#0B79B7] to-[#075B8C] text-white shadow-lg space-y-4 text-center sm:text-left rtl:sm:text-right flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-1.5 max-w-xl">
             <span className="px-3 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
@@ -1690,6 +1696,64 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      {/* ==================================================
+          10. FREQUENTLY ASKED QUESTIONS (EXPANDABLE DROPDOWN FAQ - PLACED AT THE BOTTOM)
+          ================================================== */}
+      {!searchQuery && activeCategory === 'all' && (
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-12 space-y-5">
+          <div className="text-center space-y-1">
+            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-bold uppercase tracking-wider">
+              <HelpCircle className="w-3 h-3" />
+              <span>FAQ</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-[#182230] dark:text-white tracking-tight">
+              {loc.faqHeading}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400">
+              {loc.faqSubheading}
+            </p>
+          </div>
+
+          <div className="space-y-2.5">
+            {loc.faqItems.map((item, idx) => {
+              const isFaqOpen = openFaqIndex === idx;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden bg-white dark:bg-slate-900 ${
+                    isFaqOpen
+                      ? 'border-[#0B79B7]/60 shadow-xs'
+                      : 'border-[#E1E7EC] dark:border-slate-800 hover:border-[#0B79B7]/30'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setOpenFaqIndex(isFaqOpen ? null : idx);
+                    }}
+                    className="w-full p-4 sm:p-4.5 text-left rtl:text-right flex items-center justify-between gap-3 cursor-pointer"
+                  >
+                    <span className="text-xs sm:text-sm font-bold text-[#182230] dark:text-white">
+                      {item.q}
+                    </span>
+                    <div className={`p-1 rounded-lg text-[#687587] transition-transform shrink-0 ${isFaqOpen ? 'rotate-180 text-[#0B79B7]' : ''}`}>
+                      <ChevronDown className="w-4 h-4" />
+                    </div>
+                  </button>
+
+                  {isFaqOpen && (
+                    <div className="px-4.5 pb-4 pt-1 border-t border-[#E1E7EC]/60 dark:border-slate-800 text-xs sm:text-sm text-[#687587] dark:text-slate-300 leading-relaxed animate-in fade-in duration-150">
+                      {item.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Subtle Bottom Ad Placement */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
