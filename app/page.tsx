@@ -184,6 +184,19 @@ function RealMergePdfIcon({ className = "w-7 h-7" }: { className?: string }) {
   );
 }
 
+function RealSpeechTranslatorIcon({ className = "w-7 h-7" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="44" height="44" rx="12" fill="#EFF6FF" />
+      <rect x="14" y="9" width="10" height="15" rx="5" fill="#0B79B7" />
+      <path d="M9 17C9 22.5228 13.4772 27 19 27C24.5228 27 29 22.5228 29 17" stroke="#0B79B7" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M19 27V33M14 33H24" stroke="#0B79B7" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="31" cy="28" r="8" fill="#10B981" stroke="white" strokeWidth="2" />
+      <path d="M27.5 28H34.5M31 24.5C32 25.5 32.8 26.7 32.8 28C32.8 29.3 32 30.5 31 31.5C30 30.5 29.2 29.3 29.2 28C29.2 26.7 30 25.5 31 24.5Z" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 /* Category Real Icons */
 function RealPdfCategoryIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
@@ -403,6 +416,16 @@ const PAGE_LOCALES = {
         tagBg: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/60',
       },
       {
+        id: 'live-speech-translator',
+        name: 'Live Speech Translator',
+        desc: 'Speak into microphone and get real-time voice & text translation.',
+        href: '/live-speech-translator',
+        icon: RealSpeechTranslatorIcon,
+        tag: 'LIVE AI',
+        iconBg: 'bg-blue-50 text-[#0B79B7] dark:bg-blue-950/40 dark:text-[#38a8f8] border border-blue-100 dark:border-blue-900/40',
+        tagBg: 'bg-blue-50 text-[#075B8C] dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60',
+      },
+      {
         id: 'compress-pdf',
         name: 'Compress PDF',
         desc: 'Reduce PDF file size without losing visual quality.',
@@ -605,6 +628,16 @@ const PAGE_LOCALES = {
         tag: 'اے آئی وائس',
         iconBg: 'bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40',
         tagBg: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/60',
+      },
+      {
+        id: 'live-speech-translator',
+        name: 'لائیو اسپیچ ٹرانسلیٹر',
+        desc: 'مائیکروفون میں بولیں اور لائیو آواز و ٹیکسٹ ترجمہ حاصل کریں۔',
+        href: '/live-speech-translator',
+        icon: RealSpeechTranslatorIcon,
+        tag: 'لائیو اے آئی',
+        iconBg: 'bg-blue-50 text-[#0B79B7] dark:bg-blue-950/40 dark:text-[#38a8f8] border border-blue-100 dark:border-blue-900/40',
+        tagBg: 'bg-blue-50 text-[#075B8C] dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60',
       },
       {
         id: 'compress-pdf',
@@ -811,6 +844,16 @@ const PAGE_LOCALES = {
         tagBg: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/60',
       },
       {
+        id: 'live-speech-translator',
+        name: 'المترجم الصوتي المباشر',
+        desc: 'تحدث عبر الميكروفون واحصل على ترجمة فورية وصوتية مباشرة.',
+        href: '/live-speech-translator',
+        icon: RealSpeechTranslatorIcon,
+        tag: 'ترجمة حية',
+        iconBg: 'bg-blue-50 text-[#0B79B7] dark:bg-blue-950/40 dark:text-[#38a8f8] border border-blue-100 dark:border-blue-900/40',
+        tagBg: 'bg-blue-50 text-[#075B8C] dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60',
+      },
+      {
         id: 'compress-pdf',
         name: 'ضغط ملفات PDF',
         desc: 'تقليل حجم ملفات PDF مع الحفاظ على وضوحها.',
@@ -1013,6 +1056,16 @@ const PAGE_LOCALES = {
         tag: 'AI वॉइस',
         iconBg: 'bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40',
         tagBg: 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/60',
+      },
+      {
+        id: 'live-speech-translator',
+        name: 'लाइव स्पीच ट्रांसलेटर',
+        desc: 'माइक में बोलें और रीयल-टाइम वॉइस व टेक्स्ट अनुवाद प्राप्त करें।',
+        href: '/live-speech-translator',
+        icon: RealSpeechTranslatorIcon,
+        tag: 'लाइव AI',
+        iconBg: 'bg-blue-50 text-[#0B79B7] dark:bg-blue-950/40 dark:text-[#38a8f8] border border-blue-100 dark:border-blue-900/40',
+        tagBg: 'bg-blue-50 text-[#075B8C] dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60',
       },
       {
         id: 'compress-pdf',
@@ -1226,6 +1279,9 @@ export default function HomePage() {
               </Link>
               <Link href="/voice-to-text" className="px-2.5 py-1 rounded-lg bg-[#F5F7F9] dark:bg-slate-900 hover:bg-[#0B79B7]/10 hover:text-[#0B79B7] border border-[#E1E7EC] dark:border-slate-800 transition-colors">
                 🎙️ Voice to Text
+              </Link>
+              <Link href="/live-speech-translator" className="px-2.5 py-1 rounded-lg bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] hover:bg-[#0B79B7] hover:text-white border border-[#0B79B7]/30 transition-colors font-bold">
+                🌐 Live Translator
               </Link>
               <Link href="/tools/compress-pdf" className="px-2.5 py-1 rounded-lg bg-[#F5F7F9] dark:bg-slate-900 hover:bg-[#0B79B7]/10 hover:text-[#0B79B7] border border-[#E1E7EC] dark:border-slate-800 transition-colors">
                 🗜️ Compress PDF
