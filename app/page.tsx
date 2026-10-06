@@ -1,161 +1,324 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
-  ArrowRight,
   Zap,
+  ArrowRight,
   FileText,
   Minimize2,
   Combine,
   Image as ImageIcon,
   ScanText,
   QrCode,
-  Camera,
   Layers,
   FileCheck,
   Type,
-  Lock,
   Video,
   Bookmark,
+  Brain,
+  Calculator,
+  Terminal,
+  ShieldCheck,
+  Search,
+  X,
+  ChevronRight,
   Mic,
+  Camera,
+  Wand2,
+  Workflow,
 } from 'lucide-react';
-import { TOOLS_LIST } from '@/lib/tools-config';
+import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { ToolCard } from '@/components/shared/ToolCard';
-import { HorizontalRecentToolsCarousel } from '@/components/shared/HorizontalRecentToolsCarousel';
-import { CategoryToolsModal } from '@/components/shared/CategoryToolsModal';
 import { NativeFeedAd } from '@/components/ads/NativeFeedAd';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
 import { triggerHaptic } from '@/lib/motion/motion-system';
+import { getLocalizedTool, getLocalizedCategory } from '@/lib/i18n/catalog-translations';
 
-import { getLocalizedTool } from '@/lib/i18n/catalog-translations';
+const categoryIconMap: Record<string, React.ElementType> = {
+  pdf: FileText,
+  document: FileCheck,
+  image: ImageIcon,
+  ocr: ScanText,
+  text: Type,
+  compress: Minimize2,
+  security: ShieldCheck,
+  media: Video,
+  calculator: Calculator,
+  dev: Terminal,
+  qr: QrCode,
+  ai: Brain,
+};
 
-const HOME_LOCALES = {
+const PAGE_LOCALES = {
   en: {
+    heroBadge: '✨ 220+ Free Tools & Document Utilities',
+    heroTitle: '220+ Free Online Tools for PDF, Documents, Images & Utilities',
+    heroSubtitle: 'Convert, compress, edit, calculate, and manage files with 100% private in-browser WebAssembly processing. No sign-up required.',
+    searchPlaceholder: 'Search 220+ tools (e.g. PDF to Word, OCR, Compress, QR)...',
+    clearSearch: 'Clear',
+    allToolsTab: 'All Tools',
+    frequentTools: 'Popular Quick Actions',
+    browseByCategory: 'Browse by Category',
+    directoryTitle: 'Tools Directory',
+    toolsCount: (count: number) => `${count} tools`,
+    noToolsFound: 'No tools found matching your search.',
+    resetFilters: 'Reset filters',
+    viewAllTools: 'View All 220+ Tools Directory →',
+    trustPrivate: '100% In-Browser Privacy',
+    trustPrivateDesc: 'Files never leave your device',
+    trustEngine: '500 MB WASM Engine',
+    trustEngineDesc: 'Ultra-fast local processing',
+    trustFree: 'Zero Sign-In Required',
+    trustFreeDesc: 'Instant, free unlimited access',
     bookmarked: (count: number) => `Bookmarked Tools (${count})`,
     manageBookmarks: 'Manage Bookmarks →',
-    frequentUtilities: 'Frequent Utilities',
-    allToolsLink: 'All Tools →',
-    categories: 'Tool Categories',
-    showAllCategories: 'Show All Categories',
-    toolsCount: (count: number) => `${count} tools`,
-    popularTools: 'Popular Tools',
-    selectedTools: (catLabel: string) => `${catLabel} Tools`,
-    exploreDirectory: (count: number) => `Explore All Tools in Directory`,
   },
   ur: {
+    heroBadge: '✨ 220+ مفت آن لائن ٹولز اور دستاویز یوٹیلیٹیز',
+    heroTitle: 'مفت، تیز اور مکمل نجی آن لائن ٹولز',
+    heroSubtitle: 'دستاویزات میں ترمیم، تصاویر کی تبدیلی، میڈیا آپٹیمائزیشن اور ورک فلو آٹومیشن — بغیر کسی سرور اپلوڈ کے براہِ راست براؤزر میں۔',
+    searchPlaceholder: '220+ ٹولز تلاش کریں (مثلاً پی ڈی ایف، امیج، او سی آر، کیو آر)...',
+    clearSearch: 'صاف کریں',
+    allToolsTab: 'تمام ٹولز',
+    frequentTools: 'مقبول ترین ٹولز',
+    browseByCategory: 'اقسام کے لحاظ سے دیکھیں',
+    directoryTitle: 'ٹولز ڈائرکٹری',
+    toolsCount: (count: number) => `${count} ٹولز`,
+    noToolsFound: 'آپ کی تلاش کے مطابق کوئی ٹول نہیں ملا۔',
+    resetFilters: 'فلٹرز ری سیٹ کریں',
+    viewAllTools: 'تمام 220+ ٹولز ڈائرکٹری دیکھیں ←',
+    trustPrivate: '100% مکمل مقامی رازداری',
+    trustPrivateDesc: 'فائلیں آپ کے ڈیوائس پر ہی رہتی ہیں',
+    trustEngine: '500 ایم بی لوکل انجن',
+    trustEngineDesc: 'بغیر انتظار تیز ترین پروسیسنگ',
+    trustFree: 'بغیر سائن ان مکمل رسائی',
+    trustFreeDesc: 'مفت اور لامحدود استعمال',
     bookmarked: (count: number) => `محفوظ شدہ ٹولز (${count})`,
     manageBookmarks: 'بک مارکس کا انتظام کریں ←',
-    frequentUtilities: 'اکثر استعمال ہونے والے ٹولز',
-    allToolsLink: 'تمام ٹولز دیکھیں ←',
-    categories: 'اقسام کی فہرست',
-    showAllCategories: 'تمام اقسام دیکھیں',
-    toolsCount: (count: number) => `${count} ٹولز`,
-    popularTools: 'مقبول ترین ٹولز',
-    selectedTools: (catLabel: string) => `${catLabel} کے ٹولز`,
-    exploreDirectory: (count: number) => `ڈائرکٹری کے تمام ٹولز دیکھیں`,
   },
   ar: {
+    heroBadge: '✨ أكثر من 220 أداة مجانية لمعالجة المستندات',
+    heroTitle: 'أدوات مجانية وآمنة وسريعة لمعالجة الملفات',
+    heroSubtitle: 'تحويل المستندات، وضغط الصور، وتعديل الوسائط، والبرمجة — خصوصية محلية تامة 100% داخل المتصفح.',
+    searchPlaceholder: 'ابحث في 220+ أداة (مثل تحويل PDF، ضغط، OCR، QR)...',
+    clearSearch: 'مسح',
+    allToolsTab: 'جميع الأدوات',
+    frequentTools: 'الأدوات الأكثر استخداماً',
+    browseByCategory: 'تصفح حسب التصنيف',
+    directoryTitle: 'دليل الأدوات',
+    toolsCount: (count: number) => `${count} أداة`,
+    noToolsFound: 'لم يتم العثور على أي أداة مطابقة لبحثك.',
+    resetFilters: 'إعادة ضبط التصفية',
+    viewAllTools: 'استكشف دليل جميع الأدوات 220+ ←',
+    trustPrivate: 'خصوصية محلية 100%',
+    trustPrivateDesc: 'ملفاتك لا تغادر جهازك أبداً',
+    trustEngine: 'محرك WASM بسعة 500 ميجابايت',
+    trustEngineDesc: 'معالجة فورية وفائقة السرعة',
+    trustFree: 'استخدام فوري بدون تسجيل',
+    trustFreeDesc: 'وصول مجاني وغير محدود',
     bookmarked: (count: number) => `الأدوات المحفوظة (${count})`,
     manageBookmarks: 'إدارة الإشارات المرجعية ←',
-    frequentUtilities: 'الأدوات الشائعة',
-    allToolsLink: 'جميع الأدوات ←',
-    categories: 'تصنيفات الأدوات',
-    showAllCategories: 'عرض جميع التصنيفات',
-    toolsCount: (count: number) => `${count} أداة`,
-    popularTools: 'الأدوات الشائعة',
-    selectedTools: (catLabel: string) => `أدوات ${catLabel}`,
-    exploreDirectory: (count: number) => `استكشف جميع الأدوات في الدليل`,
   },
   hi: {
+    heroBadge: '✨ 220+ मुफ़्त ऑनलाइन टूल्स व दस्तावेज़ यूटिलिटीज',
+    heroTitle: 'फास्ट, प्राइवेट और मुफ़्त ऑनलाइन टूल्स',
+    heroSubtitle: 'दस्तावेज़ कस्टमाइज़ करें, इमेज कन्वर्ट करें, मीडिया ऑप्टिमाइज़ करें और वर्कफ़्लो ऑटोमेट करें — 100% इन-ब्राउज़र गोपनीयता।',
+    searchPlaceholder: '220+ टूल्स खोजें (उदा. PDF से Word, OCR, कंप्रेस, QR)...',
+    clearSearch: 'साफ़ करें',
+    allToolsTab: 'सभी टूल्स',
+    frequentTools: 'लोकप्रिय टूल्स',
+    browseByCategory: 'श्रेणियों के अनुसार ब्राउज़ करें',
+    directoryTitle: 'टूल्स निर्देशिका',
+    toolsCount: (count: number) => `${count} टूल्स`,
+    noToolsFound: 'आपकी खोज से मेल खाता कोई टूल नहीं मिला।',
+    resetFilters: 'फ़िल्टर रीसेट करें',
+    viewAllTools: 'सभी 220+ टूल्स डायरेक्टरी देखें →',
+    trustPrivate: '100% इन-ब्राउज़र गोपनीयता',
+    trustPrivateDesc: 'फ़ाइलें कभी डिवाइस से बाहर नहीं जातीं',
+    trustEngine: '500 MB स्थानीय WASM इंजन',
+    trustEngineDesc: 'अति-तीव्र प्रोसेसिंग',
+    trustFree: 'बिना लॉगिन मुफ़्त एक्सेस',
+    trustFreeDesc: 'तत्काल और असीमित उपयोग',
     bookmarked: (count: number) => `बुकमार्क किए गए टूल्स (${count})`,
     manageBookmarks: 'बुकमार्क प्रबंधित करें →',
-    frequentUtilities: 'अक्सर उपयोग किए जाने वाले टूल्स',
-    allToolsLink: 'सभी टूल्स देखें →',
-    categories: 'टूल श्रेणियां',
-    showAllCategories: 'सभी श्रेणियां दिखाएं',
-    toolsCount: (count: number) => `${count} टूल्स`,
-    popularTools: 'लोकप्रिय टूल्स',
-    selectedTools: (catLabel: string) => `${catLabel} टूल्स`,
-    exploreDirectory: (count: number) => `निर्देशिका में सभी टूल्स देखें`,
   },
 };
 
-const QUICK_ACTION_DEFINITIONS = [
-  { id: 'voice-to-text', color: 'bg-rose-500', fallbackIcon: Mic },
-  { id: 'media-downloader', color: 'bg-purple-600', fallbackIcon: Video },
-  { id: 'camera-scanner', color: 'bg-blue-600', fallbackIcon: Camera },
-  { id: 'pdf-to-docx', color: 'bg-indigo-600', fallbackIcon: FileText },
-  { id: 'compress-pdf', color: 'bg-emerald-600', fallbackIcon: Minimize2 },
-  { id: 'merge-pdf', color: 'bg-sky-500', fallbackIcon: Combine },
-  { id: 'pdf-editor', color: 'bg-amber-500', fallbackIcon: Layers },
-  { id: 'markitdown', color: 'bg-fuchsia-600', fallbackIcon: Sparkles },
-  { id: 'background-remover', color: 'bg-pink-500', fallbackIcon: Sparkles },
-  { id: 'image-resizer', color: 'bg-cyan-600', fallbackIcon: ImageIcon },
-  { id: 'qr-generator', color: 'bg-teal-600', fallbackIcon: QrCode },
-  { id: 'workflows', color: 'bg-orange-500', fallbackIcon: Zap },
-  { id: 'video-to-mp3', color: 'bg-violet-600', fallbackIcon: Video },
-  { id: 'audio-booster', color: 'bg-lime-600', fallbackIcon: Zap },
-  { id: 'pdf-signer', color: 'bg-slate-700', fallbackIcon: FileCheck },
-  { id: 'docx-to-pdf', color: 'bg-blue-500', fallbackIcon: FileText },
+const POPULAR_QUICK_ACTIONS = [
+  { id: 'voice-to-text', name: 'Voice to Text (AI)', cat: 'voice', icon: Mic, color: 'bg-purple-600', isDirectPath: '/voice-to-text' },
+  { id: 'media-downloader', name: 'Video & Audio Saver', cat: 'media', icon: Video, color: 'bg-rose-600', isDirectPath: '/video-to-mp3' },
+  { id: 'pdf-to-docx', name: 'PDF to Word (OCR)', cat: 'pdf', icon: FileText, color: 'bg-indigo-600' },
+  { id: 'compress-pdf', name: 'Compress PDF', cat: 'pdf', icon: Minimize2, color: 'bg-emerald-600' },
+  { id: 'merge-pdf', name: 'Merge PDF', cat: 'pdf', icon: Combine, color: 'bg-blue-600' },
+  { id: 'camera-scanner', name: 'Camera Scanner', cat: 'ocr', icon: Camera, color: 'bg-teal-600', isDirectPath: '/camera-scanner' },
+  { id: 'pdf-editor', name: 'PDF Editor Studio', cat: 'pdf', icon: FileCheck, color: 'bg-violet-600', isDirectPath: '/pdf-editor' },
+  { id: 'markitdown', name: 'MarkItDown AI', cat: 'ai', icon: Brain, color: 'bg-amber-600', isDirectPath: '/markitdown' },
+  { id: 'image-resizer', name: 'Image Studio', cat: 'image', icon: ImageIcon, color: 'bg-cyan-600' },
+  { id: 'background-remover', name: 'Remove BG', cat: 'image', icon: Wand2, color: 'bg-pink-600' },
+  { id: 'qr-generator', name: 'QR Code Generator', cat: 'qr', icon: QrCode, color: 'bg-slate-800 dark:bg-slate-700' },
+  { id: 'workflows', name: 'Workflows Studio', cat: 'ai', icon: Workflow, color: 'bg-orange-600', isDirectPath: '/workflows' },
 ];
 
 export default function HomePage() {
   const { language, isRTL } = useI18n();
   const { favorites, pinnedTools } = useUserStore();
-  const loc = HOME_LOCALES[language] || HOME_LOCALES.en;
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const loc = PAGE_LOCALES[language] || PAGE_LOCALES.en;
 
-  // Restore scroll position when returning back from a tool
-  React.useEffect(() => {
-    try {
-      const lastToolId = sessionStorage.getItem('miftah_last_clicked_tool');
-      const savedScroll = sessionStorage.getItem('miftah_home_scroll');
+  const favoriteTools = useMemo(() => {
+    return TOOLS_LIST.filter(
+      (tool) =>
+        favorites.some((fav) => fav.id === tool.id || fav.id === tool.slug) ||
+        pinnedTools.includes(tool.id)
+    );
+  }, [favorites, pinnedTools]);
 
-      if (lastToolId) {
-        const timer = setTimeout(() => {
-          const el = document.getElementById(`tool-card-${lastToolId}`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.02]');
-            setTimeout(() => {
-              el.classList.remove('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.02]');
-            }, 2500);
-          } else if (savedScroll) {
-            window.scrollTo({ top: parseInt(savedScroll, 10) || 0, behavior: 'smooth' });
-          }
-        }, 150);
-        return () => clearTimeout(timer);
-      }
-    } catch (_) {}
-  }, []);
+  const filteredTools = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return TOOLS_LIST.filter((tool) => {
+      const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
+      if (!matchesCategory) return false;
 
-  // Save scroll position before unmounting / navigating
-  React.useEffect(() => {
-    const handleScroll = () => {
-      try {
-        sessionStorage.setItem('miftah_home_scroll', window.scrollY.toString());
-      } catch (_) {}
-    };
+      if (!query) return true;
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+      const localized = getLocalizedTool(tool, language);
+      const name = (localized?.name || tool.name).toLowerCase();
+      const desc = (localized?.shortDesc || tool.shortDesc || tool.fullDesc || '').toLowerCase();
+      const tags = (tool.tags || []).join(' ').toLowerCase();
 
-  // User's bookmarked favorite tools
-  const favoriteTools = TOOLS_LIST.filter(
-    (tool) =>
-      favorites.some((fav) => fav.id === tool.id || fav.id === tool.slug) ||
-      pinnedTools.includes(tool.id)
-  );
+      return name.includes(query) || desc.includes(query) || tags.includes(query) || tool.id.includes(query);
+    });
+  }, [searchQuery, activeCategory, language]);
 
   return (
-    <div className="space-y-6 sm:space-y-8 pt-2 sm:pt-4 pb-24 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
-      {/* 1. BOOKMARKED FAVORITES (Conditional on real user saving) */}
-      {favoriteTools.length > 0 && (
-        <section className="px-4 sm:px-6 lg:px-8 pt-2 max-w-7xl mx-auto space-y-3">
+    <div className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen pb-12 transition-colors">
+      {/* 1. HERO BANNER (WEBSITE HEADER) */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-brand-500/10 via-brand-500/5 to-transparent dark:from-brand-950/40 dark:via-slate-900/20 dark:to-transparent border-b border-slate-200/80 dark:border-slate-800/80 pt-8 pb-12 sm:pt-14 sm:pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-brand-500/10 dark:bg-brand-500/5 blur-3xl rounded-full pointer-events-none" />
+
+        <div className="max-w-5xl mx-auto text-center space-y-5 sm:space-y-6 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs sm:text-sm font-black shadow-xs">
+            <span>{loc.heroBadge}</span>
+          </div>
+
+          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-4xl mx-auto">
+            {loc.heroTitle}
+          </h1>
+
+          <p className="text-xs sm:text-base md:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            {loc.heroSubtitle}
+          </p>
+
+          {/* Real-time Global Search Input */}
+          <div className="max-w-2xl mx-auto pt-2">
+            <div className="relative flex items-center shadow-lg shadow-slate-900/5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-brand-500/30 dark:border-brand-500/40 focus-within:border-brand-600 dark:focus-within:border-brand-400 transition-all">
+              <Search className="w-5 h-5 text-brand-600 dark:text-brand-400 absolute left-4 rtl:left-auto rtl:right-4 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={loc.searchPlaceholder}
+                className="w-full py-3.5 sm:py-4 pl-12 pr-12 rtl:pl-12 rtl:pr-12 bg-transparent text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none rounded-2xl font-medium"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 rtl:right-auto rtl:left-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 3 Core Trust Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 max-w-3xl mx-auto text-left rtl:text-right">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustPrivate}</p>
+                <p className="text-[10px] text-slate-500 truncate">{loc.trustPrivateDesc}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-800">
+                <Zap className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustEngine}</p>
+                <p className="text-[10px] text-slate-500 truncate">{loc.trustEngineDesc}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
+                <Zap className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustFree}</p>
+                <p className="text-[10px] text-slate-500 truncate">{loc.trustFreeDesc}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. STICKY CATEGORY FILTER BAR */}
+      <section className="sticky top-14 sm:top-16 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs py-2.5 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('selection');
+              setActiveCategory('all');
+            }}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
+              activeCategory === 'all'
+                ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            {loc.allToolsTab} (220+)
+          </button>
+
+          {CATEGORIES_CONFIG.map((cat) => {
+            const Icon = categoryIconMap[cat.id] || FileText;
+            const isSelected = activeCategory === cat.id;
+            const localizedName = getLocalizedCategory(cat.id, language);
+
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setActiveCategory(cat.id);
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
+                  isSelected
+                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{localizedName}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 3. BOOKMARKED FAVORITES (IF ANY) */}
+      {favoriteTools.length > 0 && !searchQuery && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-3">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
               <Bookmark className="w-3.5 h-3.5 fill-current" />
@@ -174,92 +337,118 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 2. RECENT TOOLS (Horizontal Scrolling RTL/LTR-Aware Carousel) */}
-      <HorizontalRecentToolsCarousel />
+      {/* 4. POPULAR QUICK ACTIONS GRID (SHOWS WHEN ON ALL CATEGORY & NO SEARCH) */}
+      {activeCategory === 'all' && !searchQuery && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-500" />
+              <span>{loc.frequentTools}</span>
+            </h2>
+            <Link href="/tools" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+              {loc.viewAllTools}
+            </Link>
+          </div>
 
-      {/* 3. FREQUENT TOOLS / QUICK ACTIONS (Primary Flagship Mobile Hub) */}
-      <section className="px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 max-w-7xl mx-auto space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {POPULAR_QUICK_ACTIONS.map((action) => {
+              const Icon = action.icon;
+              const href = action.isDirectPath || `/tools/${action.id}`;
+              return (
+                <Link
+                  key={action.id}
+                  href={href}
+                  className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-brand-500 dark:hover:border-brand-500 hover:shadow-md transition-all flex items-center gap-3 group active:scale-95"
+                >
+                  <div className={`w-10 h-10 rounded-xl ${action.color} text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                      {action.name}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 uppercase font-semibold">
+                      {action.cat}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* 5. MAIN TOOL DIRECTORY GRID */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-4">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
-            <span>{loc.frequentUtilities}</span>
-          </h2>
-          <Link href="/tools" className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline">
-            {loc.allToolsLink}
-          </Link>
-        </div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wide">
+              {activeCategory === 'all'
+                ? loc.directoryTitle
+                : `${getLocalizedCategory(activeCategory, language)} Tools`}
+            </h2>
+            <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+              {loc.toolsCount(filteredTools.length)}
+            </span>
+          </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-          {QUICK_ACTION_DEFINITIONS.map((def) => {
-            const tool = TOOLS_LIST.find((t) => t.id === def.id || t.slug === def.id);
-            const localized = tool ? getLocalizedTool(tool, language) : null;
-            const title = localized?.name || def.id;
-            const desc = localized?.shortDesc || '';
-            const FallbackIcon = def.fallbackIcon;
-            const href = def.id === 'workflows' ? '/workflows' : `/tools/${tool?.slug || def.id}`;
-
-            return (
-              <Link
-                key={def.id}
-                href={href}
-                className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-brand-500 dark:hover:border-brand-500 active:scale-95 transition-all flex items-center gap-3 group"
-              >
-                <div className={`w-9 h-9 rounded-xl ${def.color} text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}>
-                  <FallbackIcon className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                    {title}
-                  </h3>
-                  <p className="text-[10px] text-slate-400 truncate">
-                    {desc}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Middle Native Ad Slot (AdMob in-feed ad) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <AdSlot placement="in-feed" />
-      </section>
-
-      {/* 4. TOOL DIRECTORY GRID (All Tools) */}
-      <section id="tools-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
-            {loc.popularTools}
-          </h2>
-          <span className="text-[11px] text-slate-400 font-semibold">{loc.toolsCount(TOOLS_LIST.length)}</span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {TOOLS_LIST.slice(0, 32).map((tool, idx) => (
-            <React.Fragment key={tool.id}>
-              <ToolCard tool={tool} />
-              {idx === 7 && <NativeFeedAd />}
-              {idx === 19 && <NativeFeedAd />}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {TOOLS_LIST.length > 32 && (
-          <div className="text-center pt-4">
-            <Link
-              href="/tools"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-xs hover:border-brand-500 shadow-xs active:scale-95 transition-all"
+          {(activeCategory !== 'all' || searchQuery) && (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCategory('all');
+                setSearchQuery('');
+              }}
+              className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline"
             >
-              <span>{loc.exploreDirectory(TOOLS_LIST.length)}</span>
-              {isRTL ? (
-                <ArrowRight className="w-4 h-4 text-brand-600 rotate-180" />
-              ) : (
-                <ArrowRight className="w-4 h-4 text-brand-600" />
-              )}
+              {loc.resetFilters}
+            </button>
+          )}
+        </div>
+
+        {filteredTools.length === 0 ? (
+          <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 space-y-3">
+            <Search className="w-8 h-8 text-slate-400 mx-auto" />
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-400">{loc.noToolsFound}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCategory('all');
+                setSearchQuery('');
+              }}
+              className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-brand-500 transition-colors"
+            >
+              {loc.resetFilters}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+            {filteredTools.slice(0, 48).map((tool, idx) => (
+              <React.Fragment key={tool.id}>
+                <ToolCard tool={tool} />
+                {idx === 7 && <NativeFeedAd />}
+                {idx === 23 && <NativeFeedAd />}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+
+        {filteredTools.length > 48 && (
+          <div className="text-center pt-6">
+            <Link
+              href={`/tools${activeCategory !== 'all' ? `?cat=${activeCategory}` : ''}`}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-brand-600/20 active:scale-95 transition-all"
+            >
+              <span>{loc.viewAllTools}</span>
+              <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
             </Link>
           </div>
         )}
+      </section>
+
+      {/* Middle Banner Ad */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <AdSlot placement="in-feed" />
       </section>
     </div>
   );
