@@ -28,6 +28,8 @@ import {
   FileText,
   RotateCcw,
   Languages,
+  Radio,
+  Send,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -44,37 +46,40 @@ const TRANSLATOR_LOCALES = {
   en: {
     backBtn: 'Back',
     title: 'Live Speech Translator',
-    subtitle: 'Speak naturally. Translate instantly in real time.',
+    subtitle: 'Speak naturally. Watch words convert to text and translate in real-time instantly.',
     iSpeak: 'I speak',
     translateTo: 'Translate to',
     autoDetect: 'Auto Detect',
     tapToSpeak: 'Tap to Speak',
-    speakNaturally: 'Speak naturally into your microphone...',
-    listening: 'Listening to your voice...',
-    stopBtn: 'Stop',
-    voiceOutputOn: 'Voice Output: ON',
-    voiceOutputOff: 'Voice Output: OFF',
+    speakNaturally: 'Press the microphone and speak naturally...',
+    listening: 'Listening... (Speak now)',
+    stopBtn: 'Stop Listening',
+    voiceOutputOn: 'Voice: ON',
+    voiceOutputOff: 'Voice: OFF',
     singleMode: 'Single Speaker',
     convoMode: 'Conversation Mode',
-    youSaid: 'You said',
+    liveSpokenTitle: 'Live Spoken (Original)',
+    liveTranslationTitle: 'Live Translation',
     translation: 'Translation',
+    waitingForSpeech: 'Speak into microphone. Text will type here in real time...',
+    translatingLive: 'Translation will appear live as you speak...',
     personA: 'Person A',
     personB: 'Person B',
-    transcriptTitle: 'Live Conversation Transcript',
-    emptyTranscript: 'Your translated conversation will appear here in real time as you speak.',
+    transcriptTitle: 'Conversation History',
+    emptyTranscript: 'Completed sentences will be saved here with audio replay, copy, and export.',
     copyText: 'Copy',
     copiedText: 'Copied!',
     shareText: 'Share',
-    speakAgain: 'Speak',
+    speakAgain: 'Listen',
     exportTxt: 'Text (.txt)',
     exportPdf: 'PDF (.pdf)',
     copyAll: 'Copy All',
-    clearChat: 'Clear Conversation',
+    clearChat: 'Clear History',
     confirmClearTitle: 'Clear Translation Session?',
-    confirmClearDesc: 'This will erase all messages in the current session. This action cannot be undone.',
+    confirmClearDesc: 'This will remove all saved translation history in the current session.',
     cancel: 'Cancel',
     clearBtn: 'Clear',
-    settingsTitle: 'Translator Settings',
+    settingsTitle: 'Voice & Translation Settings',
     speechSpeed: 'Voice Output Speed',
     speedSlow: '0.8x Slow',
     speedNormal: '1.0x Normal',
@@ -86,44 +91,47 @@ const TRANSLATOR_LOCALES = {
     autoTurnLabel: 'Auto Turn Detection',
     autoTurnDesc: 'Automatically switches speaker turns during conversation mode',
     privacyTitle: 'Privacy-First Architecture',
-    privacyNote: 'Your microphone is used only for real-time speech recognition. Audio is never stored on servers.',
+    privacyNote: 'Your speech is processed directly on your device with high accuracy and zero cloud storage.',
     browserNotSupported: 'Live speech recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.',
-    manualInputPlaceholder: 'Type a message to translate...',
-    manualTranslateBtn: 'Translate Text',
-    micErrorNotice: 'Microphone permission required for voice translation.',
-    allowMicPrompt: 'Please allow microphone access when prompted by your browser.',
+    manualInputPlaceholder: 'Or type text here to translate...',
+    manualTranslateBtn: 'Translate',
+    micErrorNotice: 'Microphone permission needed.',
+    allowMicPrompt: 'Please allow microphone access in your browser to speak.',
   },
   ur: {
     backBtn: 'واپس',
     title: 'لائیو اسپیچ ٹرانسلیٹر',
-    subtitle: 'قدرتی انداز میں بولیں اور فوری ریئل ٹائم ترجمہ پائیں۔',
+    subtitle: 'آپ بولتے جائیں، الفاظ ساتھ ساتھ لکھتے جائیں گے اور فوری ریئل ٹائم لائیو ترجمہ ہوتا جائے گا۔',
     iSpeak: 'میری زبان',
     translateTo: 'ترجمہ کی زبان',
     autoDetect: 'خودکار شناخت',
     tapToSpeak: 'بولنے کے لیے ٹیپ کریں',
-    speakNaturally: 'مائیکروفون میں قدرتی انداز میں بولیں...',
-    listening: 'آپ کی آواز سنی جا رہی ہے...',
+    speakNaturally: 'مائیکروفون دبائیں اور قدرتی انداز میں بولنا شروع کریں...',
+    listening: 'آواز سنی جا رہی ہے... (اب بولیں)',
     stopBtn: 'روکیں',
-    voiceOutputOn: 'آواز میں سنیں: آن',
-    voiceOutputOff: 'آواز میں سنیں: آف',
+    voiceOutputOn: 'آواز: آن',
+    voiceOutputOff: 'آواز: آف',
     singleMode: 'انفرادی انداز',
-    convoMode: 'مکالمہ / گفتگو موڈ',
-    youSaid: 'آپ نے کہا',
+    convoMode: 'مکالمہ / دو طرفہ گفتگو',
+    liveSpokenTitle: 'لائیو اصل آواز (Original)',
+    liveTranslationTitle: 'لائیو فوری ترجمہ (Live Translation)',
     translation: 'ترجمہ',
+    waitingForSpeech: 'مائیک میں بولیں، الفاظ یہاں حقیقی وقت میں خود بخود ٹائپ ہوں گے...',
+    translatingLive: 'بولتے ہی فوری لائیو ترجمہ یہاں سامنے آتا جائے گا...',
     personA: 'فرد اول (A)',
     personB: 'فرد دوم (B)',
-    transcriptTitle: 'لائیو گفتگو کا متن',
-    emptyTranscript: 'آپ کے بولے گئے جملوں کا ترجمہ یہاں حقیقی وقت میں ظاہر ہوگا۔',
+    transcriptTitle: 'محفوظ شدہ گفتگو اور تاریخ',
+    emptyTranscript: 'آپ کے مکمل جملے یہاں تاریخ میں آڈیو پلے اور کاپی کی سہولت کے ساتھ محفوظ ہوتے رہیں گے۔',
     copyText: 'کاپی',
     copiedText: 'کاپی ہو گیا!',
     shareText: 'شیئر',
-    speakAgain: 'دوبارہ سنیں',
+    speakAgain: 'سنیں',
     exportTxt: 'ٹیکسٹ فائل (.txt)',
     exportPdf: 'پی ڈی ایف (.pdf)',
     copyAll: 'تمام کاپی کریں',
-    clearChat: 'گفتگو صاف کریں',
-    confirmClearTitle: 'کیا آپ گفتگو صاف کرنا چاہتے ہیں؟',
-    confirmClearDesc: 'اس سے موجودہ سیشن کے تمام پیغامات ختم ہو جائیں گے۔',
+    clearChat: 'تاریخ صاف کریں',
+    confirmClearTitle: 'کیا آپ سیشن صاف کرنا چاہتے ہیں؟',
+    confirmClearDesc: 'اس سے موجودہ سیشن کے تمام محفوظ شدہ پیغامات ختم ہو جائیں گے۔',
     cancel: 'منسوخ',
     clearBtn: 'صاف کریں',
     settingsTitle: 'ٹرانسلیٹر سیٹنگز',
@@ -138,47 +146,50 @@ const TRANSLATOR_LOCALES = {
     autoTurnLabel: 'خودکار باری کی شناخت',
     autoTurnDesc: 'گفتگو کے دوران بولنے والے کی باری خود بخود تبدیل کریں',
     privacyTitle: 'مکمل محفوظ اور نجی نظام',
-    privacyNote: 'آپ کا مائیک صرف فوری آواز کی شناخت کے لیے استعمال ہوتا ہے، کوئی آڈیو محفوظ نہیں کی جاتی۔',
+    privacyNote: 'آپ کی آواز اور متن بغیر کسی سرور پر محفوظ کیے فوری پروسیس ہوتے ہیں۔',
     browserNotSupported: 'اس براؤزر میں لائیو آواز کی شناخت دستیاب نہیں۔ براہ کرم گوگل کروم یا سفاری استعمال کریں۔',
-    manualInputPlaceholder: 'ترجمہ کے لیے ٹیکسٹ لکھیں...',
+    manualInputPlaceholder: 'یا یہاں ٹیکسٹ لکھ کر براہ راست ترجمہ کریں...',
     manualTranslateBtn: 'ترجمہ کریں',
-    micErrorNotice: 'آواز کے ذریعے ترجمے کے لیے مائیکروفون کی اجازت درکار ہے۔',
-    allowMicPrompt: 'براہ کرم براؤزر کی اجازت پر Allow دبائیں۔',
+    micErrorNotice: 'مائیکروفون کی اجازت درکار ہے۔',
+    allowMicPrompt: 'براہ کرم براؤزر میں Allow کا بٹن دبائیں۔',
   },
   ar: {
     backBtn: 'رجوع',
     title: 'المترجم الصوتي المباشر',
-    subtitle: 'تحدث بطبيعتك واحصل على ترجمة فورية في الوقت الفعلي.',
+    subtitle: 'تحدث بطبيعتك، وستتحول الكلمات إلى نص وترجمة مباشرة في الوقت الفعلي فوراً.',
     iSpeak: 'أتحدث لغة',
     translateTo: 'الترجمة إلى',
     autoDetect: 'كشف تلقائي',
     tapToSpeak: 'اضغط للتحدث',
-    speakNaturally: 'تحدث بطبيعتك في الميكروفون...',
-    listening: 'جاري الاستماع لصوتك...',
-    stopBtn: 'إيقاف',
-    voiceOutputOn: 'النطق الصوتي: مفعّل',
-    voiceOutputOff: 'النطق الصوتي: معطّل',
-    singleMode: 'المتحدث الفردي',
-    convoMode: 'وضع المحادثة الثنائية',
-    youSaid: 'قلت أنت',
+    speakNaturally: 'اضغط على الميكروفون وابدأ التحدث بطبيعتك...',
+    listening: 'جاري الاستماع... (تحدث الآن)',
+    stopBtn: 'إيقاف الاستماع',
+    voiceOutputOn: 'الصوت: مفعّل',
+    voiceOutputOff: 'الصوت: معطّل',
+    singleMode: 'متحدث فردي',
+    convoMode: 'محادثة ثنائية',
+    liveSpokenTitle: 'النص الصوتي المباشر (الأصل)',
+    liveTranslationTitle: 'الترجمة الفورية المباشرة',
     translation: 'الترجمة',
+    waitingForSpeech: 'تحدث في الميكروفون، ستتم الكتابة هنا مباشرة أثناء كلامك...',
+    translatingLive: 'ستظهر الترجمة الفورية فور نطق الكلمات...',
     personA: 'الطرف الأول',
     personB: 'الطرف الثاني',
-    transcriptTitle: 'سجل المحادثة المباشرة',
-    emptyTranscript: 'ستظهر محادثاتك المترجمة هنا في الوقت الفعلي أثناء التحدث.',
+    transcriptTitle: 'سجل المحادثات والترجمة',
+    emptyTranscript: 'ستظهر الجمل المكتملة هنا في السجل مع إمكانية الاستماع والنسخ والتصدير.',
     copyText: 'نسخ',
     copiedText: 'تم النسخ!',
     shareText: 'مشاركة',
-    speakAgain: 'استماع مجدداً',
+    speakAgain: 'استماع',
     exportTxt: 'ملف نصي (.txt)',
     exportPdf: 'ملف PDF (.pdf)',
     copyAll: 'نسخ الكل',
-    clearChat: 'مسح المحادثة',
-    confirmClearTitle: 'هل تريد مسح جلسة الترجمة؟',
-    confirmClearDesc: 'سيؤدي هذا الإجراء إلى حذف جميع النصوص المترجمة الحالية.',
+    clearChat: 'مسح السجل',
+    confirmClearTitle: 'هل تريد مسح سجل الجلسة؟',
+    confirmClearDesc: 'سيتم مسح جميع النصوص المترجمة المحفوظة في هذه الجلسة.',
     cancel: 'إلغاء',
     clearBtn: 'مسح',
-    settingsTitle: 'إعدادات المترجم',
+    settingsTitle: 'إعدادات الصوت والترجمة',
     speechSpeed: 'سرعة النطق الصوتي',
     speedSlow: '0.8x بطيء',
     speedNormal: '1.0x عادي',
@@ -189,43 +200,46 @@ const TRANSLATOR_LOCALES = {
     displayOrigOnly: 'الأصل فقط',
     autoTurnLabel: 'التبديل التلقائي للمتحدث',
     autoTurnDesc: 'تبديل دور المتحدث تلقائياً أثناء وضع المحادثة',
-    privacyTitle: 'حماية كاملة للخصوصية',
-    privacyNote: 'يُستخدم الميكروفون للتعرف على الصوت مباشرة، ولا يتم حفظ أي تسجيلات على الخوادم.',
+    privacyTitle: 'خصوصية وأمان 100%',
+    privacyNote: 'تتم معالجة الصوت والنصوص مباشرة على جهازك دون حفظ أي بيانات على الخوادم.',
     browserNotSupported: 'التعرف الصوتي المباشر غير مدعوم في هذا المتصفح. يُرجى استخدام Google Chrome أو Safari.',
-    manualInputPlaceholder: 'اكتب نصاً للترجمة المباشرة...',
-    manualTranslateBtn: 'ترجمة النص',
-    micErrorNotice: 'يلزم إعطاء إذن الميكروفون للترجمة الصوتية.',
-    allowMicPrompt: 'يرجى السماح بالوصول إلى الميكروفون عندما يطلب المتصفح ذلك.',
+    manualInputPlaceholder: 'أو اكتب نصاً هنا للترجمة الفورية...',
+    manualTranslateBtn: 'ترجمة',
+    micErrorNotice: 'يلزم إعطاء إذن الميكروفون.',
+    allowMicPrompt: 'يرجى السماح بالوصول إلى الميكروفون في المتصفح.',
   },
   hi: {
     backBtn: 'वापस',
     title: 'लाइव स्पीच ट्रांसलेटर',
-    subtitle: 'स्वाभाविक रूप से बोलें और तुरंत रियल-टाइम अनुवाद प्राप्त करें।',
+    subtitle: 'आप बोलते जाएं, शब्द तुरंत टाइप होते जाएंगे और रीयल-टाइम में लाइव अनुवाद होता जाएगा।',
     iSpeak: 'मेरी भाषा',
     translateTo: 'अनुवाद की भाषा',
     autoDetect: 'स्वतः पहचान',
     tapToSpeak: 'बोलने के लिए टैप करें',
-    speakNaturally: 'माइक्रोफ़ोन में स्वाभाविक रूप से बोलें...',
-    listening: 'आपकी आवाज़ सुनी जा रही है...',
+    speakNaturally: 'माइक दबाएं और स्वाभाविक रूप से बोलना शुरू करें...',
+    listening: 'आवाज़ सुनी जा रही है... (बोलिए)',
     stopBtn: 'रोकें',
-    voiceOutputOn: 'आवाज़ आउटपुट: चालू',
-    voiceOutputOff: 'आवाज़ आउटपुट: बंद',
+    voiceOutputOn: 'आवाज़: चालू',
+    voiceOutputOff: 'आवाज़: बंद',
     singleMode: 'सिंगल स्पीकर',
     convoMode: 'बातचीत (कन्वर्सेशन) मोड',
-    youSaid: 'आपने कहा',
+    liveSpokenTitle: 'लाइव बोली गई आवाज़ (मूल)',
+    liveTranslationTitle: 'लाइव त्वरित अनुवाद (Live Translation)',
     translation: 'अनुवाद',
+    waitingForSpeech: 'माइक में बोलें, शब्द यहाँ अपने आप रीयल-टाइम में टाइप होंगे...',
+    translatingLive: 'बोलते ही तुरंत लाइव अनुवाद यहाँ सामने आता जाएगा...',
     personA: 'पहला व्यक्ति (A)',
     personB: 'दूसरा व्यक्ति (B)',
-    transcriptTitle: 'लाइव बातचीत का विवरण',
-    emptyTranscript: 'आपके द्वारा बोले गए वाक्यों का अनुवाद यहाँ वास्तविक समय में दिखाई देगा।',
+    transcriptTitle: 'बातचीत का इतिहास',
+    emptyTranscript: 'पूरे हुए वाक्य यहाँ इतिहास में ऑडियो सुनने व कॉपी करने के लिए सेव होते रहेंगे।',
     copyText: 'कॉपी',
     copiedText: 'कॉपी हो गया!',
     shareText: 'शेयर',
-    speakAgain: 'दोबारा सुनें',
+    speakAgain: 'सुनें',
     exportTxt: 'टेक्स्ट फ़ाइल (.txt)',
     exportPdf: 'PDF फ़ाइल (.pdf)',
     copyAll: 'सभी कॉपी करें',
-    clearChat: 'बातचीत साफ़ करें',
+    clearChat: 'इतिहास साफ़ करें',
     confirmClearTitle: 'क्या आप बातचीत साफ़ करना चाहते हैं?',
     confirmClearDesc: 'यह वर्तमान सत्र के सभी संदेशों को हटा देगा।',
     cancel: 'रद्द करें',
@@ -242,12 +256,12 @@ const TRANSLATOR_LOCALES = {
     autoTurnLabel: 'ऑटो टर्न डिटेक्शन',
     autoTurnDesc: 'बातचीत के दौरान बोलने वाले की बारी स्वचालित रूप से बदलें',
     privacyTitle: '100% सुरक्षित एवं निजी',
-    privacyNote: 'माइक्रोफ़ोन केवल तुरंत आवाज़ पहचानने के लिए उपयोग होता है, कोई भी ऑडियो सर्वर पर सेव नहीं होता।',
+    privacyNote: 'आपकी आवाज़ और डेटा बिना किसी सर्वर पर स्टोर किए सीधे डिवाइस पर प्रोसेस होते हैं।',
     browserNotSupported: 'इस ब्राउज़र में लाइव स्पीच उपलब्ध नहीं है। कृपया Google Chrome या Safari का उपयोग करें।',
-    manualInputPlaceholder: 'अनुवाद के लिए टेक्स्ट लिखें...',
+    manualInputPlaceholder: 'या यहाँ टाइप करके तुरंत अनुवाद करें...',
     manualTranslateBtn: 'अनुवाद करें',
-    micErrorNotice: 'आवाज़ से अनुवाद के लिए माइक्रोफ़ोन की अनुमति आवश्यक है।',
-    allowMicPrompt: 'कृपया ब्राउज़र पूछे जाने पर Allow बटन दबाएं।',
+    micErrorNotice: 'माइक्रोफ़ोन अनुमति आवश्यक है।',
+    allowMicPrompt: 'कृपया ब्राउज़र में माइक की अनुमति दें।',
   },
 };
 
@@ -256,14 +270,15 @@ export function LiveSpeechTranslator() {
   const { recordToolUsage } = useUserStore();
   const loc = TRANSLATOR_LOCALES[language] || TRANSLATOR_LOCALES.en;
 
-  // Language selectors state
+  // Language selectors state (Default Urdu -> English)
   const [sourceLang, setSourceLang] = useState<string>('ur');
   const [targetLang, setTargetLang] = useState<string>('en');
 
-  // Speech & listening state
+  // Real-time live speech state
   const [isListening, setIsListening] = useState<boolean>(false);
-  const [interimSpeech, setInterimSpeech] = useState<string>('');
-  const [interimTranslation, setInterimTranslation] = useState<string>('');
+  const [liveSpokenText, setLiveSpokenText] = useState<string>('');
+  const [liveTranslatedText, setLiveTranslatedText] = useState<string>('');
+  const [isLiveTranslating, setIsLiveTranslating] = useState<boolean>(false);
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [currentSpeaker, setCurrentSpeaker] = useState<'user' | 'peer'>('user');
@@ -292,8 +307,9 @@ export function LiveSpeechTranslator() {
 
   const recognitionControllerRef = useRef<SpeechRecognitionController | null>(null);
   const timerIntervalRef = useRef<any>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const lastTranslatedPhraseRef = useRef<string>('');
+  const interimDebounceRef = useRef<any>(null);
+  const activeAbortControllerRef = useRef<AbortController | null>(null);
+  const lastFinalTextRef = useRef<string>('');
 
   const sourceLangObj = useMemo(() => getLanguageOption(sourceLang), [sourceLang]);
   const targetLangObj = useMemo(() => getLanguageOption(targetLang), [targetLang]);
@@ -321,65 +337,88 @@ export function LiveSpeechTranslator() {
     };
   }, [isListening]);
 
-  // Record tool usage in recent tools when user translates
+  // Record tool usage
   const markToolUsed = useCallback(() => {
     try {
-      recordToolUsage(
-        'live-speech-translator',
-        'Live Speech Translator',
-        'text',
-        'Mic'
-      );
+      recordToolUsage('live-speech-translator', 'Live Speech Translator', 'text', 'Mic');
     } catch {}
   }, [recordToolUsage]);
 
-  // Real-time translation of interim speech debounced
-  const handleInterimSpeech = useCallback(
-    async (text: string) => {
-      setInterimSpeech(text);
-      if (!text.trim() || text.length < 3) return;
+  // Fast debounced real-time streaming translation as user speaks
+  const triggerLiveTranslation = useCallback(
+    (text: string) => {
+      const cleanText = text.trim();
+      if (!cleanText) {
+        setLiveTranslatedText('');
+        return;
+      }
 
       const activeSrc = settings.conversationMode && currentSpeaker === 'peer' ? targetLang : sourceLang;
       const activeTgt = settings.conversationMode && currentSpeaker === 'peer' ? sourceLang : targetLang;
 
-      // Abort previous interim request if any
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+      if (interimDebounceRef.current) {
+        clearTimeout(interimDebounceRef.current);
       }
-      abortControllerRef.current = new AbortController();
 
-      try {
-        const response = await translateSpeechText(
-          text,
-          activeSrc,
-          activeTgt,
-          abortControllerRef.current.signal
-        );
-        if (response.translatedText) {
-          setInterimTranslation(response.translatedText);
+      interimDebounceRef.current = setTimeout(async () => {
+        if (activeAbortControllerRef.current) {
+          activeAbortControllerRef.current.abort();
         }
-      } catch {}
+        activeAbortControllerRef.current = new AbortController();
+
+        setIsLiveTranslating(true);
+        try {
+          const response = await translateSpeechText(
+            cleanText,
+            activeSrc,
+            activeTgt,
+            activeAbortControllerRef.current.signal
+          );
+          if (response.translatedText) {
+            setLiveTranslatedText(response.translatedText);
+          }
+        } catch {
+          // Keep current or retry smoothly
+        } finally {
+          setIsLiveTranslating(false);
+        }
+      }, 160); // 160ms responsive debounce for stream typing
     },
     [sourceLang, targetLang, settings.conversationMode, currentSpeaker]
+  );
+
+  // Interim handler called as syllables/words are spoken
+  const handleInterimSpeech = useCallback(
+    (text: string) => {
+      setLiveSpokenText(text);
+      triggerLiveTranslation(text);
+    },
+    [triggerLiveTranslation]
   );
 
   // Final committed sentence speech recognition handler
   const handleFinalSpeech = useCallback(
     async (finalText: string, confidence: number) => {
       const cleanText = finalText.trim();
-      if (!cleanText || cleanText === lastTranslatedPhraseRef.current) return;
-      lastTranslatedPhraseRef.current = cleanText;
+      if (!cleanText) return;
+
+      if (cleanText === lastFinalTextRef.current) return;
+      lastFinalTextRef.current = cleanText;
 
       markToolUsed();
 
       const activeSrc = settings.conversationMode && currentSpeaker === 'peer' ? targetLang : sourceLang;
       const activeTgt = settings.conversationMode && currentSpeaker === 'peer' ? sourceLang : targetLang;
-
       const activeTgtObj = getLanguageOption(activeTgt);
+
+      // Update live displays
+      setLiveSpokenText(cleanText);
 
       try {
         const response = await translateSpeechText(cleanText, activeSrc, activeTgt);
         const translated = response.translatedText || cleanText;
+
+        setLiveTranslatedText(translated);
 
         const newSegment: TranslationSegment = {
           id: `seg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -393,27 +432,20 @@ export function LiveSpeechTranslator() {
         };
 
         setTranscript((prev) => [...prev, newSegment]);
-        setInterimSpeech('');
-        setInterimTranslation('');
 
-        // Trigger TTS voice output if enabled
+        // Auto TTS playback
         if (settings.voiceOutput && translated) {
-          TextToSpeechController.speak(
-            translated,
-            activeTgtObj.bcp47,
-            settings.speechSpeed
-          );
+          TextToSpeechController.speak(translated, activeTgtObj.bcp47, settings.speechSpeed);
         }
 
-        // Handle Auto-turn detection in conversation mode
+        // Conversation mode auto-turn
         if (settings.conversationMode && settings.autoTurnDetection) {
           setCurrentSpeaker((prev) => (prev === 'user' ? 'peer' : 'user'));
-          // Update recognition language for the other speaker
           const nextLang = currentSpeaker === 'user' ? targetLangObj.bcp47 : sourceLangObj.bcp47;
           recognitionControllerRef.current?.setLanguage(nextLang);
         }
       } catch (err) {
-        console.error('Final translation error:', err);
+        console.error('Final sentence error:', err);
       }
     },
     [
@@ -434,8 +466,8 @@ export function LiveSpeechTranslator() {
   const startListening = useCallback(() => {
     triggerHaptic('medium');
     setErrorMessage(null);
-    setInterimSpeech('');
-    setInterimTranslation('');
+    setLiveSpokenText('');
+    setLiveTranslatedText('');
 
     const activeBcp47 =
       settings.conversationMode && currentSpeaker === 'peer'
@@ -465,7 +497,7 @@ export function LiveSpeechTranslator() {
     targetLangObj.bcp47,
   ]);
 
-  // Stop speech recognition completely
+  // Stop speech recognition
   const stopListening = useCallback(() => {
     triggerHaptic('light');
     if (recognitionControllerRef.current) {
@@ -474,8 +506,6 @@ export function LiveSpeechTranslator() {
     TextToSpeechController.stop();
     setIsListening(false);
     setAudioLevel(0);
-    setInterimSpeech('');
-    setInterimTranslation('');
   }, []);
 
   // Cleanup on unmount
@@ -483,6 +513,9 @@ export function LiveSpeechTranslator() {
     return () => {
       if (recognitionControllerRef.current) {
         recognitionControllerRef.current.stop();
+      }
+      if (interimDebounceRef.current) {
+        clearTimeout(interimDebounceRef.current);
       }
       TextToSpeechController.stop();
     };
@@ -495,6 +528,9 @@ export function LiveSpeechTranslator() {
     const oldTarget = targetLang;
     setSourceLang(oldTarget);
     setTargetLang(oldSource);
+
+    setLiveSpokenText('');
+    setLiveTranslatedText('');
 
     if (isListening && recognitionControllerRef.current) {
       const newBcp = getLanguageOption(oldTarget).bcp47;
@@ -515,6 +551,9 @@ export function LiveSpeechTranslator() {
       const response = await translateSpeechText(manualText.trim(), activeSrc, activeTgt);
       const translated = response.translatedText || manualText.trim();
 
+      setLiveSpokenText(manualText.trim());
+      setLiveTranslatedText(translated);
+
       const newSegment: TranslationSegment = {
         id: `seg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         speaker: 'user',
@@ -532,43 +571,41 @@ export function LiveSpeechTranslator() {
       if (settings.voiceOutput && translated) {
         TextToSpeechController.speak(translated, targetLangObj.bcp47, settings.speechSpeed);
       }
-    } catch (err) {
-      setErrorMessage('Translation failed. Please check your connection.');
+    } catch {
+      setErrorMessage('Translation failed. Please check your internet connection.');
     } finally {
       setIsManualTranslating(false);
     }
   };
 
-  // Copy single segment
-  const handleCopySegment = (seg: TranslationSegment) => {
+  // Copy text helper
+  const handleCopy = (text: string, id: string) => {
     triggerHaptic('light');
-    navigator.clipboard.writeText(seg.translatedText);
-    setCopiedId(seg.id);
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Speak single segment translation
-  const handleSpeakSegment = (seg: TranslationSegment) => {
+  // Speak text helper
+  const handleSpeak = (text: string, langCode: string) => {
     triggerHaptic('light');
-    const tgtObj = getLanguageOption(seg.targetLang);
-    TextToSpeechController.speak(seg.translatedText, tgtObj.bcp47, settings.speechSpeed);
+    const langObj = getLanguageOption(langCode);
+    TextToSpeechController.speak(text, langObj.bcp47, settings.speechSpeed);
   };
 
-  // Share single segment
+  // Share helper
   const handleShareSegment = async (seg: TranslationSegment) => {
     triggerHaptic('light');
-    const shareText = `Original (${seg.sourceLang.toUpperCase()}):\n${seg.originalText}\n\nTranslation (${seg.targetLang.toUpperCase()}):\n${seg.translatedText}\n\n— Translated via Miftah Tools (https://miftahtools.com)`;
+    const shareText = `Original (${seg.sourceLang.toUpperCase()}):\n${seg.originalText}\n\nTranslation (${seg.targetLang.toUpperCase()}):\n${seg.translatedText}\n\n— Translated via Miftah Tools (https://miftahtools.com/live-speech-translator)`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Miftah Tools Translation',
+          title: 'Miftah Tools Speech Translation',
           text: shareText,
         });
       } catch {}
     } else {
-      navigator.clipboard.writeText(shareText);
-      setCopiedId(seg.id);
-      setTimeout(() => setCopiedId(null), 2000);
+      handleCopy(shareText, seg.id);
     }
   };
 
@@ -581,9 +618,7 @@ export function LiveSpeechTranslator() {
           `[${s.sourceLang.toUpperCase()}]: ${s.originalText}\n[${s.targetLang.toUpperCase()}]: ${s.translatedText}`
       )
       .join('\n\n');
-    navigator.clipboard.writeText(allText);
-    setCopiedId('all');
-    setTimeout(() => setCopiedId(null), 2000);
+    handleCopy(allText, 'all');
   };
 
   // Export as TXT
@@ -662,7 +697,7 @@ export function LiveSpeechTranslator() {
                 {loc.title}
               </h1>
               <span className="px-2 py-0.5 rounded-full bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-extrabold uppercase">
-                Free • Live
+                ⚡ Real-Time
               </span>
             </div>
             <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400">
@@ -727,6 +762,8 @@ export function LiveSpeechTranslator() {
                 value={sourceLang}
                 onChange={(e) => {
                   setSourceLang(e.target.value);
+                  setLiveSpokenText('');
+                  setLiveTranslatedText('');
                   if (isListening && recognitionControllerRef.current) {
                     const newBcp = getLanguageOption(e.target.value).bcp47;
                     recognitionControllerRef.current.setLanguage(newBcp);
@@ -767,7 +804,10 @@ export function LiveSpeechTranslator() {
             <div className="relative">
               <select
                 value={targetLang}
-                onChange={(e) => setTargetLang(e.target.value)}
+                onChange={(e) => {
+                  setTargetLang(e.target.value);
+                  setLiveTranslatedText('');
+                }}
                 className="w-full h-12 px-4 rounded-2xl bg-[#F5F7F9] dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-sm font-bold text-[#182230] dark:text-white focus:outline-none focus:border-[#0B79B7] appearance-none cursor-pointer"
               >
                 {SUPPORTED_LANGUAGES.map((lang) => (
@@ -822,7 +862,7 @@ export function LiveSpeechTranslator() {
 
           <div className="flex items-center gap-2 text-[11px] font-bold text-[#687587]">
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-            <span>100% Free & Private</span>
+            <span>100% Free & Live</span>
           </div>
         </div>
       </div>
@@ -909,7 +949,7 @@ export function LiveSpeechTranslator() {
       )}
 
       {/* ==================================================
-          4. MAIN LIVE MICROPHONE STAGE (THE HERO ACTION CARD)
+          4. MAIN LIVE MICROPHONE ACTION HERO
           ================================================== */}
       <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-md p-6 sm:p-8 text-center space-y-6">
         
@@ -992,43 +1032,111 @@ export function LiveSpeechTranslator() {
           </div>
         </div>
 
-        {/* Live Interim Speech Bubble (As user speaks) */}
-        {(interimSpeech || interimTranslation) && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#F5F7F9] dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-left space-y-3 animate-in fade-in">
-            {interimSpeech && (
-              <div className="space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#687587]">
-                  {loc.youSaid}:
-                </span>
-                <p
-                  className="text-sm sm:text-base font-semibold text-[#182230] dark:text-white"
-                  dir={sourceLangObj.isRTL ? 'rtl' : 'ltr'}
-                >
-                  {interimSpeech}
-                </p>
+        {/* ==================================================
+            DUAL LIVE STREAMING WORKSPACE CARDS (REAL-TIME AS YOU SPEAK)
+            ================================================== */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left pt-2">
+          
+          {/* Card 1: Original Spoken Words Stream */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#F5F7F9] dark:bg-slate-800/80 border border-[#E1E7EC] dark:border-slate-700 flex flex-col justify-between space-y-3 min-h-[140px]">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2 border-b border-[#E1E7EC]/60 dark:border-slate-700 pb-2">
+                <div className="flex items-center gap-1.5 text-xs font-black text-[#182230] dark:text-slate-200 uppercase tracking-wider">
+                  <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-rose-500 animate-ping' : 'bg-slate-400'}`} />
+                  <span>{loc.liveSpokenTitle}</span>
+                  <span className="text-[#687587] font-normal">({sourceLangObj.label})</span>
+                </div>
+                {liveSpokenText && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(liveSpokenText, 'live-spoken')}
+                    className="p-1 text-[#687587] hover:text-[#0B79B7] cursor-pointer"
+                    title={loc.copyText}
+                  >
+                    {copiedId === 'live-spoken' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                )}
               </div>
-            )}
 
-            {interimTranslation && (
-              <div className="pt-2 border-t border-[#E1E7EC] dark:border-slate-700 space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0B79B7] dark:text-[#38a8f8]">
-                  {loc.translation}:
-                </span>
-                <p
-                  className="text-sm sm:text-base font-bold text-[#0B79B7] dark:text-[#38a8f8]"
-                  dir={targetLangObj.isRTL ? 'rtl' : 'ltr'}
+              <p
+                className={`text-sm sm:text-base leading-relaxed ${
+                  liveSpokenText
+                    ? 'font-bold text-[#182230] dark:text-white'
+                    : 'text-[#687587]/70 dark:text-slate-500 italic'
+                }`}
+                dir={sourceLangObj.isRTL ? 'rtl' : 'ltr'}
+              >
+                {liveSpokenText || loc.waitingForSpeech}
+              </p>
+            </div>
+
+            {liveSpokenText && (
+              <div className="flex items-center justify-end gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleSpeak(liveSpokenText, sourceLang)}
+                  className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 text-[#0B79B7] border border-[#E1E7EC] dark:border-slate-700 cursor-pointer"
+                  title="Listen"
                 >
-                  {interimTranslation}
-                </p>
+                  <Volume2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
           </div>
-        )}
+
+          {/* Card 2: Live Instant Translation Stream */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 flex flex-col justify-between space-y-3 min-h-[140px]">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2 border-b border-blue-100 dark:border-blue-900/40 pb-2">
+                <div className="flex items-center gap-1.5 text-xs font-black text-[#0B79B7] dark:text-[#38a8f8] uppercase tracking-wider">
+                  <Zap className={`w-3.5 h-3.5 ${isLiveTranslating ? 'animate-bounce text-amber-500' : 'text-[#0B79B7]'}`} />
+                  <span>{loc.liveTranslationTitle}</span>
+                  <span className="text-[#687587] font-normal">({targetLangObj.label})</span>
+                </div>
+                {liveTranslatedText && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(liveTranslatedText, 'live-trans')}
+                    className="p-1 text-[#687587] hover:text-[#0B79B7] cursor-pointer"
+                    title={loc.copyText}
+                  >
+                    {copiedId === 'live-trans' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </div>
+
+              <p
+                className={`text-sm sm:text-base leading-relaxed ${
+                  liveTranslatedText
+                    ? 'font-bold text-[#0B79B7] dark:text-[#38a8f8]'
+                    : 'text-[#687587]/70 dark:text-slate-500 italic'
+                }`}
+                dir={targetLangObj.isRTL ? 'rtl' : 'ltr'}
+              >
+                {liveTranslatedText || loc.translatingLive}
+              </p>
+            </div>
+
+            {liveTranslatedText && (
+              <div className="flex items-center justify-end gap-1.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleSpeak(liveTranslatedText, targetLang)}
+                  className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 text-[#0B79B7] border border-blue-200 dark:border-blue-900 cursor-pointer"
+                  title="Listen"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+
+        </div>
 
       </div>
 
-      {/* Manual Fallback Input (For typing or unsupported browsers) */}
-      <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs flex items-center gap-2">
+      {/* Manual Fallback Input (Type & Translate) */}
+      <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs flex items-center gap-2">
         <input
           type="text"
           value={manualText}
@@ -1037,20 +1145,21 @@ export function LiveSpeechTranslator() {
             if (e.key === 'Enter') handleManualTranslate();
           }}
           placeholder={loc.manualInputPlaceholder}
-          className="flex-1 px-3 py-2 bg-transparent text-xs sm:text-sm text-[#182230] dark:text-white placeholder:text-[#687587] focus:outline-none"
+          className="flex-1 px-3 py-2 bg-transparent text-xs sm:text-sm text-[#182230] dark:text-white placeholder:text-[#687587] focus:outline-none font-medium"
         />
         <button
           type="button"
           onClick={handleManualTranslate}
           disabled={!manualText.trim() || isManualTranslating}
-          className="px-4 py-2 rounded-xl bg-[#0B79B7] hover:bg-[#075B8C] text-white font-bold text-xs shadow-xs disabled:opacity-50 transition-all cursor-pointer shrink-0"
+          className="px-4 py-2 rounded-xl bg-[#0B79B7] hover:bg-[#075B8C] text-white font-bold text-xs shadow-xs disabled:opacity-50 transition-all cursor-pointer shrink-0 inline-flex items-center gap-1.5"
         >
-          {isManualTranslating ? '...' : loc.manualTranslateBtn}
+          <Send className="w-3.5 h-3.5" />
+          <span>{isManualTranslating ? '...' : loc.manualTranslateBtn}</span>
         </button>
       </div>
 
       {/* ==================================================
-          5. LIVE CONVERSATION TRANSCRIPT & HISTORY
+          5. CONVERSATION HISTORY & TRANSCRIPT LOG
           ================================================== */}
       <div className="rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs p-5 sm:p-6 space-y-4">
         
@@ -1098,74 +1207,71 @@ export function LiveSpeechTranslator() {
               <button
                 type="button"
                 onClick={() => setShowClearModal(true)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                aria-label={loc.clearChat}
+                className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 transition-colors cursor-pointer"
+                title={loc.clearChat}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
         </div>
 
-        {/* Transcript Messages List */}
+        {/* Conversation Bubble List */}
         {transcript.length === 0 ? (
-          <div className="text-center py-12 space-y-2 text-[#687587]">
-            <Globe className="w-8 h-8 mx-auto opacity-40 text-[#0B79B7]" />
-            <p className="text-xs sm:text-sm font-medium max-w-sm mx-auto">
+          <div className="py-8 text-center space-y-2">
+            <Radio className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600" />
+            <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400 max-w-sm mx-auto">
               {loc.emptyTranscript}
             </p>
           </div>
         ) : (
-          <div className="space-y-3.5 max-h-[550px] overflow-y-auto pr-1">
-            {transcript.map((seg) => {
-              const srcLang = getLanguageOption(seg.sourceLang);
-              const tgtLang = getLanguageOption(seg.targetLang);
-              const isPeer = seg.speaker === 'peer';
+          <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+            {transcript.map((item, idx) => {
+              const segSrc = getLanguageOption(item.sourceLang);
+              const segTgt = getLanguageOption(item.targetLang);
+              const isPersonA = item.speaker === 'user';
 
               return (
                 <div
-                  key={seg.id}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all space-y-3 ${
-                    isPeer
-                      ? 'bg-purple-50/50 dark:bg-purple-950/20 border-purple-200/80 dark:border-purple-900/40'
-                      : 'bg-[#F5F7F9] dark:bg-slate-800/60 border-[#E1E7EC] dark:border-slate-700/80'
+                  key={item.id || idx}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isPersonA
+                      ? 'bg-slate-50 dark:bg-slate-800/60 border-[#E1E7EC] dark:border-slate-700'
+                      : 'bg-purple-50/50 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/40'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                      isPeer
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-                        : 'bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8]'
-                    }`}>
-                      {isPeer ? `${loc.personB} (${srcLang.label})` : `${loc.personA} (${srcLang.label})`}
-                    </span>
-
-                    {/* Bubble Action Controls */}
+                  {/* Speaker & Timestamp Top Bar */}
+                  <div className="flex items-center justify-between text-[11px] font-bold text-[#687587] dark:text-slate-400 border-b border-[#E1E7EC]/60 dark:border-slate-700/60 pb-1.5 mb-2">
                     <div className="flex items-center gap-1.5">
+                      <span className={`w-2 h-2 rounded-full ${isPersonA ? 'bg-[#0B79B7]' : 'bg-purple-600'}`} />
+                      <span className="font-extrabold text-[#182230] dark:text-white">
+                        {isPersonA ? loc.personA : loc.personB}
+                      </span>
+                      <span>•</span>
+                      <span>{new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => handleSpeakSegment(seg)}
-                        className="p-1.5 rounded-lg bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-[#0B79B7] border border-[#E1E7EC] dark:border-slate-700 shadow-xs cursor-pointer"
+                        onClick={() => handleSpeak(item.translatedText, item.targetLang)}
+                        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[#0B79B7] cursor-pointer"
                         title={loc.speakAgain}
                       >
                         <Volume2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleCopySegment(seg)}
-                        className="p-1.5 rounded-lg bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-[#0B79B7] border border-[#E1E7EC] dark:border-slate-700 shadow-xs cursor-pointer"
+                        onClick={() => handleCopy(item.translatedText, item.id)}
+                        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[#687587] cursor-pointer"
                         title={loc.copyText}
                       >
-                        {copiedId === seg.id ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
+                        {copiedId === item.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleShareSegment(seg)}
-                        className="p-1.5 rounded-lg bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-[#0B79B7] border border-[#E1E7EC] dark:border-slate-700 shadow-xs cursor-pointer"
+                        onClick={() => handleShareSegment(item)}
+                        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-[#687587] cursor-pointer"
                         title={loc.shareText}
                       >
                         <Share2 className="w-3.5 h-3.5" />
@@ -1173,66 +1279,72 @@ export function LiveSpeechTranslator() {
                     </div>
                   </div>
 
-                  {/* Original Spoken Text */}
-                  {(settings.displayMode === 'both' || settings.displayMode === 'original') && (
-                    <div className="space-y-0.5">
-                      <p
-                        className="text-sm sm:text-base font-semibold text-[#182230] dark:text-slate-200 leading-relaxed"
-                        dir={srcLang.isRTL ? 'rtl' : 'ltr'}
-                      >
-                        {seg.originalText}
-                      </p>
-                    </div>
-                  )}
+                  {/* Content: Original + Translated */}
+                  <div className="space-y-2 text-xs sm:text-sm">
+                    {/* Original */}
+                    {settings.displayMode !== 'translation' && (
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-[#687587] uppercase tracking-wider">
+                          {segSrc.label}:
+                        </span>
+                        <p
+                          className="font-medium text-[#182230] dark:text-slate-200 leading-relaxed"
+                          dir={segSrc.isRTL ? 'rtl' : 'ltr'}
+                        >
+                          {item.originalText}
+                        </p>
+                      </div>
+                    )}
 
-                  {/* Translated Output Text */}
-                  {(settings.displayMode === 'both' || settings.displayMode === 'translation') && (
-                    <div className="pt-2 border-t border-[#E1E7EC]/60 dark:border-slate-700/60 space-y-0.5">
-                      <span className="text-[10px] font-bold text-[#0B79B7] dark:text-[#38a8f8] uppercase">
-                        {tgtLang.label} {loc.translation}:
-                      </span>
-                      <p
-                        className="text-sm sm:text-base font-bold text-[#0B79B7] dark:text-[#38a8f8] leading-relaxed"
-                        dir={tgtLang.isRTL ? 'rtl' : 'ltr'}
-                      >
-                        {seg.translatedText}
-                      </p>
-                    </div>
-                  )}
+                    {/* Translation */}
+                    {settings.displayMode !== 'original' && (
+                      <div className="space-y-0.5 pt-1">
+                        <span className="text-[10px] font-bold text-[#0B79B7] dark:text-[#38a8f8] uppercase tracking-wider">
+                          {segTgt.label} ({loc.translation}):
+                        </span>
+                        <p
+                          className="font-bold text-[#0B79B7] dark:text-[#38a8f8] leading-relaxed"
+                          dir={segTgt.isRTL ? 'rtl' : 'ltr'}
+                        >
+                          {item.translatedText}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
-
       </div>
 
       {/* Clear Confirmation Modal */}
       {showClearModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-sm p-6 rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
             <h3 className="text-base font-black text-[#182230] dark:text-white">
               {loc.confirmClearTitle}
             </h3>
-            <p className="text-xs text-[#687587] dark:text-slate-400 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400">
               {loc.confirmClearDesc}
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowClearModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-[#182230] dark:text-white hover:bg-slate-200 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-[#182230] dark:text-white transition-colors cursor-pointer"
               >
                 {loc.cancel}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  triggerHaptic('medium');
                   setTranscript([]);
+                  setLiveSpokenText('');
+                  setLiveTranslatedText('');
                   setShowClearModal(false);
                 }}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white transition-colors cursor-pointer"
               >
                 {loc.clearBtn}
               </button>

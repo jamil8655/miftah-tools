@@ -37,13 +37,20 @@ import {
 import { Document, Paragraph, TextRun, Packer, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
+import { TextToSpeechController } from '@/lib/translator/text-to-speech';
 
 const LANGUAGES = [
-  { code: 'auto', label: 'Auto Detect', flag: '🌐', bcp47: 'en-US' },
   { code: 'ur', label: 'Urdu', flag: '🇵🇰', bcp47: 'ur-PK' },
   { code: 'hi', label: 'Hindi', flag: '🇮🇳', bcp47: 'hi-IN' },
   { code: 'ar', label: 'Arabic', flag: '🇸🇦', bcp47: 'ar-SA' },
   { code: 'en', label: 'English', flag: '🇺🇸', bcp47: 'en-US' },
+  { code: 'bn', label: 'Bengali', flag: '🇧🇩', bcp47: 'bn-BD' },
+  { code: 'fa', label: 'Persian', flag: '🇮🇷', bcp47: 'fa-IR' },
+  { code: 'tr', label: 'Turkish', flag: '🇹🇷', bcp47: 'tr-TR' },
+  { code: 'fr', label: 'French', flag: '🇫🇷', bcp47: 'fr-FR' },
+  { code: 'es', label: 'Spanish', flag: '🇪🇸', bcp47: 'es-ES' },
+  { code: 'de', label: 'German', flag: '🇩🇪', bcp47: 'de-DE' },
+  { code: 'pa', label: 'Punjabi', flag: '🇵🇰', bcp47: 'pa-PK' },
 ];
 
 const LOCALES = {
@@ -280,11 +287,8 @@ export function VoiceToTextStudio() {
   };
 
   const getBcp47Lang = (langCode: string): string => {
-    if (langCode === 'ur') return 'ur-PK';
-    if (langCode === 'ar') return 'ar-SA';
-    if (langCode === 'hi') return 'hi-IN';
-    if (langCode === 'en') return 'en-US';
-    return 'hi-IN';
+    const found = LANGUAGES.find((l) => l.code === langCode);
+    return found?.bcp47 || 'ur-PK';
   };
 
   const applySmartPunctuationAndParagraphs = (sentences: string[], lang: string): string => {
@@ -456,8 +460,13 @@ export function VoiceToTextStudio() {
 
             setLiveInterim(interimStr);
 
+            const allSegments = [...liveFinalBufferRef.current];
+            if (interimStr.trim()) {
+              allSegments.push(interimStr.trim());
+            }
+
             const formatted = applySmartPunctuationAndParagraphs(
-              liveFinalBufferRef.current,
+              allSegments,
               selectedLang
             );
             if (formatted) {
@@ -1093,7 +1102,19 @@ export function VoiceToTextStudio() {
             </div>
 
             {/* Action Export Buttons */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  TextToSpeechController.speak(transcription, getBcp47Lang(selectedLang), 1.0);
+                }}
+                className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-brand-500 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+              >
+                <Volume2 className="w-4 h-4 text-brand-600" />
+                <span>Listen</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleCopy}

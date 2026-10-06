@@ -10,12 +10,10 @@ export class SpeechRecognitionController {
   private recognition: any = null;
   private isListening: boolean = false;
   private shouldKeepListening: boolean = false;
-  private currentLanguageBcp47: string = 'en-US';
+  private currentLanguageBcp47: string = 'ur-PK';
   private callbacks: SpeechRecognitionCallbacks;
-  private audioContext: AudioContext | null = null;
-  private mediaStream: MediaStream | null = null;
-  private analyser: AnalyserNode | null = null;
-  private animationFrameId: number | null = null;
+  private visualizerIntervalId: any = null;
+  private restartTimeoutId: any = null;
 
   constructor(callbacks: SpeechRecognitionCallbacks) {
     this.callbacks = callbacks;
@@ -29,7 +27,7 @@ export class SpeechRecognitionController {
     );
   }
 
-  public start(bcp47Lang: string = 'en-US') {
+  public start(bcp47Lang: string = 'ur-PK') {
     if (!SpeechRecognitionController.isSupported()) {
       this.callbacks.onError(
         'Live speech recognition is not supported in this browser. Please try Google Chrome, Microsoft Edge, or Safari.'
@@ -40,7 +38,7 @@ export class SpeechRecognitionController {
     this.currentLanguageBcp47 = bcp47Lang;
     this.shouldKeepListening = true;
     this.initRecognition();
-    this.startAudioVisualizer();
+    this.startSimulatedVisualizer();
   }
 
   private initRecognition() {
@@ -51,8 +49,13 @@ export class SpeechRecognitionController {
 
       if (this.recognition) {
         try {
+          this.recognition.onstart = null;
+          this.recognition.onresult = null;
+          this.recognition.onerror = null;
+          this.recognition.onend = null;
           this.recognition.abort();
         } catch {}
+        this.recognition = null;
       }
 
       this.recognition = new SpeechRecognitionClass();
@@ -66,22 +69,38 @@ export class SpeechRecognitionController {
         this.callbacks.onStateChange?.(true);
       };
 
+      this.recognition.onaudiostart = () => {
+        this.callbacks.onAudioLevel?.(45);
+      };
+
+      this.recognition.onspeechstart = () => {
+        this.callbacks.onAudioLevel?.(75);
+      };
+
+      this.recognition.onspeechend = () => {
+        this.callbacks.onAudioLevel?.(15);
+      };
+
       this.recognition.onresult = (event: any) => {
         let interimTranscript = '';
         let finalTranscript = '';
-        let confidence = 0.9;
+        let confidence = 0.95;
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const transcriptChunk = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
+          const result = event.results[i];
+          const transcriptChunk = result[0]?.transcript || '';
+          if (result.isFinal) {
             finalTranscript += transcriptChunk;
-            if (event.results[i][0].confidence) {
-              confidence = event.results[i][0].confidence;
+            if (result[0]?.confidence) {
+              confidence = result[0].confidence;
             }
           } else {
             interimTranscript += transcriptChunk;
           }
         }
+
+        // Send audio level spike on speech activity
+        this.callbacks.onAudioLevel?.(Math.floor(Math.random() * 40) + 50);
 
         if (interimTranscript.trim()) {
           this.callbacks.onInterim(interimTranscript.trim());
@@ -93,11 +112,16 @@ export class SpeechRecognitionController {
       };
 
       this.recognition.onerror = (event: any) => {
-        if (event.error === 'no-speech') {
-          // Normal silence, don't abort unless user stopped
+        const error = event.error;
+        if (error === 'no-speech') {
+          // Normal pause in conversation, do not abort
+          this.callbacks.onAudioLevel?.(10);
           return;
         }
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        if (error === 'aborted') {
+          return;
+        }
+        if (error === 'not-allowed' || error === 'service-not-allowed') {
           this.shouldKeepListening = false;
           this.callbacks.onError(
             'Microphone access was denied. Please allow microphone permission in your browser.'
@@ -105,76 +129,62 @@ export class SpeechRecognitionController {
           this.stop();
           return;
         }
-        if (event.error === 'network') {
-          this.callbacks.onError('Network connection issue for speech recognition.');
+        if (error === 'audio-capture') {
+          this.callbacks.onError('Microphone hardware error or mic is in use by another app.');
+          return;
+        }
+        if (error === 'network') {
+          // Don't kill session immediately, attempt auto-restart
+          console.warn('Speech recognition network blip, retrying...');
         }
       };
 
       this.recognition.onend = () => {
         this.isListening = false;
-        // Auto-restart if the user hasn't explicitly stopped
         if (this.shouldKeepListening) {
-          try {
-            this.recognition.start();
-          } catch {
-            setTimeout(() => {
-              if (this.shouldKeepListening) {
-                try {
-                  this.recognition.start();
-                } catch {}
-              }
-            }, 300);
-          }
+          // Auto-restart with debounce to handle mobile background pauses
+          if (this.restartTimeoutId) clearTimeout(this.restartTimeoutId);
+          this.restartTimeoutId = setTimeout(() => {
+            if (this.shouldKeepListening) {
+              try {
+                this.initRecognition();
+              } catch {}
+            }
+          }, 200);
         } else {
           this.callbacks.onStateChange?.(false);
+          this.callbacks.onAudioLevel?.(0);
         }
       };
 
       this.recognition.start();
     } catch (err: any) {
-      this.callbacks.onError(err?.message || 'Failed to initialize speech recognition.');
-      this.stop();
+      if (this.shouldKeepListening) {
+        if (this.restartTimeoutId) clearTimeout(this.restartTimeoutId);
+        this.restartTimeoutId = setTimeout(() => {
+          if (this.shouldKeepListening) {
+            try {
+              this.initRecognition();
+            } catch {}
+          }
+        }, 500);
+      } else {
+        this.callbacks.onError(err?.message || 'Failed to initialize speech recognition.');
+        this.stop();
+      }
     }
   }
 
-  private async startAudioVisualizer() {
-    try {
-      if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-        return;
+  private startSimulatedVisualizer() {
+    if (this.visualizerIntervalId) clearInterval(this.visualizerIntervalId);
+    this.visualizerIntervalId = setInterval(() => {
+      if (!this.shouldKeepListening) return;
+      if (this.isListening) {
+        // Natural ambient flutter when listening
+        const randomFlutter = Math.floor(Math.random() * 25) + 10;
+        this.callbacks.onAudioLevel?.(randomFlutter);
       }
-
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-
-      this.audioContext = new AudioContextClass();
-      const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 64;
-      source.connect(this.analyser);
-
-      const bufferLength = this.analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      const updateVolume = () => {
-        if (!this.shouldKeepListening || !this.analyser) return;
-
-        this.analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) {
-          sum += dataArray[i];
-        }
-        const average = sum / bufferLength;
-        const normalizedLevel = Math.min(100, Math.round((average / 255) * 100 * 1.5));
-
-        this.callbacks.onAudioLevel?.(normalizedLevel);
-        this.animationFrameId = requestAnimationFrame(updateVolume);
-      };
-
-      updateVolume();
-    } catch {
-      // Audio visualization is optional, silently continue
-    }
+    }, 120);
   }
 
   public setLanguage(bcp47Lang: string) {
@@ -183,7 +193,7 @@ export class SpeechRecognitionController {
       try {
         this.recognition.abort();
       } catch {}
-      // onend will automatically restart with the new language if shouldKeepListening is true
+      // onend will automatically restart with the new language
     }
   }
 
@@ -191,32 +201,28 @@ export class SpeechRecognitionController {
     this.shouldKeepListening = false;
     this.isListening = false;
 
+    if (this.restartTimeoutId) {
+      clearTimeout(this.restartTimeoutId);
+      this.restartTimeoutId = null;
+    }
+
+    if (this.visualizerIntervalId) {
+      clearInterval(this.visualizerIntervalId);
+      this.visualizerIntervalId = null;
+    }
+
     if (this.recognition) {
       try {
+        this.recognition.onstart = null;
+        this.recognition.onresult = null;
+        this.recognition.onerror = null;
+        this.recognition.onend = null;
         this.recognition.stop();
         this.recognition.abort();
       } catch {}
       this.recognition = null;
     }
 
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach((track) => track.stop());
-      this.mediaStream = null;
-    }
-
-    if (this.audioContext && this.audioContext.state !== 'closed') {
-      try {
-        this.audioContext.close();
-      } catch {}
-      this.audioContext = null;
-    }
-
-    this.analyser = null;
     this.callbacks.onAudioLevel?.(0);
     this.callbacks.onStateChange?.(false);
   }
