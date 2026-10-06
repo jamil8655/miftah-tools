@@ -32,13 +32,8 @@ const FOOTER_LOCALES = {
     engineDesc: 'Transform massive documents & media smoothly in-browser.',
     privacyTitle: '100% In-Browser Privacy',
     privacyDesc: 'Files never touch external servers or get stored remotely.',
-    learningTitle: 'Free & Open Learning Paths',
-    learningDesc: 'Browse curriculums & lessons with zero forced locks.',
-    webDev: 'Web Development Mastery',
-    pythonAi: 'Python & AI Prompt Mastery',
-    docEngineering: 'Document Engineering Mastery',
-    cyberSec: 'Cyber Security & Encryption',
-    viewAllCourses: 'Explore All Courses →',
+    toolsTitle: '220+ Free Digital Tools',
+    toolsDesc: 'Fast, unlimited & 100% private in-browser utilities.',
     viewAllTools: 'Explore All 220+ Tools →',
     pdfToWord: 'PDF to Word (OCR)',
     pdfEditor: 'PDF Editor Studio',
@@ -54,13 +49,8 @@ const FOOTER_LOCALES = {
     engineDesc: 'بڑی دستاویزات اور میڈیا کو براؤزر کے اندر آسانی سے پروسیس کریں۔',
     privacyTitle: '100% مکمل رازداری کی ضمانت',
     privacyDesc: 'آپ کی فائلیں کبھی بھی بیرونی سرور پر اپلوڈ نہیں ہوتیں۔',
-    learningTitle: 'مفت اور کھلا تعلیمی نصاب',
-    learningDesc: 'مکمل کورسز اور اسباق بغیر کسی رکاوٹ کے حاصل کریں۔',
-    webDev: 'جدید ویب ڈویلپمنٹ ماسٹری',
-    pythonAi: 'پائتھن اور اے آئی ایجنٹس',
-    docEngineering: 'دستاویز اور پی ڈی ایف انجینئرنگ',
-    cyberSec: 'سائبر سیکیورٹی اور انکرپشن',
-    viewAllCourses: 'تمام کورسز دیکھیں ←',
+    toolsTitle: '220+ مفت ڈیجیٹل ٹولز',
+    toolsDesc: 'براؤزر میں تیز رفتار، لامحدود اور مکمل نجی استعمال۔',
     viewAllTools: 'تمام 220+ ٹولز دیکھیں ←',
     pdfToWord: 'پی ڈی ایف سے ورڈ (OCR)',
     pdfEditor: 'پی ڈی ایف ایڈیٹر اسٹوڈیو',
@@ -76,13 +66,8 @@ const FOOTER_LOCALES = {
     engineDesc: 'معالجة المستندات والوسائط الضخمة مباشرة وبسلاسة في المتصفح.',
     privacyTitle: 'خصوصية وأمان محلي بنسبة 100%',
     privacyDesc: 'ملفاتك لا تغادر جهازك ولا يتم تخزينها على أي خادم خارجي.',
-    learningTitle: 'مسارات تعليمية مجانية ومفتوحة',
-    learningDesc: 'استكشف المناهج والدروس التقنية الكاملة بحرية تامة.',
-    webDev: 'احتراف تطوير الويب المتكامل',
-    pythonAi: 'بايثون وهندسة الأوامر الذكية',
-    docEngineering: 'هندسة وأتمتة مستندات PDF',
-    cyberSec: 'الأمن السيبراني والتشفير',
-    viewAllCourses: 'استكشف جميع الكورسات ←',
+    toolsTitle: '220+ أداة رقمية مجانية',
+    toolsDesc: 'معالجة فورية وغير محدودة بخصوصية تامة في المتصفح.',
     viewAllTools: 'استكشف جميع الأدوات 220+ ←',
     pdfToWord: 'تحويل PDF إلى Word (OCR)',
     pdfEditor: 'استوديو محرر PDF التفاعلي',
@@ -98,13 +83,8 @@ const FOOTER_LOCALES = {
     engineDesc: 'ब्राउज़र में सीधे भारी दस्तावेज़ और मीडिया फ़ाइलें प्रोसेस करें।',
     privacyTitle: '100% इन-ब्राउज़र गोपनीयता',
     privacyDesc: 'आपकी फ़ाइलें कभी किसी बाहरी सर्वर पर अपलोड नहीं होती हैं।',
-    learningTitle: 'निःशुल्क व खुला शिक्षण पाठ्यक्रम',
-    learningDesc: 'बिना किसी रुकावट के सम्पूर्ण कोर्सेज और पाठ पढ़ें।',
-    webDev: 'वेब डेवलपमेंट मास्टरी',
-    pythonAi: 'पायथन व एआई प्रॉम्प्ट मास्टरी',
-    docEngineering: 'दस्तावेज़ व PDF इंजीनियरिंग',
-    cyberSec: 'साइबर सुरक्षा व एन्क्रिप्शन',
-    viewAllCourses: 'सभी कोर्सेज देखें →',
+    toolsTitle: '220+ मुफ़्त डिजिटल टूल्स',
+    toolsDesc: 'असीमित, तेज़ और 100% प्राइवेट इन-ब्राउज़र यूटिलिटीज।',
     viewAllTools: 'सभी 220+ टूल्स देखें →',
     pdfToWord: 'PDF से Word (OCR)',
     pdfEditor: 'PDF एडिटर स्टूडियो',
@@ -148,11 +128,11 @@ export function Footer() {
 
           <div className="flex items-center justify-center sm:justify-start gap-3">
             <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 shrink-0">
-              <GraduationCap className="w-5 h-5" />
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">{loc.learningTitle}</p>
-              <p className="text-[11px] text-slate-500">{loc.learningDesc}</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">{loc.toolsTitle}</p>
+              <p className="text-[11px] text-slate-500">{loc.toolsDesc}</p>
             </div>
           </div>
         </div>
@@ -234,42 +214,42 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Section 1: Master Courses & Learning */}
+          {/* Section 1: PDF & Document Utilities */}
           <div className="space-y-3">
-            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-brand-600" />
-              <span>{t.footer.courses}</span>
-            </h4>
+            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-brand-600" />
+              <span>PDF & Documents</span>
+            </h3>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
-                <Link href="/courses/modern-fullstack-web-mastery" className="hover:text-brand-600 transition-colors">
-                  {loc.webDev}
+                <Link href="/tools/pdf-to-docx" className="hover:text-brand-600 transition-colors">
+                  {loc.pdfToWord}
                 </Link>
               </li>
               <li>
-                <Link href="/courses/python-ai-prompt-engineering-mastery" className="hover:text-brand-600 transition-colors">
-                  {loc.pythonAi}
+                <Link href="/tools/compress-pdf" className="hover:text-brand-600 transition-colors">
+                  Compress PDF
                 </Link>
               </li>
               <li>
-                <Link href="/courses/document-pdf-automation-mastery" className="hover:text-brand-600 transition-colors">
-                  {loc.docEngineering}
+                <Link href="/tools/merge-pdf" className="hover:text-brand-600 transition-colors">
+                  Merge PDF
                 </Link>
               </li>
               <li>
-                <Link href="/courses/cybersecurity-privacy-engineering" className="hover:text-brand-600 transition-colors">
-                  {loc.cyberSec}
+                <Link href="/pdf-editor" className="hover:text-brand-600 transition-colors">
+                  {loc.pdfEditor}
                 </Link>
               </li>
               <li>
-                <Link href="/quiz" className="hover:text-brand-600 transition-colors font-bold text-brand-600 dark:text-brand-400 inline-flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>{t.quiz?.title || 'Knowledge Quizzes'}</span>
+                <Link href="/pdf-signer" className="hover:text-brand-600 transition-colors">
+                  Sign & Stamp PDF
                 </Link>
               </li>
               <li>
-                <Link href="/courses" className="text-brand-600 dark:text-brand-400 font-bold hover:underline">
-                  {loc.viewAllCourses}
+                <Link href="/tools/text-to-pdf" className="hover:text-brand-600 transition-colors font-bold text-brand-600 dark:text-brand-400 inline-flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{loc.textToPdf}</span>
                 </Link>
               </li>
             </ul>

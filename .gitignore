@@ -29,6 +29,7 @@ local.properties
 # Misc
 .DS_Store
 *.pem
+*.zip
 serviceAccountKey.json
 *.serviceAccountKey.json
 

@@ -195,10 +195,9 @@ export function Header() {
 
   const navLinks = [
     { label: t.nav.allTools || loc.allTools, href: '/tools', icon: Sparkles },
-    { label: t.nav.courses || 'Courses', href: '/courses', icon: GraduationCap },
-    { label: t.quiz?.title || 'Quizzes', href: '/quiz', icon: HelpCircle },
     { label: t.nav.workflows || loc.workflows, href: '/workflows', icon: Workflow },
     { label: t.footer.aboutPlatform || 'About', href: '/about', icon: Info },
+    { label: t.footer.faq || 'FAQ', href: '/faq', icon: HelpCircle },
   ];
 
   return (
