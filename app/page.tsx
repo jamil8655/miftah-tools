@@ -378,36 +378,47 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 5. MAIN TOOL DIRECTORY GRID */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-4">
+      {/* 5. MAIN TOOL DIRECTORY GRID (POPULAR ON FRONT, FULL IN DIRECTORY) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-5">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wide">
-              {activeCategory === 'all'
-                ? loc.directoryTitle
+              {searchQuery
+                ? 'Search Results'
+                : activeCategory === 'all'
+                ? '⭐ Popular & Flagship Tools'
                 : `${getLocalizedCategory(activeCategory, language)} Tools`}
             </h2>
-            <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-              {loc.toolsCount(filteredTools.length)}
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+              {searchQuery || activeCategory !== 'all'
+                ? loc.toolsCount(filteredTools.length)
+                : `${Math.min(16, filteredTools.length)} Popular Tools`}
             </span>
           </div>
 
-          {(activeCategory !== 'all' || searchQuery) && (
+          {(activeCategory !== 'all' || searchQuery) ? (
             <button
               type="button"
               onClick={() => {
                 setActiveCategory('all');
                 setSearchQuery('');
               }}
-              className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline"
+              className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
             >
               {loc.resetFilters}
             </button>
+          ) : (
+            <Link
+              href="/tools"
+              className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+            >
+              <span>{loc.viewAllTools}</span>
+            </Link>
           )}
         </div>
 
         {filteredTools.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 space-y-3">
+          <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 space-y-3 shadow-xs">
             <Search className="w-8 h-8 text-slate-400 mx-auto" />
             <p className="text-sm font-bold text-slate-600 dark:text-slate-400">{loc.noToolsFound}</p>
             <button
@@ -416,30 +427,45 @@ export default function HomePage() {
                 setActiveCategory('all');
                 setSearchQuery('');
               }}
-              className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-brand-500 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-brand-500 transition-colors cursor-pointer"
             >
               {loc.resetFilters}
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-            {filteredTools.slice(0, 48).map((tool, idx) => (
+            {(searchQuery || activeCategory !== 'all'
+              ? filteredTools
+              : filteredTools.slice(0, 16)
+            ).map((tool, idx) => (
               <React.Fragment key={tool.id}>
                 <ToolCard tool={tool} />
                 {idx === 7 && <NativeFeedAd />}
-                {idx === 23 && <NativeFeedAd />}
               </React.Fragment>
             ))}
           </div>
         )}
 
-        {filteredTools.length > 48 && (
-          <div className="text-center pt-6">
+        {/* Directory Card on Front Page */}
+        {!searchQuery && activeCategory === 'all' && (
+          <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-700 text-white shadow-xl space-y-4 text-center sm:text-left rtl:sm:text-right flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="space-y-1.5 max-w-xl">
+              <span className="px-3 py-1 rounded-full bg-white/20 text-white text-[11px] font-bold uppercase tracking-wider">
+                Full 220+ Tools Directory
+              </span>
+              <h3 className="text-lg sm:text-2xl font-black text-white">
+                Looking for more document, image, or developer utilities?
+              </h3>
+              <p className="text-xs sm:text-sm text-brand-100/90 leading-relaxed">
+                Explore our full catalog of 220+ client-side tools organized across 12 categories with instant in-browser processing.
+              </p>
+            </div>
+
             <Link
-              href={`/tools${activeCategory !== 'all' ? `?cat=${activeCategory}` : ''}`}
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-brand-600/20 active:scale-95 transition-all"
+              href="/tools"
+              className="px-6 py-3.5 rounded-2xl bg-white hover:bg-brand-50 text-brand-700 hover:text-brand-800 font-black text-xs sm:text-sm shadow-lg active:scale-95 transition-all inline-flex items-center gap-2 shrink-0 select-none"
             >
-              <span>{loc.viewAllTools}</span>
+              <span>Explore All 220+ Tools Directory</span>
               <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
             </Link>
           </div>

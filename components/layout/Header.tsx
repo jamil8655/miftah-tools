@@ -265,11 +265,14 @@ export function Header() {
                 href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700 text-xs font-bold transition-all shadow-xs shrink-0 select-none"
+                className="hidden lg:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700/80 text-xs font-bold transition-all shadow-xs shrink-0 select-none group"
                 title="Get Miftah Tools on Google Play"
               >
-                <svg className="w-3.5 h-3.5 fill-current text-emerald-400 shrink-0" viewBox="0 0 24 24">
-                  <path d="M3.609 1.814L13.792 12 3.61 22.186c-.37-.36-.61-.88-.61-1.474V3.288c0-.594.24-1.114.61-1.474zM15.207 13.414l2.586 2.586-12.871 7.43 10.285-10.016zm0-2.828L4.922.57 17.793 8l-2.586 2.586zm1.414 1.414l3.779-2.182c.8-.462.8-1.214 0-1.676l-3.779-2.182-2.121 2.121 2.121 2.919z" />
+                <svg className="w-4 h-4 shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 512 512">
+                  <path fill="#00D3FF" d="M30.4 17.8c-7.7 8.2-12.4 20.3-12.4 35.5v405.4c0 15.2 4.7 27.3 12.4 35.5l2.4 2.2 231-231v-5.8L32.8 15.6l-2.4 2.2z" />
+                  <path fill="#FF3A44" d="M340.5 341.2l-76.7-76.7v-5.8l76.7-76.7 1.8 1 90.7 51.5c25.9 14.7 25.9 38.8 0 53.6l-90.7 51.5-1.8 1.6z" />
+                  <path fill="#00E676" d="M342.3 342.8L263.8 264 32.8 495.2c8.5 9 22.7 10.1 38.6 1.1l270.9-153.5z" />
+                  <path fill="#FFD400" d="M342.3 169.2L71.4 15.7C55.5 6.7 41.3 7.8 32.8 16.8L263.8 248l78.5-78.8z" />
                 </svg>
                 <span>Google Play</span>
               </a>
@@ -361,17 +364,20 @@ export function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsMenuDrawerOpen(false)}
-                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 text-white text-xs font-bold active:scale-98 transition-all shadow-md"
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-900 border border-slate-700/80 text-white text-xs font-bold active:scale-98 transition-all shadow-md group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-white/20 text-white shadow-xs">
-                    <svg className="w-5 h-5 fill-current text-white" viewBox="0 0 24 24">
-                      <path d="M3.609 1.814L13.792 12 3.61 22.186c-.37-.36-.61-.88-.61-1.474V3.288c0-.594.24-1.114.61-1.474zM15.207 13.414l2.586 2.586-12.871 7.43 10.285-10.016zm0-2.828L4.922.57 17.793 8l-2.586 2.586zm1.414 1.414l3.779-2.182c.8-.462.8-1.214 0-1.676l-3.779-2.182-2.121 2.121 2.121 2.919z" />
+                  <div className="p-2 rounded-xl bg-slate-800 border border-slate-700 text-white shadow-xs">
+                    <svg className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 512 512">
+                      <path fill="#00D3FF" d="M30.4 17.8c-7.7 8.2-12.4 20.3-12.4 35.5v405.4c0 15.2 4.7 27.3 12.4 35.5l2.4 2.2 231-231v-5.8L32.8 15.6l-2.4 2.2z" />
+                      <path fill="#FF3A44" d="M340.5 341.2l-76.7-76.7v-5.8l76.7-76.7 1.8 1 90.7 51.5c25.9 14.7 25.9 38.8 0 53.6l-90.7 51.5-1.8 1.6z" />
+                      <path fill="#00E676" d="M342.3 342.8L263.8 264 32.8 495.2c8.5 9 22.7 10.1 38.6 1.1l270.9-153.5z" />
+                      <path fill="#FFD400" d="M342.3 169.2L71.4 15.7C55.5 6.7 41.3 7.8 32.8 16.8L263.8 248l78.5-78.8z" />
                     </svg>
                   </div>
                   <div className="text-left rtl:text-right">
-                    <div className="text-[9px] uppercase tracking-wider text-emerald-100 font-bold leading-none">Official Android App</div>
-                    <div className="text-xs font-black tracking-tight text-white leading-none mt-1">Get on Google Play</div>
+                    <div className="text-[9px] uppercase tracking-wider text-slate-300 font-bold leading-none">GET IT ON</div>
+                    <div className="text-xs font-black tracking-tight text-white leading-none mt-1">Google Play Store</div>
                   </div>
                 </div>
                 <ChevronRight className={`w-4 h-4 text-white ${isRTL ? 'rotate-180' : ''}`} />
