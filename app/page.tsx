@@ -155,11 +155,11 @@ const POPULAR_QUICK_ACTIONS = [
   { id: 'merge-pdf', name: 'Merge PDF', cat: 'pdf', icon: Combine, color: 'bg-blue-600' },
   { id: 'camera-scanner', name: 'Camera Scanner', cat: 'ocr', icon: Camera, color: 'bg-teal-600', isDirectPath: '/camera-scanner' },
   { id: 'pdf-editor', name: 'PDF Editor Studio', cat: 'pdf', icon: FileCheck, color: 'bg-violet-600', isDirectPath: '/pdf-editor' },
-  { id: 'markitdown', name: 'MarkItDown AI', cat: 'ai', icon: Brain, color: 'bg-amber-600', isDirectPath: '/markitdown' },
+  { id: 'pdf-signer', name: 'Sign & Stamp PDF', cat: 'pdf', icon: ShieldCheck, color: 'bg-amber-600', isDirectPath: '/pdf-signer' },
   { id: 'image-resizer', name: 'Image Studio', cat: 'image', icon: ImageIcon, color: 'bg-cyan-600' },
   { id: 'background-remover', name: 'Remove BG', cat: 'image', icon: Wand2, color: 'bg-pink-600' },
   { id: 'qr-generator', name: 'QR Code Generator', cat: 'qr', icon: QrCode, color: 'bg-slate-800 dark:bg-slate-700' },
-  { id: 'workflows', name: 'Workflows Studio', cat: 'ai', icon: Workflow, color: 'bg-orange-600', isDirectPath: '/workflows' },
+  { id: 'workflows', name: 'Workflows Studio', cat: 'smart', icon: Workflow, color: 'bg-orange-600', isDirectPath: '/workflows' },
 ];
 
 const POPULAR_CATEGORY_SECTIONS = [
@@ -182,12 +182,6 @@ const POPULAR_CATEGORY_SECTIONS = [
     badgeStyle: 'bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
   },
   {
-    id: 'ai',
-    icon: Brain,
-    color: 'text-amber-600 dark:text-amber-400',
-    badgeStyle: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-  },
-  {
     id: 'ocr',
     icon: ScanText,
     color: 'text-teal-600 dark:text-teal-400',
@@ -198,6 +192,12 @@ const POPULAR_CATEGORY_SECTIONS = [
     icon: Video,
     color: 'text-purple-600 dark:text-purple-400',
     badgeStyle: 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+  },
+  {
+    id: 'compress',
+    icon: Minimize2,
+    color: 'bg-emerald-500',
+    badgeStyle: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
   },
   {
     id: 'qr',
