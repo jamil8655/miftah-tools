@@ -518,7 +518,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       allowRegistration: 'Allow New User Registrations',
     },
     footer: {
-      desc: 'Miftah Tools Pro is the premier all-in-one digital toolkit and mastery platform, delivering 220+ lightning-fast client-side tools and comprehensive courses.',
+      desc: 'Miftah Tools Pro is a high-performance, 100% private client-side digital toolkit delivering 220+ lightning-fast tools running entirely in your browser with zero server file transfers.',
       quickLinks: 'Quick Links',
       aboutPlatform: 'About Platform',
       courses: 'Explore Courses',
@@ -819,7 +819,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       allowRegistration: 'السماح بتسجيل مستخدمين جدد',
     },
     footer: {
-      desc: 'نيكسورا برو هي المنصة الرقمية الرائدة التي تجمع بين أكثر من 220 أداة فائقة الأداء تعمل محلياً بنسبة 100% مع دورات تدريبية شاملة للمهارات الرقمية.',
+      desc: 'مفتاح تولز برو هي منصة رقمية فائقة الأداء توفر أكثر من 220 أداة سريعة تعمل محلياً بنسبة 100% داخل المتصفح وبخصوصية تامة مع انعدام رفع الملفات.',
       quickLinks: 'روابط سريعة',
       aboutPlatform: 'عن المنصة',
       courses: 'استكشاف الدورات',
@@ -1120,7 +1120,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       allowRegistration: 'نئے صارفین کی رجسٹریشن کی اجازت دیں',
     },
     footer: {
-      desc: 'نیکسورا پرو ایک جامع ڈیجیٹل ٹول کٹ اور لرننگ پلیٹ فارم ہے جو 220 سے زائد تیز رفتار پرائیویٹ ٹولز اور پیشہ ورانہ کورسز فراہم کرتا ہے۔',
+      desc: 'مفتاح ٹولز پرو ایک تیز رفتار اور 100% پرائیویٹ ڈیجیٹل ٹول کٹ ہے جو براؤزر کے اندر 220 سے زائد مفت، محفوظ اور لاجواب ٹولز بغیر سرور اپلوڈ کے فراہم کرتی ہے۔',
       quickLinks: 'فوری لنکس',
       aboutPlatform: 'پلیٹ فارم کے بارے میں',
       courses: 'کورسز دریافت کریں',
@@ -1421,7 +1421,7 @@ export const TRANSLATIONS: Record<Language, Translations> = {
       allowRegistration: 'नए पंजीकरण की अनुमति दें',
     },
     footer: {
-      desc: 'नेक्सोरा प्रो एक प्रमुख डिजिटल टूलकिट और लर्निंग प्लेटफ़ॉर्म है जो 220+ तेज़ गति वाले टूल्स और व्यापक डिजिटल कौशल पाठ्यक्रम प्रदान करता है।',
+      desc: 'मिफ़्ताह टूल्स प्रो एक उच्च प्रदर्शन, 100% प्राइवेट क्लाइंट-साइड डिजिटल टूलकिट है जो ब्राउज़र में सीधे 220+ तेज़, मुफ़्त और सुरक्षित टूल्स प्रदान करता है।',
       quickLinks: 'त्वरित लिंक',
       aboutPlatform: 'प्लेटफ़ॉर्म के बारे में',
       courses: 'कोर्सेज एक्सप्लोर करें',
