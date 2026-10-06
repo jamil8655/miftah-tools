@@ -6,6 +6,8 @@ import { ToolPageClient } from '@/components/shared/ToolPageClient';
 
 const TOOL_ALIASES: Record<string, string> = {
   'pdf-to-word': 'pdf-to-docx',
+  'pdf-to-word-ocr': 'ocr-to-word',
+  'ocr-pdf-to-word': 'ocr-to-word',
   'word-to-pdf': 'docx-to-pdf',
   'ocr-image-to-text': 'ocr-image',
   'qr-code-generator': 'qr-generator',
@@ -45,19 +47,22 @@ export async function generateMetadata({ params }: { params: { toolId: string } 
   const tool = resolveTool(params.toolId);
   if (!tool) {
     return {
-      title: 'Tool Not Found — Miftah Tools',
+      title: 'Tool Not Found',
     };
   }
 
-  const title = `${tool.name} — Free Online Tool | Miftah Tools`;
+  const title = `${tool.name} — Free Online Tool`;
   const description = tool.fullDesc || tool.shortDesc;
 
   return {
     title,
     description,
     keywords: tool.tags?.join(', ') || 'online tools, pdf, image converter, video downloader',
+    alternates: {
+      canonical: `https://miftahtools.com/tools/${tool.slug}`,
+    },
     openGraph: {
-      title,
+      title: `${tool.name} — Free Online Tool | Miftah Tools`,
       description,
       type: 'website',
       url: `https://miftahtools.com/tools/${tool.slug}`,
@@ -65,7 +70,7 @@ export async function generateMetadata({ params }: { params: { toolId: string } 
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: `${tool.name} — Free Online Tool | Miftah Tools`,
       description,
     },
   };
@@ -82,16 +87,10 @@ export default function ToolPage({ params }: { params: { toolId: string } }) {
     description: tool.fullDesc || tool.shortDesc,
     applicationCategory: 'UtilitiesApplication',
     operatingSystem: 'All',
-    browserRequirements: 'Requires JavaScript. Requires HTML5.',
     offers: {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'USD',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '1250',
     },
   };
 

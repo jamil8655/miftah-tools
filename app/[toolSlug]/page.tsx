@@ -6,6 +6,8 @@ import { ToolPageClient } from '@/components/shared/ToolPageClient';
 
 const TOOL_ALIASES: Record<string, string> = {
   'pdf-to-word': 'pdf-to-docx',
+  'pdf-to-word-ocr': 'ocr-to-word',
+  'ocr-pdf-to-word': 'ocr-to-word',
   'word-to-pdf': 'docx-to-pdf',
   'ocr-image-to-text': 'ocr-image',
   'qr-code-generator': 'qr-generator',
@@ -45,19 +47,22 @@ export async function generateMetadata({ params }: { params: { toolSlug: string 
   const tool = resolveTool(params.toolSlug);
   if (!tool) {
     return {
-      title: 'Tool Not Found — Miftah Tools',
+      title: 'Tool Not Found',
     };
   }
 
-  const title = `${tool.name} — Free Online Tool | Miftah Tools`;
+  const title = `${tool.name} — Free Online Tool`;
   const description = tool.fullDesc || tool.shortDesc;
 
   return {
     title,
     description,
     keywords: tool.tags?.join(', ') || 'online tools, pdf, image converter, video downloader',
+    alternates: {
+      canonical: `https://miftahtools.com/${tool.slug}`,
+    },
     openGraph: {
-      title,
+      title: `${tool.name} — Free Online Tool | Miftah Tools`,
       description,
       type: 'website',
       url: `https://miftahtools.com/${tool.slug}`,
@@ -65,7 +70,7 @@ export async function generateMetadata({ params }: { params: { toolSlug: string 
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: `${tool.name} — Free Online Tool | Miftah Tools`,
       description,
     },
   };
@@ -87,11 +92,6 @@ export default function ToolSlugPage({ params }: { params: { toolSlug: string } 
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'USD',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '1250',
     },
   };
 

@@ -10,7 +10,7 @@ const CONTACT_LOCALES = {
     title: 'We’d Love to Hear From You',
     subtitle: 'Have a question, feedback, feature request, or custom integration inquiry? Get in touch with our team.',
     emailCardTitle: 'Email Support',
-    emailCardDesc: 'jrahmanansari132@gmail.com',
+    emailCardDesc: 'support@miftahtools.com',
     responseCardTitle: 'Response Time',
     responseCardDesc: 'We typically reply to all inquiries within 12-24 business hours.',
     privacyCardTitle: 'Privacy Guarantee',
@@ -39,7 +39,7 @@ const CONTACT_LOCALES = {
     title: 'ہم آپ کے تاثرات اور پیغامات کے منتظر ہیں',
     subtitle: 'کیا آپ کا کوئی سوال، تجویز، نئی فیچر کی درخواست یا رابطہ ہے؟ ہماری ٹیم سے رابطہ کریں۔',
     emailCardTitle: 'ای میل سپورٹ',
-    emailCardDesc: 'jrahmanansari132@gmail.com',
+    emailCardDesc: 'support@miftahtools.com',
     responseCardTitle: 'جواب کا وقت',
     responseCardDesc: 'ہم عموماً 12 سے 24 کاروباری گھنٹوں کے اندر تمام پیغامات کا جواب دیتے ہیں۔',
     privacyCardTitle: 'پرائیویسی کی ضمانت',
@@ -68,7 +68,7 @@ const CONTACT_LOCALES = {
     title: 'يسعدنا دائماً الاستماع إليك والتواصل معك',
     subtitle: 'هل لديك أي استفسار أو ملاحظة أو اقتراح لأداة جديدة؟ تواصل مباشرة مع فريق العمل.',
     emailCardTitle: 'الدعم عبر البريد',
-    emailCardDesc: 'jrahmanansari132@gmail.com',
+    emailCardDesc: 'support@miftahtools.com',
     responseCardTitle: 'وقت الاستجابة',
     responseCardDesc: 'نقوم بالرد على جميع الرسائل عادة خلال 12 إلى 24 ساعة عمل.',
     privacyCardTitle: 'ضمان الخصوصية',
@@ -97,7 +97,7 @@ const CONTACT_LOCALES = {
     title: 'हम आपसे संवाद करने के लिए सदैव तत्पर हैं',
     subtitle: 'क्या आपका कोई प्रश्न, सुझाव, नए टूल का अनुरोध या कोई समस्या है? हमारी टीम से संपर्क करें।',
     emailCardTitle: 'ईमेल सपोर्ट',
-    emailCardDesc: 'jrahmanansari132@gmail.com',
+    emailCardDesc: 'support@miftahtools.com',
     responseCardTitle: 'प्रतिक्रिया समय',
     responseCardDesc: 'हम आमतौर पर 12 से 24 कार्य घंटों के भीतर सभी प्रश्नों का उत्तर देते हैं।',
     privacyCardTitle: 'गोपनीयता गारंटी',
@@ -137,6 +137,24 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
+    
+    const subjectLine = `[MiftahTools Support] ${formData.subject} - ${formData.name}`;
+    const bodyContent = `Name: ${formData.name}
+Email: ${formData.email}
+Subject: ${formData.subject}
+
+Message:
+${formData.message}
+
+Sent from MiftahTools App`;
+
+    const mailtoUrl = `mailto:support@miftahtools.com?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(bodyContent)}`;
+    
+    try {
+      window.location.href = mailtoUrl;
+    } catch {
+      window.open(mailtoUrl, '_blank');
+    }
     setSubmitted(true);
   };
 
@@ -160,19 +178,26 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Info Side Cards */}
           <div className="space-y-4">
-            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs">
-              <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 flex items-center justify-center">
+            <h2 className="sr-only">Contact Details & Channels</h2>
+            <a 
+              href="mailto:support@miftahtools.com"
+              className="block p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs hover:border-brand-500 transition-colors group cursor-pointer"
+            >
+              <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Mail className="w-4 h-4" />
               </div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">{loc.emailCardTitle}</h4>
-              <p className="text-[11px] text-slate-500 font-mono">{loc.emailCardDesc}</p>
-            </div>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                {loc.emailCardTitle}
+                <span className="text-[10px] text-brand-600 font-semibold">Send Directly →</span>
+              </h3>
+              <p className="text-[11px] text-slate-500 font-mono">support@miftahtools.com</p>
+            </a>
 
             <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs">
               <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
                 <Clock className="w-4 h-4" />
               </div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">{loc.responseCardTitle}</h4>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">{loc.responseCardTitle}</h3>
               <p className="text-[11px] text-slate-500">{loc.responseCardDesc}</p>
             </div>
 
@@ -180,13 +205,14 @@ export default function ContactPage() {
               <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center">
                 <ShieldCheck className="w-4 h-4" />
               </div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">{loc.privacyCardTitle}</h4>
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">{loc.privacyCardTitle}</h3>
               <p className="text-[11px] text-slate-500">{loc.privacyCardDesc}</p>
             </div>
           </div>
 
           {/* Form */}
           <div className="lg:col-span-2 p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <h2 className="sr-only">Direct Inquiry Message Form</h2>
             {submitted ? (
               <div className="text-center py-10 space-y-4">
                 <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center mx-auto">
@@ -198,15 +224,24 @@ export default function ContactPage() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                   {loc.successDesc(formData.name)}
                 </p>
-                <button
-                  onClick={() => {
-                    setSubmitted(false);
-                    setFormData({ name: '', email: '', subject: loc.subjects.general, message: '' });
-                  }}
-                  className="px-5 py-2.5 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-all cursor-pointer"
-                >
-                  {loc.sendAnother}
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  <a
+                    href={`mailto:support@miftahtools.com?subject=${encodeURIComponent(`[MiftahTools Support] ${formData.subject} - ${formData.name}`)}&body=${encodeURIComponent(formData.message)}`}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    Open in Gmail / Email App
+                  </a>
+                  <button
+                    onClick={() => {
+                      setSubmitted(false);
+                      setFormData({ name: '', email: '', subject: loc.subjects.general, message: '' });
+                    }}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-all cursor-pointer"
+                  >
+                    {loc.sendAnother}
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">

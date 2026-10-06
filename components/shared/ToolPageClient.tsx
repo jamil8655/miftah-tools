@@ -372,7 +372,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     customWorkspace = <ImageResizerStudio />;
   } else if (tool.id === 'passport-photo-maker' || tool.slug === 'passport-photo-maker') {
     customWorkspace = <PassportPhotoStudio />;
-  } else if (tool.id === 'background-remover' || tool.slug === 'background-remover') {
+  } else if (
+    tool.id === 'background-remover' ||
+    tool.slug === 'background-remover' ||
+    tool.id === 'remove-background' ||
+    tool.slug === 'remove-background' ||
+    tool.slug === 'remove-bg' ||
+    tool.slug === 'ai-background-remover' ||
+    tool.slug === 'image-background-remover'
+  ) {
     customWorkspace = <BackgroundRemoverStudio />;
   } else if (tool.id === 'favicon-generator' || tool.slug === 'favicon-generator') {
     customWorkspace = <FaviconStudio />;

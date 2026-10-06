@@ -8,6 +8,7 @@ export interface SiteConfig {
   slogan: string;
   links: {
     github: string;
+    playStore: string;
     docs: string;
     privacy: string;
     terms: string;
@@ -35,13 +36,14 @@ export const siteConfig: SiteConfig = {
   slogan: 'Your All-in-One Master Key for Digital Mastery & Workflow Automation.',
   links: {
     github: 'https://github.com/jamil8655/miftah-tools',
+    playStore: 'https://play.google.com/store/apps/details?id=com.miftahtools.app',
     docs: '/tools',
     privacy: '/privacy',
     terms: '/terms',
   },
   contact: {
-    email: 'jrahmanansari132@gmail.com',
-    support: 'jrahmanansari132@gmail.com',
+    email: 'support@miftahtools.com',
+    support: 'support@miftahtools.com',
   },
   stats: {
     totalTools: '220+',

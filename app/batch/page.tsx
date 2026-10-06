@@ -12,6 +12,62 @@ import { Layers, Play, Download, Trash2, CheckCircle, File, Image as ImageIcon, 
 import confetti from 'canvas-confetti';
 import { adManager } from '@/lib/ads/AdManager';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { useI18n } from '@/lib/i18n/i18n-context';
+
+const BATCH_LOCALES = {
+  en: {
+    title: 'Batch Processing Studio',
+    subtitle: 'Process, convert, compress, or combine multiple files simultaneously.',
+    rewardTitle: 'Need to process 100+ files at once?',
+    rewardDesc: 'Watch a quick sponsor video to unlock 100-file bulk capacity & fast-lane queue.',
+    rewardCta: 'Unlock 100 Files',
+    rewardLoading: 'Loading Ad...',
+    rewardActive: '100-File High-Capacity Batch Queue Unlocked & Active',
+    bulkAction: 'Bulk Action',
+    bulkActionDesc: (count: number) => `Select the transformation to apply across all ${count} files`,
+    startBatch: 'Start Batch Processing',
+    processing: 'Processing batch queue...',
+  },
+  ur: {
+    title: 'بیچ پروسیسنگ اسٹوڈیو',
+    subtitle: 'ایک ساتھ متعدد فائلوں کو پروسیس، تبدیل یا سائز کم کریں۔',
+    rewardTitle: 'کیا آپ ایک ساتھ 100+ فائلیں پروسیس کرنا چاہتے ہیں؟',
+    rewardDesc: 'مختصر اسپانسر ویڈیو دیکھ کر 100 فائلوں کی بڑی گنجائش انلاک کریں۔',
+    rewardCta: '100 فائلیں انلاک کریں',
+    rewardLoading: 'اشتہار لوڈ ہو رہا ہے...',
+    rewardActive: '100 فائلوں کی گنجائش کامیابی سے انلاک ہو گئی ہے',
+    bulkAction: 'ایک ساتھ کارروائی',
+    bulkActionDesc: (count: number) => `تمام ${count} فائلوں پر لاگو کرنے کے لیے مطلوبہ ایکشن منتخب کریں`,
+    startBatch: 'بیچ پروسیسنگ شروع کریں',
+    processing: 'فائلیں پروسیس ہو رہی ہیں...',
+  },
+  ar: {
+    title: 'استوديو المعالجة المتعددة',
+    subtitle: 'معالجة وتحويل وضغط ودمج عدة ملفات في وقت واحد.',
+    rewardTitle: 'هل تحتاج لمعالجة أكثر من 100 ملف دفعة واحدة؟',
+    rewardDesc: 'شاهد فيديو قصير لفتح سعة 100 ملف ومعالجة ذات أولوية.',
+    rewardCta: 'فتح 100 ملف',
+    rewardLoading: 'جاري تحميل الإعلان...',
+    rewardActive: 'تم تفعيل سعة 100 ملف بنجاح',
+    bulkAction: 'الإجراء المجمع',
+    bulkActionDesc: (count: number) => `اختر العملية لتطبيقها على جميع الـ ${count} ملفات`,
+    startBatch: 'بدء المعالجة المجمعة',
+    processing: 'جاري معالجة الملفات...',
+  },
+  hi: {
+    title: 'बैच प्रोसेसिंग स्टूडियो',
+    subtitle: 'एक साथ कई फ़ाइलों को प्रोसेस, कन्वर्ट या कंप्रेस करें।',
+    rewardTitle: 'क्या आप एक साथ 100+ फ़ाइलें प्रोसेस करना चाहते हैं?',
+    rewardDesc: 'छोटा प्रायोजित वीडियो देखकर 100 फ़ाइलों की क्षमता अनलॉक करें।',
+    rewardCta: '100 फ़ाइलें अनलॉक करें',
+    rewardLoading: 'विज्ञापन लोड हो रहा है...',
+    rewardActive: '100 फ़ाइलों की क्षमता सक्रिय हो गई है',
+    bulkAction: 'थोक कार्रवाई',
+    bulkActionDesc: (count: number) => `सभी ${count} फ़ाइलों पर लागू करने के लिए विकल्प चुनें`,
+    startBatch: 'बैच प्रोसेसिंग शुरू करें',
+    processing: 'फ़ाइलें प्रोसेस हो रही हैं...',
+  },
+};
 
 interface BatchItem {
   id: string;
@@ -24,6 +80,8 @@ interface BatchItem {
 }
 
 export default function BatchPage() {
+  const { language, isRTL } = useI18n();
+  const loc = BATCH_LOCALES[language] || BATCH_LOCALES.en;
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [batchAction, setBatchAction] = useState<'convert-webp' | 'convert-png' | 'compress' | 'merge-pdf'>('convert-webp');
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -36,10 +94,15 @@ export default function BatchPage() {
   const handleUnlockProQueue = async () => {
     setIsRewardLoading(true);
     try {
-      await adManager.showRewardedAd((reward) => {
-        console.log('[Batch] Reward confirmed by SDK:', reward);
-        setIsProQueueUnlocked(true);
-      });
+      await adManager.showRewardedAd(
+        (reward) => {
+          console.log('[Batch] Reward confirmed by SDK:', reward);
+          setIsProQueueUnlocked(true);
+        },
+        () => {
+          console.log('[Batch] Rewarded ad dismissed or failed.');
+        }
+      );
     } finally {
       setIsRewardLoading(false);
     }
@@ -149,15 +212,15 @@ export default function BatchPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
-      <Breadcrumbs items={[{ label: 'Utilities', href: '/tools' }, { label: 'Batch Processing' }]} />
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
+      <Breadcrumbs items={[{ label: 'Utilities', href: '/tools' }, { label: loc.title }]} />
 
       <div className="text-center space-y-1">
         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
-          Batch File Processing
+          {loc.title}
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
-          Process, convert, compress, or combine up to 50 files simultaneously.
+          {loc.subtitle}
         </p>
       </div>
 
@@ -174,10 +237,10 @@ export default function BatchPage() {
                   </div>
                   <div>
                     <h4 className="text-xs font-black text-slate-900 dark:text-white">
-                      Need to process 100+ files at once?
+                      {loc.rewardTitle}
                     </h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Watch a quick 15-second sponsor video to unlock 100-file bulk capacity & fast-lane queue.
+                      {loc.rewardDesc}
                     </p>
                   </div>
                 </div>
@@ -189,13 +252,13 @@ export default function BatchPage() {
                   className="px-4 py-2 rounded-xl bg-linear-to-r from-amber-500 to-brand-600 text-white font-extrabold text-xs shadow-md hover:scale-105 active:scale-95 transition-all shrink-0 flex items-center gap-1.5"
                 >
                   <Award className="w-3.5 h-3.5" />
-                  <span>{isRewardLoading ? 'Loading Ad...' : 'Unlock 100 Files'}</span>
+                  <span>{isRewardLoading ? loc.rewardLoading : loc.rewardCta}</span>
                 </button>
               </div>
             ) : (
               <div className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
-                <span>100-File High-Capacity Batch Queue Unlocked & Active</span>
+                <span>{loc.rewardActive}</span>
               </div>
             )}
 
@@ -218,10 +281,10 @@ export default function BatchPage() {
                 <Layers className="w-5 h-5 text-brand-500" />
                 <div>
                   <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    Bulk Action
+                    {loc.bulkAction}
                   </label>
                   <p className="text-[11px] text-slate-500">
-                    Select the transformation to apply across all {items.length} files
+                    {loc.bulkActionDesc(items.length)}
                   </p>
                 </div>
               </div>

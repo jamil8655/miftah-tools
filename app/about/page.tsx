@@ -162,35 +162,38 @@ export default function AboutPage() {
         </div>
 
         {/* Pillars Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6" />
+        <div className="space-y-6">
+          <h2 className="sr-only">Core Platform Pillars</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{loc.pillar1Title}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                {loc.pillar1Desc}
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{loc.pillar1Title}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              {loc.pillar1Desc}
-            </p>
-          </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/50 text-brand-600 flex items-center justify-center">
-              <Zap className="w-6 h-6" />
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/50 text-brand-600 flex items-center justify-center">
+                <Zap className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{loc.pillar2Title}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                {loc.pillar2Desc}
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{loc.pillar2Title}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              {loc.pillar2Desc}
-            </p>
-          </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center">
-              <GraduationCap className="w-6 h-6" />
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{loc.pillar3Title}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                {loc.pillar3Desc}
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{loc.pillar3Title}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              {loc.pillar3Desc}
-            </p>
           </div>
         </div>
 
@@ -210,7 +213,7 @@ export default function AboutPage() {
               <div key={idx} className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">{item.title}</h4>
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-white">{item.title}</h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">{item.desc}</p>
                 </div>
               </div>

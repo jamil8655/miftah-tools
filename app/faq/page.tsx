@@ -222,6 +222,7 @@ export default function FaqPage() {
 
         {/* FAQ Accordion List */}
         <div className="space-y-4">
+          <h2 className="sr-only">Frequently Asked Questions & Answers</h2>
           {filteredFaqs.map((faq, idx) => {
             const isOpen = openFaqs[idx] !== false;
 
@@ -259,7 +260,7 @@ export default function FaqPage() {
 
         {/* Still Have Questions? */}
         <div className="p-6 rounded-3xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-3">
-          <h4 className="text-sm font-bold text-slate-900 dark:text-white">{loc.stillQuestions}</h4>
+          <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">{loc.stillQuestions}</h2>
           <p className="text-xs text-slate-500">{loc.supportPrompt}</p>
           <Link
             href="/contact"

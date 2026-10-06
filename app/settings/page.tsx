@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useTheme } from '@/components/layout/ThemeContext';
@@ -23,273 +23,348 @@ import {
   ChevronRight,
   Sparkles,
   Smartphone,
-  ExternalLink,
   HelpCircle,
   Mail,
   FileText,
   Lock,
-  Zap,
   Info,
-  Layers,
   HeartHandshake,
   Share2,
+  SlidersHorizontal,
+  Play,
 } from 'lucide-react';
 import { shareAppNative } from '@/lib/native/android-bridge';
 
+// Web Audio API Pleasant Completion Chime
+function playCompletionChime() {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const now = ctx.currentTime;
+
+    const notes = [523.25, 659.25, 783.99];
+    notes.forEach((freq, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + index * 0.08);
+
+      gain.gain.setValueAtTime(0.001, now + index * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.2, now + index * 0.08 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.08 + 0.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + index * 0.08);
+      osc.stop(now + index * 0.08 + 0.4);
+    });
+  } catch (_) {}
+}
+
 const SETTINGS_LOCALES = {
   en: {
-    pageTitle: 'Settings & Preferences',
-    pageSubtitle: 'Manage your app interface, on-device storage, notifications, and privacy options.',
-    appBadge: 'Miftah Tools Studio Pro',
-    engineStatus: '100% Client-Side Engine • Private & Offline',
-    
-    shareAppTitle: 'Share Miftah Tools with Friends',
-    shareAppDesc: 'Help coworkers, friends, and students discover 220+ free, offline, and private productivity tools.',
-    shareAppBtn: 'Share App Now',
-    
-    appearanceHeader: 'Look & Language',
-    appearanceDesc: 'Customize theme lighting and app display language',
+    pageTitle: 'Settings',
+    pageSubtitle: 'Manage your app preferences and personalization.',
+    versionBadge: 'v1.0.7',
+
+    // Section 1: Appearance & Language
+    appearanceHeader: 'Appearance & Language',
     selectLang: 'App Language',
-    autoDetectLang: 'Auto Match Device Language',
-    autoDetectDesc: 'Automatically switches to your phone / OS system language',
-    themeMode: 'Theme Appearance',
+    autoDetectLang: 'Auto Detect',
+    themeMode: 'Theme',
     lightTheme: 'Light',
     darkTheme: 'Dark',
     systemTheme: 'System',
 
-    systemHeader: 'System, Haptics & Sound',
-    systemDesc: 'Configure touch response and background alerts',
-    toolCompleteAlert: 'Task Completion Alerts',
-    toolCompleteDesc: 'Notify when large PDF or batch exports finish',
-    hapticFeedback: 'Tactile Haptic Feedback',
-    hapticDesc: 'Gentle vibration response on buttons and tools',
-    soundEffects: 'Sound Effects (Audio Chimes)',
-    soundDesc: 'Play pleasant chime on successful export',
+    // Section 2: Audio & System Response
+    systemHeader: 'Notifications & Audio',
+    toolCompleteAlert: 'Task Notifications',
+    toolCompleteDesc: 'Notify when background conversions finish',
+    hapticFeedback: 'Haptic Feedback',
+    hapticDesc: 'Tactile vibration on buttons and sliders',
+    soundEffects: 'Sound Effects',
+    soundDesc: 'Play pleasant chime on task completion',
+    testSound: 'Play',
 
-    storageHeader: 'Device Memory & Privacy',
-    storageDesc: 'Manage local caches and temporary work logs',
-    localUsage: 'Estimated Local Storage',
-    clearCache: 'Purge Local Cache',
-    cacheCleared: 'Cache & local preferences successfully purged!',
-    privacyBadge: 'Zero Cloud Uploads Guaranteed',
-    privacyBadgeDesc: 'All document and image manipulations occur entirely in your device memory.',
+    // Section 3: Tool Defaults
+    toolDefaultsHeader: 'Export & Quality',
+    imageQuality: 'Compression Quality',
+    imageQualityHigh: 'Maximum',
+    imageQualityMed: 'Balanced',
+    imageQualityLow: 'Compact',
+    autoDownload: 'Auto-Download Files',
+    autoDownloadDesc: 'Save files automatically when tasks complete',
 
-    legalHeader: 'Legal, Compliance & Safety',
-    legalDesc: 'Official disclosures, terms of use, and privacy rules',
+    // Section 4: Storage & Cache
+    storageHeader: 'Storage & Cache',
+    localUsage: 'Cached Data',
+    clearCache: 'Clear Cache',
+    clearCacheDesc: 'Clears temporary cache without affecting saved files.',
+    clearCacheConfirm: 'Are you sure you want to clear temporary cache and history?',
+    cacheCleared: 'Cache successfully cleared!',
+
+    // Section 5: Share App
+    shareAppTitle: 'Share App',
+    shareAppDesc: 'Share Miftah Tools with friends and colleagues.',
+    shareAppBtn: 'Share',
+
+    // Section 6: Legal & About
+    legalHeader: 'Legal & Support',
     privacyPolicy: 'Privacy Policy',
     termsOfService: 'Terms of Service',
-    privacyCenter: 'Privacy Center & Consent',
-    disclaimer: 'Legal Disclaimer',
-    refundPolicy: 'Refund & Usage Policy',
-    accountDeletion: 'Account & Data Deletion Portal',
-    accountDeletionDesc: 'Permanently purge your profile and cloud sync data (Google Play Policy).',
-    manageDeletion: 'Manage Deletion',
-
-    aboutHeader: 'About & Support',
-    faq: 'Help & FAQ',
+    privacyCenter: 'Privacy Center',
+    disclaimer: 'Disclaimer',
+    refundPolicy: 'Refund Policy',
+    faq: 'FAQ & Help',
+    accountDeletion: 'Account & Data Deletion',
+    accountDeletionDesc: 'Permanently remove your account and stored data.',
     contactSupport: 'Contact Support',
-    developerCredits: 'Engineered with Precision for Android & Web',
   },
   ur: {
-    pageTitle: 'ترتیبات اور ترجیحات (Settings)',
-    pageSubtitle: 'ایپ کا ڈسپلے، آف لائن کیشے، زبان، اور پرائیویسی سیٹنگز کا انتظام کریں۔',
-    appBadge: 'مفتاح ٹولز اسٹوڈیو پرو',
-    engineStatus: '100% آن ڈیوائس انجن • محفوظ اور آف لائن',
+    pageTitle: 'سیٹنگز (Settings)',
+    pageSubtitle: 'ایپ کی ترجیحات، زبان اور ظاہری شکل کا انتظام کریں۔',
+    versionBadge: 'ورژن 1.0.7',
 
-    shareAppTitle: 'دوستوں کے ساتھ مفتاح ٹولز شیئر کریں',
-    shareAppDesc: 'اپنے دوستوں، ساتھیوں اور طلباء کو 220 سے زائد مفت، آف لائن اور پرائیویٹ ٹولز شیئر کریں۔',
-    shareAppBtn: 'ابھی ایپ شیئر کریں',
+    // Section 1: Appearance & Language
+    appearanceHeader: 'ظاہری شکل اور زبان',
+    selectLang: 'ایپ کی زبان',
+    autoDetectLang: 'خودکار زبان',
+    themeMode: 'تھیم',
+    lightTheme: 'روشن',
+    darkTheme: 'تاریک',
+    systemTheme: 'سسٹم',
 
-    appearanceHeader: 'ظاہری شکل اور زبان (Appearance)',
-    appearanceDesc: 'تھیم کا رنگ اور ایپ کی زبان تبدیل کریں',
-    selectLang: 'ایپ کی زبان منتخب کریں',
-    autoDetectLang: 'موبائل کے مطابق خودکار زبان (Auto Detect)',
-    autoDetectDesc: 'آپ کے موبائل کی سسٹم زبان کے مطابق خودکار سیٹ ہو جائے گا',
-    themeMode: 'تھیم کا موڈ',
-    lightTheme: 'روشن (Light)',
-    darkTheme: 'تاریک (Dark)',
-    systemTheme: 'سسٹم (Auto)',
+    // Section 2: Audio & System Response
+    systemHeader: 'اطلاعات اور صوتی اثرات',
+    toolCompleteAlert: 'ٹاسک الرٹ',
+    toolCompleteDesc: 'کام مکمل ہونے پر اطلاع دیں',
+    hapticFeedback: 'ٹچ وائبریشن',
+    hapticDesc: 'بٹن دبانے پر ہلکی وائبریشن',
+    soundEffects: 'صوتی اثرات',
+    soundDesc: 'فائل تیار ہونے پر آواز',
+    testSound: 'آواز',
 
-    systemHeader: 'سسٹم، ہیپٹکس اور آواز (System)',
-    systemDesc: 'ٹچ وائبریشن اور اطلاعات کی ترتیبات',
-    toolCompleteAlert: 'ٹاسک مکمل ہونے کا الرٹ',
-    toolCompleteDesc: 'پی ڈی ایف یا امیج تیار ہونے پر مطلع کریں',
-    hapticFeedback: 'ٹچ وائبریشن (Haptic Feedback)',
-    hapticDesc: 'بٹن دبانے پر ہلکی وائبریشن کا احساس',
-    soundEffects: 'صوتی اثرات (Sound Chimes)',
-    soundDesc: 'فائل ایکسپورٹ ہونے پر خوشگوار آواز',
+    // Section 3: Tool Defaults
+    toolDefaultsHeader: 'کوالٹی اور فائلیں',
+    imageQuality: 'امیج کوالٹی',
+    imageQualityHigh: 'اعلیٰ',
+    imageQualityMed: 'متوازن',
+    imageQualityLow: 'کمپریسڈ',
+    autoDownload: 'خودکار ڈاؤنلوڈ',
+    autoDownloadDesc: 'مکمل ہوتے ہی فائل خود بخود ڈاؤنلوڈ ہو',
 
-    storageHeader: 'ڈیوائس میموری اور پرائیویسی (Storage)',
-    storageDesc: 'لوکل کیشے اور ہسٹری لاگز کا انتظام',
-    localUsage: 'مقامی اسٹوریج کا استعمال',
-    clearCache: 'کیشے اور ہسٹری صاف کریں',
-    cacheCleared: 'کیشے اور مقامی ڈیٹا کامیابی سے صاف ہو گیا!',
-    privacyBadge: '100% پرائیویٹ اور محفوظ پروسیسنگ',
-    privacyBadgeDesc: 'آپ کی فائلیں کبھی کسی سرور پر اپلوڈ نہیں ہوتیں، سارا کام ڈیوائس میں ہوتا ہے۔',
+    // Section 4: Storage & Cache
+    storageHeader: 'اسٹوریج اور کیشے',
+    localUsage: 'عارضی میموری',
+    clearCache: 'کیشے صاف کریں',
+    clearCacheDesc: 'عارضی کیشے کو محفوظ طریقے سے خالی کریں۔',
+    clearCacheConfirm: 'کیا آپ عارضی کیشے اور ہسٹری صاف کرنا چاہتے ہیں؟',
+    cacheCleared: 'کیشے کامیابی سے صاف ہو گیا!',
 
-    legalHeader: 'قانونی، پالیسیاں اور سیکیورٹی (Legal)',
-    legalDesc: 'پرائیویسی پالیسی، شرائط و ضوابط اور سرکاری ڈسکلوزرز',
-    privacyPolicy: 'پرائیویسی پالیسی (Privacy Policy)',
-    termsOfService: 'شرائطِ استعمال (Terms of Service)',
-    privacyCenter: 'پرائیویسی سینٹر (Privacy Center)',
-    disclaimer: 'قانونی دستبرداری (Disclaimer)',
-    refundPolicy: 'ریفنڈ اور سروس پالیسی',
-    accountDeletion: 'اکاؤنٹ اور ڈیٹا ڈیلیشن پورٹل',
-    accountDeletionDesc: 'گوگل پلے پالیسی کے مطابق اکاؤنٹ اور کلاؤڈ ڈیٹا مکمل طور پر حذف کریں۔',
-    manageDeletion: 'ڈیلیٹ کریں',
+    // Section 5: Share App
+    shareAppTitle: 'ایپ شیئر کریں',
+    shareAppDesc: 'مفتاح ٹولز دوستوں اور ساتھیوں کے ساتھ شیئر کریں۔',
+    shareAppBtn: 'شیئر',
 
-    aboutHeader: 'معلومات اور رابطہ (About & Help)',
-    faq: 'عمومی سوالات (FAQ)',
-    contactSupport: 'ہم سے رابطہ کریں (Support)',
-    developerCredits: 'تمام حقوق محفوظ ہیں • مفتاح ٹولز ٹیم',
+    // Section 6: Legal & About
+    legalHeader: 'قانونی پالیسیاں اور سپورٹ',
+    privacyPolicy: 'پرائیویسی پالیسی',
+    termsOfService: 'شرائطِ استعمال',
+    privacyCenter: 'پرائیویسی سینٹر',
+    disclaimer: 'قانونی دستبرداری',
+    refundPolicy: 'ریفنڈ پالیسی',
+    faq: 'عمومی سوالات',
+    accountDeletion: 'اکاؤنٹ ڈیلیشن پورٹل',
+    accountDeletionDesc: 'اپنا ڈیٹا اور اکاؤنٹ مکمل حذف کریں۔',
+    contactSupport: 'سپورٹ سے رابطہ',
   },
   ar: {
-    pageTitle: 'الإعدادات والتفضيلات (Settings)',
-    pageSubtitle: 'تخصيص الواجهة، والذاكرة المؤقتة، واللغة، وخيارات الخصوصية.',
-    appBadge: 'مفتاح تولز ستوديو برو',
-    engineStatus: 'معالجة محلية 100% • خصوصية تامة دون اتصال',
+    pageTitle: 'الإعدادات',
+    pageSubtitle: 'تخصيص المظهر، اللغة، الإشعارات والتخزين.',
+    versionBadge: 'الإصدار 1.0.7',
 
-    shareAppTitle: 'مشاركة تطبيق مفتاح تولز مع الأصدقاء',
-    shareAppDesc: 'ساعد زملاءك والطلاب في اكتشاف أكثر من 220 أداة مجانية وآمنة وسريعة دون إنترنت.',
-    shareAppBtn: 'مشاركة التطبيق الآن',
-
-    appearanceHeader: 'المظهر واللغة (Appearance)',
-    appearanceDesc: 'تخصيص إضاءة المظهر ولغة عرض التطبيق',
+    // Section 1: Appearance & Language
+    appearanceHeader: 'المظهر واللغة',
     selectLang: 'لغة التطبيق',
-    autoDetectLang: 'مطابقة لغة الهاتف تلقائياً (Auto Detect)',
-    autoDetectDesc: 'التحويل التلقائي بحسب لغة نظام هاتفك الذكي',
-    themeMode: 'وضع المظهر',
+    autoDetectLang: 'تلقائي',
+    themeMode: 'المظهر',
     lightTheme: 'فاتح',
     darkTheme: 'داكن',
     systemTheme: 'النظام',
 
-    systemHeader: 'النظام والاهتزاز والصوت (System)',
-    systemDesc: 'ضبط استجابة اللمس والإشعارات الفورية',
-    toolCompleteAlert: 'تنبيه اكتمال المهام',
-    toolCompleteDesc: 'إشعار فوري عند اكتمال تصدير الملفات',
-    hapticFeedback: 'الاستجابة اللمسية (الاهتزاز)',
-    hapticDesc: 'اهتزاز خفيف وذكي عند النقر على الأزرار',
+    // Section 2: Audio & System Response
+    systemHeader: 'الإشعارات والأصوات',
+    toolCompleteAlert: 'تنبيهات المهام',
+    toolCompleteDesc: 'إشعار عند اكتمال معالجة الملفات',
+    hapticFeedback: 'الاهتزاز اللمسي',
+    hapticDesc: 'اهتزاز تفاعلي خفيف عند اللمس',
     soundEffects: 'المؤثرات الصوتية',
-    soundDesc: 'نغمة صوتية مريحة عند نجاح التصدير',
+    soundDesc: 'نغمة هادئة عند انتهاء المهمة',
+    testSound: 'تشغيل',
 
-    storageHeader: 'ذاكرة الجهاز والخصوصية (Storage)',
-    storageDesc: 'إدارة الذاكرة المؤقتة وسجلات الملفات',
-    localUsage: 'الذاكرة المحلية المستخدمة',
+    // Section 3: Tool Defaults
+    toolDefaultsHeader: 'الجودة والملفات',
+    imageQuality: 'جودة المعالجة',
+    imageQualityHigh: 'عالية',
+    imageQualityMed: 'متوازنة',
+    imageQualityLow: 'مضغوطة',
+    autoDownload: 'تحميل تلقائي',
+    autoDownloadDesc: 'حفظ الملفات تلقائياً عند انتهاء المعالجة',
+
+    // Section 4: Storage & Cache
+    storageHeader: 'التخزين والذاكرة المؤقتة',
+    localUsage: 'الذاكرة المؤقتة',
     clearCache: 'مسح الذاكرة المؤقتة',
-    cacheCleared: 'تم مسح الذاكرة المؤقتة والبيانات بنجاح!',
-    privacyBadge: 'ضمان عدم رفع الملفات إلى أي خادم',
-    privacyBadgeDesc: 'تتم كافة عمليات تعديل المستندات والصور داخل ذاكرة هاتفك فقط.',
+    clearCacheDesc: 'مسح الملفات المؤقتة دون حذف ملفاتك الأصلية.',
+    clearCacheConfirm: 'هل تريد بالتأكيد مسح الذاكرة المؤقتة؟',
+    cacheCleared: 'تم مسح الذاكرة المؤقتة بنجاح!',
 
-    legalHeader: 'السياسات والامتثال والأمان (Legal)',
-    legalDesc: 'الإفصاحات الرسمية وشروط الاستخدام وسياسة الخصوصية',
+    // Section 5: Share App
+    shareAppTitle: 'مشاركة التطبيق',
+    shareAppDesc: 'شارك مفتاح تولز مع أصدقائك وزملائك.',
+    shareAppBtn: 'مشاركة',
+
+    // Section 6: Legal & About
+    legalHeader: 'الدعم والقانونية',
     privacyPolicy: 'سياسة الخصوصية',
     termsOfService: 'شروط الخدمة',
-    privacyCenter: 'مركز الخصوصية والموافقة',
-    disclaimer: 'إخلاء المسؤولية القانوني',
-    refundPolicy: 'سياسة الاسترداد والاستخدام',
-    accountDeletion: 'بوابة حذف الحساب والبيانات',
-    accountDeletionDesc: 'حذف الحساب والبيانات نهائياً وفق معايير Google Play.',
-    manageDeletion: 'إدارة الحذف',
-
-    aboutHeader: 'حول التطبيق والمساعدة (About)',
+    privacyCenter: 'مركز الخصوصية',
+    disclaimer: 'إخلاء المسؤولية',
+    refundPolicy: 'سياسة الاسترداد',
     faq: 'الأسئلة الشائعة',
-    contactSupport: 'الدعم والمساعدة',
-    developerCredits: 'تم التطوير باحترافية لنظامي أندرويد والويب',
+    accountDeletion: 'حذف الحساب والبيانات',
+    accountDeletionDesc: 'حذف بياناتك وحسابك نهائياً.',
+    contactSupport: 'تواصل مع الدعم',
   },
   hi: {
-    pageTitle: 'सेटिंग्स व प्राथमिकताएं (Settings)',
-    pageSubtitle: 'ऐप का इंटरफ़ेस, ऑफ़लाइन कैश, भाषा और गोपनीयता सेटिंग्स प्रबंधित करें।',
-    appBadge: 'मिफ़्ताह टूल्स प्रो स्टूडियो',
-    engineStatus: '100% ऑन-डिवाइस इंजन • सुरक्षित और ऑफ़लाइन',
+    pageTitle: 'सेटिंग्स',
+    pageSubtitle: 'ऐप की भाषा, थीम और प्राथमिकताओं को प्रबंधित करें।',
+    versionBadge: 'v1.0.7',
 
-    shareAppTitle: 'दोस्तों के साथ मिफ्ताह टूल्स शेयर करें',
-    shareAppDesc: 'अपने दोस्तों, सहकर्मियों और छात्रों को 220+ मुफ़्त, ऑफ़लाइन व निजी टूल्स का लाभ उठाने में मदद करें।',
-    shareAppBtn: 'अभी ऐप शेयर करें',
-
-    appearanceHeader: 'दिखावट व भाषा (Appearance)',
-    appearanceDesc: 'थीम लाइटिंग और ऐप की भाषा कस्टमाइज़ करें',
-    selectLang: 'ऐप की भाषा चुनें',
-    autoDetectLang: 'मोबाइल की भाषा के अनुसार चुनें (Auto Detect)',
-    autoDetectDesc: 'आपके फ़ोन / सिस्टम की भाषा के अनुसार अपने आप सेट होगा',
-    themeMode: 'थीम का स्वरूप',
+    // Section 1: Appearance & Language
+    appearanceHeader: 'थीम व भाषा',
+    selectLang: 'ऐप की भाषा',
+    autoDetectLang: 'ऑटो डिटेक्ट',
+    themeMode: 'थीम',
     lightTheme: 'लाइट',
     darkTheme: 'डार्क',
     systemTheme: 'सिस्टम',
 
-    systemHeader: 'सिस्टम, वाइब्रेशन व ध्वनि (System)',
-    systemDesc: 'टच वाइब्रेशन और बैकग्राउंड अलर्ट कॉन्फ़िगर करें',
-    toolCompleteAlert: 'कार्य पूरा होने का अलर्ट',
-    toolCompleteDesc: 'फ़ाइल एक्सपोर्ट पूरी होने पर तुरंत सूचित करें',
-    hapticFeedback: 'टच हैप्टिक फ़ीडबैक (वाइब्रेशन)',
-    hapticDesc: 'बटन टैप पर हल्का वाइब्रेशन अनुभव',
-    soundEffects: 'साउंड इफेक्ट्स (ऑडियो चाइम)',
-    soundDesc: 'फ़ाइल तैयार होने पर मधुर ध्वनि',
+    // Section 2: Audio & System Response
+    systemHeader: 'नोटिफिकेशन व साउंड',
+    toolCompleteAlert: 'टास्क अलर्ट',
+    toolCompleteDesc: 'फाइल प्रोसेस पूरा होने पर सूचित करें',
+    hapticFeedback: 'टच वाइब्रेशन',
+    hapticDesc: 'बटन व स्लाइडर पर हैप्टिक फीडबैक',
+    soundEffects: 'साउंड इफेक्ट्स',
+    soundDesc: 'टास्क पूरा होने पर मधुर ध्वनि',
+    testSound: 'साउंड सुनें',
 
-    storageHeader: 'डिवाइस मेमोरी व गोपनीयता (Storage)',
-    storageDesc: 'लोकल कैश और कार्य इतिहास का प्रबंधन',
-    localUsage: 'लोकल स्टोरेज उपयोग',
-    clearCache: 'कैश व डेटा साफ़ करें',
-    cacheCleared: 'कैश और लोकल डेटा सफलतापूर्वक साफ़ हो गया!',
-    privacyBadge: '100% निजी व सुरक्षित प्रोसेसिंग',
-    privacyBadgeDesc: 'आपकी फ़ाइलें कभी किसी सर्वर पर अपलोड नहीं होतीं, सभी कार्य डिवाइस में होते हैं।',
+    // Section 3: Tool Defaults
+    toolDefaultsHeader: 'एक्सपोर्ट व क्वालिटी',
+    imageQuality: 'इमेज क्वालिटी',
+    imageQualityHigh: 'उच्चतम',
+    imageQualityMed: 'संतुलित',
+    imageQualityLow: 'कंप्रेस्ड',
+    autoDownload: 'ऑटो डाउनलोड',
+    autoDownloadDesc: 'टास्क पूरा होते ही फाइल अपने आप सेव हो',
 
-    legalHeader: 'क़ानूनी नीतियां व सुरक्षा (Legal)',
-    legalDesc: 'गोपनीयता नीति, सेवा की शर्तें और आधिकारिक नीतियां',
-    privacyPolicy: 'प्राइवेसी पॉलिसी (Privacy Policy)',
-    termsOfService: 'नियम व शर्तें (Terms of Service)',
-    privacyCenter: 'प्राइवेसी सेंटर (Privacy Center)',
-    disclaimer: 'क़ानूनी अस्वीकरण (Disclaimer)',
-    refundPolicy: 'रिफंड व उपयोग नीति',
-    accountDeletion: 'खाता व डेटा हटाने का पोर्टल',
-    accountDeletionDesc: 'Google Play नीति के अनुसार खाता और डेटा स्थायी रूप से हटाएं।',
-    manageDeletion: 'हटाना प्रबंधित करें',
+    // Section 4: Storage & Cache
+    storageHeader: 'स्टोरेज व मेमोरी',
+    localUsage: 'अस्थायी मेमोरी',
+    clearCache: 'कैश साफ़ करें',
+    clearCacheDesc: 'अस्थायी कैश साफ़ करें, आपकी फाइलें सुरक्षित रहेंगी।',
+    clearCacheConfirm: 'क्या आप अस्थायी कैश साफ़ करना चाहते हैं?',
+    cacheCleared: 'कैश सफलतापूर्वक साफ़ हो गया!',
 
-    aboutHeader: 'जानकारी व सहायता (About & Help)',
-    faq: 'अक्सर पूछे जाने वाले प्रश्न (FAQ)',
-    contactSupport: 'सहायता व संपर्क',
-    developerCredits: 'सर्वाधिकार सुरक्षित • मिफ़्ताह टूल्स टीम',
+    // Section 5: Share App
+    shareAppTitle: 'ऐप शेयर करें',
+    shareAppDesc: 'मिफ्ताह टूल्स को अपने दोस्तों और सहयोगियों के साथ शेयर करें।',
+    shareAppBtn: 'शेयर करें',
+
+    // Section 6: Legal & About
+    legalHeader: 'सपोर्ट व कानूनी नीतियां',
+    privacyPolicy: 'प्राइवेसी पॉलिसी',
+    termsOfService: 'नियम व शर्तें',
+    privacyCenter: 'प्राइवेसी सेंटर',
+    disclaimer: 'अस्वीकरण',
+    refundPolicy: 'रिफंड पॉलिसी',
+    faq: 'एफएक्यू व सहायता',
+    accountDeletion: 'खाता व डेटा विलोपन',
+    accountDeletionDesc: 'अपना खाता और डेटा स्थायी रूप से हटाएं।',
+    contactSupport: 'सपोर्ट से संपर्क करें',
   },
 };
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage, autoDetectLanguage, isRTL } = useI18n();
+  const { language, setLanguage, isRTL, autoDetectLanguage } = useI18n();
   const loc = SETTINGS_LOCALES[language] || SETTINGS_LOCALES.en;
 
-  const [cacheCleared, setCacheCleared] = useState(false);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [hapticFeedback, setHapticFeedback] = useState(true);
-  const [soundEffects, setSoundEffects] = useState(true);
+  // Preferences
+  const [pushNotifications, setPushNotifications] = useState<boolean>(true);
+  const [hapticFeedback, setHapticFeedback] = useState<boolean>(true);
+  const [soundEffects, setSoundEffects] = useState<boolean>(true);
+  const [imageQuality, setImageQuality] = useState<'high' | 'med' | 'low'>('high');
+  const [autoDownload, setAutoDownload] = useState<boolean>(false);
   const [storageBytes, setStorageBytes] = useState<number>(0);
+  const [cacheCleared, setCacheCleared] = useState<boolean>(false);
 
   useEffect(() => {
-    // Calculate approximate localStorage size
     try {
+      const savedPush = localStorage.getItem('miftah_pref_push');
+      if (savedPush !== null) setPushNotifications(savedPush === 'true');
+
+      const savedHaptic = localStorage.getItem('miftah_pref_haptic');
+      if (savedHaptic !== null) setHapticFeedback(savedHaptic === 'true');
+
+      const savedSound = localStorage.getItem('miftah_pref_sound');
+      if (savedSound !== null) setSoundEffects(savedSound === 'true');
+
+      const savedQuality = localStorage.getItem('miftah_pref_quality');
+      if (savedQuality) setImageQuality(savedQuality as 'high' | 'med' | 'low');
+
+      const savedAutoDownload = localStorage.getItem('miftah_pref_autodownload');
+      if (savedAutoDownload !== null) setAutoDownload(savedAutoDownload === 'true');
+
       let total = 0;
       for (const x in localStorage) {
-        if (localStorage.hasOwnProperty(x)) {
+        if (Object.prototype.hasOwnProperty.call(localStorage, x)) {
           total += ((localStorage[x]?.length || 0) + x.length) * 2;
         }
       }
       setStorageBytes(total);
-    } catch (e) {
-      setStorageBytes(1024 * 45); // default fallback
+    } catch (_) {
+      setStorageBytes(1024 * 32);
     }
   }, [cacheCleared]);
 
-  const handleClearCache = () => {
+  const updatePreference = (key: string, value: string | boolean) => {
+    try {
+      localStorage.setItem(key, String(value));
+    } catch (_) {}
+  };
+
+  const handleClearCache = useCallback(() => {
     triggerHaptic('medium');
-    if (confirm(language === 'ur' ? 'کیا آپ تمام لوکل ترجیحات اور ہسٹری کیشے صاف کرنا چاہتے ہیں؟' : 'Purge all local offline cache, history, and temporary preferences?')) {
+    if (confirm(loc.clearCacheConfirm)) {
       try {
         localStorage.removeItem('nexora_history');
         localStorage.removeItem('nexora_downloads');
         localStorage.removeItem('miftah_recent_tools');
+        localStorage.removeItem('miftah_saved_presets');
       } catch (_) {}
       setCacheCleared(true);
-      setStorageBytes(0);
-      setTimeout(() => setCacheCleared(false), 3500);
+      setStorageBytes(1024 * 4);
+      setTimeout(() => setCacheCleared(false), 3000);
     }
-  };
+  }, [loc.clearCacheConfirm]);
 
   const formatStorage = (bytes: number) => {
     if (bytes === 0) return '0 KB';
@@ -301,453 +376,446 @@ export default function SettingsPage() {
   return (
     <div
       dir={isRTL ? 'rtl' : 'ltr'}
-      className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-9 space-y-6 sm:space-y-8 animate-in fade-in duration-300 pb-20"
+      className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5 animate-in fade-in duration-300 pb-28"
     >
-      {/* Breadcrumbs */}
       <div className="hidden sm:block">
         <Breadcrumbs items={[{ label: loc.pageTitle }]} />
       </div>
 
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 p-5 sm:p-6 text-white shadow-lg">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-brand-600 flex items-center justify-center shrink-0">
-            <Settings className="w-6 h-6 text-white" />
+      {/* 1. Header Card */}
+      <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-800">
+            <Settings className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">
+            <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
               {loc.pageTitle}
             </h1>
-            <p className="text-xs text-slate-400 line-clamp-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {loc.pageSubtitle}
             </p>
           </div>
         </div>
+
+        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-mono font-bold">
+          {loc.versionBadge}
+        </span>
       </div>
 
-      {/* Grid of Modular Premium Setting Cards */}
-      <div className="space-y-6">
-
-        {/* 1. APPEARANCE & LOCALIZATION */}
-        <div className="rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/60 flex items-center justify-center shrink-0">
-                <Languages className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
-                  {loc.appearanceHeader}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {loc.appearanceDesc}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-5 sm:p-6 space-y-6">
-            {/* Language Selector */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-                  {loc.selectLang}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('medium');
-                    const detected = autoDetectLanguage();
-                    alert(
-                      language === 'ur'
-                        ? `سسٹم کی زبان خودکار طور پر شناخت کر لی گئی: ${detected.toUpperCase()}`
-                        : language === 'ar'
-                        ? `تم التعرف على لغة النظام تلقائياً: ${detected.toUpperCase()}`
-                        : language === 'hi'
-                        ? `सिस्टम भाषा अपने आप पहचान ली गई: ${detected.toUpperCase()}`
-                        : `Device system language auto-detected: ${detected.toUpperCase()}`
-                    );
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-600 dark:text-brand-400 border border-brand-200/80 dark:border-brand-800/60 text-[11px] font-bold transition-all active:scale-95 cursor-pointer shadow-xs"
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>{loc.autoDetectLang}</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {[
-                  { id: 'en', label: 'English', native: 'English', flag: '🇬🇧' },
-                  { id: 'ur', label: 'Urdu', native: 'اردو', flag: '🇵🇰' },
-                  { id: 'ar', label: 'Arabic', native: 'العربية', flag: '🇸🇦' },
-                  { id: 'hi', label: 'Hindi', native: 'हिन्दी', flag: '🇮🇳' },
-                ].map((lang) => {
-                  const isSelected = language === lang.id;
-                  return (
-                    <button
-                      key={lang.id}
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setLanguage(lang.id as any);
-                      }}
-                      className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all duration-150 active:scale-95 relative overflow-hidden ${
-                        isSelected
-                          ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-600/25 ring-2 ring-brand-500/30'
-                          : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 hover:border-brand-500'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-base">{lang.flag}</span>
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                            isSelected
-                              ? 'border-white bg-white text-brand-600'
-                              : 'border-slate-300 dark:border-slate-600'
-                          }`}
-                        >
-                          {isSelected && <span className="w-2 h-2 rounded-full bg-brand-600" />}
-                        </div>
-                      </div>
-                      <div className="pt-2">
-                        <p className="text-sm font-black tracking-tight">{lang.native}</p>
-                        <p className={`text-[10px] font-medium ${isSelected ? 'text-brand-100' : 'text-slate-400'}`}>
-                          {lang.label}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Theme Selector */}
-            <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-              <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-                {loc.themeMode}
-              </label>
-              <div className="grid grid-cols-3 gap-2.5">
-                {[
-                  { id: 'light', label: loc.lightTheme, icon: Sun, iconColor: 'text-amber-500' },
-                  { id: 'dark', label: loc.darkTheme, icon: Moon, iconColor: 'text-indigo-400' },
-                  { id: 'system', label: loc.systemTheme, icon: Laptop, iconColor: 'text-slate-400' },
-                ].map((m) => {
-                  const isThemeSelected = theme === m.id;
-                  const Icon = m.icon;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('light');
-                        setTheme(m.id as any);
-                      }}
-                      className={`p-4 rounded-2xl border text-center flex flex-col items-center justify-center gap-2 transition-all duration-150 active:scale-95 ${
-                        isThemeSelected
-                          ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-600/25 ring-2 ring-brand-500/30'
-                          : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 hover:border-brand-500'
-                      }`}
-                    >
-                      <Icon className={`w-5 h-5 ${isThemeSelected ? 'text-white' : m.iconColor}`} />
-                      <span className="text-xs font-bold">{m.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+      {/* 2. Appearance & Language */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+          <Languages className="w-4 h-4 text-brand-600" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            {loc.appearanceHeader}
+          </h2>
         </div>
 
-        {/* 2. SYSTEM, HAPTICS & SOUNDS */}
-        <div className="rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60 flex items-center justify-center shrink-0">
-                <Vibrate className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
-                  {loc.systemHeader}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {loc.systemDesc}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-5 sm:p-6 space-y-4 divide-y divide-slate-100 dark:divide-slate-800/60">
-            {/* Toggle 1: Push Notifications */}
-            <div className="flex items-center justify-between pt-1">
-              <div className="space-y-0.5 max-w-sm">
-                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-purple-500" />
-                  <span>{loc.toolCompleteAlert}</span>
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {loc.toolCompleteDesc}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('selection');
-                  setPushNotifications(!pushNotifications);
-                }}
-                className={`w-12 h-7 rounded-full transition-colors relative p-1 shrink-0 ${
-                  pushNotifications ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
-                    pushNotifications ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Toggle 2: Haptic Vibration */}
-            <div className="flex items-center justify-between pt-4">
-              <div className="space-y-0.5 max-w-sm">
-                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <Vibrate className="w-4 h-4 text-emerald-500" />
-                  <span>{loc.hapticFeedback}</span>
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {loc.hapticDesc}
-                </p>
-              </div>
-
+        <div className="p-4 space-y-4">
+          {/* Language Selector */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                {loc.selectLang}
+              </span>
               <button
                 type="button"
                 onClick={() => {
                   triggerHaptic('medium');
-                  setHapticFeedback(!hapticFeedback);
+                  const detected = autoDetectLanguage();
+                  setLanguage(detected as any);
                 }}
-                className={`w-12 h-7 rounded-full transition-colors relative p-1 shrink-0 ${
-                  hapticFeedback ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'
-                }`}
+                className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <div
-                  className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
-                    hapticFeedback ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <Smartphone className="w-3 h-3" />
+                <span>{loc.autoDetectLang}</span>
               </button>
             </div>
 
-            {/* Toggle 3: Sound Effects */}
-            <div className="flex items-center justify-between pt-4">
-              <div className="space-y-0.5 max-w-sm">
-                <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <Volume2 className="w-4 h-4 text-amber-500" />
-                  <span>{loc.soundEffects}</span>
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {loc.soundDesc}
-                </p>
-              </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { id: 'en', label: 'English', flag: '🇬🇧' },
+                { id: 'ur', label: 'اردو', flag: '🇵🇰' },
+                { id: 'ar', label: 'العربية', flag: '🇸🇦' },
+                { id: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+              ].map((l) => {
+                const isSelected = language === l.id;
+                return (
+                  <button
+                    key={l.id}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setLanguage(l.id as any);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <span>{l.flag}</span>
+                    <span>{l.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('selection');
-                  setSoundEffects(!soundEffects);
-                }}
-                className={`w-12 h-7 rounded-full transition-colors relative p-1 shrink-0 ${
-                  soundEffects ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              >
-                <div
-                  className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
-                    soundEffects ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+          {/* Theme Selector */}
+          <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+              {loc.themeMode}
+            </span>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'light', label: loc.lightTheme, icon: Sun },
+                { id: 'dark', label: loc.darkTheme, icon: Moon },
+                { id: 'system', label: loc.systemTheme, icon: Laptop },
+              ].map((m) => {
+                const isSelected = theme === m.id;
+                const Icon = m.icon;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setTheme(m.id as any);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-brand-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{m.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 3. DEVICE MEMORY & PRIVACY CACHE */}
-        <div className="rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 flex items-center justify-center shrink-0">
-                <Database className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
-                  {loc.storageHeader}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {loc.storageDesc}
-                </p>
-              </div>
-            </div>
-
-            <div className="text-right">
-              <span className="text-xs font-mono font-black text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950 px-2.5 py-1 rounded-xl border border-brand-200 dark:border-brand-800">
-                {formatStorage(storageBytes)}
-              </span>
-            </div>
-          </div>
-
-          <div className="p-5 sm:p-6 space-y-4">
-            {/* Clear Storage Action */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  {loc.localUsage}: <span className="font-mono text-slate-500">{formatStorage(storageBytes)}</span>
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  Clean up cached history, download logs, and recent tool queues.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleClearCache}
-                className="px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 text-xs font-black flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xs"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>{loc.clearCache}</span>
-              </button>
-            </div>
-
-            {cacheCleared && (
-              <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>{loc.cacheCleared}</span>
-              </div>
-            )}
-          </div>
+      {/* 3. Notifications & Audio (Clean iOS-style Toggles) */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+          <Bell className="w-4 h-4 text-purple-600" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            {loc.systemHeader}
+          </h2>
         </div>
 
-        {/* SHARE APP WITH FRIENDS & COMMUNITY */}
-        <div className="rounded-3xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 p-6 sm:p-7 text-white shadow-xl shadow-brand-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-          
-          <div className="space-y-1.5 relative z-10 max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Community & Sharing</span>
+        <div className="p-4 space-y-3 divide-y divide-slate-100 dark:divide-slate-800">
+          {/* Toggle 1: Push Notifications */}
+          <div className="flex items-center justify-between pt-1">
+            <div className="space-y-0.5">
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                {loc.toolCompleteAlert}
+              </p>
+              <p className="text-[11px] text-slate-400">
+                {loc.toolCompleteDesc}
+              </p>
             </div>
-            <h2 className="text-base sm:text-lg font-black tracking-tight">
-              {loc.shareAppTitle}
+
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('selection');
+                const next = !pushNotifications;
+                setPushNotifications(next);
+                updatePreference('miftah_pref_push', next);
+              }}
+              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 cursor-pointer ${
+                pushNotifications ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full bg-white shadow-xs transform transition-transform ${
+                  pushNotifications ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Toggle 2: Haptics */}
+          <div className="flex items-center justify-between pt-3">
+            <div className="space-y-0.5">
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                {loc.hapticFeedback}
+              </p>
+              <p className="text-[11px] text-slate-400">
+                {loc.hapticDesc}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('medium');
+                const next = !hapticFeedback;
+                setHapticFeedback(next);
+                updatePreference('miftah_pref_haptic', next);
+              }}
+              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 cursor-pointer ${
+                hapticFeedback ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full bg-white shadow-xs transform transition-transform ${
+                  hapticFeedback ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Toggle 3: Sound Effects */}
+          <div className="flex items-center justify-between pt-3">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                  {loc.soundEffects}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    playCompletionChime();
+                  }}
+                  className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 text-[10px] font-bold flex items-center gap-1 cursor-pointer active:scale-95"
+                >
+                  <Play className="w-2.5 h-2.5 fill-current" />
+                  <span>{loc.testSound}</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {loc.soundDesc}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('selection');
+                const next = !soundEffects;
+                setSoundEffects(next);
+                updatePreference('miftah_pref_sound', next);
+                if (next) playCompletionChime();
+              }}
+              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 cursor-pointer ${
+                soundEffects ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full bg-white shadow-xs transform transition-transform ${
+                  soundEffects ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Export Quality & Tool Defaults */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+          <SlidersHorizontal className="w-4 h-4 text-teal-600" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            {loc.toolDefaultsHeader}
+          </h2>
+        </div>
+
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+              {loc.imageQuality}
+            </span>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'high', label: loc.imageQualityHigh },
+                { id: 'med', label: loc.imageQualityMed },
+                { id: 'low', label: loc.imageQualityLow },
+              ].map((q) => {
+                const isSelected = imageQuality === q.id;
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setImageQuality(q.id as any);
+                      updatePreference('miftah_pref_quality', q.id);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-teal-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    {q.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="space-y-0.5">
+              <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+                {loc.autoDownload}
+              </p>
+              <p className="text-[11px] text-slate-400">
+                {loc.autoDownloadDesc}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('selection');
+                const next = !autoDownload;
+                setAutoDownload(next);
+                updatePreference('miftah_pref_autodownload', next);
+              }}
+              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 shrink-0 cursor-pointer ${
+                autoDownload ? 'bg-brand-600' : 'bg-slate-300 dark:bg-slate-700'
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full bg-white shadow-xs transform transition-transform ${
+                  autoDownload ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Storage & Cache */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Database className="w-4 h-4 text-indigo-600" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              {loc.storageHeader}
             </h2>
-            <p className="text-xs sm:text-sm text-brand-100/90 leading-relaxed font-medium">
-              {loc.shareAppDesc}
+          </div>
+          <span className="text-xs font-mono font-bold text-slate-500">
+            {formatStorage(storageBytes)}
+          </span>
+        </div>
+
+        <div className="p-4 flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+              {loc.clearCache}
+            </p>
+            <p className="text-[11px] text-slate-400">
+              {loc.clearCacheDesc}
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => {
-              triggerHaptic('medium');
-              shareAppNative(language);
-            }}
-            className="px-6 py-3.5 rounded-2xl bg-white text-brand-700 hover:bg-brand-50 text-xs sm:text-sm font-black flex items-center justify-center gap-2.5 transition-all active:scale-95 shadow-lg shadow-black/10 shrink-0 relative z-10"
+            onClick={handleClearCache}
+            className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-xs font-bold flex items-center gap-1.5 shrink-0 active:scale-95 transition-all cursor-pointer"
           >
-            <Share2 className="w-4 h-4 text-brand-600" />
-            <span>{loc.shareAppBtn}</span>
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{loc.clearCache}</span>
           </button>
         </div>
 
-        {/* 4. LEGAL, COMPLIANCE & SAFETY POLICIES */}
-        <div className="rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/40">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
-                  {loc.legalHeader}
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {loc.legalDesc}
-                </p>
-              </div>
-            </div>
+        {cacheCleared && (
+          <div className="mx-4 mb-4 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>{loc.cacheCleared}</span>
           </div>
+        )}
+      </div>
 
-          <div className="p-5 sm:p-6 space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {[
-                { label: loc.privacyPolicy, href: '/privacy', icon: Lock, color: 'text-emerald-500' },
-                { label: loc.termsOfService, href: '/terms', icon: FileText, color: 'text-blue-500' },
-                { label: loc.privacyCenter, href: '/privacy-center', icon: ShieldCheck, color: 'text-purple-500' },
-                { label: loc.disclaimer, href: '/disclaimer', icon: Info, color: 'text-amber-500' },
-                { label: loc.refundPolicy, href: '/refund', icon: HeartHandshake, color: 'text-rose-500' },
-                { label: loc.faq, href: '/faq', icon: HelpCircle, color: 'text-teal-500' },
-              ].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => triggerHaptic('light')}
-                    className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 hover:border-brand-500 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200 transition-all active:scale-95 group"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 ${item.color}`} />
-                      <span>{item.label}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Google Play Compliant Account & Data Purge Portal */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80">
-              <div className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 flex items-center justify-center shrink-0">
-                    <UserX className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-black text-rose-950 dark:text-rose-200">
-                      {loc.accountDeletion}
-                    </h3>
-                    <p className="text-[11px] text-rose-700/80 dark:text-rose-400">
-                      {loc.accountDeletionDesc}
-                    </p>
-                  </div>
-                </div>
-
-                <Link
-                  href="/account"
-                  onClick={() => triggerHaptic('medium')}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black transition-all shadow-xs flex items-center gap-1.5 shrink-0 self-stretch sm:self-auto justify-center active:scale-95"
-                >
-                  <span>{loc.manageDeletion}</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 5. APP FOOTER & CREDITS */}
-        <div className="text-center space-y-2 pt-2 text-slate-400 text-xs">
-          <p className="font-semibold text-slate-500 dark:text-slate-400">
-            {loc.developerCredits}
+      {/* 6. Share App Banner */}
+      <div className="rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 p-4 sm:p-5 text-white shadow-md flex items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <h2 className="text-sm sm:text-base font-black">
+            {loc.shareAppTitle}
+          </h2>
+          <p className="text-xs text-brand-100/90 line-clamp-1">
+            {loc.shareAppDesc}
           </p>
-          <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400">
-            <Link href="/contact" className="hover:text-brand-500 transition-colors flex items-center gap-1">
-              <Mail className="w-3 h-3" />
-              <span>{loc.contactSupport}</span>
-            </Link>
-            <span>•</span>
-            <Link href="/faq" className="hover:text-brand-500 transition-colors flex items-center gap-1">
-              <HelpCircle className="w-3 h-3" />
-              <span>{loc.faq}</span>
-            </Link>
-          </div>
         </div>
 
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic('medium');
+            shareAppNative(language as any);
+          }}
+          className="px-4 py-2 rounded-xl bg-white text-brand-700 hover:bg-brand-50 text-xs font-black flex items-center gap-1.5 shrink-0 active:scale-95 transition-all shadow-xs cursor-pointer"
+        >
+          <Share2 className="w-3.5 h-3.5 text-brand-600" />
+          <span>{loc.shareAppBtn}</span>
+        </button>
+      </div>
+
+      {/* 7. Legal, Policies & Support */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            {loc.legalHeader}
+          </h2>
+        </div>
+
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          {[
+            { label: loc.privacyPolicy, href: '/privacy', icon: Lock },
+            { label: loc.termsOfService, href: '/terms', icon: FileText },
+            { label: loc.privacyCenter, href: '/privacy-center', icon: ShieldCheck },
+            { label: loc.disclaimer, href: '/disclaimer', icon: Info },
+            { label: loc.refundPolicy, href: '/refund', icon: HeartHandshake },
+            { label: loc.faq, href: '/faq', icon: HelpCircle },
+            { label: loc.contactSupport, href: '/contact', icon: Mail },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => triggerHaptic('light')}
+                className="px-4 py-3 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Icon className="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors" />
+                  <span>{item.label}</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform" />
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Account Deletion */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-rose-50/40 dark:bg-rose-950/20 flex items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <p className="text-xs font-bold text-rose-900 dark:text-rose-200">
+              {loc.accountDeletion}
+            </p>
+            <p className="text-[11px] text-rose-600 dark:text-rose-400">
+              {loc.accountDeletionDesc}
+            </p>
+          </div>
+
+          <Link
+            href="/account"
+            onClick={() => triggerHaptic('medium')}
+            className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shrink-0 active:scale-95 transition-all cursor-pointer shadow-xs"
+          >
+            {loc.accountDeletion.split(' ')[0]}
+          </Link>
+        </div>
       </div>
     </div>
   );

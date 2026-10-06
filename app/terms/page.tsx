@@ -96,27 +96,27 @@ export default function TermsPage() {
 
         <div className="p-6 sm:p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-8 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">{loc.s1Title}</h3>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">{loc.s1Title}</h2>
             <p>{loc.s1Desc}</p>
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">{loc.s2Title}</h3>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">{loc.s2Title}</h2>
             <p>{loc.s2Desc}</p>
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">{loc.s3Title}</h3>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">{loc.s3Title}</h2>
             <p>{loc.s3Desc}</p>
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">{loc.s4Title}</h3>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">{loc.s4Title}</h2>
             <p>{loc.s4Desc}</p>
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">{loc.s5Title}</h3>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">{loc.s5Title}</h2>
             <p>{loc.s5Desc}</p>
           </section>
 

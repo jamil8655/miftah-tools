@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   FileText,
   Download,
@@ -38,7 +38,6 @@ import {
   Sliders,
   Type,
   FileImage,
-  CheckSquare,
   Indent,
   Outdent,
   RemoveFormatting,
@@ -47,437 +46,385 @@ import {
   Trash2,
   Share2,
   CheckCircle2,
+  Search,
+  Replace as ReplaceIcon,
+  Eye,
+  Plus,
+  ArrowRight,
+  ChevronDown,
+  X,
+  Maximize2,
+  Palette,
+  FolderOpen,
+  Layers,
+  FileSpreadsheet,
+  HelpCircle,
+  Clock,
+  Sparkle,
 } from 'lucide-react';
 import { marked } from 'marked';
 import mammoth from 'mammoth';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import {
-  Document,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  Packer,
-  Table,
-  TableRow,
-  TableCell,
-  AlignmentType,
-  WidthType,
-} from 'docx';
-import { downloadSingleFile } from '@/lib/utils/download';
+  DocumentModel,
+  DocumentPageSettings,
+  DEFAULT_PAGE_SETTINGS,
+  FONT_OPTIONS,
+  FONT_SIZE_OPTIONS,
+  LINE_SPACING_OPTIONS,
+  MARGIN_VALUES,
+  PAPER_DIMENSIONS,
+  DOCUMENT_TEMPLATES,
+  DocumentTemplateItem,
+  RecentDocumentMeta,
+  PaperSize,
+  PageOrientation,
+  MarginPreset,
+} from '@/lib/documents/document-types';
+import {
+  exportDocumentToPdf,
+  exportDocumentToDocx,
+  printDocumentNative,
+  getSafeFileName,
+} from '@/lib/documents/document-export';
+import {
+  downloadSingleFile,
+  shareDownloadedFile,
+  openDownloadedFile,
+  SavedFileInfo,
+} from '@/lib/utils/download';
+import { adManager } from '@/lib/ads/AdManager';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
 interface RichTextToDocumentStudioProps {
   defaultFormat?: 'pdf' | 'docx' | 'image';
 }
 
-const STARTER_TEMPLATES = [
-  {
-    id: 'blank',
-    name: 'Blank Document (खाली पृष्ठ)',
-    icon: '📄',
-    desc: 'Clean A4 page ready for direct typing or pasting',
-    content: '<h1>Document Title</h1><p>Start typing your document here or paste text from your clipboard. You can apply formatting, insert tables, add signatures, and export to PDF, Word DOCX, or Image instantly.</p>',
-  },
-  {
-    id: 'letter',
-    name: 'Formal Business Letter (व्यावसायिक पत्र)',
-    icon: '💼',
-    desc: 'Professional correspondence with header & sign-off',
-    content: '<p><strong>Your Name / Company Name</strong><br/>123 Business Avenue, Suite 400<br/>City, State, Zip Code<br/>Email: contact@company.com | Tel: +1 (555) 019-2834</p><hr/><p><strong>Date:</strong> ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</p><p><strong>To:</strong><br/>Recipient Name / Department Head<br/>Target Enterprise Inc.<br/>456 Innovation Blvd, Tech City</p><p><strong>Subject: Formal Business Collaboration & Proposal</strong></p><p>Dear Sir / Madam,</p><p>I am writing to formally present our strategic collaboration proposal for the upcoming quarter. Our organization specializes in high-performance digital tools and document workflow solutions.</p><p>We would welcome the opportunity to schedule a brief 15-minute introductory call at your earliest convenience to review milestones and answer any questions.</p><p>Thank you very much for your time and consideration.</p><p>Sincerely,</p><p><strong>Your Full Name</strong><br/>Managing Director<br/><em>Your Organization Name</em></p>',
-  },
-  {
-    id: 'report',
-    name: 'Project & Business Report (रिपोर्ट)',
-    icon: '📊',
-    desc: 'Executive summary, structured table & status points',
-    content: '<h1>Executive Project Performance Report</h1><p><em>Quarterly Review &bull; ' + new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</em></p><hr/><h2>1. Executive Summary</h2><p>This report outlines the key performance metrics, milestone completions, and strategic opportunities achieved over the preceding quarter.</p><h2>2. Key Deliverables & Status</h2><table style="width:100%; border-collapse: collapse; border: 1px solid #cbd5e1; margin: 12px 0;"><thead><tr style="background-color: #f1f5f9;"><th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Project Phase</th><th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Lead Owner</th><th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Completion</th><th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Status</th></tr></thead><tbody><tr><td style="border: 1px solid #cbd5e1; padding: 8px;">Architecture Optimization</td><td style="border: 1px solid #cbd5e1; padding: 8px;">Engineering</td><td style="border: 1px solid #cbd5e1; padding: 8px;">100%</td><td style="border: 1px solid #cbd5e1; padding: 8px; color: #16a34a; font-weight: bold;">Completed</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px;">Client-Side Engine Refactor</td><td style="border: 1px solid #cbd5e1; padding: 8px;">Core Dev Team</td><td style="border: 1px solid #cbd5e1; padding: 8px;">100%</td><td style="border: 1px solid #cbd5e1; padding: 8px; color: #16a34a; font-weight: bold;">Verified</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px;">Multi-Format Export Test</td><td style="border: 1px solid #cbd5e1; padding: 8px;">QA Team</td><td style="border: 1px solid #cbd5e1; padding: 8px;">95%</td><td style="border: 1px solid #cbd5e1; padding: 8px; color: #0284c7; font-weight: bold;">In Progress</td></tr></tbody></table><h2>3. Strategic Recommendations</h2><ul><li>Accelerate local client-side processing pipelines to guarantee 100% user privacy.</li><li>Standardize automated document generation templates for enterprise workflows.</li></ul>',
-  },
-  {
-    id: 'mom',
-    name: 'Meeting Minutes (मीटिंग विवरण)',
-    icon: '📝',
-    desc: 'Structured meeting agenda, decisions & action items',
-    content: '<h1>Minutes of Meeting (MoM)</h1><p><strong>Topic:</strong> Product Roadmap & System Architecture Sync<br/><strong>Date & Time:</strong> ' + new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + '<br/><strong>Facilitator:</strong> Product Lead | <strong>Recorded By:</strong> Project Manager</p><hr/><h2>1. Attendees</h2><p>&bull; Alex Johnson (Engineering Lead)<br/>&bull; Sarah Williams (Product Manager)<br/>&bull; David Chen (Design & UX)<br/>&bull; Jamil Rahman (Technical Architect)</p><h2>2. Agenda Items Discussed</h2><ol><li>Review of Microsoft Word / Google Docs style WYSIWYG studio.</li><li>Deployment of PDF, Word DOCX, and high-resolution Image export.</li><li>Timeline review for next release milestone.</li></ol><h2>3. Action Items</h2><table style="width:100%; border-collapse: collapse; border: 1px solid #cbd5e1;"><thead><tr style="background-color: #f1f5f9;"><th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Action Item</th><th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Assignee</th><th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Due Date</th></tr></thead><tbody><tr><td style="border: 1px solid #cbd5e1; padding: 8px;">Deploy Text to PDF / Word / Image Studio</td><td style="border: 1px solid #cbd5e1; padding: 8px;">Jamil Rahman</td><td style="border: 1px solid #cbd5e1; padding: 8px;">Immediate</td></tr><tr><td style="border: 1px solid #cbd5e1; padding: 8px;">Verify mobile responsiveness & RTL typography</td><td style="border: 1px solid #cbd5e1; padding: 8px;">QA Team</td><td style="border: 1px solid #cbd5e1; padding: 8px;">Today</td></tr></tbody></table>',
-  },
-  {
-    id: 'urdu_letter',
-    name: 'Urdu / Arabic Application (اردو / عربی درخواست)',
-    icon: '✍️',
-    desc: 'RTL formatted formal petition & letter in Nastaliq',
-    content: '<div dir="rtl" style="text-align: right; font-family: \'Noto Nastaliq Urdu\', \'Amiri\', serif;"><p><strong>بتاریخ:</strong> ' + new Date().toLocaleDateString('ur-PK') + '</p><p><strong>بخدمت جناب:</strong> ڈائریکٹر صاحب / مینیجنگ ایڈیٹر<br/>ادارہِ مفتاح ٹولز و ٹیکنالوجی سروسز<br/>نئی دہلی / اسلام آباد</p><p><strong>عنوان: باقاعدہ درخواست برائے جدید ٹیکسٹ ٹو پی ڈی ایف و ورڈ ڈاکومنٹ سروس</strong></p><p><strong>جنابِ عالی!</strong></p><p>مؤدبانہ گزارش ہے کہ ہماری تنظیم آپ کے پلیٹ فارم "مفتاح ٹولز" کے ذریعے مختلف دفتری دستاویزات، رپورٹس اور خطوط کو اعلیٰ معیار میں پی ڈی ایف (PDF)، مائیکروسافٹ ورڈ (Word DOCX) اور تصویر (Image) میں تبدیل کرنا چاہتی ہے۔</p><p>ہمیں بے حد خوشی ہے کہ آپ نے مائیکروسافٹ ورڈ جیسا لائیو ایڈیٹر، خوبصورت اردو نستعلیق فونٹس، اور ون کلک ایکسپورٹ کی سہولت فراہم کر کے صارفین کا کام انتہائی آسان بنا دیا ہے۔</p><p>امید ہے کہ آپ اسی طرح اردو اور عربی زبانوں کی خدمات کا دائرہ مزید وسیع فرمائیں گے۔</p><p>ہم آپ کے بے حد مشکور و ممنون رہیں گے۔</p><p style="margin-top: 24px;"><strong>فقط العارض:</strong><br/>آپ کا مخلص خادم<br/>محمد جمیل الرحمن<br/><em>رابطہ نمبر: 919876543210+</em></p></div>',
-  },
-  {
-    id: 'hindi_letter',
-    name: 'Hindi Official Application (प्रार्थना पत्र)',
-    icon: '🇮🇳',
-    desc: 'Formal Hindi application with Devanagari typography',
-    content: '<div style="font-family: \'Noto Sans Devanagari\', sans-serif;"><p><strong>दिनांक:</strong> ' + new Date().toLocaleDateString('hi-IN') + '</p><p><strong>सेवा में,</strong><br/>श्रीमान प्रबंधक महोदय / प्रधानाचार्य जी,<br/>डिजिटल प्रौद्योगिकी एवं दस्तावेज़ विभाग,<br/>नई दिल्ली, भारत।</p><p><strong>विषय: उच्च गुणवत्ता वाले टेक्स्ट से पीडीएफ एवं वर्ड दस्तावेज़ निर्माण हेतु प्रार्थना पत्र।</strong></p><p><strong>महोदय,</strong></p><p>सविनय निवेदन यह है कि हम आपके प्रतिष्ठित डिजिटल प्लेटफॉर्म "Miftah Tools" का उपयोग विभिन्न आधिकारिक पत्रों, शैक्षणिक नोट्स और व्यावसायिक रिपोर्ट तैयार करने के लिए कर रहे हैं।</p><p>आपके नए माइक्रोसॉफ्ट वर्ड शैली वाले एडिटर की मदद से अब हम सीधे हिंदी में टाइप करके, शीर्षक, टेबल और रंगीन टेक्स्ट जोड़कर एक क्लिक में पीडीएफ (PDF), वर्ड (DOCX) और इमेज फाइल डाउनलोड कर पा रहे हैं।</p><p>अतः आपसे विनम्र निवेदन है कि इस उत्कृष्ट निःशुल्क सेवा को सदैव जारी रखने की कृपा करें।</p><p>इसके लिए हम सदैव आपके आभारी रहेंगे।</p><p style="margin-top: 24px;"><strong>भवदीय,</strong><br/>जमील रहमान<br/><em>संपर्क सूत्र: contact@miftahtools.com</em></p></div>',
-  },
-  {
-    id: 'notes',
-    name: 'Study & Summary Notes (अध्ययन नोट्स)',
-    icon: '📚',
-    desc: 'Structured notes with callout highlights and bullet lists',
-    content: '<h1>Course Study Notes: Modern Web Architecture</h1><p><em>Module 4 &bull; Client-Side Processing & High-Performance Web Apps</em></p><hr/><h2>Key Principles</h2><ul><li><strong>Zero Server Overhead:</strong> Computation executed directly in browser memory.</li><li><strong>Air-Gapped Privacy:</strong> Files never leave client device RAM.</li><li><strong>Instant Scalability:</strong> Zero cloud compute bottlenecks.</li></ul><div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 12px 16px; margin: 16px 0; border-radius: 8px;"><p style="margin: 0; color: #166534;"><strong>💡 Key Takeaway:</strong> High-resolution multi-page PDF and Word DOCX generation executes in under 300 milliseconds directly inside the browser.</p></div>',
-  },
+const LOCAL_STORAGE_KEY_DRAFT = 'miftah_document_studio_draft_v4';
+const LOCAL_STORAGE_KEY_RECENTS = 'miftah_document_studio_recents_v4';
+
+const SPECIAL_SYMBOLS = [
+  '•', '‣', '⁃', '◦', '★', '✓', '✗', '—', '–', '©', '®', '™',
+  '₹', '₨', '﷼', '$', '€', '£', '¥', '¢',
+  '±', '×', '÷', '≠', '≤', '≥', '≈', '√', 'π', '∞', '∑', '½', '¼', '¾',
+  '§', '¶', '†', '‡', '•', '°', '‰', '℃', '℉',
 ];
-
-const FONT_FAMILIES = [
-  { label: 'Calibri / Modern Sans', value: 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-  { label: 'Times New Roman / Serif', value: 'Amiri, Georgia, "Times New Roman", Times, serif' },
-  { label: 'Arial / Standard', value: 'Arial, Helvetica, sans-serif' },
-  { label: 'Georgia / Elegant Serif', value: 'Georgia, serif' },
-  { label: 'Urdu Nastaliq (اردو نستعلیق)', value: '"Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", serif' },
-  { label: 'Hindi Devanagari (हिंदी देवनागरी)', value: '"Noto Sans Devanagari", sans-serif' },
-  { label: 'Arabic Modern (Cairo / Tajawal)', value: 'Cairo, Tajawal, "Noto Kufi Arabic", sans-serif' },
-  { label: 'Courier / Monospace Code', value: '"Courier New", Courier, monospace' },
-];
-
-const FONT_SIZES = [
-  { label: '11 pt (Small)', value: '14.5px' },
-  { label: '12 pt (Standard)', value: '16px' },
-  { label: '14 pt (Subheading)', value: '18.5px' },
-  { label: '16 pt (Heading 3)', value: '21px' },
-  { label: '18 pt (Heading 2)', value: '24px' },
-  { label: '24 pt (Heading 1)', value: '32px' },
-  { label: '32 pt (Title)', value: '42px' },
-];
-
-const LINE_SPACINGS = [
-  { label: '1.0 (Single)', value: '1.2' },
-  { label: '1.15 (Standard)', value: '1.35' },
-  { label: '1.5 (Relaxed)', value: '1.6' },
-  { label: '2.0 (Double)', value: '2.1' },
-];
-
-const MARGIN_SIZES = [
-  { label: 'Normal (1 inch / 25mm)', value: '25mm' },
-  { label: 'Narrow (0.5 inch / 12mm)', value: '12mm' },
-  { label: 'Wide (1.5 inch / 38mm)', value: '38mm' },
-];
-
-function smartAutoFormatText(rawText: string): string {
-  if (!rawText || !rawText.trim()) return '<p></p>';
-
-  const lines = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-  const htmlBlocks: string[] = [];
-  let inBulletList = false;
-  let inOrderedList = false;
-
-  const closeLists = () => {
-    if (inBulletList) {
-      htmlBlocks.push('</ul>');
-      inBulletList = false;
-    }
-    if (inOrderedList) {
-      htmlBlocks.push('</ol>');
-      inOrderedList = false;
-    }
-  };
-
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i].trim();
-
-    if (!line) {
-      closeLists();
-      continue;
-    }
-
-    if (line.startsWith('# ')) {
-      closeLists();
-      htmlBlocks.push('<h1>' + escapeHtml(line.substring(2)) + '</h1>');
-      continue;
-    }
-    if (line.startsWith('## ')) {
-      closeLists();
-      htmlBlocks.push('<h2>' + escapeHtml(line.substring(3)) + '</h2>');
-      continue;
-    }
-    if (line.startsWith('### ')) {
-      closeLists();
-      htmlBlocks.push('<h3>' + escapeHtml(line.substring(4)) + '</h3>');
-      continue;
-    }
-
-    if (/^(\d+\.|\d+\))\s+[A-Z\u0600-\u06FF\u0900-\u097F]/.test(line) && line.length < 80 && !line.endsWith('.')) {
-      closeLists();
-      htmlBlocks.push('<h2>' + escapeHtml(line) + '</h2>');
-      continue;
-    }
-
-    if (line.length > 3 && line.length < 60 && line === line.toUpperCase() && /[A-Z]/.test(line) && !line.includes(':')) {
-      closeLists();
-      htmlBlocks.push('<h2>' + escapeHtml(line) + '</h2>');
-      continue;
-    }
-
-    if (/^[-*•]\s+/.test(line)) {
-      if (inOrderedList) closeLists();
-      if (!inBulletList) {
-        htmlBlocks.push('<ul>');
-        inBulletList = true;
-      }
-      const itemText = line.replace(/^[-*•]\s+/, '');
-      htmlBlocks.push('<li>' + formatInlineText(itemText) + '</li>');
-      continue;
-    }
-
-    if (/^\d+[\.\)]\s+/.test(line)) {
-      if (inBulletList) closeLists();
-      if (!inOrderedList) {
-        htmlBlocks.push('<ol>');
-        inOrderedList = true;
-      }
-      const itemText = line.replace(/^\d+[\.\)]\s+/, '');
-      htmlBlocks.push('<li>' + formatInlineText(itemText) + '</li>');
-      continue;
-    }
-
-    if (line.startsWith('> ')) {
-      closeLists();
-      htmlBlocks.push('<blockquote>' + formatInlineText(line.substring(2)) + '</blockquote>');
-      continue;
-    }
-
-    if (/^[-=_*]{3,}$/.test(line)) {
-      closeLists();
-      htmlBlocks.push('<hr/>');
-      continue;
-    }
-
-    closeLists();
-    htmlBlocks.push('<p>' + formatInlineText(line) + '</p>');
-  }
-
-  closeLists();
-  return htmlBlocks.join('');
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function formatInlineText(text: string): string {
-  let escaped = escapeHtml(text);
-  escaped = escaped.replace(/^([A-Za-z\u0600-\u06FF\u0900-\u097F\s]{2,30}):\s*(.*)$/, '<strong>$1:</strong> $2');
-  escaped = escaped.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, '<a href="mailto:$1" style="color:#0284c7;">$1</a>');
-  escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  return escaped;
-}
 
 export function RichTextToDocumentStudio({ defaultFormat = 'pdf' }: RichTextToDocumentStudioProps) {
-  const { language } = useI18n();
+  const { language, isRtl: appIsRtl } = useI18n();
+
+  // Primary Document Model State
+  const [docId, setDocId] = useState<string>('doc_' + Date.now());
+  const [docTitle, setDocTitle] = useState<string>('Untitled Document');
+  const [fontFamily, setFontFamily] = useState<string>(FONT_OPTIONS[0].family);
+  const [fontSize, setFontSize] = useState<string>('16px');
+  const [lineSpacing, setLineSpacing] = useState<string>(FONT_OPTIONS[0].defaultLineHeight || '1.5');
+  const [isRTL, setIsRTL] = useState<boolean>(false);
+  const [settings, setSettings] = useState<DocumentPageSettings>(DEFAULT_PAGE_SETTINGS);
+
+  // Editor DOM & Tooling Refs
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const pasteInputRef = useRef<HTMLTextAreaElement>(null);
+  const savedSelectionRef = useRef<Range | null>(null);
 
-  const [documentTitle, setDocumentTitle] = useState('Untitled Document');
-  const [selectedFont, setSelectedFont] = useState(FONT_FAMILIES[0].value);
-  const [fontSize, setFontSize] = useState('16px');
-  const [lineSpacing, setLineSpacing] = useState('1.35');
-  const [marginSize, setMarginSize] = useState('25mm');
-  const [paperSize, setPaperSize] = useState<'a4' | 'letter'>('a4');
-  const [isRTL, setIsRTL] = useState(false);
-  const [showPageBorder, setShowPageBorder] = useState(true);
-  const [includeHeaderFooter, setIncludeHeaderFooter] = useState(true);
-  const [pageBgColor, setPageBgColor] = useState('#ffffff');
-  const [activeRibbonTab, setActiveRibbonTab] = useState<'home' | 'insert' | 'layout' | 'templates'>('home');
+  // Stats & Progress States
+  const [stats, setStats] = useState({ words: 0, chars: 0, paragraphs: 0, pages: 1 });
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'restored'>('saved');
+  const [copied, setCopied] = useState(false);
 
+  // Active Modals & Bottom Drawers
+  const [activeModal, setActiveModal] = useState<
+    'none' | 'settings' | 'insert' | 'templates' | 'recents' | 'findReplace' | 'link' | 'table' | 'symbols' | 'preview' | 'exportResult'
+  >('none');
+
+  // Export / Progress State
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState({ percent: 0, status: '' });
+  const [exportResultInfo, setExportResultInfo] = useState<{
+    fileInfo: SavedFileInfo | null;
+    format: 'pdf' | 'docx';
+    title: string;
+  } | null>(null);
+
+  // Find and Replace State
+  const [findQuery, setFindQuery] = useState('');
+  const [replaceQuery, setReplaceQuery] = useState('');
+  const [findCount, setFindCount] = useState<number | null>(null);
+
+  // Table Insert Config
+  const [tableRows, setTableRows] = useState(3);
+  const [tableCols, setTableCols] = useState(3);
+
+  // Link Insert Config
+  const [linkText, setLinkText] = useState('');
+  const [linkUrl, setLinkUrl] = useState('https://');
+
+  // Quick Paste Drawer
   const [quickPasteOpen, setQuickPasteOpen] = useState(false);
   const [rawTextInput, setRawTextInput] = useState('');
-  const [autoFormatEnabled, setAutoFormatEnabled] = useState(true);
 
-  const [copied, setCopied] = useState(false);
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
-  const [isExportingDocx, setIsExportingDocx] = useState(false);
-  const [isExportingImage, setIsExportingImage] = useState(false);
-  const [stats, setStats] = useState({ words: 0, chars: 0, paragraphs: 0, readingTime: 1, estimatedPages: 1 });
-
+  // 1. Initial Load & Recovery from LocalStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('miftah_document_studio_draft');
-      if (saved && editorRef.current) {
-        editorRef.current.innerHTML = saved;
-        updateStats();
-        return;
-      }
-    }
-    if (editorRef.current && !editorRef.current.innerHTML.trim()) {
-      editorRef.current.innerHTML = STARTER_TEMPLATES[0].content;
-      updateStats();
-    }
-  }, []);
+    if (typeof window === 'undefined') return;
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (editorRef.current && typeof window !== 'undefined') {
-        localStorage.setItem('miftah_document_studio_draft', editorRef.current.innerHTML);
-      }
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const updateStats = () => {
-    if (!editorRef.current) return;
-    const text = editorRef.current.innerText || '';
-    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-    const chars = text.length;
-    const paragraphs = editorRef.current.querySelectorAll('p, h1, h2, h3, h4, li, blockquote, table').length || 1;
-    const readingTime = Math.max(1, Math.ceil(words / 200));
-    const estimatedPages = Math.max(1, Math.ceil(words / 450));
-    setStats({ words, chars, paragraphs, readingTime, estimatedPages });
-  };
-
-  const executeCommand = (command: string, value: string | undefined = undefined) => {
-    if (typeof document !== 'undefined') {
-      document.execCommand(command, false, value);
-      editorRef.current?.focus();
-      updateStats();
-    }
-  };
-
-  const handleApplyTemplate = (template: typeof STARTER_TEMPLATES[0]) => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = template.content;
-      setDocumentTitle(template.name.split(' (')[0]);
-      if (template.id === 'urdu_letter') {
-        setIsRTL(true);
-        setSelectedFont(FONT_FAMILIES[4].value);
-      } else if (template.id === 'hindi_letter') {
-        setIsRTL(false);
-        setSelectedFont(FONT_FAMILIES[5].value);
-      } else {
-        setIsRTL(false);
-        setSelectedFont(FONT_FAMILIES[0].value);
-      }
-      setActiveRibbonTab('home');
-      updateStats();
-    }
-  };
-
-  const handlePasteFromClipboard = async () => {
     try {
-      if (navigator.clipboard && navigator.clipboard.readText) {
-        const text = await navigator.clipboard.readText();
-        if (text) {
-          setRawTextInput(text);
-          setQuickPasteOpen(true);
+      const savedDraft = localStorage.getItem(LOCAL_STORAGE_KEY_DRAFT);
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft) as DocumentModel;
+        if (parsed.contentHtml && editorRef.current) {
+          editorRef.current.innerHTML = parsed.contentHtml;
+          setDocId(parsed.id || 'doc_' + Date.now());
+          setDocTitle(parsed.title || 'Untitled Document');
+          setIsRTL(parsed.isRTL ?? (language === 'ur' || language === 'ar'));
+          if (parsed.fontFamily) setFontFamily(parsed.fontFamily);
+          if (parsed.fontSize) setFontSize(parsed.fontSize);
+          if (parsed.lineSpacing) setLineSpacing(parsed.lineSpacing);
+          if (parsed.settings) setSettings(parsed.settings);
+          setSaveStatus('restored');
+          recalculateStats();
           return;
         }
       }
-      setQuickPasteOpen(true);
-    } catch {
-      setQuickPasteOpen(true);
+    } catch (e) {
+      console.warn('Draft restore notice:', e);
+    }
+
+    // Default template load if empty
+    if (editorRef.current && !editorRef.current.innerHTML.trim()) {
+      const defaultTmpl = language === 'ur'
+        ? DOCUMENT_TEMPLATES.find((t) => t.id === 'urdu_formal') || DOCUMENT_TEMPLATES[0]
+        : language === 'ar'
+        ? DOCUMENT_TEMPLATES.find((t) => t.id === 'arabic_formal') || DOCUMENT_TEMPLATES[0]
+        : language === 'hi'
+        ? DOCUMENT_TEMPLATES.find((t) => t.id === 'hindi_application') || DOCUMENT_TEMPLATES[0]
+        : DOCUMENT_TEMPLATES[0];
+
+      editorRef.current.innerHTML = defaultTmpl.content;
+      setDocTitle(defaultTmpl.name.split(' (')[0]);
+      setIsRTL(defaultTmpl.isRTL);
+      setFontFamily(defaultTmpl.fontFamily);
+      if (defaultTmpl.defaultLineHeight) {
+        setLineSpacing(defaultTmpl.defaultLineHeight);
+      }
+      recalculateStats();
+    }
+  }, [language]);
+
+  // 2. Selection Helper
+  const saveCurrentSelection = () => {
+    if (typeof window === 'undefined') return;
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      savedSelectionRef.current = sel.getRangeAt(0).cloneRange();
     }
   };
 
-  const handleCommitRawText = (mode: 'replace' | 'append' | 'cursor') => {
-    if (!rawTextInput.trim() || !editorRef.current) return;
-
-    const formattedHtml = autoFormatEnabled ? smartAutoFormatText(rawTextInput) : '<p>' + rawTextInput.replace(/\n/g, '<br/>') + '</p>';
-
-    if (mode === 'replace') {
-      editorRef.current.innerHTML = formattedHtml;
-    } else if (mode === 'append') {
-      editorRef.current.innerHTML += '<hr/>' + formattedHtml;
-    } else {
-      editorRef.current.focus();
-      executeCommand('insertHTML', formattedHtml);
+  const restoreSavedSelection = () => {
+    if (typeof window === 'undefined' || !savedSelectionRef.current) return;
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(savedSelectionRef.current);
     }
-
-    setRawTextInput('');
-    setQuickPasteOpen(false);
-    updateStats();
   };
 
-  const insertTable = () => {
-    const tableHtml = `
-      <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; margin: 14px 0;">
-        <thead>
-          <tr style="background-color: #f1f5f9;">
-            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;">Item / Description</th>
-            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Category</th>
-            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Status / Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 8px;">Sample Entry 1</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">General</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; color: #16a34a; font-weight: bold;">Active</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #cbd5e1; padding: 8px;">Sample Entry 2</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center;">Documentation</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; color: #0284c7; font-weight: bold;">Verified</td>
-          </tr>
-        </tbody>
-      </table><p><br/></p>
-    `;
-    executeCommand('insertHTML', tableHtml);
+  // 3. Stats & Live Page Calculation
+  const recalculateStats = useCallback(() => {
+    if (!editorRef.current) return;
+    const text = editorRef.current.innerText || '';
+    const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+    const chars = text.length;
+    const paragraphs = editorRef.current.querySelectorAll('p, h1, h2, h3, li, blockquote, table').length || 1;
+
+    const pageBreaks = editorRef.current.querySelectorAll('.page-break').length;
+    const contentHeight = editorRef.current.scrollHeight;
+    const autoPages = Math.max(1, Math.ceil(contentHeight / 950));
+    const estimatedPages = Math.max(pageBreaks + 1, autoPages, Math.ceil(words / 450));
+
+    setStats({ words, chars, paragraphs, pages: estimatedPages });
+  }, []);
+
+  // 4. Auto-Save Mechanism
+  const persistDraftToStorage = useCallback(() => {
+    if (!editorRef.current || typeof window === 'undefined') return;
+
+    setSaveStatus('saving');
+    const model: DocumentModel = {
+      id: docId,
+      title: docTitle,
+      contentHtml: editorRef.current.innerHTML,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      isRTL,
+      fontFamily,
+      fontSize,
+      lineSpacing,
+      settings,
+    };
+
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY_DRAFT, JSON.stringify(model));
+
+      // Update Recents List
+      const recentsRaw = localStorage.getItem(LOCAL_STORAGE_KEY_RECENTS);
+      let recentsList: RecentDocumentMeta[] = recentsRaw ? JSON.parse(recentsRaw) : [];
+
+      const currentSnippet = editorRef.current.innerText?.slice(0, 100) || '';
+      const existingIdx = recentsList.findIndex((r) => r.id === docId);
+
+      const metaItem: RecentDocumentMeta = {
+        id: docId,
+        title: docTitle || 'Untitled Document',
+        updatedAt: Date.now(),
+        wordCount: stats.words,
+        charCount: stats.chars,
+        pageCount: stats.pages,
+        previewSnippet: currentSnippet,
+        isRTL,
+      };
+
+      if (existingIdx >= 0) {
+        recentsList[existingIdx] = metaItem;
+      } else {
+        recentsList.unshift(metaItem);
+        recentsList = recentsList.slice(0, 20);
+      }
+
+      localStorage.setItem(LOCAL_STORAGE_KEY_RECENTS, JSON.stringify(recentsList));
+      setTimeout(() => setSaveStatus('saved'), 400);
+    } catch (e) {
+      console.warn('Auto-save error:', e);
+      setSaveStatus('saved');
+    }
+  }, [docId, docTitle, isRTL, fontFamily, fontSize, lineSpacing, settings, stats]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      persistDraftToStorage();
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [persistDraftToStorage]);
+
+  // 5. Rich Text Command Executor
+  const execCmd = (command: string, value: string | undefined = undefined) => {
+    if (typeof document !== 'undefined') {
+      editorRef.current?.focus();
+      document.execCommand(command, false, value);
+      recalculateStats();
+      persistDraftToStorage();
+    }
   };
 
-  const insertCallout = (type: 'info' | 'warning' | 'success') => {
-    let bg = '#eff6ff';
-    let border = '#3b82f6';
-    let text = '#1e40af';
-    let title = '📌 Note';
-
-    if (type === 'warning') {
-      bg = '#fffbeb';
-      border = '#f59e0b';
-      text = '#92400e';
-      title = '⚠️ Important Notice';
-    } else if (type === 'success') {
-      bg = '#f0fdf4';
-      border = '#22c55e';
-      text = '#166534';
-      title = '✓ Confirmed Item';
+  // 6. Font Family Change with Optimal Line-Height & RTL auto-tuning
+  const handleFontChange = (selectedFamily: string) => {
+    setFontFamily(selectedFamily);
+    const fontObj = FONT_OPTIONS.find((f) => f.family === selectedFamily);
+    if (fontObj) {
+      if (fontObj.defaultLineHeight) {
+        setLineSpacing(fontObj.defaultLineHeight);
+      }
+      if (fontObj.isRTL !== undefined) {
+        setIsRTL(fontObj.isRTL);
+      }
     }
+    recalculateStats();
+    persistDraftToStorage();
+  };
+
+  // 7. Font Size Change Helper
+  const handleFontSizeDelta = (delta: number) => {
+    const currentPt = parseInt(fontSize) || 16;
+    const newPt = Math.max(8, Math.min(72, currentPt + delta));
+    setFontSize(`${newPt}px`);
+  };
+
+  // 8. Insert Custom Elements
+  const insertPageBreak = () => {
+    const html = `<div class="page-break" style="page-break-after: always; break-after: page; height: 16px; margin: 24px 0; border-bottom: 2px dashed #94a3b8; text-align: center; color: #94a3b8; font-size: 10px; user-select: none;" contenteditable="false">--- Page Break ---</div><p><br/></p>`;
+    execCmd('insertHTML', html);
+    setActiveModal('none');
+  };
+
+  const insertHorizontalRule = () => {
+    execCmd('insertHorizontalRule');
+    setActiveModal('none');
+  };
+
+  const insertDate = () => {
+    const dateText = new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
+    execCmd('insertText', dateText);
+    setActiveModal('none');
+  };
+
+  const insertTableElement = () => {
+    let tableHtml = `<table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; margin: 16px 0;"><thead><tr style="background-color: #f8fafc;">`;
+    for (let c = 1; c <= tableCols; c++) {
+      tableHtml += `<th style="border: 1px solid #cbd5e1; padding: 10px; text-align: ${isRTL ? 'right' : 'left'}; font-weight: bold;">Header ${c}</th>`;
+    }
+    tableHtml += `</tr></thead><tbody>`;
+    for (let r = 1; r <= tableRows; r++) {
+      tableHtml += `<tr>`;
+      for (let c = 1; c <= tableCols; c++) {
+        tableHtml += `<td style="border: 1px solid #cbd5e1; padding: 10px; text-align: ${isRTL ? 'right' : 'left'};">Row ${r}, Col ${c}</td>`;
+      }
+      tableHtml += `</tr>`;
+    }
+    tableHtml += `</tbody></table><p><br/></p>`;
+
+    execCmd('insertHTML', tableHtml);
+    setActiveModal('none');
+  };
+
+  const insertLinkElement = () => {
+    if (!linkUrl.trim()) return;
+    const html = `<a href="${linkUrl.trim()}" target="_blank" rel="noopener noreferrer" style="color: #0284c7; text-decoration: underline;">${linkText.trim() || linkUrl.trim()}</a>`;
+    execCmd('insertHTML', html);
+    setLinkText('');
+    setLinkUrl('https://');
+    setActiveModal('none');
+  };
+
+  const insertCalloutBox = (type: 'info' | 'warning' | 'success') => {
+    const config = {
+      info: { bg: '#eff6ff', border: '#3b82f6', text: '#1e40af', icon: '📌', title: 'Note' },
+      warning: { bg: '#fffbeb', border: '#f59e0b', text: '#92400e', icon: '⚠️', title: 'Important' },
+      success: { bg: '#f0fdf4', border: '#22c55e', text: '#166534', icon: '✓', title: 'Key Takeaway' },
+    }[type];
 
     const html = `
-      <div style="background-color: ${bg}; border-left: 4px solid ${border}; padding: 12px 16px; margin: 14px 0; border-radius: 8px;">
-        <p style="margin: 0; color: ${text}; font-weight: bold;">${title}</p>
-        <p style="margin: 4px 0 0 0; color: ${text};">Add your highlighted key information or instructions here.</p>
+      <div style="background-color: ${config.bg}; border-left: 4px solid ${config.border}; padding: 12px 16px; margin: 16px 0; border-radius: 8px;">
+        <p style="margin: 0; color: ${config.text}; font-weight: bold;">${config.icon} ${config.title}:</p>
+        <p style="margin: 4px 0 0 0; color: ${config.text};">Write your important announcement or note here.</p>
       </div><p><br/></p>
     `;
-    executeCommand('insertHTML', html);
+    execCmd('insertHTML', html);
+    setActiveModal('none');
   };
 
-  const insertSignatureBox = () => {
+  const insertSignatureBlock = () => {
     const html = `
-      <div style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 10px;">
-        <div style="text-align: left; width: 220px; border-top: 1px solid #0f172a; padding-top: 6px;">
-          <p style="margin: 0; font-size: 11px; font-weight: bold;">Authorized Signature</p>
-          <p style="margin: 0; font-size: 10px; color: #64748b;">Managing Authority</p>
+      <div style="display: flex; justify-content: space-between; margin-top: 48px; padding-top: 12px; page-break-inside: avoid;">
+        <div style="text-align: ${isRTL ? 'right' : 'left'}; width: 220px; border-top: 1px solid #334155; padding-top: 6px;">
+          <p style="margin: 0; font-size: 12px; font-weight: bold;">Authorized Signature</p>
+          <p style="margin: 0; font-size: 11px; color: #64748b;">Managing Authority</p>
         </div>
-        <div style="text-align: right; width: 160px; border-top: 1px solid #0f172a; padding-top: 6px;">
-          <p style="margin: 0; font-size: 11px; font-weight: bold;">Date & Seal</p>
-          <p style="margin: 0; font-size: 10px; color: #64748b;">${new Date().toLocaleDateString()}</p>
+        <div style="text-align: ${isRTL ? 'left' : 'right'}; width: 180px; border-top: 1px solid #334155; padding-top: 6px;">
+          <p style="margin: 0; font-size: 12px; font-weight: bold;">Date &amp; Seal</p>
+          <p style="margin: 0; font-size: 11px; color: #64748b;">${new Date().toLocaleDateString('en-GB')}</p>
         </div>
       </div><p><br/></p>
     `;
-    executeCommand('insertHTML', html);
+    execCmd('insertHTML', html);
+    setActiveModal('none');
   };
 
-  const insertDateStamp = () => {
-    const nowStr = new Date().toLocaleDateString(language === 'ur' ? 'ur-PK' : language === 'hi' ? 'hi-IN' : 'en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    executeCommand('insertText', nowStr);
+  const insertSymbol = (sym: string) => {
+    execCmd('insertText', sym);
+    setActiveModal('none');
   };
 
-  const handleImageInsert = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 9. Image Handling
+  const handleImageFilePicked = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !editorRef.current) return;
 
@@ -485,37 +432,45 @@ export function RichTextToDocumentStudio({ defaultFormat = 'pdf' }: RichTextToDo
     reader.onload = (loadEvt) => {
       const src = loadEvt.target?.result as string;
       if (src) {
-        const imgHtml = '<p><img src="' + src + '" alt="Inserted Image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 12px 0;" /></p><p><br/></p>';
-        executeCommand('insertHTML', imgHtml);
+        const imgHtml = `
+          <div style="text-align: center; margin: 16px 0;">
+            <img src="${src}" alt="Inserted Image" style="max-width: 100%; width: 80%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" />
+          </div><p><br/></p>
+        `;
+        execCmd('insertHTML', imgHtml);
       }
     };
     reader.readAsDataURL(file);
     if (imageInputRef.current) imageInputRef.current.value = '';
+    setActiveModal('none');
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 10. Document Import
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !editorRef.current) return;
 
     try {
-      const fileName = file.name.toLowerCase();
-      setDocumentTitle(file.name.replace(/\.[^/.]+$/, ''));
+      const name = file.name.toLowerCase();
+      setDocTitle(file.name.replace(/\.[^/.]+$/, ''));
 
-      if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+      if (name.endsWith('.docx') || name.endsWith('.doc')) {
         const arrayBuffer = await file.arrayBuffer();
         const result = await mammoth.convertToHtml({ arrayBuffer });
-        editorRef.current.innerHTML = result.value || '<p>Empty Word Document</p>';
-      } else if (fileName.endsWith('.md') || fileName.endsWith('.markdown')) {
+        editorRef.current.innerHTML = result.value || '<p>Empty Document</p>';
+      } else if (name.endsWith('.md') || name.endsWith('.markdown')) {
         const text = await file.text();
         editorRef.current.innerHTML = (await marked.parse(text)) as string;
-      } else if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+      } else if (name.endsWith('.html') || name.endsWith('.htm')) {
         const text = await file.text();
         editorRef.current.innerHTML = text;
       } else {
         const text = await file.text();
-        editorRef.current.innerHTML = smartAutoFormatText(text);
+        const paras = text.split(/\n\s*\n/).map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
+        editorRef.current.innerHTML = paras || '<p>Empty Document</p>';
       }
-      updateStats();
+      recalculateStats();
+      persistDraftToStorage();
     } catch (err) {
       console.error('File import error:', err);
     } finally {
@@ -523,752 +478,299 @@ export function RichTextToDocumentStudio({ defaultFormat = 'pdf' }: RichTextToDo
     }
   };
 
-  const handleExportPdf = async () => {
+  // 11. Templates Selector Handler
+  const handleApplyTemplate = (tmpl: DocumentTemplateItem) => {
     if (!editorRef.current) return;
-    setIsExportingPdf(true);
-
-    try {
-      const printContainer = document.createElement('div');
-      printContainer.style.position = 'fixed';
-      printContainer.style.left = '-9999px';
-      printContainer.style.top = '0';
-      printContainer.style.width = paperSize === 'a4' ? '794px' : '816px';
-      printContainer.style.backgroundColor = pageBgColor;
-      printContainer.style.padding = marginSize === '12mm' ? '30px' : marginSize === '38mm' ? '80px' : '50px';
-      printContainer.style.fontFamily = selectedFont;
-      printContainer.style.fontSize = fontSize;
-      printContainer.style.lineHeight = lineSpacing;
-      printContainer.style.color = '#0f172a';
-      printContainer.style.boxSizing = 'border-box';
-      printContainer.dir = isRTL ? 'rtl' : 'ltr';
-
-      let innerContent = '';
-      if (includeHeaderFooter) {
-        innerContent += `
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 20px; font-size: 11px; color: #64748b;">
-            <span>${documentTitle || 'Document'}</span>
-            <span>Miftah Tools • miftahtools.com</span>
-          </div>
-        `;
+    if (confirm(`Load template "${tmpl.name}"? Current content will be replaced with the template layout.`)) {
+      setDocId('doc_' + Date.now());
+      setDocTitle(tmpl.name.split(' (')[0]);
+      setIsRTL(tmpl.isRTL);
+      setFontFamily(tmpl.fontFamily);
+      if (tmpl.defaultLineHeight) {
+        setLineSpacing(tmpl.defaultLineHeight);
       }
-
-      innerContent += editorRef.current.innerHTML;
-
-      if (includeHeaderFooter) {
-        innerContent += `
-          <div style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 30px; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between;">
-            <span>${new Date().toLocaleDateString()}</span>
-            <span>Page 1 of ${stats.estimatedPages} &bull; Verified Document</span>
-          </div>
-        `;
-      }
-
-      printContainer.innerHTML = innerContent;
-      document.body.appendChild(printContainer);
-
-      const canvas = await html2canvas(printContainer, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: pageBgColor,
-      });
-
-      document.body.removeChild(printContainer);
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: paperSize === 'a4' ? 'a4' : 'letter',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pdfHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pdfHeight;
-      }
-
-      const safeTitle = (documentTitle || 'document').replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'document';
-      pdf.save(safeTitle + '.pdf');
-    } catch (err) {
-      console.error('PDF generation error:', err);
-    } finally {
-      setIsExportingPdf(false);
+      editorRef.current.innerHTML = tmpl.content;
+      recalculateStats();
+      persistDraftToStorage();
+      setActiveModal('none');
     }
   };
 
-  const handleExportDocx = async () => {
+  // 12. Create New Document
+  const handleCreateNewDoc = () => {
+    if (confirm('Create a new blank document? Your current draft is already saved.')) {
+      setDocId('doc_' + Date.now());
+      setDocTitle('Untitled Document');
+      if (editorRef.current) {
+        editorRef.current.innerHTML = '<h1>Untitled Document</h1><p>Start writing...</p>';
+      }
+      recalculateStats();
+      persistDraftToStorage();
+      setActiveModal('none');
+    }
+  };
+
+  // 13. Find & Replace Handler
+  const handleFindNext = () => {
+    if (!findQuery.trim() || typeof window === 'undefined') return;
+    const win = window as any;
+    if (win.find) {
+      const found = win.find(findQuery, false, false, true, false, false, false);
+      setFindCount(found ? 1 : 0);
+    }
+  };
+
+  const handleReplace = () => {
+    if (!findQuery.trim() || !editorRef.current) return;
+    const currentHtml = editorRef.current.innerHTML;
+    const regex = new RegExp(escapeRegex(findQuery), 'i');
+    if (regex.test(currentHtml)) {
+      editorRef.current.innerHTML = currentHtml.replace(regex, replaceQuery);
+      recalculateStats();
+      persistDraftToStorage();
+    }
+  };
+
+  const handleReplaceAll = () => {
+    if (!findQuery.trim() || !editorRef.current) return;
+    const currentHtml = editorRef.current.innerHTML;
+    const regex = new RegExp(escapeRegex(findQuery), 'gi');
+    const matches = currentHtml.match(regex);
+    if (matches && matches.length > 0) {
+      editorRef.current.innerHTML = currentHtml.replace(regex, replaceQuery);
+      setFindCount(matches.length);
+      recalculateStats();
+      persistDraftToStorage();
+    }
+  };
+
+  function escapeRegex(str: string) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // 14. PDF Export Pipeline
+  const handleExportPDF = async () => {
     if (!editorRef.current) return;
-    setIsExportingDocx(true);
+    setIsExporting(true);
+    setExportProgress({ percent: 10, status: 'Starting PDF export...' });
 
     try {
-      const docElements: (Paragraph | Table)[] = [];
-
-      if (includeHeaderFooter && documentTitle) {
-        docElements.push(
-          new Paragraph({
-            text: documentTitle,
-            heading: HeadingLevel.TITLE,
-            alignment: isRTL ? AlignmentType.RIGHT : AlignmentType.LEFT,
-            spacing: { after: 200 },
-          })
-        );
-      }
-
-      const parseInlineRuns = (element: Node): TextRun[] => {
-        const runs: TextRun[] = [];
-        element.childNodes.forEach((child) => {
-          if (child.nodeType === Node.TEXT_NODE) {
-            runs.push(new TextRun({ text: child.textContent || '', size: 24 }));
-          } else if (child.nodeType === Node.ELEMENT_NODE) {
-            const el = child as HTMLElement;
-            const tag = el.tagName.toLowerCase();
-            const text = el.innerText || el.textContent || '';
-            const isBold = tag === 'b' || tag === 'strong' || el.style.fontWeight === 'bold';
-            const isItalic = tag === 'i' || tag === 'em' || el.style.fontStyle === 'italic';
-            const isUnderline = tag === 'u' || el.style.textDecoration.includes('underline');
-            const isStrike = tag === 's' || tag === 'strike' || el.style.textDecoration.includes('line-through');
-
-            runs.push(
-              new TextRun({
-                text: text,
-                bold: isBold,
-                italics: isItalic,
-                underline: isUnderline ? {} : undefined,
-                strike: isStrike,
-                size: 24,
-              })
-            );
-          }
-        });
-        return runs;
+      const docModel: DocumentModel = {
+        id: docId,
+        title: docTitle,
+        contentHtml: editorRef.current.innerHTML,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        isRTL,
+        fontFamily,
+        fontSize,
+        lineSpacing,
+        settings,
       };
 
-      const nodes = Array.from(editorRef.current.childNodes);
-      nodes.forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          const el = node as HTMLElement;
-          const tag = el.tagName.toLowerCase();
-
-          if (tag === 'h1') {
-            docElements.push(
-              new Paragraph({
-                text: el.innerText,
-                heading: HeadingLevel.HEADING_1,
-                alignment: isRTL ? AlignmentType.RIGHT : AlignmentType.LEFT,
-                spacing: { before: 240, after: 120 },
-              })
-            );
-          } else if (tag === 'h2') {
-            docElements.push(
-              new Paragraph({
-                text: el.innerText,
-                heading: HeadingLevel.HEADING_2,
-                alignment: isRTL ? AlignmentType.RIGHT : AlignmentType.LEFT,
-                spacing: { before: 200, after: 100 },
-              })
-            );
-          } else if (tag === 'h3') {
-            docElements.push(
-              new Paragraph({
-                text: el.innerText,
-                heading: HeadingLevel.HEADING_3,
-                alignment: isRTL ? AlignmentType.RIGHT : AlignmentType.LEFT,
-                spacing: { before: 160, after: 80 },
-              })
-            );
-          } else if (tag === 'table') {
-            const rows = Array.from(el.querySelectorAll('tr')).map((tr) => {
-              const cells = Array.from(tr.querySelectorAll('th, td')).map((cell) => {
-                return new TableCell({
-                  children: [
-                    new Paragraph({
-                      children: parseInlineRuns(cell),
-                    }),
-                  ],
-                  width: { size: 100 / (tr.children.length || 1), type: WidthType.PERCENTAGE },
-                });
-              });
-              return new TableRow({ children: cells });
-            });
-
-            if (rows.length > 0) {
-              docElements.push(
-                new Table({
-                  rows,
-                  width: { size: 100, type: WidthType.PERCENTAGE },
-                })
-              );
-            }
-          } else {
-            const runs = parseInlineRuns(el);
-            docElements.push(
-              new Paragraph({
-                children: runs.length > 0 ? runs : [new TextRun({ text: el.innerText || '', size: 24 })],
-                alignment: isRTL ? AlignmentType.RIGHT : AlignmentType.LEFT,
-                spacing: { after: 140 },
-              })
-            );
-          }
-        }
+      const pdfBlob = await exportDocumentToPdf(docModel, (pct, msg) => {
+        setExportProgress({ percent: pct, status: msg });
       });
 
-      const doc = new Document({
-        sections: [
-          {
-            properties: {},
-            children: docElements.length > 0 ? docElements : [new Paragraph({ text: 'Miftah Tools Document' })],
-          },
-        ],
-      });
+      const fileName = getSafeFileName(docTitle, 'pdf');
 
-      const blob = await Packer.toBlob(doc);
-      const safeTitle = (documentTitle || 'document').replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'document';
-      downloadSingleFile(blob, safeTitle + '.docx');
+      await adManager.showInterstitialOnDownload(async () => {
+        const saved = await downloadSingleFile(pdfBlob, fileName);
+        setExportResultInfo({
+          fileInfo: saved,
+          format: 'pdf',
+          title: fileName,
+        });
+        setActiveModal('exportResult');
+      });
     } catch (err) {
-      console.error('Word DOCX generation error:', err);
+      console.error('PDF Export Error:', err);
+      alert('PDF export failed. Your document is still safely preserved.');
     } finally {
-      setIsExportingDocx(false);
+      setIsExporting(false);
     }
   };
 
-  const handleExportImage = async (format: 'png' | 'jpeg' = 'png') => {
+  // 15. Word (.docx) Export Pipeline
+  const handleExportWord = async () => {
     if (!editorRef.current) return;
-    setIsExportingImage(true);
+    setIsExporting(true);
+    setExportProgress({ percent: 10, status: 'Creating Word document...' });
 
     try {
-      const renderContainer = document.createElement('div');
-      renderContainer.style.position = 'fixed';
-      renderContainer.style.left = '-9999px';
-      renderContainer.style.top = '0';
-      renderContainer.style.width = paperSize === 'a4' ? '794px' : '816px';
-      renderContainer.style.backgroundColor = pageBgColor;
-      renderContainer.style.padding = marginSize === '12mm' ? '30px' : marginSize === '38mm' ? '80px' : '50px';
-      renderContainer.style.fontFamily = selectedFont;
-      renderContainer.style.fontSize = fontSize;
-      renderContainer.style.lineHeight = lineSpacing;
-      renderContainer.style.color = '#0f172a';
-      renderContainer.style.boxSizing = 'border-box';
-      renderContainer.dir = isRTL ? 'rtl' : 'ltr';
+      const docModel: DocumentModel = {
+        id: docId,
+        title: docTitle,
+        contentHtml: editorRef.current.innerHTML,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        isRTL,
+        fontFamily,
+        fontSize,
+        lineSpacing,
+        settings,
+      };
 
-      let innerContent = '';
-      if (includeHeaderFooter) {
-        innerContent += `
-          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 20px; font-size: 11px; color: #64748b;">
-            <span>${documentTitle || 'Document'}</span>
-            <span>Miftah Tools • miftahtools.com</span>
-          </div>
-        `;
-      }
-
-      innerContent += editorRef.current.innerHTML;
-
-      if (includeHeaderFooter) {
-        innerContent += `
-          <div style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 30px; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between;">
-            <span>${new Date().toLocaleDateString()}</span>
-            <span>Page 1 of ${stats.estimatedPages}</span>
-          </div>
-        `;
-      }
-
-      renderContainer.innerHTML = innerContent;
-      document.body.appendChild(renderContainer);
-
-      const canvas = await html2canvas(renderContainer, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: pageBgColor,
+      const docxBlob = await exportDocumentToDocx(docModel, (pct, msg) => {
+        setExportProgress({ percent: pct, status: msg });
       });
 
-      document.body.removeChild(renderContainer);
+      const fileName = getSafeFileName(docTitle, 'docx');
 
-      const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const safeTitle = (documentTitle || 'document').replace(/[^a-zA-Z0-9-_ ]/g, '').trim() || 'document';
-          downloadSingleFile(blob, safeTitle + (format === 'jpeg' ? '.jpg' : '.png'));
-        }
-      }, mimeType, 0.95);
+      await adManager.showInterstitialOnDownload(async () => {
+        const saved = await downloadSingleFile(docxBlob, fileName);
+        setExportResultInfo({
+          fileInfo: saved,
+          format: 'docx',
+          title: fileName,
+        });
+        setActiveModal('exportResult');
+      });
     } catch (err) {
-      console.error('Image generation error:', err);
+      console.error('Word Export Error:', err);
+      alert('Word export failed. Your document is still safely preserved.');
     } finally {
-      setIsExportingImage(false);
+      setIsExporting(false);
     }
   };
 
-  const handleCopy = () => {
-    if (!editorRef.current) return;
-    navigator.clipboard.writeText(editorRef.current.innerText || '');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
+  // 16. Native System Print
   const handlePrint = () => {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+    if (!editorRef.current) return;
+    const docModel: DocumentModel = {
+      id: docId,
+      title: docTitle,
+      contentHtml: editorRef.current.innerHTML,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      isRTL,
+      fontFamily,
+      fontSize,
+      lineSpacing,
+      settings,
+    };
+    printDocumentNative(docModel);
   };
 
-  const handleClear = () => {
-    if (editorRef.current && confirm('Are you sure you want to clear the canvas? (क्या आप पूरे पेज को खाली करना चाहते हैं?)')) {
-      editorRef.current.innerHTML = '<p><br/></p>';
-      updateStats();
-    }
-  };
+  // Paper Dimension CSS Calculation
+  const paperDim = PAPER_DIMENSIONS[settings.paperSize] || PAPER_DIMENSIONS.a4;
+  const currentDim = settings.orientation === 'landscape' ? paperDim.landscape : paperDim.portrait;
+  const marginCss = MARGIN_VALUES[settings.marginPreset].css;
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-4">
-      {/* 1. TOP MICROSOFT OFFICE STYLE TITLE & EXPORT HEADER */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-lg shadow-slate-100 dark:shadow-none space-y-3">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Document Title & File Info */}
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-blue-600 flex items-center justify-center shadow-md shadow-brand-500/20 text-white shrink-0">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <input
-                type="text"
-                value={documentTitle}
-                onChange={(e) => setDocumentTitle(e.target.value)}
-                placeholder="Document Title (दस्तावेज़ का नाम)..."
-                className="text-base sm:text-lg font-black text-slate-900 dark:text-white bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 focus:border-brand-500 focus:outline-hidden px-1 py-0.5 w-full max-w-xs sm:max-w-md transition-colors"
-              />
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
-                <span className="text-brand-600 dark:text-brand-400 font-bold">Word &amp; Docs Studio</span>
-                <span>&bull;</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">✓ Auto-saved locally</span>
-              </p>
-            </div>
+    <div className="w-full max-w-7xl mx-auto space-y-3 pb-16">
+      {/* 1. MOBILE-FIRST TOP HEADER: Title, Auto-Save Status, Main Actions */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 sm:p-4 shadow-md shadow-slate-100 dark:shadow-none flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Title Input & Save Status */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-sm shrink-0">
+            <FileText className="w-5 h-5" />
           </div>
-
-          {/* Core Export Actions: PDF, Word DOCX, Image PNG, Paste, Print */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="min-w-0 flex-1">
             <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".txt,.md,.markdown,.docx,.doc,.rtf,.html,.log"
-              className="hidden"
+              type="text"
+              value={docTitle}
+              onChange={(e) => setDocTitle(e.target.value)}
+              placeholder="Document Title..."
+              className="text-base sm:text-lg font-black text-slate-900 dark:text-white bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 focus:border-brand-500 focus:outline-hidden px-1 py-0.5 w-full max-w-sm transition-colors"
             />
-            <input
-              type="file"
-              ref={imageInputRef}
-              onChange={handleImageInsert}
-              accept="image/*"
-              className="hidden"
-            />
-
-            {/* Paste from Clipboard Button */}
-            <button
-              type="button"
-              onClick={handlePasteFromClipboard}
-              className="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-bold text-xs border border-indigo-200 dark:border-indigo-800 inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
-              title="Paste text from clipboard (Ctrl+V)"
-            >
-              <ClipboardPaste className="w-3.5 h-3.5 text-indigo-600" />
-              <span>📋 Paste Text</span>
-            </button>
-
-            {/* Import File */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
-              title="Open / Import .txt, .docx, .md file"
-            >
-              <Upload className="w-3.5 h-3.5 text-slate-500" />
-              <span>Import</span>
-            </button>
-
-            {/* Copy All */}
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
-              title="Copy all text to clipboard"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
-
-            {/* Print */}
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 inline-flex items-center transition-all shadow-xs cursor-pointer"
-              title="Print document (Ctrl+P)"
-            >
-              <Printer className="w-4 h-4" />
-            </button>
-
-            {/* EXPORT IMAGE BUTTON */}
-            <button
-              type="button"
-              onClick={() => handleExportImage('png')}
-              disabled={isExportingImage}
-              className="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-violet-600/20 inline-flex items-center gap-1.5 transition-all cursor-pointer"
-              title="Download page as high-resolution PNG image"
-            >
-              <FileImage className="w-3.5 h-3.5" />
-              <span>{isExportingImage ? 'Rendering Image...' : 'Export Image (.png)'}</span>
-            </button>
-
-            {/* EXPORT DOCX BUTTON */}
-            <button
-              type="button"
-              onClick={handleExportDocx}
-              disabled={isExportingDocx}
-              className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 inline-flex items-center gap-1.5 transition-all cursor-pointer"
-              title="Download editable Microsoft Word document"
-            >
-              <FileCode className="w-3.5 h-3.5" />
-              <span>{isExportingDocx ? 'Saving Word...' : 'Export Word (.docx)'}</span>
-            </button>
-
-            {/* EXPORT PDF BUTTON */}
-            <button
-              type="button"
-              onClick={handleExportPdf}
-              disabled={isExportingPdf}
-              className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-brand-600/25 inline-flex items-center gap-1.5 transition-all cursor-pointer"
-              title="Download print-ready PDF document"
-            >
-              <Download className="w-4 h-4" />
-              <span>{isExportingPdf ? 'Generating PDF...' : 'Export PDF (.pdf)'}</span>
-            </button>
+            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <span className="font-bold text-brand-600 dark:text-brand-400">Word/Docs Studio</span>
+              <span>&bull;</span>
+              <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <Check className="w-3 h-3" />
+                {saveStatus === 'saving' ? 'Saving draft...' : saveStatus === 'restored' ? 'Draft restored' : 'Saved'}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* 2. MICROSOFT OFFICE RIBBON TABS */}
-        <div className="flex items-center gap-1 border-t border-slate-100 dark:border-slate-800 pt-2.5 overflow-x-auto">
+        {/* Top Actions: Templates, Page Setup, Print, Preview, Export */}
+        <div className="flex flex-wrap items-center gap-1.5 justify-end">
+          {/* Templates Gallery */}
           <button
             type="button"
-            onClick={() => setActiveRibbonTab('home')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeRibbonTab === 'home'
-                ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
+            onClick={() => setActiveModal('templates')}
+            className="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-800 inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+            title="Choose from starter document templates"
           >
-            <Type className="w-3.5 h-3.5" />
-            <span>Home (फॉर्मेटिंग)</span>
+            <Zap className="w-3.5 h-3.5 text-amber-600" />
+            <span>Templates</span>
           </button>
 
+          {/* Page Setup Settings */}
           <button
             type="button"
-            onClick={() => setActiveRibbonTab('insert')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeRibbonTab === 'insert'
-                ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
+            onClick={() => setActiveModal('settings')}
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 inline-flex items-center transition-all shadow-xs cursor-pointer active:scale-95"
+            title="Page Size, Margins, Headers & Footers"
           >
-            <TableIcon className="w-3.5 h-3.5" />
-            <span>Insert (टेबल व चित्र)</span>
+            <Layout className="w-4 h-4" />
           </button>
 
+          {/* Print */}
           <button
             type="button"
-            onClick={() => setActiveRibbonTab('layout')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeRibbonTab === 'layout'
-                ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
+            onClick={handlePrint}
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 inline-flex items-center transition-all shadow-xs cursor-pointer active:scale-95"
+            title="Print or Save as Native Vector PDF"
           >
-            <Layout className="w-3.5 h-3.5" />
-            <span>Page Layout (पेज सेटिंग)</span>
+            <Printer className="w-4 h-4" />
           </button>
 
+          {/* Preview Mode */}
           <button
             type="button"
-            onClick={() => setActiveRibbonTab('templates')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeRibbonTab === 'templates'
-                ? 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
+            onClick={() => setActiveModal('preview')}
+            className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+            title="Preview Multi-Page Print Layout"
           >
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
-            <span>Templates (${STARTER_TEMPLATES.length})</span>
+            <Eye className="w-3.5 h-3.5 text-slate-500" />
+            <span>Preview</span>
+          </button>
+
+          {/* Export Word (.docx) */}
+          <button
+            type="button"
+            onClick={handleExportWord}
+            disabled={isExporting}
+            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 inline-flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Export as Microsoft Word (.docx)"
+          >
+            <FileCode className="w-3.5 h-3.5" />
+            <span>Word (.docx)</span>
+          </button>
+
+          {/* Export PDF */}
+          <button
+            type="button"
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-brand-600/25 inline-flex items-center gap-1.5 transition-all cursor-pointer"
+            title="Export print-ready PDF document"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export PDF</span>
           </button>
         </div>
       </div>
 
-      {/* QUICK PASTE / SMART AUTO-FORMAT DRAWER */}
-      {quickPasteOpen && (
-        <div className="bg-gradient-to-r from-indigo-900/10 via-brand-900/10 to-violet-900/10 dark:bg-slate-900 border-2 border-indigo-500/30 rounded-3xl p-5 shadow-xl space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span>Quick Paste &amp; Smart Auto-Format Engine (क्विक पेस्ट व ऑटो-फॉर्मेट)</span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Paste any unformatted text, WhatsApp notes, copied PDF excerpts, or raw notes. The engine will structure headings, lists, and bold keys automatically!
-              </p>
-            </div>
-            <label className="flex items-center gap-2 text-xs font-bold text-indigo-700 dark:text-indigo-300 cursor-pointer bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 shrink-0">
-              <input
-                type="checkbox"
-                checked={autoFormatEnabled}
-                onChange={(e) => setAutoFormatEnabled(e.target.checked)}
-                className="w-4 h-4 rounded text-indigo-600"
-              />
-              <span>Smart Auto-Format Enabled</span>
-            </label>
-          </div>
-
-          <textarea
-            ref={pasteInputRef}
-            value={rawTextInput}
-            onChange={(e) => setRawTextInput(e.target.value)}
-            placeholder="Paste or type raw text here... (e.g. 1. Title, - Bullet list, Key: Value, multiple paragraphs)"
-            className="w-full h-36 p-4 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40"
-          />
-
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleCommitRawText('replace')}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md shadow-indigo-600/20 inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>✨ Format &amp; Replace Canvas</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleCommitRawText('append')}
-                className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-600/20 inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
-              >
-                <span>➕ Append to Bottom (नीचे जोड़ते जाएं)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleCommitRawText('cursor')}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
-              >
-                <span>📍 Insert at Cursor</span>
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setRawTextInput('');
-                setQuickPasteOpen(false);
-              }}
-              className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* TEMPLATES POPUP / VIEW */}
-      {activeRibbonTab === 'templates' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Choose a Ready-to-Use Document Template</h3>
-              <p className="text-xs text-slate-500">Pick a structured layout and start writing or editing right away.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveRibbonTab('home')}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-pointer"
-            >
-              Close Templates
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {STARTER_TEMPLATES.map((tmpl) => (
-              <div
-                key={tmpl.id}
-                onClick={() => handleApplyTemplate(tmpl)}
-                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 transition-all cursor-pointer group shadow-xs space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xl">{tmpl.icon}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 group-hover:bg-brand-600 group-hover:text-white transition-colors">
-                    Apply
-                  </span>
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                    {tmpl.name}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">{tmpl.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* PAGE LAYOUT SETTINGS VIEW */}
-      {activeRibbonTab === 'layout' && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4 animate-in fade-in duration-200">
-          <div>
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Page Layout &amp; Margins Setup</h3>
-            <p className="text-xs text-slate-500">Configure paper size, margins, page background, and writing direction.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Paper Standard */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Paper Standard</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPaperSize('a4')}
-                  className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                    paperSize === 'a4'
-                      ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400'
-                      : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600'
-                  }`}
-                >
-                  A4 (210×297mm)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaperSize('letter')}
-                  className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                    paperSize === 'letter'
-                      ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400'
-                      : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600'
-                  }`}
-                >
-                  US Letter
-                </button>
-              </div>
-            </div>
-
-            {/* Margins */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Margins</label>
-              <select
-                value={marginSize}
-                onChange={(e) => setMarginSize(e.target.value)}
-                className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-hidden"
-              >
-                {MARGIN_SIZES.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Writing Direction */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Writing Direction</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsRTL(false)}
-                  className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                    !isRTL
-                      ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400'
-                      : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600'
-                  }`}
-                >
-                  LTR (ENG/हिंदी)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsRTL(true)}
-                  className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                    isRTL
-                      ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400'
-                      : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600'
-                  }`}
-                >
-                  RTL (اردو/عربي)
-                </button>
-              </div>
-            </div>
-
-            {/* Page Background */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Page Color</label>
-              <div className="flex items-center gap-2">
-                {['#ffffff', '#fafaf9', '#f8fafc', '#fefce8'].map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setPageBgColor(c)}
-                    className={`w-7 h-7 rounded-lg border-2 cursor-pointer transition-all ${
-                      pageBgColor === c ? 'border-brand-600 scale-110 shadow-xs' : 'border-slate-300 dark:border-slate-700'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={includeHeaderFooter}
-                onChange={(e) => setIncludeHeaderFooter(e.target.checked)}
-                className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
-              />
-              <span>Include Header &amp; Footer in Export</span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
-              <input
-                type="checkbox"
-                checked={showPageBorder}
-                onChange={(e) => setShowPageBorder(e.target.checked)}
-                className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
-              />
-              <span>Show A4 Paper Shadow &amp; Border</span>
-            </label>
-          </div>
-        </div>
-      )}
-
-      {/* 3. STICKY MICROSOFT OFFICE FORMATTING TOOLBAR */}
-      <div className="sticky top-14 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 rounded-2xl p-2 shadow-md shadow-slate-200/50 dark:shadow-none flex flex-wrap items-center justify-between gap-2">
-        {/* Left Formatting Tools */}
-        <div className="flex flex-wrap items-center gap-1.5">
+      {/* 2. HORIZONTALLY SCROLLABLE FORMATTING TOOLBAR WITH ORGANIZED FONTS */}
+      <div className="sticky top-14 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 rounded-2xl p-1.5 sm:p-2 shadow-md shadow-slate-200/40 dark:shadow-none flex items-center justify-between gap-1 overflow-x-auto">
+        <div className="flex items-center gap-1 shrink-0">
           {/* Undo / Redo */}
           <button
             type="button"
-            onClick={() => executeCommand('undo')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('undo')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer active:scale-95"
             title="Undo (Ctrl+Z)"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('redo')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('redo')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer active:scale-95"
             title="Redo (Ctrl+Y)"
           >
             <RotateCw className="w-4 h-4" />
@@ -1276,162 +778,230 @@ export function RichTextToDocumentStudio({ defaultFormat = 'pdf' }: RichTextToDo
 
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
 
-          {/* Font Family */}
+          {/* Categorized Font Selector */}
           <select
-            value={selectedFont}
-            onChange={(e) => setSelectedFont(e.target.value)}
-            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-hidden text-slate-800 dark:text-slate-200"
-            title="Select Font Family"
+            value={fontFamily}
+            onChange={(e) => handleFontChange(e.target.value)}
+            className="p-1.5 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-hidden text-slate-800 dark:text-slate-200 max-w-[150px] sm:max-w-[200px]"
+            title="Font Family & Typography"
           >
-            {FONT_FAMILIES.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
-              </option>
-            ))}
+            <optgroup label="Urdu (اردو)">
+              {FONT_OPTIONS.filter((f) => f.category === 'urdu').map((f) => (
+                <option key={f.id} value={f.family}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Arabic (العربية)">
+              {FONT_OPTIONS.filter((f) => f.category === 'arabic').map((f) => (
+                <option key={f.id} value={f.family}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Hindi (हिन्दी)">
+              {FONT_OPTIONS.filter((f) => f.category === 'hindi').map((f) => (
+                <option key={f.id} value={f.family}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="English & Standard">
+              {FONT_OPTIONS.filter((f) => f.category === 'english').map((f) => (
+                <option key={f.id} value={f.family}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
           </select>
 
-          {/* Font Size */}
-          <select
-            value={fontSize}
-            onChange={(e) => setFontSize(e.target.value)}
-            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-hidden text-slate-800 dark:text-slate-200"
-            title="Font Size"
-          >
-            {FONT_SIZES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+          {/* Font Size Selector + Step Buttons */}
+          <div className="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 border border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => handleFontSizeDelta(-1)}
+              className="px-2 py-1 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700"
+              title="Decrease Font Size"
+            >
+              A-
+            </button>
+            <select
+              value={fontSize}
+              onChange={(e) => setFontSize(e.target.value)}
+              className="p-1 bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 border-0 focus:outline-hidden"
+            >
+              {FONT_SIZE_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => handleFontSizeDelta(1)}
+              className="px-2 py-1 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700"
+              title="Increase Font Size"
+            >
+              A+
+            </button>
+          </div>
 
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
 
-          {/* Headings / Styles */}
+          {/* Headings */}
           <button
             type="button"
-            onClick={() => executeCommand('formatBlock', '<h1>')}
-            className="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-black text-xs transition-colors cursor-pointer"
-            title="Main Heading (H1)"
+            onClick={() => execCmd('formatBlock', '<h1>')}
+            className="px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-black text-xs cursor-pointer"
+            title="Heading 1"
           >
             H1
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('formatBlock', '<h2>')}
-            className="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-colors cursor-pointer"
-            title="Heading 2 (H2)"
+            onClick={() => execCmd('formatBlock', '<h2>')}
+            className="px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs cursor-pointer"
+            title="Heading 2"
           >
             H2
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('formatBlock', '<h3>')}
-            className="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors cursor-pointer"
-            title="Heading 3 (H3)"
+            onClick={() => execCmd('formatBlock', '<h3>')}
+            className="px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
+            title="Heading 3"
           >
             H3
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('formatBlock', '<p>')}
-            className="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs transition-colors cursor-pointer"
-            title="Normal Paragraph"
+            onClick={() => execCmd('formatBlock', '<p>')}
+            className="px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs cursor-pointer"
+            title="Body Paragraph"
           >
-            Normal
+            Body
           </button>
 
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
 
-          {/* Bold, Italic, Underline, Strike */}
+          {/* Bold, Italic, Underline, Strikethrough */}
           <button
             type="button"
-            onClick={() => executeCommand('bold')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('bold')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer active:scale-95"
             title="Bold (Ctrl+B)"
           >
             <Bold className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('italic')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('italic')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer active:scale-95"
             title="Italic (Ctrl+I)"
           >
             <Italic className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('underline')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('underline')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer active:scale-95"
             title="Underline (Ctrl+U)"
           >
             <Underline className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('strikeThrough')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('strikeThrough')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer active:scale-95"
             title="Strikethrough"
           >
             <Strikethrough className="w-4 h-4" />
           </button>
 
-          {/* Text Color Picker */}
-          <div className="relative flex items-center gap-1" title="Text Color">
-            <span className="text-[10px] font-bold text-slate-400">A</span>
+          {/* Text ForeColor */}
+          <label className="relative flex items-center gap-1 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" title="Text Color">
+            <span className="text-xs font-black text-slate-700 dark:text-slate-300 underline decoration-brand-600 decoration-2">A</span>
             <input
               type="color"
               defaultValue="#0f172a"
-              onChange={(e) => executeCommand('foreColor', e.target.value)}
-              className="w-5 h-5 rounded cursor-pointer border-0 p-0 bg-transparent"
+              onChange={(e) => execCmd('foreColor', e.target.value)}
+              className="w-4 h-4 rounded cursor-pointer border-0 p-0 bg-transparent opacity-0 absolute inset-0"
             />
-          </div>
+          </label>
 
-          {/* Highlight Color Picker */}
-          <div className="relative flex items-center gap-1" title="Highlight Color">
-            <span className="text-[10px] font-bold text-amber-500">🎨</span>
+          {/* Highlight Marker */}
+          <label className="relative flex items-center gap-1 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" title="Highlight Color">
+            <Palette className="w-4 h-4 text-amber-500" />
             <input
               type="color"
               defaultValue="#fef08a"
-              onChange={(e) => executeCommand('hiliteColor', e.target.value)}
-              className="w-5 h-5 rounded cursor-pointer border-0 p-0 bg-transparent"
+              onChange={(e) => execCmd('hiliteColor', e.target.value)}
+              className="w-4 h-4 rounded cursor-pointer border-0 p-0 bg-transparent opacity-0 absolute inset-0"
             />
-          </div>
+          </label>
 
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
 
-          {/* Alignments */}
+          {/* Alignment */}
           <button
             type="button"
-            onClick={() => executeCommand('justifyLeft')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('justifyLeft')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
             title="Align Left"
           >
             <AlignLeft className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('justifyCenter')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('justifyCenter')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
             title="Align Center"
           >
             <AlignCenter className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('justifyRight')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('justifyRight')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
             title="Align Right"
           >
             <AlignRight className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('justifyFull')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('justifyFull')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
             title="Justify Text"
           >
             <AlignJustify className="w-4 h-4" />
+          </button>
+
+          {/* Line Spacing Selector */}
+          <select
+            value={lineSpacing}
+            onChange={(e) => setLineSpacing(e.target.value)}
+            className="p-1 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-hidden text-slate-800 dark:text-slate-200"
+            title="Line Spacing (فاصل الأسطر / فاصلہ)"
+          >
+            {LINE_SPACING_OPTIONS.map((ls) => (
+              <option key={ls.value} value={ls.value}>
+                {ls.label}
+              </option>
+            ))}
+          </select>
+
+          {/* RTL / LTR Direction Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsRTL((prev) => !prev)}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              isRTL
+                ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+            }`}
+            title="Toggle Right-to-Left or Left-to-Right"
+          >
+            <span>{isRTL ? 'RTL (دائیں سے بائیں)' : 'LTR (Left to Right)'}</span>
           </button>
 
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
@@ -1439,131 +1009,192 @@ export function RichTextToDocumentStudio({ defaultFormat = 'pdf' }: RichTextToDo
           {/* Lists */}
           <button
             type="button"
-            onClick={() => executeCommand('insertUnorderedList')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('insertUnorderedList')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
             title="Bullet List"
           >
             <List className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => executeCommand('insertOrderedList')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+            onClick={() => execCmd('insertOrderedList')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
             title="Numbered List"
           >
             <ListOrdered className="w-4 h-4" />
           </button>
+          <button
+            type="button"
+            onClick={() => execCmd('indent')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
+            title="Indent"
+          >
+            <Indent className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => execCmd('outdent')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
+            title="Outdent"
+          >
+            <Outdent className="w-4 h-4" />
+          </button>
 
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1" />
 
-          {/* Inserts: Table, Image, Callout, Signature, Divider, Date */}
+          {/* Master Insert Button (Opens Menu) */}
           <button
             type="button"
-            onClick={insertTable}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Insert Table"
+            onClick={() => setActiveModal('insert')}
+            className="px-3 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 font-bold text-xs border border-brand-200 dark:border-brand-800 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
-            <TableIcon className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
+            <span>Insert</span>
           </button>
+
+          {/* Find and Replace */}
           <button
             type="button"
-            onClick={() => imageInputRef.current?.click()}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Insert Image from Device"
+            onClick={() => setActiveModal('findReplace')}
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
+            title="Find & Replace Text"
           >
-            <ImageIcon className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => insertCallout('info')}
-            className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-600 transition-colors cursor-pointer"
-            title="Insert Highlight Box"
-          >
-            <Info className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={insertSignatureBox}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Insert Signature Line"
-          >
-            <PenTool className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => executeCommand('insertHorizontalRule')}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Divider Line"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={insertDateStamp}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Insert Current Date"
-          >
-            <Calendar className="w-4 h-4" />
+            <Search className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Right Tools: Clear & Quick Paste Toggle */}
-        <div className="flex items-center gap-1.5">
+        {/* Right Tools: File Upload & Clear */}
+        <div className="flex items-center gap-1 shrink-0">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImportFile}
+            accept=".txt,.md,.markdown,.docx,.doc,.rtf,.html,.log"
+            className="hidden"
+          />
+          <input
+            type="file"
+            ref={imageInputRef}
+            onChange={handleImageFilePicked}
+            accept="image/*"
+            className="hidden"
+          />
+
           <button
             type="button"
-            onClick={() => setQuickPasteOpen((prev) => !prev)}
-            className="px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer flex items-center gap-1"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
+            title="Open / Import .txt, .docx, .md file"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{quickPasteOpen ? 'Hide Paste' : 'Quick Paste Box'}</span>
+            <Upload className="w-4 h-4" />
           </button>
 
           <button
             type="button"
-            onClick={handleClear}
-            className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-500 transition-colors cursor-pointer"
-            title="Clear Page"
+            onClick={handleCreateNewDoc}
+            className="p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-500 cursor-pointer"
+            title="New / Clear Document"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* 4. REALISTIC MICROSOFT WORD / GOOGLE DOCS A4 CANVAS CONTAINER */}
-      <div className="p-3 sm:p-8 bg-slate-200/70 dark:bg-slate-950/70 rounded-3xl border border-slate-300/80 dark:border-slate-800 flex flex-col items-center min-h-[750px] overflow-x-auto">
+      {/* 3. FIND AND REPLACE INLINE DRAWER */}
+      {activeModal === 'findReplace' && (
+        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-md flex flex-wrap items-center justify-between gap-2 animate-in fade-in duration-200">
+          <div className="flex flex-wrap items-center gap-2 flex-1">
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 text-xs">
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Find text..."
+                value={findQuery}
+                onChange={(e) => setFindQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleFindNext()}
+                className="bg-transparent focus:outline-hidden text-slate-900 dark:text-white text-xs w-28 sm:w-36"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1 text-xs">
+              <ReplaceIcon className="w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Replace with..."
+                value={replaceQuery}
+                onChange={(e) => setReplaceQuery(e.target.value)}
+                className="bg-transparent focus:outline-hidden text-slate-900 dark:text-white text-xs w-28 sm:w-36"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleFindNext}
+              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer"
+            >
+              Find Next
+            </button>
+            <button
+              type="button"
+              onClick={handleReplace}
+              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer"
+            >
+              Replace
+            </button>
+            <button
+              type="button"
+              onClick={handleReplaceAll}
+              className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-bold text-white cursor-pointer"
+            >
+              Replace All
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setActiveModal('none')}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* 4. REALISTIC MULTI-PAGE DOCUMENT VIEW CONTAINER */}
+      <div className="p-2 sm:p-8 bg-slate-200/70 dark:bg-slate-950/70 rounded-3xl border border-slate-300/80 dark:border-slate-800 flex flex-col items-center min-h-[750px] overflow-x-auto">
         {/* Top Paper Header Info */}
         <div className="w-full max-w-4xl flex items-center justify-between pb-3 px-2">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400">
             <FileCheck className="w-4 h-4 text-emerald-600" />
             <span>
-              {paperSize === 'a4' ? 'A4 Paper (210×297mm)' : 'US Letter'} &bull; ~{stats.estimatedPages} Page(s) &bull; Click anywhere on page to type
+              {settings.paperSize.toUpperCase()} {settings.orientation === 'landscape' ? 'Landscape' : 'Portrait'} &bull; ~{stats.pages} Page(s)
             </span>
           </div>
 
           <div className="text-[11px] font-semibold text-slate-500">
-            {stats.words.toLocaleString()} Words &bull; {stats.chars.toLocaleString()} Chars
+            {stats.words.toLocaleString()} Words &bull; {stats.chars.toLocaleString()} Chars &bull; {stats.paragraphs} Blocks
           </div>
         </div>
 
-        {/* Central White A4 Sheet with Realistic Word Shadow */}
+        {/* Central White Paper Sheet */}
         <div
-          className={`w-full max-w-[800px] transition-all bg-white text-slate-900 ${
-            showPageBorder ? 'shadow-2xl shadow-slate-400/60 dark:shadow-2xl dark:shadow-black/70 border border-slate-300/80 rounded-xl' : ''
+          className={`w-full max-w-[840px] transition-all bg-white text-slate-900 ${
+            settings.showPageBorders ? 'shadow-2xl shadow-slate-400/60 dark:shadow-2xl dark:shadow-black/70 border border-slate-300/80 rounded-xl' : ''
           }`}
           style={{
-            backgroundColor: pageBgColor,
-            minHeight: paperSize === 'a4' ? '1120px' : '1050px',
-            padding: marginSize,
+            backgroundColor: settings.pageBgColor || '#ffffff',
+            minHeight: `${currentDim.heightPx}px`,
+            padding: marginCss,
             boxSizing: 'border-box',
           }}
         >
           {/* Document Top Header */}
-          {includeHeaderFooter && (
+          {settings.includeHeaderFooter && (
             <div
               dir={isRTL ? 'rtl' : 'ltr'}
               className="flex items-center justify-between border-b border-slate-200 pb-3 mb-6 text-xs text-slate-400 font-medium select-none"
             >
-              <span>{documentTitle || 'Untitled Document'}</span>
+              <span>{settings.headerText || docTitle || 'Untitled Document'}</span>
               <span>Miftah Tools Document Studio</span>
             </div>
           )}
@@ -1573,53 +1204,645 @@ export function RichTextToDocumentStudio({ defaultFormat = 'pdf' }: RichTextToDo
             ref={editorRef}
             contentEditable
             suppressContentEditableWarning
-            onInput={updateStats}
+            onInput={recalculateStats}
             dir={isRTL ? 'rtl' : 'ltr'}
             className="min-h-[700px] outline-hidden text-slate-900 prose prose-slate max-w-none focus:outline-hidden"
             style={{
-              fontFamily: selectedFont,
-              fontSize: fontSize,
+              fontFamily,
+              fontSize,
               lineHeight: lineSpacing,
             }}
           />
 
           {/* Document Page Footer */}
-          {includeHeaderFooter && (
+          {settings.includeHeaderFooter && (
             <div
               dir={isRTL ? 'rtl' : 'ltr'}
               className="flex items-center justify-between border-t border-slate-200 pt-3 mt-12 text-[11px] text-slate-400 font-medium select-none"
             >
-              <span>{new Date().toLocaleDateString()}</span>
-              <span>Page 1 of ${stats.estimatedPages} &bull; miftahtools.com</span>
+              <span>{settings.footerText || new Date().toLocaleDateString('en-GB')}</span>
+              <span>Page 1 of {stats.pages} &bull; miftahtools.com</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* 5. MICROSOFT WORD STYLE BOTTOM STATUS BAR */}
+      {/* 5. BOTTOM STATUS BAR */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 px-4 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-400 font-medium">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-brand-600" />
-            <span>Page 1 of {stats.estimatedPages}</span>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 font-bold text-brand-600 dark:text-brand-400">
+            <FileText className="w-4 h-4" />
+            <span>Page 1 of {stats.pages}</span>
           </span>
           <span>&bull;</span>
           <span><strong>{stats.words.toLocaleString()}</strong> words</span>
           <span>&bull;</span>
-          <span><strong>{stats.chars.toLocaleString()}</strong> characters</span>
-          <span>&bull;</span>
-          <span><strong>{stats.paragraphs}</strong> blocks</span>
+          <span><strong>{stats.chars.toLocaleString()}</strong> chars</span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <span>Est. Reading: ~{stats.readingTime} min</span>
+        <div className="flex items-center gap-3">
+          <span>Est. Reading: ~{Math.max(1, Math.ceil(stats.words / 200))} min</span>
           <span>&bull;</span>
-          <span className="text-emerald-600 font-bold flex items-center gap-1">
+          <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>Ready to Export</span>
           </span>
         </div>
       </div>
+
+      {/* MODAL: INSERT MENU */}
+      {activeModal === 'insert' && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Plus className="w-5 h-5 text-brand-600" />
+                <span>Insert Element</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setActiveModal('none')}
+                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {/* Image */}
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <ImageIcon className="w-5 h-5 text-brand-600 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Image</div>
+                <div className="text-[10px] text-slate-500">From gallery / camera</div>
+              </button>
+
+              {/* Table */}
+              <button
+                type="button"
+                onClick={() => setActiveModal('table')}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <TableIcon className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Table</div>
+                <div className="text-[10px] text-slate-500">Rows &amp; Columns</div>
+              </button>
+
+              {/* Hyperlink */}
+              <button
+                type="button"
+                onClick={() => setActiveModal('link')}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <Type className="w-5 h-5 text-sky-600 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Hyperlink</div>
+                <div className="text-[10px] text-slate-500">Web URL link</div>
+              </button>
+
+              {/* Page Break */}
+              <button
+                type="button"
+                onClick={insertPageBreak}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <Layers className="w-5 h-5 text-violet-600 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Page Break</div>
+                <div className="text-[10px] text-slate-500">Force new page</div>
+              </button>
+
+              {/* Divider Line */}
+              <button
+                type="button"
+                onClick={insertHorizontalRule}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <Minus className="w-5 h-5 text-slate-600 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Divider Line</div>
+                <div className="text-[10px] text-slate-500">Horizontal rule</div>
+              </button>
+
+              {/* Date Stamp */}
+              <button
+                type="button"
+                onClick={insertDate}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <Calendar className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Date Stamp</div>
+                <div className="text-[10px] text-slate-500">Today&apos;s date</div>
+              </button>
+
+              {/* Highlight Callout */}
+              <button
+                type="button"
+                onClick={() => insertCalloutBox('info')}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <Info className="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Callout Box</div>
+                <div className="text-[10px] text-slate-500">Highlighted notice</div>
+              </button>
+
+              {/* Signature Line */}
+              <button
+                type="button"
+                onClick={insertSignatureBlock}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <PenTool className="w-5 h-5 text-slate-700 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Signature Line</div>
+                <div className="text-[10px] text-slate-500">Sign &amp; date block</div>
+              </button>
+
+              {/* Special Symbols */}
+              <button
+                type="button"
+                onClick={() => setActiveModal('symbols')}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50 dark:bg-slate-800/40 text-left space-y-1 transition-all cursor-pointer group"
+              >
+                <Sparkles className="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform" />
+                <div className="font-bold text-xs text-slate-900 dark:text-white">Symbols</div>
+                <div className="text-[10px] text-slate-500">Math, currency &amp; icons</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: TABLE BUILDER */}
+      {activeModal === 'table' && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <TableIcon className="w-5 h-5 text-indigo-600" />
+                <span>Insert Table</span>
+              </h3>
+              <button type="button" onClick={() => setActiveModal('none')} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Number of Rows</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={tableRows}
+                    onChange={(e) => setTableRows(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Number of Columns</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={tableCols}
+                    onChange={(e) => setTableCols(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500">
+                Creates a responsive {tableRows} × {tableCols} styled table matching document direction ({isRTL ? 'RTL' : 'LTR'}).
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('none')}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={insertTableElement}
+                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-600/20"
+                >
+                  Insert Table
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: HYPERLINK */}
+      {activeModal === 'link' && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Type className="w-5 h-5 text-sky-600" />
+                <span>Insert Hyperlink</span>
+              </h3>
+              <button type="button" onClick={() => setActiveModal('none')} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Link Text</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Visit Miftah Tools"
+                  value={linkText}
+                  onChange={(e) => setLinkText(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-medium"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">URL Destination</label>
+                <input
+                  type="url"
+                  placeholder="https://example.com"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModal('none')}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={insertLinkElement}
+                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-600/20"
+                >
+                  Insert Link
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: SPECIAL SYMBOLS */}
+      {activeModal === 'symbols' && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                <span>Special Symbols &amp; Math</span>
+              </h3>
+              <button type="button" onClick={() => setActiveModal('none')} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 max-h-60 overflow-y-auto p-1">
+              {SPECIAL_SYMBOLS.map((sym, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => insertSymbol(sym)}
+                  className="h-10 rounded-xl bg-slate-100 hover:bg-brand-100 dark:bg-slate-800 dark:hover:bg-brand-950/50 hover:text-brand-600 font-bold text-sm transition-colors cursor-pointer flex items-center justify-center"
+                >
+                  {sym}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PAGE SETTINGS */}
+      {activeModal === 'settings' && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-xl w-full shadow-2xl space-y-5 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Layout className="w-5 h-5 text-brand-600" />
+                <span>Page Layout &amp; Margins Setup</span>
+              </h3>
+              <button type="button" onClick={() => setActiveModal('none')} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Paper Size */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Paper Standard</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['a4', 'letter'] as PaperSize[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setSettings({ ...settings, paperSize: p })}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        settings.paperSize === p
+                          ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400'
+                          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600'
+                      }`}
+                    >
+                      {p.toUpperCase()} ({p === 'a4' ? '210×297mm' : '8.5×11 in'})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Orientation */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Page Orientation</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['portrait', 'landscape'] as PageOrientation[]).map((o) => (
+                    <button
+                      key={o}
+                      type="button"
+                      onClick={() => setSettings({ ...settings, orientation: o })}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        settings.orientation === o
+                          ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400'
+                          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600'
+                      }`}
+                    >
+                      {o === 'portrait' ? 'Portrait (عمودي)' : 'Landscape (أفقي)'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Margins Preset */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Margins</label>
+                <select
+                  value={settings.marginPreset}
+                  onChange={(e) => setSettings({ ...settings, marginPreset: e.target.value as MarginPreset })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-hidden"
+                >
+                  <option value="normal">Normal (1 in / 25.4mm)</option>
+                  <option value="narrow">Narrow (0.5 in / 12.7mm)</option>
+                  <option value="wide">Wide (1.5 in / 38.1mm)</option>
+                </select>
+              </div>
+
+              {/* Page Number Position */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Page Numbering</label>
+                <select
+                  value={settings.pageNumberPosition}
+                  onChange={(e) => setSettings({ ...settings, pageNumberPosition: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold focus:outline-hidden"
+                >
+                  <option value="bottom-center">Bottom Center (صفحة 1 من N)</option>
+                  <option value="bottom-right">Bottom Right</option>
+                  <option value="bottom-left">Bottom Left</option>
+                  <option value="none">No Page Numbers</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Header & Footer Text */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Custom Header Text</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Official Document"
+                  value={settings.headerText}
+                  onChange={(e) => setSettings({ ...settings, headerText: e.target.value })}
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Custom Footer Text</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Confidential &bull; All Rights Reserved"
+                  value={settings.footerText}
+                  onChange={(e) => setSettings({ ...settings, footerText: e.target.value })}
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.includeHeaderFooter}
+                  onChange={(e) => setSettings({ ...settings, includeHeaderFooter: e.target.checked })}
+                  className="w-4 h-4 rounded text-brand-600"
+                />
+                <span>Include Header &amp; Footer in PDF</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setActiveModal('none')}
+                className="px-5 py-2 rounded-xl bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-600/20"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: STARTER TEMPLATES */}
+      {activeModal === 'templates' && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-3xl w-full shadow-2xl space-y-4 max-h-[85vh] flex flex-col animate-in fade-in duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-amber-500" />
+                  <span>Choose a Starter Document Template</span>
+                </h3>
+                <p className="text-xs text-slate-500">Pick a pre-formatted layout in Urdu, Arabic, Hindi, or English.</p>
+              </div>
+              <button type="button" onClick={() => setActiveModal('none')} className="p-1 text-slate-400">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto p-1 flex-1">
+              {DOCUMENT_TEMPLATES.map((tmpl) => (
+                <div
+                  key={tmpl.id}
+                  onClick={() => handleApplyTemplate(tmpl)}
+                  className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 transition-all cursor-pointer group shadow-xs space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">{tmpl.icon}</span>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                      Use Template
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      {tmpl.name}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">{tmpl.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PREVIEW MODE */}
+      {activeModal === 'preview' && (
+        <div className="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex flex-col p-2 sm:p-6">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-2xl flex items-center justify-between gap-4 max-w-5xl mx-auto w-full mb-3 shrink-0">
+            <div className="flex items-center gap-3">
+              <Eye className="w-5 h-5 text-brand-600" />
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">{docTitle} &bull; Print Preview</h3>
+                <p className="text-[11px] text-slate-500">True multi-page layout preview ({settings.paperSize.toUpperCase()})</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"
+              >
+                Print
+              </button>
+              <button
+                type="button"
+                onClick={handleExportPDF}
+                className="px-4 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-extrabold text-white cursor-pointer"
+              >
+                Export PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal('none')}
+                className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto flex justify-center p-2">
+            <div
+              className="bg-white text-slate-900 shadow-2xl rounded-xl p-8 max-w-[800px] w-full"
+              style={{
+                fontFamily,
+                fontSize,
+                lineHeight: lineSpacing,
+              }}
+              dir={isRTL ? 'rtl' : 'ltr'}
+              dangerouslySetInnerHTML={{ __html: editorRef.current?.innerHTML || '' }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EXPORT RESULT READY DIALOG */}
+      {activeModal === 'exportResult' && exportResultInfo && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200 text-center">
+            <div className="w-14 h-14 rounded-3xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center mx-auto shadow-md shadow-emerald-500/20">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                {exportResultInfo.format === 'pdf' ? 'PDF Document Ready!' : 'Word Document Ready!'}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Your file has been processed and saved with 100% data privacy.
+              </p>
+            </div>
+
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-left space-y-1">
+              <div className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                📄 {exportResultInfo.title}
+              </div>
+              <div className="text-[11px] text-slate-500 flex items-center gap-3">
+                <span>Format: {exportResultInfo.format.toUpperCase()}</span>
+                <span>&bull;</span>
+                <span>Pages: ~{stats.pages}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (exportResultInfo.fileInfo) {
+                    shareDownloadedFile(exportResultInfo.fileInfo);
+                  }
+                }}
+                className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-600/25 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Share File</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (exportResultInfo.fileInfo) {
+                    openDownloadedFile(exportResultInfo.fileInfo);
+                  }
+                }}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Open in Viewer</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModal('none')}
+                className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+              >
+                Back to Document Editor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EXPORT PROGRESS OVERLAY */}
+      {isExporting && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/50 text-brand-600 flex items-center justify-center mx-auto animate-bounce">
+              <Download className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                {exportProgress.status || 'Generating document...'}
+              </h4>
+              <p className="text-xs text-slate-500">{exportProgress.percent}% completed</p>
+            </div>
+            <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-brand-600 transition-all duration-200"
+                style={{ width: `${exportProgress.percent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

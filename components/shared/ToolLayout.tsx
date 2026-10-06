@@ -15,6 +15,7 @@ import { useUserStore } from '@/lib/user/user-store';
 import { getLocalizedTool, getLocalizedCategory } from '@/lib/i18n/catalog-translations';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { adManager } from '@/lib/ads/AdManager';
 
 interface ToolLayoutProps {
   tool: ToolDefinition;
@@ -125,6 +126,7 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
     if (selectedFiles.length === 0 && tool.maxFiles > 0) return;
     triggerHaptic('medium');
     setIsProcessing(true);
+    adManager.setProcessingState(true);
     setProgress(10);
     setProgressStatus(loc.initStatus);
     setErrorMessage(null);
@@ -154,49 +156,54 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
       setErrorMessage(err.message || loc.genericError);
     } finally {
       setIsProcessing(false);
+      adManager.setProcessingState(false);
     }
   };
 
   const handleDownloadSingle = async (index: number) => {
     if (!results || !results[index]) return;
     const file = results[index];
-    if (file.blob) {
-      const savedInfo = await downloadSingleFile(file.blob, file.name);
-      if (savedInfo) setDownloadedModalFile(savedInfo);
-      addDownload({
-        name: file.name,
-        size: `${Math.round((file.processedSize || file.blob.size) / 1024)} KB`,
-        type: tool.outputExtension || 'file',
-      });
-    } else if (file.textResult) {
-      const blob = new Blob([file.textResult], { type: 'text/plain;charset=utf-8' });
-      const savedInfo = await downloadSingleFile(blob, file.name);
-      if (savedInfo) setDownloadedModalFile(savedInfo);
-      addDownload({
-        name: file.name,
-        size: `${Math.round(blob.size / 1024)} KB`,
-        type: 'txt',
-      });
-    }
+    await adManager.showInterstitialOnDownload(async () => {
+      if (file.blob) {
+        const savedInfo = await downloadSingleFile(file.blob, file.name);
+        if (savedInfo) setDownloadedModalFile(savedInfo);
+        addDownload({
+          name: file.name,
+          size: `${Math.round((file.processedSize || file.blob.size) / 1024)} KB`,
+          type: tool.outputExtension || 'file',
+        });
+      } else if (file.textResult) {
+        const blob = new Blob([file.textResult], { type: 'text/plain;charset=utf-8' });
+        const savedInfo = await downloadSingleFile(blob, file.name);
+        if (savedInfo) setDownloadedModalFile(savedInfo);
+        addDownload({
+          name: file.name,
+          size: `${Math.round(blob.size / 1024)} KB`,
+          type: 'txt',
+        });
+      }
+    });
   };
 
   const handleDownloadAllZip = async () => {
     if (!results) return;
-    const zipFiles: { name: string; blob: Blob }[] = [];
-    results.forEach((r) => {
-      if (r.blob) {
-        zipFiles.push({ name: r.name, blob: r.blob });
-      } else if (r.textResult) {
-        zipFiles.push({ name: r.name, blob: new Blob([r.textResult], { type: 'text/plain;charset=utf-8' }) });
-      }
-    });
-    const zipName = `${tool.slug}-result.zip`;
-    const savedInfo = await downloadAsZip(zipFiles, zipName);
-    if (savedInfo) setDownloadedModalFile(savedInfo);
-    addDownload({
-      name: zipName,
-      size: 'Multi-File ZIP',
-      type: 'zip',
+    await adManager.showInterstitialOnDownload(async () => {
+      const zipFiles: { name: string; blob: Blob }[] = [];
+      results.forEach((r) => {
+        if (r.blob) {
+          zipFiles.push({ name: r.name, blob: r.blob });
+        } else if (r.textResult) {
+          zipFiles.push({ name: r.name, blob: new Blob([r.textResult], { type: 'text/plain;charset=utf-8' }) });
+        }
+      });
+      const zipName = `${tool.slug}-result.zip`;
+      const savedInfo = await downloadAsZip(zipFiles, zipName);
+      if (savedInfo) setDownloadedModalFile(savedInfo);
+      addDownload({
+        name: zipName,
+        size: 'Multi-File ZIP',
+        type: 'zip',
+      });
     });
   };
 
@@ -310,9 +317,6 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
                 </div>
               )}
 
-              {/* In-Tool Contextual Ad Placement */}
-              <AdSlot placement="in-feed" />
-
               {/* Step 2: Dynamic & Fine-Grained Tool Options */}
               {selectedFiles.length > 0 && (
                 <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60">
@@ -339,6 +343,9 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
                   />
                 </div>
               )}
+
+              {/* In-Tool In-Feed Ad Placement (Positioned above action button) */}
+              <AdSlot placement="in-feed" />
 
               {/* Error Message Alert */}
               {errorMessage && (

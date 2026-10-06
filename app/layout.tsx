@@ -25,7 +25,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: `${siteConfig.name} - Free Online Tools & Digital Skills Platform`,
+  title: {
+    default: `${siteConfig.name} - Free Online Tools & Digital Skills Platform`,
+    template: `%s | ${siteConfig.name}`,
+  },
   description: 'Miftah Tools provides 220+ free high-performance client-side digital utilities and modern developer skill courses with zero server tracking.',
   manifest: '/manifest.json',
   keywords: [

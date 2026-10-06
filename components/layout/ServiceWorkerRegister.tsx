@@ -11,7 +11,20 @@ export function ServiceWorkerRegister() {
         navigator.serviceWorker
           .register(swPath, { scope: swScope })
           .then((reg) => {
+            // Check for service worker updates immediately
+            reg.update();
             console.log('Miftah Tools PWA ServiceWorker registered with scope:', reg.scope);
+
+            reg.addEventListener('updatefound', () => {
+              const installingWorker = reg.installing;
+              if (installingWorker) {
+                installingWorker.addEventListener('statechange', () => {
+                  if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('New Miftah Tools version available, updating cache...');
+                  }
+                });
+              }
+            });
           })
           .catch((err) => {
             console.warn('PWA ServiceWorker registration failed:', err);

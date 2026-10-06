@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Miftah Tools Hardened FileProvider Paths -->
+<!-- Restricts access strictly to app-specific internal and external sandboxed directories -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="external_root" path="." />
-    <external-files-path name="external_files" path="." />
-    <external-cache-path name="external_cache" path="." />
-    <files-path name="internal_files" path="." />
-    <cache-path name="internal_cache" path="." />
+    <external-files-path name="miftah_downloads" path="Download" />
+    <external-files-path name="miftah_ext_files" path="." />
+    <external-cache-path name="miftah_ext_cache" path="." />
+    <files-path name="miftah_internal_files" path="." />
+    <cache-path name="miftah_cache" path="." />
 </paths>

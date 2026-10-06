@@ -22,10 +22,14 @@ import android.webkit.URLUtil;
 import android.webkit.WebView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
@@ -105,6 +109,40 @@ public class MainActivity extends BridgeActivity {
             }
         }
 
+        private String sanitizeFileName(String fileName) {
+            if (fileName == null || fileName.trim().isEmpty()) {
+                return "miftah_" + System.currentTimeMillis();
+            }
+            // Strip path traversal characters, directory separators, and control characters
+            String name = new File(fileName).getName();
+            name = name.replaceAll("[^a-zA-Z0-9._-]", "_");
+            if (name.startsWith(".")) {
+                name = "miftah" + name;
+            }
+            if (name.length() > 150) {
+                int dot = name.lastIndexOf(".");
+                String ext = (dot > 0) ? name.substring(dot) : "";
+                name = name.substring(0, 140) + ext;
+            }
+            return name;
+        }
+
+        private boolean isFileInAllowedAppDirectory(File file) {
+            try {
+                if (file == null) return false;
+                String canonicalPath = file.getCanonicalPath();
+                String cacheCanonical = mContext.getCacheDir().getCanonicalPath();
+                File extFiles = mContext.getExternalFilesDir(null);
+                String extCanonical = (extFiles != null) ? extFiles.getCanonicalPath() : null;
+
+                if (canonicalPath.startsWith(cacheCanonical)) return true;
+                if (extCanonical != null && canonicalPath.startsWith(extCanonical)) return true;
+                return false;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
         private String resolveMimeType(String fileName, String providedMime) {
             if (providedMime != null && !providedMime.isEmpty() && !providedMime.equals("application/octet-stream") && !providedMime.equals("*/*")) {
                 return providedMime;
@@ -131,13 +169,16 @@ public class MainActivity extends BridgeActivity {
             return "application/octet-stream";
         }
 
-        private File saveToAppCache(byte[] fileBytes, String fileName) {
+        private File saveToAppCache(byte[] fileBytes, String rawFileName) {
             try {
+                String safeName = sanitizeFileName(rawFileName);
                 File cacheDir = new File(mContext.getCacheDir(), "downloads");
                 if (!cacheDir.exists()) {
                     cacheDir.mkdirs();
                 }
-                File cacheFile = new File(cacheDir, fileName);
+                File cacheFile = new File(cacheDir, safeName);
+                if (!isFileInAllowedAppDirectory(cacheFile)) return null;
+
                 try (FileOutputStream fos = new FileOutputStream(cacheFile)) {
                     fos.write(fileBytes);
                     fos.flush();
@@ -149,12 +190,15 @@ public class MainActivity extends BridgeActivity {
             }
         }
 
-        private File saveToAppExternalFiles(byte[] fileBytes, String fileName) {
+        private File saveToAppExternalFiles(byte[] fileBytes, String rawFileName) {
             try {
+                String safeName = sanitizeFileName(rawFileName);
                 File extDir = mContext.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
                 if (extDir != null) {
                     if (!extDir.exists()) extDir.mkdirs();
-                    File extFile = new File(extDir, fileName);
+                    File extFile = new File(extDir, safeName);
+                    if (!isFileInAllowedAppDirectory(extFile)) return null;
+
                     try (FileOutputStream fos = new FileOutputStream(extFile)) {
                         fos.write(fileBytes);
                         fos.flush();
@@ -168,13 +212,14 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public boolean saveBase64File(String base64Data, String fileName, String mimeType) {
-            if (base64Data == null || base64Data.isEmpty() || fileName == null || fileName.isEmpty()) {
+        public boolean saveBase64File(String base64Data, String rawFileName, String mimeType) {
+            if (base64Data == null || base64Data.isEmpty() || rawFileName == null || rawFileName.isEmpty()) {
                 showToast("Download failed: empty data.");
                 return false;
             }
 
             try {
+                String fileName = sanitizeFileName(rawFileName);
                 String cleanBase64 = base64Data.contains(",") ? base64Data.substring(base64Data.indexOf(",") + 1) : base64Data;
                 byte[] fileBytes = Base64.decode(cleanBase64, Base64.DEFAULT);
                 String effectiveMime = resolveMimeType(fileName, mimeType);
@@ -225,8 +270,9 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public boolean openBase64FileInSystem(String base64Data, String fileName, String mimeType) {
+        public boolean openBase64FileInSystem(String base64Data, String rawFileName, String mimeType) {
             try {
+                String fileName = sanitizeFileName(rawFileName);
                 if (base64Data != null && !base64Data.isEmpty()) {
                     String cleanBase64 = base64Data.contains(",") ? base64Data.substring(base64Data.indexOf(",") + 1) : base64Data;
                     byte[] fileBytes = Base64.decode(cleanBase64, Base64.DEFAULT);
@@ -242,8 +288,9 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public boolean openFileInSystem(String fileName, String mimeType) {
+        public boolean openFileInSystem(String rawFileName, String mimeType) {
             try {
+                String fileName = sanitizeFileName(rawFileName);
                 File targetFile = null;
 
                 // Check 1: App External Files Downloads dir
@@ -364,15 +411,20 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public void downloadUrl(String fileUrl, String fileName, String mimeType) {
+        public void downloadUrl(String fileUrl, String rawFileName, String mimeType) {
             try {
                 if (fileUrl == null || fileUrl.isEmpty()) {
                     showToast("Download failed: empty URL.");
                     return;
                 }
+                if (!fileUrl.startsWith("https://")) {
+                    showToast("Insecure download URL blocked.");
+                    return;
+                }
                 Uri uri = Uri.parse(fileUrl);
                 android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(uri);
-                String cleanName = (fileName != null && !fileName.isEmpty()) ? fileName : URLUtil.guessFileName(fileUrl, null, mimeType);
+                String guessed = (rawFileName != null && !rawFileName.isEmpty()) ? rawFileName : URLUtil.guessFileName(fileUrl, null, mimeType);
+                String cleanName = sanitizeFileName(guessed);
                 String effectiveMime = resolveMimeType(cleanName, mimeType);
 
                 request.setTitle(cleanName);
@@ -398,6 +450,190 @@ public class MainActivity extends BridgeActivity {
 
         private void showToast(final String message) {
             runOnUiThread(() -> Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show());
+        }
+    }
+
+    public class AndroidSpeechInterface {
+        private SpeechRecognizer speechRecognizer;
+        private Intent speechIntent;
+        private boolean isExplicitListening = false;
+        private String currentLangCode = "hi-IN";
+
+        @JavascriptInterface
+        public boolean isSpeechRecognitionAvailable() {
+            return SpeechRecognizer.isRecognitionAvailable(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public void startListening(String languageCode) {
+            runOnUiThread(() -> {
+                try {
+                    isExplicitListening = true;
+                    currentLangCode = (languageCode != null && !languageCode.isEmpty()) ? languageCode : "hi-IN";
+                    initAndStartRecognizer();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    sendSpeechEvent("onError", e.getMessage());
+                }
+            });
+        }
+
+        private void initAndStartRecognizer() {
+            if (speechRecognizer != null) {
+                try {
+                    speechRecognizer.destroy();
+                } catch (Exception ignored) {}
+                speechRecognizer = null;
+            }
+
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
+            speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, currentLangCode);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, currentLangCode);
+            speechIntent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"hi-IN", "ur-PK", "ar-SA", "en-US"});
+
+            speechRecognizer.setRecognitionListener(new RecognitionListener() {
+                @Override
+                public void onReadyForSpeech(Bundle params) {
+                    sendSpeechEvent("onReady", "");
+                }
+
+                @Override
+                public void onBeginningOfSpeech() {
+                    sendSpeechEvent("onBeginning", "");
+                }
+
+                @Override
+                public void onRmsChanged(float rmsdB) {
+                    sendSpeechEvent("onRmsChanged", String.valueOf(rmsdB));
+                }
+
+                @Override
+                public void onBufferReceived(byte[] buffer) {}
+
+                @Override
+                public void onEndOfSpeech() {
+                    sendSpeechEvent("onEnd", "");
+                }
+
+                @Override
+                public void onError(int error) {
+                    String errorMsg = getSpeechErrorMsg(error);
+                    sendSpeechEvent("onError", errorMsg);
+                    if (isExplicitListening && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
+                        runOnUiThread(() -> {
+                            if (isExplicitListening) {
+                                try {
+                                    if (speechRecognizer != null) {
+                                        speechRecognizer.startListening(speechIntent);
+                                    }
+                                } catch (Exception ignored) {}
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onResults(Bundle results) {
+                    if (results != null) {
+                        ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                        if (matches != null && !matches.isEmpty()) {
+                            String text = matches.get(0);
+                            sendSpeechEvent("onResults", text);
+                        }
+                    }
+                    if (isExplicitListening) {
+                        runOnUiThread(() -> {
+                            if (isExplicitListening) {
+                                try {
+                                    if (speechRecognizer != null) {
+                                        speechRecognizer.startListening(speechIntent);
+                                    }
+                                } catch (Exception ignored) {}
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onPartialResults(Bundle partialResults) {
+                    if (partialResults != null) {
+                        ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                        if (matches != null && !matches.isEmpty()) {
+                            String text = matches.get(0);
+                            sendSpeechEvent("onPartialResults", text);
+                        }
+                    }
+                }
+
+                @Override
+                public void onEvent(int eventType, Bundle params) {}
+            });
+
+            speechRecognizer.startListening(speechIntent);
+        }
+
+        @JavascriptInterface
+        public void stopListening() {
+            runOnUiThread(() -> {
+                isExplicitListening = false;
+                try {
+                    if (speechRecognizer != null) {
+                        speechRecognizer.stopListening();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void cancelListening() {
+            runOnUiThread(() -> {
+                isExplicitListening = false;
+                try {
+                    if (speechRecognizer != null) {
+                        speechRecognizer.cancel();
+                        speechRecognizer.destroy();
+                        speechRecognizer = null;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        private void sendSpeechEvent(String eventType, String data) {
+            runOnUiThread(() -> {
+                try {
+                    if (bridge != null && bridge.getWebView() != null) {
+                        String clean = (data != null) ? data : "";
+                        String escapedData = clean.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
+                        String js = "if (window.__onAndroidSpeechEvent) { window.__onAndroidSpeechEvent(\"" + eventType + "\", \"" + escapedData + "\"); }";
+                        bridge.getWebView().evaluateJavascript(js, null);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        private String getSpeechErrorMsg(int error) {
+            switch (error) {
+                case SpeechRecognizer.ERROR_AUDIO: return "Audio recording error";
+                case SpeechRecognizer.ERROR_CLIENT: return "Client side error";
+                case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS: return "Microphone permission missing";
+                case SpeechRecognizer.ERROR_NETWORK: return "Network connection error";
+                case SpeechRecognizer.ERROR_NETWORK_TIMEOUT: return "Network timeout";
+                case SpeechRecognizer.ERROR_NO_MATCH: return "No speech recognized";
+                case SpeechRecognizer.ERROR_RECOGNIZER_BUSY: return "Speech recognizer busy";
+                case SpeechRecognizer.ERROR_SERVER: return "Server error";
+                case SpeechRecognizer.ERROR_SPEECH_TIMEOUT: return "No speech input";
+                default: return "Speech recognition error (" + error + ")";
+            }
         }
     }
 
@@ -437,6 +673,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
         createNotificationChannel();
         requestNativePermissions();
@@ -449,17 +686,29 @@ public class MainActivity extends BridgeActivity {
             WebView webView = this.bridge.getWebView();
             webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
 
-            // Grant Camera and Microphone access to HTML5 getUserMedia and Speech APIs
+            // Grant Camera and Microphone access ONLY to local app / localhost origins
             webView.setWebChromeClient(new BridgeWebChromeClient(this.bridge) {
                 @Override
                 public void onPermissionRequest(final PermissionRequest request) {
                     runOnUiThread(() -> {
-                        request.grant(request.getResources());
+                        try {
+                            Uri origin = request.getOrigin();
+                            String host = origin != null ? origin.getHost() : "";
+                            String scheme = origin != null ? origin.getScheme() : "";
+                            if ("localhost".equalsIgnoreCase(host) || "capacitor".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+                                request.grant(request.getResources());
+                            } else {
+                                request.deny();
+                            }
+                        } catch (Exception e) {
+                            request.deny();
+                        }
                     });
                 }
             });
 
             webView.addJavascriptInterface(new AndroidDownloaderInterface(this), "AndroidDownloader");
+            webView.addJavascriptInterface(new AndroidSpeechInterface(), "AndroidSpeech");
 
             webView.setDownloadListener(new DownloadListener() {
                 @Override
@@ -473,7 +722,7 @@ public class MainActivity extends BridgeActivity {
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                        } else if (url.startsWith("http://") || url.startsWith("https://")) {
+                        } else if (url.startsWith("https://")) {
                             String filename = URLUtil.guessFileName(url, contentDisposition, mimetype);
                             new AndroidDownloaderInterface(MainActivity.this).downloadUrl(url, filename, mimetype);
                         }

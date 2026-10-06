@@ -14,12 +14,13 @@ export function StickyBottomAd() {
     if (adManager.isNativeEnvironment()) {
       const isSafe = adManager.isRouteAdSafe(pathname);
       if (isSafe) {
-        // Show native bottom adaptive banner
-        adManager.showBanner().catch((e) => {
-          console.warn('[AdMob] Native Banner show skipped:', e);
-        });
+        const timer = setTimeout(() => {
+          adManager.showAdaptiveBanner().catch((e) => {
+            console.warn('[AdMob] Native Banner show skipped:', e);
+          });
+        }, 300);
+        return () => clearTimeout(timer);
       } else {
-        // Hide native banner on sensitive/editing screens (e.g. PDF editor, Quiz, Settings)
         adManager.hideBanner().catch((e) => {
           console.warn('[AdMob] Native Banner hide skipped:', e);
         });

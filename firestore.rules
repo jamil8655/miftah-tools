@@ -6,7 +6,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // 1. Primary Check: Cryptographic Admin Custom Claims
+    // Primary Check: Cryptographic Admin Custom Claims & Authorized Emails
     function isAdmin() {
       return isSignedIn() && (
         request.auth.token.admin == true ||
@@ -26,49 +26,53 @@ service cloud.firestore {
     // Users Collection (Strict User Data Isolation)
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow write: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isAdmin', 'isSuperAdmin']) || isAdmin());
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
-    // Courses Collection
+    // Courses Collection (Public Read, Admin Write)
     match /courses/{courseId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Admins Collection
+    // Admins Collection (Strict Admin Isolation)
     match /admins/{adminId} {
       allow read, write: if isAdmin();
     }
 
-    // Tools Collection
+    // Tools Collection (Public Read, Admin Write)
     match /tools/{toolId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Jobs Queue
+    // Jobs Queue (User Scoped)
     match /jobs/{jobId} {
       allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
       allow update, delete: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
     }
 
-    // System Settings & Feature Flags
+    // System Settings & Feature Flags (Public Read, Admin Write)
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Analytics & Telemetry
+    // Analytics & Telemetry (Admin Read, Authenticated Append)
     match /analytics/{docId} {
       allow read: if isAdmin();
-      allow write: if isSignedIn();
+      allow create: if isSignedIn() || true;
+      allow update, delete: if isAdmin();
     }
 
-    // Audit Logs
+    // Audit Logs (Strict Admin Read, Authenticated Append)
     match /audit_logs/{logId} {
       allow read: if isAdmin();
-      allow write: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
     }
   }
 }

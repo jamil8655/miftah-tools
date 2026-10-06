@@ -16,6 +16,8 @@ import {
   BookOpen,
   Globe2,
   Share2,
+  Download,
+  Smartphone,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { shareAppNative } from '@/lib/native/android-bridge';
@@ -23,7 +25,9 @@ import { triggerHaptic } from '@/lib/motion/motion-system';
 
 const FOOTER_LOCALES = {
   en: {
-    shareApp: 'Share App with Friends',
+    shareApp: 'Share App',
+    getAndroidApp: 'Get on Google Play',
+    officialAppDesc: 'Install the official Miftah Tools Android app for 100% offline document & media processing with zero data limits.',
     engineTitle: '500 MB Client-Side Engine',
     engineDesc: 'Transform massive documents & media smoothly in-browser.',
     privacyTitle: '100% In-Browser Privacy',
@@ -40,10 +44,12 @@ const FOOTER_LOCALES = {
     pdfEditor: 'PDF Editor Studio',
     imageStudio: 'Image Studio Suite',
     ocrText: 'OCR Image to Text',
-    markItDown: 'MarkItDown AI Studio',
+    textToPdf: 'Document Studio & Text to PDF',
   },
   ur: {
-    shareApp: 'دوستوں کے ساتھ ایپ شیئر کریں',
+    shareApp: 'ایپ شیئر کریں',
+    getAndroidApp: 'گوگل پلے پر حاصل کریں',
+    officialAppDesc: 'مفتاح ٹولز کی آفیشل اینڈرائیڈ ایپ پلے اسٹور سے انسٹال کریں اور 100% آف لائن تیز رفتار پروسیسنگ حاصل کریں۔',
     engineTitle: '500 ایم بی کلائنٹ سائیڈ انجن',
     engineDesc: 'بڑی دستاویزات اور میڈیا کو براؤزر کے اندر آسانی سے پروسیس کریں۔',
     privacyTitle: '100% مکمل رازداری کی ضمانت',
@@ -60,10 +66,12 @@ const FOOTER_LOCALES = {
     pdfEditor: 'پی ڈی ایف ایڈیٹر اسٹوڈیو',
     imageStudio: 'امیج اسٹوڈیو سویٹ',
     ocrText: 'تصویر سے ٹیکسٹ نکالیں (OCR)',
-    markItDown: 'مارک اِٹ ڈاؤن اے آئی اسٹوڈیو',
+    textToPdf: 'دستاویز اسٹوڈیو و ٹیکسٹ ٹو پی ڈی ایف',
   },
   ar: {
-    shareApp: 'مشاركة التطبيق مع الأصدقاء',
+    shareApp: 'مشاركة التطبيق',
+    getAndroidApp: 'تحميل من Google Play',
+    officialAppDesc: 'حمل تطبيق مفتاح تولز الرسمي للأندرويد لمعالجة كافة المستندات والصور بدون اتصال بالإنترنت وبخصوصية تامة.',
     engineTitle: 'محرك محلي فائق بسعة 500 ميجابايت',
     engineDesc: 'معالجة المستندات والوسائط الضخمة مباشرة وبسلاسة في المتصفح.',
     privacyTitle: 'خصوصية وأمان محلي بنسبة 100%',
@@ -80,10 +88,12 @@ const FOOTER_LOCALES = {
     pdfEditor: 'استوديو محرر PDF التفاعلي',
     imageStudio: 'استوديو معالجة وتحسين الصور',
     ocrText: 'استخراج النصوص من الصور (OCR)',
-    markItDown: 'استوديو MarkItDown للذكاء الاصطناعي',
+    textToPdf: 'استوديو المستندات وتحويل النص إلى PDF',
   },
   hi: {
-    shareApp: 'दोस्तों के साथ ऐप शेयर करें',
+    shareApp: 'ऐप शेयर करें',
+    getAndroidApp: 'Google Play से डाउनलोड करें',
+    officialAppDesc: 'मिफ़्ताह टूल्स का आधिकारिक एंड्रॉइड ऐप इंस्टॉल करें और 100% ऑफ़लाइन दस्तावेज़ व मीडिया फ़ाइलें प्रोसेस करें।',
     engineTitle: '500 MB क्लाइंट-साइड इंजन',
     engineDesc: 'ब्राउज़र में सीधे भारी दस्तावेज़ और मीडिया फ़ाइलें प्रोसेस करें।',
     privacyTitle: '100% इन-ब्राउज़र गोपनीयता',
@@ -99,8 +109,8 @@ const FOOTER_LOCALES = {
     pdfToWord: 'PDF से Word (OCR)',
     pdfEditor: 'PDF एडिटर स्टूडियो',
     imageStudio: 'इमेज स्टूडियो सूट',
-    ocrText: 'इमेज से टेक्स्ट निकालें (OCR)',
-    markItDown: 'MarkItDown AI स्टूडियो',
+    ocrText: 'फोटो से टेक्स्ट निकालें (OCR)',
+    textToPdf: 'डॉक्यूमेंट स्टूडियो व टेक्स्ट टू PDF',
   },
 };
 
@@ -111,7 +121,7 @@ export function Footer() {
   return (
     <footer
       dir={isRTL ? 'rtl' : 'ltr'}
-      className="hidden lg:block w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 mt-20 transition-colors"
+      className="block w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 mt-12 sm:mt-20 transition-colors pb-16 lg:pb-8"
     >
       {/* 3 Core Trust Badges */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -148,10 +158,10 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-10">
         {/* Main Columns Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-          {/* Brand Col */}
+          {/* Brand Col with Google Play Store badge */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-2 select-none">
               <span className="text-xl font-black tracking-tight text-brand-600 dark:text-brand-400">
@@ -159,10 +169,53 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-              {t.footer.desc}
+              {t.footer.desc || 'High-performance, 100% private, client-side digital utilities running entirely in your browser with zero server file transfers.'}
             </p>
 
-            {/* Language Quick Switcher & Share App Trigger */}
+            {/* Official Google Play Store Download Card */}
+            <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5 max-w-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Official Android App</h4>
+                  <p className="text-[10px] text-slate-400">100% Free • On-Device Privacy</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700 transition-all shadow-sm active:scale-95 group select-none"
+                  aria-label="Get Miftah Tools on Google Play"
+                >
+                  <svg className="w-5 h-5 fill-current text-white shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                    <path d="M3.609 1.814L13.792 12 3.61 22.186c-.37-.36-.61-.88-.61-1.474V3.288c0-.594.24-1.114.61-1.474zM15.207 13.414l2.586 2.586-12.871 7.43 10.285-10.016zm0-2.828L4.922.57 17.793 8l-2.586 2.586zm1.414 1.414l3.779-2.182c.8-.462.8-1.214 0-1.676l-3.779-2.182-2.121 2.121 2.121 2.919z" />
+                  </svg>
+                  <div className="text-left rtl:text-right">
+                    <div className="text-[8px] uppercase tracking-wider text-slate-300 font-semibold leading-none">GET IT ON</div>
+                    <div className="text-[11px] font-black tracking-tight text-white leading-none mt-0.5">Google Play</div>
+                  </div>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    shareAppNative(language);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-brand-50 dark:bg-slate-800 dark:hover:bg-brand-950/50 text-slate-700 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all active:scale-95 shadow-xs"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                  <span>{loc.shareApp}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Language Quick Switcher */}
             <div className="space-y-2 pt-1">
               <div className="flex items-center gap-2">
                 <Globe2 className="w-4 h-4 text-slate-400" />
@@ -187,20 +240,6 @@ export function Footer() {
                   ))}
                 </div>
               </div>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    shareAppNative(language);
-                  }}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-brand-50 dark:bg-slate-800 dark:hover:bg-brand-950/50 text-slate-700 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all active:scale-95 shadow-xs"
-                >
-                  <Share2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                  <span>{loc.shareApp}</span>
-                </button>
-              </div>
             </div>
           </div>
 
@@ -208,7 +247,7 @@ export function Footer() {
           <div className="space-y-3">
             <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
               <GraduationCap className="w-3.5 h-3.5 text-brand-600" />
-              {t.footer.courses}
+              <span>{t.footer.courses}</span>
             </h4>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
@@ -232,8 +271,9 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/quiz" className="hover:text-brand-600 transition-colors font-bold text-brand-600 dark:text-brand-400">
-                  ⚡ {t.quiz?.title || 'Knowledge Quizzes'}
+                <Link href="/quiz" className="hover:text-brand-600 transition-colors font-bold text-brand-600 dark:text-brand-400 inline-flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>{t.quiz?.title || 'Knowledge Quizzes'}</span>
                 </Link>
               </li>
               <li>
@@ -246,10 +286,10 @@ export function Footer() {
 
           {/* Section 2: Tools & Utilities */}
           <div className="space-y-3">
-            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-brand-600" />
-              {t.footer.tools}
-            </h4>
+              <span>{t.footer.tools}</span>
+            </h3>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
                 <Link href="/tools/pdf-to-docx" className="hover:text-brand-600 transition-colors">
@@ -272,8 +312,9 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/markitdown" className="hover:text-brand-600 transition-colors font-bold text-brand-600 dark:text-brand-400">
-                  🤖 {loc.markItDown}
+                <Link href="/tools/text-to-pdf" className="hover:text-brand-600 transition-colors font-bold text-brand-600 dark:text-brand-400 inline-flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{loc.textToPdf}</span>
                 </Link>
               </li>
               <li>
@@ -286,10 +327,10 @@ export function Footer() {
 
           {/* Section 3: Information & Legal */}
           <div className="space-y-3">
-            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+            <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-brand-600" />
-              {t.footer.helpSupport}
-            </h4>
+              <span>{t.footer.helpSupport}</span>
+            </h3>
             <ul className="space-y-2 text-xs text-slate-500 dark:text-slate-400">
               <li>
                 <Link href="/about" className="hover:text-brand-600 transition-colors">
@@ -338,7 +379,17 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>© 2026 Miftah Tools. {t.footer.rights}</p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <a
+              href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-600 dark:text-brand-400 font-bold hover:underline inline-flex items-center gap-1"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>Google Play Store</span>
+            </a>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
             <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
               <ShieldCheck className="w-3.5 h-3.5" />
               {t.footer.poweredBy}

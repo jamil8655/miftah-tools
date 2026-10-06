@@ -98,9 +98,8 @@ export function SmartFileDropHub() {
       setSuggestions([
         { id: 'compress-pdf', title: 'Compress PDF', desc: 'Reduce file size by up to 90% without losing quality.', href: '/tools/compress-pdf', badge: 'Popular' },
         { id: 'pdf-to-docx', title: 'PDF to Word DOCX', desc: 'Convert PDF with OCR into an editable Word document.', href: '/tools/pdf-to-docx' },
-        { id: 'pdf-signer', title: 'Sign & Stamp PDF', desc: 'Draw digital signatures, stamps, and notes onto pages.', href: '/pdf-signer', badge: 'Signature' },
         { id: 'split-pdf', title: 'Split & Extract Pages', desc: 'Separate pages into individual PDF files.', href: '/tools/split-pdf' },
-        { id: 'markitdown', title: 'PDF to Markdown', desc: 'Convert structured text and tables to Markdown.', href: '/markitdown' },
+        { id: 'merge-pdf', title: 'Merge PDF Files', desc: 'Combine multiple PDF files into one clean document.', href: '/tools/merge-pdf' },
       ]);
       return;
     }
@@ -121,7 +120,6 @@ export function SmartFileDropHub() {
     if (['docx', 'doc'].includes(ext) || mime.includes('wordprocessingml')) {
       setSuggestions([
         { id: 'docx-pdf', title: 'Word to PDF', desc: 'Convert Word document directly into printable PDF.', href: '/tools/docx-to-pdf', badge: 'Instant' },
-        { id: 'docx-md', title: 'Word to Markdown', desc: 'Extract headings, tables, and lists into structured MD.', href: '/markitdown' },
         { id: 'docx-clean', title: 'Clean Word Formatting', desc: 'Remove double spaces, broken tags, and metadata.', href: '/tools/clean-word-formatting' },
       ]);
       return;
@@ -131,7 +129,6 @@ export function SmartFileDropHub() {
     if (['xlsx', 'xls', 'csv', 'tsv'].includes(ext) || mime.includes('spreadsheet') || mime.includes('csv')) {
       setSuggestions([
         { id: 'excel-pdf', title: 'Spreadsheet to PDF', desc: 'Convert sheets into landscape formatted PDF.', href: '/tools/excel-to-pdf' },
-        { id: 'excel-md', title: 'Spreadsheet to Markdown Table', desc: 'Transform data rows into clean GitHub Flavored Markdown.', href: '/markitdown', badge: 'Smart' },
         { id: 'csv-json', title: 'CSV to JSON Converter', desc: 'Convert tabular rows into API-ready JSON data.', href: '/tools/csv-to-json' },
       ]);
       return;
@@ -141,14 +138,12 @@ export function SmartFileDropHub() {
     if (['pptx', 'ppt'].includes(ext) || mime.includes('presentationml')) {
       setSuggestions([
         { id: 'ppt-pdf', title: 'PowerPoint to PDF', desc: 'Convert presentation slides into high quality PDF.', href: '/tools/pptx-to-pdf' },
-        { id: 'ppt-md', title: 'PowerPoint to Markdown', desc: 'Extract slide titles, bullet points, and speaker notes.', href: '/markitdown' },
       ]);
       return;
     }
 
     // Fallback Universal Actions
     setSuggestions([
-      { id: 'universal-md', title: 'Universal MarkItDown', desc: 'Extract structured text and data into clean Markdown.', href: '/markitdown' },
       { id: 'workflows-pipe', title: 'Smart Pipeline Workflow', desc: 'Chain multiple processing steps in sequence.', href: '/workflows' },
     ]);
   };

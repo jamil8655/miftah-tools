@@ -10,30 +10,26 @@ import {
   ArrowRight,
   Plus,
   Trash2,
-  Copy,
-  RefreshCw,
   Download,
   Layers,
   FileText,
   Image as ImageIcon,
   Workflow,
-  Sliders,
-  Settings2,
   RotateCcw,
   Check,
   Eye,
-  FolderDown,
-  ShieldCheck,
   Zap,
   Cpu,
-  FileCheck2,
   Wand2,
   X,
-  ExternalLink,
   ChevronRight,
   ChevronDown,
-  ArrowDown,
-  ArrowUp,
+  Upload,
+  RefreshCw,
+  FolderDown,
+  Sliders,
+  FileCheck2,
+  SlidersHorizontal,
 } from 'lucide-react';
 import {
   SavedWorkflow,
@@ -41,28 +37,32 @@ import {
   getSavedWorkflows,
   saveWorkflow,
   deleteWorkflow,
-  DEFAULT_WORKFLOW_TEMPLATES,
   logActivity,
   saveProcessedFile,
 } from '@/lib/storage/indexeddb-store';
-import { TOOLS_LIST } from '@/lib/tools-config';
 import { downloadSingleFile, openDownloadedFile } from '@/lib/utils/download';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { formatBytes } from '@/lib/utils/formatters';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { compressPdfAdvanced } from '@/lib/pdf/pdf-compressor';
-import { watermarkPdf, addPageNumbers, rotatePdfPages, reversePdfPages } from '@/lib/pdf/pdf-manipulator';
-import { convertImage, resizeImage, compressImageToTargetKB, watermarkImage, rotateAndFlipImage, stripExifAndMetadata } from '@/lib/image/image-manipulator';
+import { watermarkPdf, addPageNumbers } from '@/lib/pdf/pdf-manipulator';
+import {
+  convertImage,
+  resizeImage,
+  compressImageToTargetKB,
+  watermarkImage,
+  stripExifAndMetadata,
+} from '@/lib/image/image-manipulator';
 import { runOcr } from '@/lib/ocr/ocr-engine';
 import { universalMarkItDown } from '@/lib/engines/markitdown-engine';
 
 const WORKFLOW_LOCALES = {
   en: {
-    badge: 'Workflows',
-    title: 'Workflows & Automation',
-    subtitle: 'Chain tools into automated pipelines with instant device export.',
-    selectActiveWf: 'Pipeline Templates',
-    available: 'Ready',
+    badge: 'Smart Workflows',
+    title: 'Automated Workflows',
+    subtitle: 'Chain multiple tools into an automated 1-click processing pipeline.',
+    selectWorkflow: 'Select Pipeline',
+    choosePreset: 'Choose Workflow Preset',
     allTab: 'All',
     imageTab: 'Images',
     pdfTab: 'PDF',
@@ -70,49 +70,30 @@ const WORKFLOW_LOCALES = {
     customTab: 'Custom',
     templateBadge: 'TEMPLATE',
     customBadge: 'CUSTOM',
-    stepsCount: (count: number) => `${count} Stages`,
-    sequentialSteps: 'Pipeline Stages',
-    toolIdLabel: (id: string) => `Module: ${id}`,
-    processingStatus: 'Processing...',
-    waitingStatus: 'Queued',
-    completedStatus: 'Passed ✓',
-    failedStatus: 'Failed',
-    executionHub: 'Pipeline Execution',
-    uploadPrompt: 'Drop File to Run Pipeline',
-    uploadSub: 'Supports Photos, PDFs & Documents with automatic format chaining',
-    changeFile: 'Change File',
-    runningSteps: 'Executing Pipeline Stages...',
-    runFullWorkflow: (count: number) => `Execute ${count} Stages`,
-    completedTitle: 'Pipeline Completed!',
-    completedSub: (count: number) => `All ${count} operations executed and saved directly to your device.`,
-    downloadFinal: 'Download Output',
+    stagesLabel: (count: number) => `${count} ${count === 1 ? 'Stage' : 'Stages'}`,
+    uploadPrompt: 'Tap to select or drop file here',
+    uploadSub: 'Supports Photos, PDFs & Documents',
+    changeFile: 'Change',
+    runningSteps: 'Executing Pipeline...',
+    runFullWorkflow: 'Run Pipeline',
+    completedTitle: 'Pipeline Completed Successfully!',
+    downloadFinal: 'Download Result',
     openFile: 'Open & View',
     runAgain: 'Run Again',
-    createNewPipeline: 'New Pipeline',
-    pipelineNamePlaceholder: 'e.g. Photo ID Suite',
-    pipelineDescPlaceholder: 'Describe your pipeline...',
-    addStepButton: 'Add Stage',
-    savePipeline: 'Save & Deploy',
+    createNewPipeline: 'Create Custom Pipeline',
+    pipelineNamePlaceholder: 'Pipeline Name (e.g. Photo ID Suite)',
+    pipelineDescPlaceholder: 'Short description...',
+    addStagePrompt: '+ Add Next Stage',
+    savePipeline: 'Save Pipeline',
     cancel: 'Cancel',
-    categorySelect: 'Category',
-    stepPreviewTitle: 'Intermediate Outputs',
-    originalInput: 'Original Input',
-    finalOutput: 'Final Result',
-    savedBadge: 'Saved to Device',
-    statsOffline: 'Offline',
-    statsStorage: 'Private',
-    statsSpeed: 'Instant',
-    moveUp: 'Move Up',
-    moveDown: 'Move Down',
-    deleteStep: 'Delete Stage',
-    stageOptions: 'Stage Settings',
+    intermediateResults: 'Stage Previews',
   },
   ur: {
-    badge: 'ورک فلو',
-    title: 'ورک فلو اور آٹومیشن',
-    subtitle: 'ٹولز کو ملا کر خودکار پائپ لائن چلائیں اور محفوظ کریں۔',
-    selectActiveWf: 'پائپ لائن ٹیمپلیٹس',
-    available: 'دستیاب',
+    badge: 'اسمارٹ ورک فلو',
+    title: 'خودکار ورک فلو پائپ لائن',
+    subtitle: 'مختلف ٹولز کو ملا کر 1-کلک میں خودکار پروسیسنگ کریں۔',
+    selectWorkflow: 'پائپ لائن منتخب کریں',
+    choosePreset: 'ورک فلو پری سیٹ منتخب کریں',
     allTab: 'تمام',
     imageTab: 'تصاویر',
     pdfTab: 'پی ڈی ایف',
@@ -120,49 +101,30 @@ const WORKFLOW_LOCALES = {
     customTab: 'کسٹم',
     templateBadge: 'ٹیمپلیٹ',
     customBadge: 'کسٹم',
-    stepsCount: (count: number) => `${count} مراحل`,
-    sequentialSteps: 'پائپ لائن کے مراحل',
-    toolIdLabel: (id: string) => `ماڈیول: ${id}`,
-    processingStatus: 'جاری ہے...',
-    waitingStatus: 'انتظار',
-    completedStatus: 'مکمل ✓',
-    failedStatus: 'ناکام',
-    executionHub: 'پائپ لائن ایگزیکیوشن',
-    uploadPrompt: 'فائل یہاں رکھیں یا منتخب کریں',
-    uploadSub: 'تصاویر، پی ڈی ایف اور دستاویزات کی خودکار پروسیسنگ',
-    changeFile: 'فائل تبدیل کریں',
-    runningSteps: 'پائپ لائن چلائی جا رہی ہے...',
-    runFullWorkflow: (count: number) => `تمام ${count} مراحل چلائیں`,
-    completedTitle: 'پائپ لائن مکمل ہو گئی!',
-    completedSub: (count: number) => `تمام ${count} مراحل مکمل ہو کر ڈیوائس میں محفوظ ہو گئے۔`,
-    downloadFinal: 'فائل ڈاؤن لوڈ کریں',
-    openFile: 'فائل کھولیں',
+    stagesLabel: (count: number) => `${count} ${count === 1 ? 'مرحلہ' : 'مراحل'}`,
+    uploadPrompt: 'فائل منتخب کرنے کے لیے ٹیپ کریں یا یہاں رکھیں',
+    uploadSub: 'تصاویر، پی ڈی ایف اور دستاویزات کے لیے موزوں',
+    changeFile: 'تبدیل کریں',
+    runningSteps: 'پائپ لائن پروسیس ہو رہی ہے...',
+    runFullWorkflow: 'پائپ لائن چلائیں',
+    completedTitle: 'پائپ لائن کامیابی سے مکمل ہو گئی!',
+    downloadFinal: 'نتیجہ ڈاؤن لوڈ کریں',
+    openFile: 'فائل دیکھیں',
     runAgain: 'دوبارہ چلائیں',
-    createNewPipeline: 'نیا ورک فلو',
-    pipelineNamePlaceholder: 'مثال: پاسپورٹ فوٹو سوٹ',
-    pipelineDescPlaceholder: 'ورک فلو کی تفصیل...',
-    addStepButton: 'اگلا مرحلہ شامل کریں',
+    createNewPipeline: 'نیا کسٹم ورک فلو بنائیں',
+    pipelineNamePlaceholder: 'ورک فلو کا نام',
+    pipelineDescPlaceholder: 'مختصر تفصیل...',
+    addStagePrompt: '+ اگلا مرحلہ شامل کریں',
     savePipeline: 'ورک فلو محفوظ کریں',
     cancel: 'منسوخ',
-    categorySelect: 'قسم',
-    stepPreviewTitle: 'مراحل کے نتائج',
-    originalInput: 'اصل فائل',
-    finalOutput: 'حتمی فائل',
-    savedBadge: 'ڈیوائس میں محفوظ',
-    statsOffline: 'آف لائن',
-    statsStorage: 'محفوظ',
-    statsSpeed: 'تیز ترین',
-    moveUp: 'اوپر',
-    moveDown: 'نیچے',
-    deleteStep: 'ہٹائیں',
-    stageOptions: 'سیٹنگز',
+    intermediateResults: 'مراحل کے نتائج',
   },
   ar: {
-    badge: 'سير العمل',
+    badge: 'سير العمل الذكي',
     title: 'سير العمل والأتمتة',
-    subtitle: 'دمج الأدوات في خطوط معالجة تلقائية مع حفظ فوري على جهازك.',
-    selectActiveWf: 'قوالب خطوط المعالجة',
-    available: 'جاهز',
+    subtitle: 'دمج عدة أدوات في خط معالجة تلقائي بنقرة واحدة.',
+    selectWorkflow: 'اختيار خط المعالجة',
+    choosePreset: 'اختر قالب سير العمل',
     allTab: 'الكل',
     imageTab: 'الصور',
     pdfTab: 'PDF',
@@ -170,49 +132,30 @@ const WORKFLOW_LOCALES = {
     customTab: 'مخصص',
     templateBadge: 'قالب',
     customBadge: 'مخصص',
-    stepsCount: (count: number) => `${count} مراحل`,
-    sequentialSteps: 'مراحل المعالجة',
-    toolIdLabel: (id: string) => `الوحدة: ${id}`,
-    processingStatus: 'جاري التنفيذ...',
-    waitingStatus: 'في الانتظار',
-    completedStatus: 'ناجح ✓',
-    failedStatus: 'فشل',
-    executionHub: 'تنفيذ سير العمل',
-    uploadPrompt: 'أفلت الملف لتشغيل خط المعالجة',
+    stagesLabel: (count: number) => `${count} ${count === 1 ? 'مرحلة' : 'مراحل'}`,
+    uploadPrompt: 'اضغط لاختيار ملف أو اسحبه هنا',
     uploadSub: 'يدعم الصور وملفات PDF والمستندات',
-    changeFile: 'تغيير الملف',
-    runningSteps: 'جاري تنفيذ المراحل...',
-    runFullWorkflow: (count: number) => `تشغيل ${count} مراحل`,
-    completedTitle: 'اكتمل سير العمل بنجاح!',
-    completedSub: (count: number) => `تم تنفيذ ${count} عمليات وحفظها في جهازك.`,
+    changeFile: 'تغيير',
+    runningSteps: 'جاري تشغيل خط المعالجة...',
+    runFullWorkflow: 'تشغيل سير العمل',
+    completedTitle: 'تم إنجاز خط المعالجة بنجاح!',
     downloadFinal: 'تنزيل النتيجة',
     openFile: 'فتح وعرض',
     runAgain: 'إعادة التشغيل',
-    createNewPipeline: 'خط معالجة مخصص',
-    pipelineNamePlaceholder: 'مثال: حزمة صور الجواز',
-    pipelineDescPlaceholder: 'وصف سير العمل...',
-    addStepButton: 'إضافة مرحلة',
+    createNewPipeline: 'إنشاء سير عمل مخصص',
+    pipelineNamePlaceholder: 'اسم سير العمل',
+    pipelineDescPlaceholder: 'وصف موجز...',
+    addStagePrompt: '+ إضافة مرحلة',
     savePipeline: 'حفظ سير العمل',
     cancel: 'إلغاء',
-    categorySelect: 'التصنيف',
-    stepPreviewTitle: 'مخرجات المراحل',
-    originalInput: 'الملف الأصلي',
-    finalOutput: 'النتيجة النهائية',
-    savedBadge: 'تم الحفظ بالجهاز',
-    statsOffline: 'محلي',
-    statsStorage: 'خصوصية',
-    statsSpeed: 'فوري',
-    moveUp: 'للأعلى',
-    moveDown: 'للأسفل',
-    deleteStep: 'حذف',
-    stageOptions: 'الإعدادات',
+    intermediateResults: 'مخرجات المراحل',
   },
   hi: {
-    badge: 'वर्कफ़्लो',
-    title: 'वर्कफ़्लो और ऑटोमेशन',
-    subtitle: 'टूल्स को स्वचालित पाइपलाइन में जोड़ें और त्वरित सेव करें।',
-    selectActiveWf: 'पाइपलाइन टेम्पलेट्स',
-    available: 'तैयार',
+    badge: 'स्मार्ट वर्कफ़्लो',
+    title: 'स्वचालित वर्कफ़्लो',
+    subtitle: 'मल्टीपल टूल्स को एक स्वचालित 1-क्लिक पाइपलाइन में जोड़ें।',
+    selectWorkflow: 'पाइपलाइन चुनें',
+    choosePreset: 'वर्कफ़्लो प्रीसेट चुनें',
     allTab: 'सभी',
     imageTab: 'फ़ोटो',
     pdfTab: 'पीडीएफ',
@@ -220,100 +163,80 @@ const WORKFLOW_LOCALES = {
     customTab: 'कस्टम',
     templateBadge: 'टेम्पलेट',
     customBadge: 'कस्टम',
-    stepsCount: (count: number) => `${count} चरण`,
-    sequentialSteps: 'पाइपलाइन चरण',
-    toolIdLabel: (id: string) => `मॉड्यूल: ${id}`,
-    processingStatus: 'प्रगति पर...',
-    waitingStatus: 'प्रतीक्षारत',
-    completedStatus: 'सफल ✓',
-    failedStatus: 'विफल',
-    executionHub: 'पाइपलाइन निष्पादन',
-    uploadPrompt: 'फ़ाइल यहाँ छोड़ें या चुनें',
-    uploadSub: 'फ़ोटो, पीडीएफ और दस्तावेज़ों का स्वचालित प्रसंस्करण',
-    changeFile: 'फ़ाइल बदलें',
-    runningSteps: 'पाइपलाइन चरण निष्पादित हो रहे हैं...',
-    runFullWorkflow: (count: number) => `${count} चरण चलाएं`,
-    completedTitle: 'पाइपलाइन पूरी हुई!',
-    completedSub: (count: number) => `सभी ${count} कार्य पूरे हुए और डिवाइस में सहेजे गए।`,
-    downloadFinal: 'डाउनलोड करें',
+    stagesLabel: (count: number) => `${count} चरण`,
+    uploadPrompt: 'फ़ाइल चुनने के लिए टैप करें या यहाँ छोड़ें',
+    uploadSub: 'फ़ोटो, पीडीएफ और दस्तावेज़ों का त्वरित प्रसंस्करण',
+    changeFile: 'बदलें',
+    runningSteps: 'पाइपलाइन चल रही है...',
+    runFullWorkflow: 'वर्कफ़्लो चलाएं',
+    completedTitle: 'पाइपलाइन सफलतापूर्वक पूरी हुई!',
+    downloadFinal: 'परिणाम डाउनलोड करें',
     openFile: 'खोलें और देखें',
     runAgain: 'पुनः चलाएं',
-    createNewPipeline: 'नया वर्कफ़्लो',
-    pipelineNamePlaceholder: 'उदा. पासपोर्ट फ़ोटो सूट',
-    pipelineDescPlaceholder: 'पाइपलाइन का विवरण...',
-    addStepButton: 'चरण जोड़ें',
+    createNewPipeline: 'नया कस्टम वर्कफ़्लो बनाएं',
+    pipelineNamePlaceholder: 'वर्कफ़्लो का नाम (उदा. पासपोर्ट सूट)',
+    pipelineDescPlaceholder: 'संक्षिप्त विवरण...',
+    addStagePrompt: '+ अगला चरण जोड़ें',
     savePipeline: 'वर्कफ़्लो सहेजें',
     cancel: 'रद्द करें',
-    categorySelect: 'श्रेणी',
-    stepPreviewTitle: 'चरण आउटपुट',
-    originalInput: 'मूल इनपुट',
-    finalOutput: 'अंतिम परिणाम',
-    savedBadge: 'डिवाइस में सहेजा गया',
-    statsOffline: 'ऑफ़लाइन',
-    statsStorage: 'सुरक्षित',
-    statsSpeed: 'त्वरित',
-    moveUp: 'ऊपर',
-    moveDown: 'नीचे',
-    deleteStep: 'हटाएं',
-    stageOptions: 'सेटिंग्स',
+    intermediateResults: 'चरण पूर्वावलोकन',
   },
 };
 
-// Rich extended default pipelines for authentic multi-step power
 const EXTENDED_PRESET_WORKFLOWS: SavedWorkflow[] = [
   {
     id: 'wf_passport_studio',
     name: 'Government Exam & Passport Suite',
-    description: 'Clean background ➔ 3.5x4.5cm Visa Crop ➔ Add DOP Name Strip ➔ Compress strictly to < 50KB.',
+    description: 'Clean background ➔ Official 3.5x4.5cm Crop ➔ Compress to < 50KB.',
     category: 'image',
     createdAt: Date.now(),
     updatedAt: Date.now(),
     isTemplate: true,
     steps: [
       { id: 's1', toolId: 'background-remover', toolName: 'Background Cutout & White Fill', options: { tolerance: 30, fillColor: '#ffffff' }, status: 'Waiting' },
-      { id: 's2', toolId: 'passport-photo-maker', toolName: 'Official 3.5x4.5cm Ratio Crop', options: { width: 413, height: 531 }, status: 'Waiting' },
-      { id: 's3', toolId: 'image-compressor', toolName: 'Precision Target Compression (50 KB)', options: { targetKB: 48 }, status: 'Waiting' },
+      { id: 's2', toolId: 'passport-photo-maker', toolName: 'Official 3.5x4.5cm Crop', options: { width: 413, height: 531 }, status: 'Waiting' },
+      { id: 's3', toolId: 'image-compressor', toolName: 'Target Compression (50 KB)', options: { targetKB: 48 }, status: 'Waiting' },
     ],
   },
   {
     id: 'wf_pdf_optimizer',
     name: 'Official PDF Document Package',
-    description: 'High-ratio PDF compression ➔ Add Page Numbering ➔ Stamp Official Watermark.',
+    description: 'High-ratio PDF compression ➔ Add Page Numbers ➔ Stamp Official Watermark.',
     category: 'pdf',
     createdAt: Date.now(),
     updatedAt: Date.now(),
     isTemplate: true,
     steps: [
-      { id: 'p1', toolId: 'compress-pdf', toolName: 'Smart PDF Stream Optimizer', options: { level: 'medium' }, status: 'Waiting' },
-      { id: 'p2', toolId: 'pdf-page-numbers', toolName: 'Add Header/Footer Page Numbers', options: { format: 'Page X of Y' }, status: 'Waiting' },
-      { id: 'p3', toolId: 'watermark-pdf', toolName: 'Official Confidential Stamp', options: { text: 'OFFICIAL DOCUMENT', opacity: 0.25 }, status: 'Waiting' },
+      { id: 'p1', toolId: 'compress-pdf', toolName: 'Smart PDF Compressor', options: { level: 'medium' }, status: 'Waiting' },
+      { id: 'p2', toolId: 'pdf-page-numbers', toolName: 'Page Numbering', options: { format: 'Page X of Y' }, status: 'Waiting' },
+      { id: 'p3', toolId: 'watermark-pdf', toolName: 'Confidential Watermark Stamp', options: { text: 'OFFICIAL DOCUMENT', opacity: 0.25 }, status: 'Waiting' },
     ],
   },
   {
     id: 'wf_web_image_polish',
-    name: 'E-Commerce Product Image Optimizer',
-    description: 'Auto-level contrast ➔ Resize to 1200x1200px ➔ Strip EXIF metadata ➔ Export Next-Gen WebP.',
+    name: 'E-Commerce Product Image Suite',
+    description: 'Square 1200px Resize ➔ Strip EXIF metadata ➔ Lossless WebP Export.',
     category: 'image',
     createdAt: Date.now(),
     updatedAt: Date.now(),
     isTemplate: true,
     steps: [
-      { id: 'w1', toolId: 'image-resizer', toolName: 'Square 1200x1200px Resizing', options: { width: 1200, height: 1200, maintainAspect: true }, status: 'Waiting' },
-      { id: 'w2', toolId: 'strip-metadata', toolName: 'Strip EXIF & Privacy Tags', options: {}, status: 'Waiting' },
-      { id: 'w3', toolId: 'image-converter', toolName: 'Convert to Lossless WebP', options: { targetFormat: 'image/webp' }, status: 'Waiting' },
+      { id: 'w1', toolId: 'image-resizer', toolName: 'Square 1200px Resizing', options: { width: 1200, height: 1200, maintainAspect: true }, status: 'Waiting' },
+      { id: 'w2', toolId: 'strip-metadata', toolName: 'Sanitize EXIF Privacy Tags', options: {}, status: 'Waiting' },
+      { id: 'w3', toolId: 'image-converter', toolName: 'Convert to Next-Gen WebP', options: { targetFormat: 'image/webp' }, status: 'Waiting' },
     ],
   },
   {
     id: 'wf_ocr_text_extractor',
     name: 'Scan OCR & Document Text Pipeline',
-    description: 'Auto-contrast enhancement ➔ High-accuracy OCR Text extraction ➔ TXT Document generation.',
+    description: 'Clarity enhancement ➔ Neural OCR Character Extraction ➔ TXT Document.',
     category: 'ocr',
     createdAt: Date.now(),
     updatedAt: Date.now(),
     isTemplate: true,
     steps: [
       { id: 'o1', toolId: 'image-resizer', toolName: 'High-DPI Clarity Scaler', options: { width: 1800, height: 2400 }, status: 'Waiting' },
-      { id: 'o2', toolId: 'ocr-image-to-text', toolName: 'Neural OCR Character Extraction', options: { language: 'eng' }, status: 'Waiting' },
+      { id: 'o2', toolId: 'ocr-image-to-text', toolName: 'Neural OCR Text Extraction', options: { language: 'eng' }, status: 'Waiting' },
     ],
   },
 ];
@@ -340,6 +263,7 @@ export function WorkflowBuilder() {
   const [workflows, setWorkflows] = useState<SavedWorkflow[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'image' | 'pdf' | 'ocr' | 'custom'>('all');
   const [activeWorkflow, setActiveWorkflow] = useState<SavedWorkflow | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [inputFile, setInputFile] = useState<File | null>(null);
   const [inputPreview, setInputPreview] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -349,7 +273,10 @@ export function WorkflowBuilder() {
   const [finalDownloadUrl, setFinalDownloadUrl] = useState<string | null>(null);
   const [finalFilename, setFinalFilename] = useState<string>('');
 
-  // Pipeline Custom Creator State
+  // Accordion / Expanded state: only 1 workflow is open at a time
+  const [expandedWorkflowId, setExpandedWorkflowId] = useState<string | null>(null);
+
+  // Custom Pipeline Creator State
   const [isCreatingCustom, setIsCreatingCustom] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customDesc, setCustomDesc] = useState('');
@@ -359,36 +286,21 @@ export function WorkflowBuilder() {
     { toolId: 'image-compressor', toolName: 'Target Compressor (100KB)', options: { targetKB: 100 } },
   ]);
 
-  const handleAddCustomStep = (moduleId: string) => {
-    const mod = AVAILABLE_MODULES.find((m) => m.id === moduleId);
-    if (!mod) return;
-    setCustomSteps((prev) => [
-      ...prev,
-      { toolId: mod.id, toolName: mod.name, options: { ...mod.defaultOptions } },
-    ]);
-    triggerHaptic('light');
-  };
-
-  const handleRemoveCustomStep = (index: number) => {
-    setCustomSteps((prev) => prev.filter((_, i) => i !== index));
-    triggerHaptic('light');
-  };
-
-  const handleMoveCustomStep = (index: number, direction: 'up' | 'down') => {
-    setCustomSteps((prev) => {
-      const next = [...prev];
-      const targetIdx = direction === 'up' ? index - 1 : index + 1;
-      if (targetIdx < 0 || targetIdx >= next.length) return prev;
-      const temp = next[index];
-      next[index] = next[targetIdx];
-      next[targetIdx] = temp;
-      return next;
-    });
-    triggerHaptic('light');
-  };
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadWorkflows();
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadWorkflows = async () => {
@@ -402,17 +314,40 @@ export function WorkflowBuilder() {
     setWorkflows(merged);
     if (merged.length > 0 && !activeWorkflow) {
       setActiveWorkflow(merged[0]);
+      setExpandedWorkflowId(merged[0].id);
     }
   };
 
   const handleSelectWorkflow = (wf: SavedWorkflow) => {
     setActiveWorkflow(wf);
+    setExpandedWorkflowId(wf.id);
+    setIsDropdownOpen(false);
     setInputFile(null);
     setInputPreview(null);
     setStepResults([]);
     setFinalResultBlob(null);
     setFinalDownloadUrl(null);
     setCurrentStepIndex(-1);
+    triggerHaptic('light');
+  };
+
+  const handleToggleAccordion = (id: string) => {
+    const target = workflows.find((w) => w.id === id);
+    if (target) {
+      if (expandedWorkflowId === id) {
+        // keep it or allow toggle
+        setExpandedWorkflowId(null);
+      } else {
+        setExpandedWorkflowId(id);
+        setActiveWorkflow(target);
+        setInputFile(null);
+        setInputPreview(null);
+        setStepResults([]);
+        setFinalResultBlob(null);
+        setFinalDownloadUrl(null);
+        setCurrentStepIndex(-1);
+      }
+    }
     triggerHaptic('light');
   };
 
@@ -431,6 +366,21 @@ export function WorkflowBuilder() {
       setCurrentStepIndex(-1);
       triggerHaptic('medium');
     }
+  };
+
+  const handleAddCustomStep = (moduleId: string) => {
+    const mod = AVAILABLE_MODULES.find((m) => m.id === moduleId);
+    if (!mod) return;
+    setCustomSteps((prev) => [
+      ...prev,
+      { toolId: mod.id, toolName: mod.name, options: { ...mod.defaultOptions } },
+    ]);
+    triggerHaptic('light');
+  };
+
+  const handleRemoveCustomStep = (index: number) => {
+    setCustomSteps((prev) => prev.filter((_, i) => i !== index));
+    triggerHaptic('light');
   };
 
   // Real Multi-Stage Pipeline Execution Engine
@@ -452,7 +402,6 @@ export function WorkflowBuilder() {
       setActiveWorkflow({ ...activeWorkflow, steps: [...steps] });
 
       try {
-        // Execute concrete step logic
         const { outputBlob, details } = await executeConcreteStep(steps[i], currentBlob, inputFile.name);
         steps[i].status = 'Completed';
         currentBlob = outputBlob;
@@ -493,7 +442,6 @@ export function WorkflowBuilder() {
     const finalUrl = URL.createObjectURL(currentBlob);
     setFinalDownloadUrl(finalUrl);
 
-    // Compute extension based on final mime and workflow category
     let ext = 'png';
     if (currentBlob.type === 'application/pdf' || activeWorkflow.category === 'pdf') ext = 'pdf';
     else if (currentBlob.type === 'text/markdown' || activeWorkflow.category === 'document') ext = 'md';
@@ -507,7 +455,6 @@ export function WorkflowBuilder() {
     setCurrentStepIndex(-1);
     triggerHaptic('success');
 
-    // Auto-save to IndexedDB My Files library
     await saveProcessedFile({
       name: outName,
       size: currentBlob.size,
@@ -517,7 +464,6 @@ export function WorkflowBuilder() {
       category: activeWorkflow.category,
     });
 
-    // Log Activity
     await logActivity({
       toolId: activeWorkflow.id,
       toolName: `Workflow: ${activeWorkflow.name}`,
@@ -526,12 +472,11 @@ export function WorkflowBuilder() {
       fileSize: inputFile.size,
       status: 'Completed',
       durationMs: Date.now() - startTime,
-      resultSummary: `Executed ${steps.length} sequential stages in ${Math.round((Date.now() - startTime) / 1000)}s`,
+      resultSummary: `Executed ${steps.length} stages in ${Math.round((Date.now() - startTime) / 1000)}s`,
       downloadUrl: finalUrl,
     });
   };
 
-  // Concrete Execution Dispatcher for real client-side algorithms
   const executeConcreteStep = async (
     step: WorkflowStep,
     blob: Blob,
@@ -540,7 +485,6 @@ export function WorkflowBuilder() {
     const isImage = blob.type.startsWith('image/') || origName.match(/\.(png|jpe?g|webp|bmp)$/i);
     const isPdf = blob.type === 'application/pdf' || origName.endsWith('.pdf');
 
-    // 1. Background Cutout / White Fill
     if (step.toolId === 'background-remover' || step.toolId === 'passport-photo-maker') {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -552,12 +496,10 @@ export function WorkflowBuilder() {
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
           if (!ctx) return reject(new Error('Canvas context error'));
 
-          // Draw image
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const data = imgData.data;
 
-          // Corner sample background removal
           const bgR = data[0];
           const bgG = data[1];
           const bgB = data[2];
@@ -574,102 +516,91 @@ export function WorkflowBuilder() {
                 data[p + 2] = 255;
                 data[p + 3] = 255;
               } else {
-                data[p + 3] = 0; // transparent
+                data[p + 3] = 0;
               }
             }
           }
           ctx.putImageData(imgData, 0, 0);
 
           canvas.toBlob((b) => {
-            if (b) resolve({ outputBlob: b, details: `${canvas.width}x${canvas.height}px cropped` });
+            if (b) resolve({ outputBlob: b, details: `${canvas.width}x${canvas.height}px` });
             else reject(new Error('Background processing failed'));
           }, 'image/png');
         };
-        img.onerror = () => reject(new Error('Failed to load image into background engine'));
+        img.onerror = () => reject(new Error('Failed to load image'));
         img.src = URL.createObjectURL(blob);
       });
     }
 
-    // 2. Image Resizer
     if (step.toolId === 'image-resizer') {
       const file = new File([blob], origName, { type: blob.type || 'image/png' });
       const targetW = step.options.width || 1200;
       const targetH = step.options.height || 1200;
       const res = await resizeImage(file, targetW, targetH, step.options.maintainAspect ?? true, 'image/png', 0.95);
-      return { outputBlob: res.blob, details: `Scaled to ${res.width}x${res.height}px` };
+      return { outputBlob: res.blob, details: `${res.width}x${res.height}px` };
     }
 
-    // 3. Image Target Compressor
     if (step.toolId === 'image-compressor') {
       const file = new File([blob], origName, { type: blob.type || 'image/jpeg' });
       const targetKB = step.options.targetKB || 50;
       const res = await compressImageToTargetKB(file, targetKB, 'image/jpeg');
-      return { outputBlob: res.blob, details: `Compressed to ${res.finalKB} KB (${res.width}x${res.height}px)` };
+      return { outputBlob: res.blob, details: `${res.finalKB} KB` };
     }
 
-    // 4. Image Format Converter
     if (step.toolId === 'image-converter') {
       const file = new File([blob], origName, { type: blob.type || 'image/png' });
       const targetFormat = (step.options.targetFormat as any) || 'image/webp';
       const res = await convertImage(file, targetFormat, 0.92);
-      return { outputBlob: res.blob, details: `Converted to ${targetFormat.split('/')[1].toUpperCase()}` };
+      return { outputBlob: res.blob, details: targetFormat.split('/')[1].toUpperCase() };
     }
 
-    // 5. Strip Metadata
     if (step.toolId === 'strip-metadata') {
       const file = new File([blob], origName, { type: blob.type || 'image/jpeg' });
       const res = await stripExifAndMetadata(file);
-      return { outputBlob: res.blob, details: 'EXIF & GPS metadata sanitized' };
+      return { outputBlob: res.blob, details: 'Metadata Cleaned' };
     }
 
-    // 6. Watermark Image
     if (step.toolId === 'watermark-image') {
       const file = new File([blob], origName, { type: blob.type || 'image/png' });
       const res = await watermarkImage(file, step.options.text || 'Miftah Tools', step.options.opacity || 0.4);
-      return { outputBlob: res.blob, details: `Stamped watermark "${step.options.text || 'Miftah Tools'}"` };
+      return { outputBlob: res.blob, details: 'Watermark Stamped' };
     }
 
-    // 7. PDF Compression
     if (step.toolId === 'compress-pdf' && (isPdf || blob.type === 'application/pdf')) {
       const buffer = await blob.arrayBuffer();
       const res = await compressPdfAdvanced(buffer, { level: step.options.level || 'medium' });
       const outBlob = new Blob([res.bytes.buffer as ArrayBuffer], { type: 'application/pdf' });
-      return { outputBlob: outBlob, details: `PDF optimized (${(res.savedPercentage).toFixed(1)}% reduction)` };
+      return { outputBlob: outBlob, details: `${res.savedPercentage.toFixed(0)}% Saved` };
     }
 
-    // 8. PDF Page Numbers
     if (step.toolId === 'pdf-page-numbers' && (isPdf || blob.type === 'application/pdf')) {
       const buffer = await blob.arrayBuffer();
       const resBytes = await addPageNumbers(buffer, 'bottom-center', step.options.format || 'Page X of Y');
       const outBlob = new Blob([resBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
-      return { outputBlob: outBlob, details: 'Numbered all pages in footer' };
+      return { outputBlob: outBlob, details: 'Numbered' };
     }
 
-    // 9. Watermark PDF
     if (step.toolId === 'watermark-pdf' && (isPdf || blob.type === 'application/pdf')) {
       const buffer = await blob.arrayBuffer();
       const resBytes = await watermarkPdf(buffer, step.options.text || 'CONFIDENTIAL', step.options.opacity || 0.25);
       const outBlob = new Blob([resBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
-      return { outputBlob: outBlob, details: `Stamped PDF watermark "${step.options.text || 'CONFIDENTIAL'}"` };
+      return { outputBlob: outBlob, details: 'Stamped' };
     }
 
-    // 10. OCR Image to Text
     if (step.toolId === 'ocr-image-to-text') {
       const res = await runOcr(blob, step.options.language || 'eng');
       const txtBlob = new Blob([res.text], { type: 'text/plain;charset=utf-8' });
-      return { outputBlob: txtBlob, details: `Extracted ${res.text.length} chars (Confidence: ${res.confidence}%)` };
+      return { outputBlob: txtBlob, details: `${res.text.length} chars` };
     }
 
-    // 11. Universal Offline Document to Structured Markdown
-    if (step.toolId === 'doc-to-markdown' || step.toolId === 'universal-markdown') {
+    if (step.toolId === 'universal-markdown') {
       const file = new File([blob], origName, { type: blob.type });
       const res = await universalMarkItDown(file, { includeMetadata: true });
       const mdBlob = new Blob([res.markdown], { type: 'text/markdown;charset=utf-8' });
-      return { outputBlob: mdBlob, details: `Extracted ${res.wordCount} words (${res.charCount} chars, ${res.lineCount} lines)` };
+      return { outputBlob: mdBlob, details: `${res.wordCount} words` };
     }
 
-    // Default Pass-through
-    return { outputBlob: blob, details: 'Stage verified' };
+    return { outputBlob: blob, details: 'Completed' };
   };
 
   const handleDownloadFinal = async () => {
@@ -684,13 +615,12 @@ export function WorkflowBuilder() {
     await openDownloadedFile({ name: finalFilename, blob: finalResultBlob });
   };
 
-  // Custom Pipeline Builder Save
   const handleSaveCustomWorkflow = async () => {
     if (!customName.trim()) return;
     const newWf: SavedWorkflow = {
       id: 'custom_wf_' + Date.now(),
       name: customName.trim(),
-      description: customDesc.trim() || 'User automated multi-tool pipeline',
+      description: customDesc.trim() || 'Custom automated workflow',
       category: customCategory,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -707,6 +637,7 @@ export function WorkflowBuilder() {
     await saveWorkflow(newWf);
     await loadWorkflows();
     setActiveWorkflow(newWf);
+    setExpandedWorkflowId(newWf.id);
     setIsCreatingCustom(false);
     triggerHaptic('success');
   };
@@ -718,19 +649,22 @@ export function WorkflowBuilder() {
   });
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="max-w-6xl mx-auto space-y-5 animate-in fade-in duration-300 pb-20">
-      {/* Sleek Compact Header */}
-      <div className="text-center space-y-1.5 relative">
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-2">
-          <Workflow className="w-5 h-5 text-brand-600 dark:text-brand-400 shrink-0" />
-          <span>{loc.title}</span>
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300 pb-16">
+      {/* 1. Header with Compact Pill Controls */}
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 text-xs font-black border border-brand-200 dark:border-brand-800">
+          <Workflow className="w-3.5 h-3.5" />
+          <span>{loc.badge}</span>
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          {loc.title}
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
           {loc.subtitle}
         </p>
 
-        {/* Category Filter Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+        {/* Category Filter Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
           {[
             { id: 'all', label: loc.allTab },
             { id: 'image', label: loc.imageTab },
@@ -747,9 +681,9 @@ export function WorkflowBuilder() {
                   setSelectedCategory(tab.id as any);
                   triggerHaptic('light');
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all active:scale-95 ${
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
                   isActive
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-brand-500/30'
+                    ? 'bg-brand-600 text-white shadow-sm'
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
@@ -760,509 +694,421 @@ export function WorkflowBuilder() {
         </div>
       </div>
 
-      {/* Main Grid: Pipeline Selection & Execution Studio */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Pipelines List & Creator */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Workflow Picker Card */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-5">
-            <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                <Layers className="w-4 h-4 text-brand-600" />
-                <span>{loc.selectActiveWf}</span>
+      {/* 2. Interactive Dropdown / Accordion Workflow Selector */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 space-y-4">
+        {/* Dropdown Header Trigger */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 flex items-center justify-center font-bold">
+              <Layers className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                {loc.selectWorkflow}
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 text-[10px] font-bold">
-                {filteredWorkflows.length} {loc.available}
-              </span>
+              <div className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <span>{activeWorkflow?.name || loc.choosePreset}</span>
+                {activeWorkflow && (
+                  <span className="px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 text-[10px] font-bold">
+                    {loc.stagesLabel(activeWorkflow.steps.length)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsCreatingCustom(!isCreatingCustom)}
+              className="px-3 py-1.5 rounded-xl border border-dashed border-brand-300 dark:border-brand-700 hover:border-brand-500 text-brand-600 dark:text-brand-400 font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{loc.createNewPipeline}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Custom Pipeline Creator Drawer */}
+        {isCreatingCustom && (
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-brand-300 dark:border-brand-800 space-y-3 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <Wand2 className="w-3.5 h-3.5 text-brand-600" />
+                <span>{loc.createNewPipeline}</span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => setIsCreatingCustom(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
-              {filteredWorkflows.map((wf) => {
-                const isSelected = activeWorkflow?.id === wf.id;
-                return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <input
+                type="text"
+                placeholder={loc.pipelineNamePlaceholder}
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-hidden"
+              />
+              <input
+                type="text"
+                placeholder={loc.pipelineDescPlaceholder}
+                value={customDesc}
+                onChange={(e) => setCustomDesc(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-hidden"
+              />
+            </div>
+
+            {/* Stages Builder */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex flex-wrap gap-1.5">
+                {customSteps.map((step, sIdx) => (
                   <div
-                    key={wf.id}
-                    onClick={() => handleSelectWorkflow(wf)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
-                      isSelected
-                        ? 'border-brand-500 bg-gradient-to-br from-brand-50/80 to-indigo-50/50 dark:from-brand-950/60 dark:to-indigo-950/40 ring-2 ring-brand-500/25 shadow-md'
-                        : 'border-slate-200/80 dark:border-slate-800 hover:border-brand-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/40'
-                    }`}
+                    key={sIdx}
+                    className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs font-bold shadow-2xs"
                   >
-                    <div className="space-y-1.5">
-                      <div className="font-black text-xs sm:text-sm text-slate-900 dark:text-white flex items-center justify-between gap-2">
+                    <span className="text-brand-600 font-mono text-[10px]">{sIdx + 1}.</span>
+                    <span className="text-slate-800 dark:text-slate-200 truncate max-w-[140px]">
+                      {step.toolName}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCustomStep(sIdx)}
+                      className="text-rose-500 hover:text-rose-700"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleAddCustomStep(e.target.value);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-brand-600 dark:text-brand-400 cursor-pointer focus:ring-2 focus:ring-brand-500 outline-hidden"
+                  defaultValue=""
+                >
+                  <option value="" disabled>{loc.addStagePrompt}</option>
+                  {AVAILABLE_MODULES.map((mod) => (
+                    <option key={mod.id} value={mod.id}>
+                      + {mod.name} ({mod.category.toUpperCase()})
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={handleSaveCustomWorkflow}
+                  className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-sm active:scale-95 transition-all"
+                >
+                  {loc.savePipeline}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Accordion List of Workflows: Only 1 expands at a time */}
+        <div className="space-y-2 pt-1">
+          {filteredWorkflows.map((wf) => {
+            const isSelected = activeWorkflow?.id === wf.id;
+            const isExpanded = expandedWorkflowId === wf.id;
+
+            return (
+              <div
+                key={wf.id}
+                className={`rounded-2xl border transition-all overflow-hidden ${
+                  isSelected
+                    ? 'border-brand-500/80 bg-brand-50/30 dark:bg-brand-950/20'
+                    : 'border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-slate-700'
+                }`}
+              >
+                {/* Accordion Header Row */}
+                <div
+                  onClick={() => handleToggleAccordion(wf.id)}
+                  className="p-3.5 flex items-center justify-between cursor-pointer select-none group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+                        isSelected
+                          ? 'bg-brand-600 text-white shadow-xs'
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                      }`}
+                    >
+                      {wf.category === 'pdf' ? (
+                        <FileText className="w-3.5 h-3.5" />
+                      ) : wf.category === 'ocr' ? (
+                        <Cpu className="w-3.5 h-3.5" />
+                      ) : (
+                        <ImageIcon className="w-3.5 h-3.5" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2 truncate">
                         <span className="truncate">{wf.name}</span>
                         {wf.isTemplate ? (
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 shrink-0">
+                          <span className="px-1.5 py-0.2 rounded text-[8px] font-black bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 shrink-0">
                             {loc.templateBadge}
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-black bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 shrink-0">
+                          <span className="px-1.5 py-0.2 rounded text-[8px] font-black bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 shrink-0">
                             {loc.customBadge}
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-snug">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
                         {wf.description}
                       </p>
                     </div>
+                  </div>
 
-                    <div className="flex items-center justify-between pt-2.5 text-[10px] font-mono text-slate-400 border-t border-slate-100 dark:border-slate-800/60 mt-2">
-                      <span className="font-bold text-slate-600 dark:text-slate-300">{loc.stepsCount(wf.steps.length)}</span>
-                      <span className="font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">{wf.category}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] font-bold font-mono text-slate-500 dark:text-slate-400 hidden sm:inline">
+                      {loc.stagesLabel(wf.steps.length)}
+                    </span>
+                    <div
+                      className={`w-6 h-6 rounded-md flex items-center justify-center text-slate-400 transition-transform duration-200 ${
+                        isExpanded ? 'rotate-180 text-brand-600' : ''
+                      }`}
+                    >
+                      <ChevronDown className="w-4 h-4" />
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
 
-            {/* Create Custom Pipeline Trigger */}
-            <button
-              type="button"
-              onClick={() => setIsCreatingCustom(!isCreatingCustom)}
-              className="w-full py-3.5 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 text-brand-600 dark:text-brand-400 font-extrabold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-brand-50/30 dark:bg-brand-950/20"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{loc.createNewPipeline}</span>
-            </button>
+                {/* Expanded Stage Sequence: Shown only for the active accordion */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-3 animate-in fade-in duration-200">
+                    {/* Compact Horizontal Stages Flow */}
+                    <div className="flex flex-wrap items-center gap-2 pt-2">
+                      {wf.steps.map((step, sIdx) => {
+                        const isCurrent = isRunning && isSelected && currentStepIndex === sIdx;
+                        const isDone = isSelected && step.status === 'Completed';
+
+                        return (
+                          <React.Fragment key={step.id}>
+                            <div
+                              className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all shadow-2xs ${
+                                isDone
+                                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200'
+                                  : isCurrent
+                                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 animate-pulse ring-2 ring-amber-500/20'
+                                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              <span
+                                className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 ${
+                                  isDone
+                                    ? 'bg-emerald-600 text-white'
+                                    : isCurrent
+                                    ? 'bg-amber-500 text-white'
+                                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                                }`}
+                              >
+                                {isDone ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : sIdx + 1}
+                              </span>
+                              <span className="truncate max-w-[160px] sm:max-w-none">{step.toolName}</span>
+                            </div>
+
+                            {sIdx < wf.steps.length - 1 && (
+                              <ArrowRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. Streamlined File Upload & 1-Click Execution Studio */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-7 space-y-6">
+        {!inputFile ? (
+          <div
+            onClick={() => document.getElementById('pipeline-file-input')?.click()}
+            className="p-10 sm:p-12 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 text-center space-y-3 hover:border-brand-500 hover:bg-brand-50/20 dark:hover:bg-brand-950/10 transition-all cursor-pointer group"
+          >
+            <input
+              id="pipeline-file-input"
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-md shadow-brand-500/25 group-hover:scale-105 transition-transform">
+              <Upload className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-black text-sm sm:text-base text-slate-800 dark:text-slate-100">
+                {loc.uploadPrompt}
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                {loc.uploadSub}
+              </p>
+            </div>
           </div>
-
-          {/* Custom Pipeline Creator Drawer */}
-          {isCreatingCustom && (
-            <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-950 border border-brand-300 dark:border-brand-800 space-y-4 animate-in slide-in-from-top duration-200 shadow-xl">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Wand2 className="w-3.5 h-3.5 text-brand-600" />
-                  <span>{loc.createNewPipeline}</span>
-                </h4>
-                <button
-                  type="button"
-                  onClick={() => setIsCreatingCustom(false)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+        ) : (
+          <div className="space-y-5">
+            {/* Selected File Bar */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 flex items-center justify-center font-bold shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                    {inputFile.name}
+                  </div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-2">
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      {formatBytes(inputFile.size)}
+                    </span>
+                    <span>•</span>
+                    <span className="uppercase">{inputFile.type.split('/')[1] || 'FILE'}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    {loc.pipelineNamePlaceholder}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={loc.pipelineNamePlaceholder}
-                    value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-hidden"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                    {loc.pipelineDescPlaceholder}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={loc.pipelineDescPlaceholder}
-                    value={customDesc}
-                    onChange={(e) => setCustomDesc(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-hidden"
-                  />
-                </div>
-
-                {/* Category Selector */}
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                    Category
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['image', 'pdf', 'ocr'] as const).map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setCustomCategory(cat)}
-                        className={`py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
-                          customCategory === cat
-                            ? 'bg-brand-600 text-white'
-                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Steps List */}
-                <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                    <span>{loc.sequentialSteps} ({customSteps.length})</span>
-                  </div>
-
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {customSteps.map((step, sIdx) => (
-                      <div
-                        key={sIdx}
-                        className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 shadow-2xs"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-5 h-5 rounded-md bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 text-[10px] font-bold flex items-center justify-center shrink-0">
-                            {sIdx + 1}
-                          </span>
-                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                            {step.toolName}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => handleMoveCustomStep(sIdx, 'up')}
-                            disabled={sIdx === 0}
-                            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30"
-                            title={loc.moveUp}
-                          >
-                            <ArrowUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveCustomStep(sIdx, 'down')}
-                            disabled={sIdx === customSteps.length - 1}
-                            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30"
-                            title={loc.moveDown}
-                          >
-                            <ArrowDown className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCustomStep(sIdx)}
-                            className="p-1 rounded-md text-rose-500 hover:text-rose-700"
-                            title={loc.deleteStep}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Add Stage Selector */}
-                  <div className="pt-2">
-                    <select
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          handleAddCustomStep(e.target.value);
-                          e.target.value = '';
-                        }
-                      }}
-                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-brand-600 dark:text-brand-400 cursor-pointer focus:ring-2 focus:ring-brand-500 outline-hidden"
-                      defaultValue=""
-                    >
-                      <option value="" disabled>+ {loc.createNewPipeline} (Add Module)</option>
-                      {AVAILABLE_MODULES.map((mod) => (
-                        <option key={mod.id} value={mod.id}>
-                          + {mod.name} ({mod.category.toUpperCase()})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleSaveCustomWorkflow}
-                    className="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-xs shadow-md shadow-brand-500/25 active:scale-95 transition-all"
-                  >
-                    {loc.savePipeline}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsCreatingCustom(false)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  >
-                    {loc.cancel}
-                  </button>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setInputFile(null);
+                  setFinalDownloadUrl(null);
+                  setFinalResultBlob(null);
+                  setStepResults([]);
+                }}
+                className="px-2.5 py-1 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0"
+              >
+                {loc.changeFile}
+              </button>
             </div>
-          )}
 
-          {/* Sequential Steps in Active Pipeline */}
-          {activeWorkflow && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Workflow className="w-4 h-4 text-brand-600" />
-                  <span>{loc.sequentialSteps}</span>
-                </span>
-                <span className="text-xs font-mono font-bold text-brand-600 px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950">
-                  {activeWorkflow.steps.length} Stages
-                </span>
-              </h3>
+            {/* Run Button */}
+            {!finalDownloadUrl && (
+              <button
+                type="button"
+                onClick={runWorkflowPipeline}
+                disabled={isRunning}
+                className="w-full py-3.5 sm:py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-sm sm:text-base shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {isRunning ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>{loc.runningSteps}</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 fill-current" />
+                    <span>{loc.runFullWorkflow} ({activeWorkflow?.steps.length || 0} Stages)</span>
+                  </>
+                )}
+              </button>
+            )}
 
-              <div className="space-y-3 relative">
-                {activeWorkflow.steps.map((step, idx) => {
-                  const isCurrent = currentStepIndex === idx;
-                  return (
-                    <div key={step.id} className="relative">
-                      <div
-                        className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
-                          isCurrent
-                            ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/50 ring-2 ring-amber-500/25 shadow-md'
-                            : step.status === 'Completed'
-                            ? 'border-emerald-500/80 bg-emerald-50/50 dark:bg-emerald-950/40 shadow-xs'
-                            : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono font-black text-xs shrink-0 shadow-xs transition-all ${
-                              step.status === 'Completed'
-                                ? 'bg-emerald-600 text-white shadow-emerald-500/30'
-                                : isCurrent
-                                ? 'bg-amber-500 text-white animate-pulse shadow-amber-500/30'
-                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                            }`}
-                          >
-                            {step.status === 'Completed' ? <Check className="w-4 h-4 stroke-[3]" /> : idx + 1}
-                          </div>
-                          <div>
-                            <div className="font-extrabold text-xs text-slate-900 dark:text-white">
-                              {step.toolName}
-                            </div>
-                            <div className="text-[10px] text-slate-400 font-mono">
-                              {loc.toolIdLabel(step.toolId)}
-                            </div>
-                          </div>
-                        </div>
+            {/* Intermediate Output Previews */}
+            {stepResults.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <h4 className="font-bold text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-brand-600" />
+                  <span>{loc.intermediateResults}</span>
+                </h4>
 
-                        <div>
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide ${
-                              step.status === 'Completed'
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
-                                : isCurrent
-                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 animate-pulse'
-                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                            }`}
-                          >
-                            {isCurrent
-                              ? loc.processingStatus
-                              : step.status === 'Completed'
-                              ? loc.completedStatus
-                              : loc.waitingStatus}
-                          </span>
-                        </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {stepResults.map((res, index) => (
+                    <div
+                      key={res.stepId}
+                      className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2 shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                          {index + 1}. {res.stepName}
+                        </span>
+                        <span className="font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                          {formatBytes(res.size)}
+                        </span>
                       </div>
 
-                      {/* Connector Arrow */}
-                      {idx < activeWorkflow.steps.length - 1 && (
-                        <div className="flex justify-center py-1 text-slate-300 dark:text-slate-700">
-                          <ArrowDown className="w-3.5 h-3.5" />
+                      {res.details && (
+                        <div className="text-[11px] text-slate-500 font-medium">
+                          {res.details}
+                        </div>
+                      )}
+
+                      {res.resultBlob.type.startsWith('image/') && (
+                        <div className="h-24 rounded-xl overflow-hidden bg-slate-200/50 dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-800">
+                          <img
+                            src={res.dataUrl}
+                            alt={res.stepName}
+                            className="h-full w-full object-contain"
+                          />
                         </div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Execution Hub, Drag-and-Drop & Live Results */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-brand-600" />
-                <span>{loc.executionHub}</span>
-              </h3>
-              <span className="text-xs font-bold text-brand-600 dark:text-brand-400 font-mono">
-                {activeWorkflow?.name}
-              </span>
-            </div>
-
-            {/* File Input Dropzone */}
-            {!inputFile ? (
-              <div
-                onClick={() => document.getElementById('pipeline-file-input')?.click()}
-                className="p-12 sm:p-16 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 text-center space-y-4 hover:border-brand-500 hover:bg-brand-50/20 dark:hover:bg-brand-950/10 transition-all cursor-pointer group"
-              >
-                <input
-                  id="pipeline-file-input"
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-brand-500/25 group-hover:scale-105 transition-transform">
-                  <Workflow className="w-8 h-8" />
-                </div>
-                <div className="space-y-1.5">
-                  <h4 className="font-black text-base text-slate-800 dark:text-slate-100">
-                    {loc.uploadPrompt}
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                    {loc.uploadSub}
-                  </p>
+                  ))}
                 </div>
               </div>
-            ) : (
-              <div className="space-y-6">
-                {/* File Info Bar */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-11 h-11 rounded-xl bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 flex items-center justify-center font-bold shadow-xs">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-md">
-                        {inputFile.name}
-                      </div>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                          {formatBytes(inputFile.size)}
-                        </span>
-                        <span>•</span>
-                        <span>{inputFile.type || 'FILE'}</span>
-                      </div>
-                    </div>
+            )}
+
+            {/* Completed Final Screen */}
+            {finalDownloadUrl && finalResultBlob && (
+              <div className="p-5 sm:p-6 rounded-3xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-4 animate-in fade-in duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 font-black text-sm sm:text-base">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <span>{loc.completedTitle}</span>
                   </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 text-xs font-mono font-bold">
+                    {formatBytes(finalResultBlob.size)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleDownloadFinal}
+                    className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>{loc.downloadFinal}</span>
+                  </button>
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setInputFile(null);
-                      setFinalDownloadUrl(null);
-                      setFinalResultBlob(null);
-                      setStepResults([]);
-                    }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    onClick={handleOpenFinal}
+                    className="py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
                   >
-                    {loc.changeFile}
+                    <Eye className="w-4 h-4 text-brand-600" />
+                    <span>{loc.openFile}</span>
                   </button>
                 </div>
 
-                {/* Primary Pipeline Run Action */}
-                {!finalDownloadUrl && (
+                <div className="flex justify-center pt-1">
                   <button
                     type="button"
                     onClick={runWorkflowPipeline}
-                    disabled={isRunning}
-                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base shadow-xl shadow-brand-500/25 flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all disabled:opacity-50"
+                    className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1 transition-colors cursor-pointer"
                   >
-                    {isRunning ? (
-                      <>
-                        <RefreshCw className="w-5 h-5 animate-spin" />
-                        <span>{loc.runningSteps}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-5 h-5 fill-current" />
-                        <span>{loc.runFullWorkflow(activeWorkflow?.steps.length || 0)}</span>
-                      </>
-                    )}
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>{loc.runAgain}</span>
                   </button>
-                )}
-
-                {/* Live Step Previews Section */}
-                {stepResults.length > 0 && (
-                  <div className="space-y-4 pt-2">
-                    <h4 className="font-black text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-brand-600" />
-                      <span>{loc.stepPreviewTitle}</span>
-                    </h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {stepResults.map((res, index) => (
-                        <div
-                          key={res.stepId}
-                          className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-xs"
-                        >
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-extrabold text-slate-800 dark:text-slate-200 truncate">
-                              {index + 1}. {res.stepName}
-                            </span>
-                            <span className="font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                              {formatBytes(res.size)}
-                            </span>
-                          </div>
-
-                          {res.details && (
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                              {res.details}
-                            </div>
-                          )}
-
-                          {res.resultBlob.type.startsWith('image/') && (
-                            <div className="h-28 rounded-xl overflow-hidden bg-slate-200/50 dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-800">
-                              <img
-                                src={res.dataUrl}
-                                alt={res.stepName}
-                                className="h-full w-full object-contain"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Final Completed Banner & Action Suite */}
-                {finalDownloadUrl && finalResultBlob && (
-                  <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-50 dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-emerald-950/40 border border-emerald-300 dark:border-emerald-800 space-y-5 animate-in fade-in duration-300 shadow-xl">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 text-emerald-800 dark:text-emerald-200 font-black text-base">
-                        <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                        <span>{loc.completedTitle}</span>
-                      </div>
-                      <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300 text-xs font-mono font-bold">
-                        {formatBytes(finalResultBlob.size)}
-                      </span>
-                    </div>
-
-                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                      {loc.completedSub(activeWorkflow?.steps.length || 0)}
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <button
-                        type="button"
-                        onClick={handleDownloadFinal}
-                        className="py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 active:scale-95 transition-all"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>{loc.downloadFinal}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleOpenFinal}
-                        className="py-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
-                      >
-                        <Eye className="w-4 h-4 text-brand-600" />
-                        <span>{loc.openFile}</span>
-                      </button>
-                    </div>
-
-                    <div className="flex justify-center pt-1">
-                      <button
-                        type="button"
-                        onClick={runWorkflowPipeline}
-                        className="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5 transition-colors"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>{loc.runAgain}</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

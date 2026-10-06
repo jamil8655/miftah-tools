@@ -8,16 +8,12 @@ import {
   EyeOff, 
   CheckCircle2, 
   UserX, 
-  Trash2, 
   ArrowLeft, 
-  FileText, 
   Server, 
   Camera, 
   FolderLock, 
   Mail, 
-  AlertTriangle,
   Smartphone,
-  ExternalLink
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
@@ -45,25 +41,25 @@ const PRIVACY_LOCALES = {
       'No User Tracking: No personal profile creation or intrusive session telemetry.',
       '100% Local Device Storage: Your recent tools, bookmarks, and conversion history stay strictly on your device.',
     ],
-    s4Title: '4. Advertising Policy & Google AdMob Compliance',
-    s4Intro: 'To keep all 220+ tools permanently 100% free for users worldwide, the mobile app displays non-intrusive Google AdMob advertisements:',
+    s4Title: '4. Advertising & Telemetry (Web & Mobile App)',
+    s4Intro: 'To keep all 220+ tools permanently 100% free for users worldwide, Miftah Tools uses standard advertising and analytics:',
     s4Items: [
-      'App Open Ads: Displayed briefly on startup with a clear skip button.',
-      'Bottom Banner Ads: Non-intrusive, safe banner ads placed at the bottom of non-critical screens.',
-      'Interstitial & Rewarded Ads: Shown between separate tool workflows with rate-limiting.',
-      'AdMob Compliance: All ads comply strictly with Google Play Family and Child Safety policies.',
+      'Document Processing Isolation: 100% local in-browser / on-device. Your documents and photos are NEVER transmitted to ad networks or analytics.',
+      'Website Data Practices: The website uses essential local storage for user preferences (dark mode, selected language), Google Analytics (GA4) for aggregate visitor metrics, and Google AdSense for web ads.',
+      'Android Mobile App: The Android app uses Google Mobile Ads (AdMob) compliant with Google Play Families Policy for non-intrusive banner and interstitial ads.',
+      'Third-Party Providers: Trusted services include Google AdMob, Google AdSense, Google Analytics 4, and Google Fonts.',
     ],
     s5Title: '5. Device Permissions & Strict Rationale',
     permCamera: '📷 Camera Permission: Used exclusively when scanning QR & Barcodes. Frames are processed live in memory and never recorded or uploaded.',
     permStorage: '📁 Storage & Media: Used exclusively when you explicitly select files or images for local compression, conversion, or editing.',
-    permInternet: '🌐 Internet State: Required solely for Google AdMob ad delivery and web documentation assets.',
+    permInternet: '🌐 Internet State: Required solely for Google AdMob/AdSense ad delivery, analytics, and web assets.',
     permScoped: '🔒 Scoped Storage: Complies with Android 14 & 15 Scoped Storage rules. The app cannot access files outside your explicit selection.',
     s6Title: '6. Data Safety & Instant Local Cache Deletion',
     s6Intro: 'Since Miftah Tools does not maintain user databases on servers, you have immediate and permanent control over all local data:',
     methodATitle: 'Method A: 1-Tap In-App Data Purge',
     methodADesc: 'You can purge all cached history, recent tools, and offline assets instantly in Settings > "Clear Cache & History" or in the Privacy Center.',
-    methodBTitle: 'Method B: Direct Developer Support & Verification',
-    methodBDesc: 'If you have any questions regarding privacy or data verification, email our lead developer directly at jrahmanansari132@gmail.com. We reply within 24 hours.',
+    methodBTitle: 'Method B: Direct Support & Verification',
+    methodBDesc: 'If you have any questions regarding privacy or data verification, email our support team directly at support@miftahtools.com. We reply within 24 hours.',
     s6ZeroCloud: '100% Zero-Cloud Guarantee: Uninstalling the application immediately and completely removes all local app files and cache from your device.',
     s7Title: '7. Children’s Privacy (COPPA & GDPR-K Compliance)',
     s7Desc: 'Miftah Tools is designed for general utility and technical education. We do not knowingly collect personal identifiable information from children under 13 years of age.',
@@ -98,25 +94,25 @@ const PRIVACY_LOCALES = {
       'کوئی ذاتی ٹریکنگ نہیں: نہ پروفائل بنانے کی ضرورت نہ سیشنز کی غیر ضروری نگرانی۔',
       '100٪ لوکل ڈیوائس اسٹوریج: آپ کے حالیہ ٹولز، بک مارکس اور ہسٹری صرف آپ کے فون میں محفوظ رہتے ہیں۔',
     ],
-    s4Title: '4. اشتہارات کی پالیسی اور گوگل ایڈموب کا تحفظ',
-    s4Intro: 'تمام 220+ ٹولز کو دنیا بھر کے تمام صارفین کے لیے ہمیشہ 100٪ مفت رکھنے کے لیے ایپ میں محفوظ گوگل ایڈموب اشتہارات دکھائے جاتے ہیں:',
+    s4Title: '4. اشتہارات اور اینالیٹکس کی پالیسی (ویب و موبائل ایپ)',
+    s4Intro: 'تمام 220+ ٹولز کو دنیا بھر کے تمام صارفین کے لیے ہمیشہ 100٪ مفت رکھنے کے لیے پلیٹ فارم پر محفوظ اشتہارات دکھائے جاتے ہیں:',
     s4Items: [
-      'ایپ اوپن ایڈز: ایپ کھلتے وقت مختصر وقت کے لیے واضح اسکیپ بٹن کے ساتھ۔',
-      'نیچے بینر ایڈز: اسکرین کے نیچے غیر پریشان کن اور محفوظ بینر اشتہارات۔',
-      'انٹرسٹیشل اور ریوارڈڈ ایڈز: کام مکمل ہونے کے بعد محفوظ وقفوں کے ساتھ۔',
-      'ایڈموب پالیسی: تمام اشتہارات گوگل پلے فیملی پالیسی اور بچوں کے تحفظ کے معیار کے مطابق ہیں۔',
+      'دستاویزات کی پروسیسنگ: 100٪ لوکل براؤزر میموری میں ہوتی ہے۔ آپ کی فائلیں کبھی کسی اشتہاری سروس کو نہیں بھیجی جاتیں۔',
+      'ویب سائٹ ڈیٹا: ویب براؤزر میں صارف کی ترجیحات (تھیم، زبان) اور گمنام ٹریفک کے لیے Google Analytics اور Google AdSense استعمال ہوتا ہے۔',
+      'اینڈرائیڈ موبائل ایپ: موبائل ایپ میں Google AdMob کے محفوظ اور فیملی فرینڈلی اشتہارات دکھائے جاتے ہیں۔',
+      'تھرڈ پارٹیز: Google AdMob, Google AdSense, Google Analytics 4, اور Google Fonts۔',
     ],
     s5Title: '5. ڈیوائس کی اجازتیں اور ان کی وجوہات',
     permCamera: '📷 کیمرے کی اجازت: صرف کیو آر کوڈ اور بارکوڈ اسکین کرتے وقت استعمال ہوتی ہے۔ لائیو فریم صرف ریم میں پروسیس ہوتے ہیں اور کہیں محفوظ نہیں ہوتے۔',
     permStorage: '📁 اسٹوریج اور میڈیا: صرف اس وقت استعمال ہوتی ہے جب آپ خود کوئی فائل یا تصویر پروسیسنگ کے لیے منتخب کرتے ہیں۔',
-    permInternet: '🌐 انٹرنیٹ کنکشن: صرف ایڈموب اشتہارات دکھانے اور ٹول ڈاکومنٹیشن لوڈ کرنے کے لیے درکار ہے۔',
+    permInternet: '🌐 انٹرنیٹ کنکشن: صرف اشتہارات دکھانے اور ٹول ڈاکومنٹیشن لوڈ کرنے کے لیے درکار ہے۔',
     permScoped: '🔒 اسکوپڈ اسٹوریج: اینڈرائیڈ 14 اور 15 کے سیکیورٹی قوانین کے مطابق، ایپ آپ کی منتخب فائل کے علاوہ کسی دوسری فائل تک رسائی حاصل نہیں کر سکتی۔',
     s6Title: '6. ڈیٹا کی حفاظت اور لوکل کیش ڈیلیٹ کرنے کی پالیسی',
     s6Intro: 'چونکہ مفتاح ٹولز سرورز پر کوئی صارف ڈیٹا نہیں رکھتا، اس لیے آپ اپنے ڈیوائس کے لوکل ڈیٹا پر مکمل اور فوری کنٹرول رکھتے ہیں:',
     methodATitle: 'طریقہ A: ایپ کے اندر سے 1-کلک ڈیٹا ڈیلیٹ',
     methodADesc: 'آپ سیٹنگز > "Clear Cache & History" یا پرائیویسی سینٹر میں جا کر ایک کلک سے تمام ہسٹری اور محفوظ ڈیٹا ختم کر سکتے ہیں۔',
-    methodBTitle: 'طریقہ B: ڈویلپر سے براہ راست سپورٹ',
-    methodBDesc: 'پرائیویسی سے متعلق کسی بھی سوال کے لیے ہمارے ڈویلپر کو براہ راست ای میل کریں: jrahmanansari132@gmail.com۔ ہم 24 گھنٹے میں جواب دیتے ہیں۔',
+    methodBTitle: 'طریقہ B: سپورٹ ٹیم سے رابطہ',
+    methodBDesc: 'پرائیویسی سے متعلق کسی بھی سوال کے لیے ہماری ٹیم کو براہ راست ای میل کریں: support@miftahtools.com۔ ہم 24 گھنٹے میں جواب دیتے ہیں۔',
     s6ZeroCloud: '100٪ زیرو کلاؤڈ گارنٹی: ایپ کو ان انسٹال کرنے سے تمام لوکل فائلز اور کیش آپ کے فون سے فوری اور مکمل طور پر ختم ہو جاتی ہے۔',
     s7Title: '7. بچوں کی پرائیویسی (COPPA و GDPR-K پالیسی)',
     s7Desc: 'مفتاح ٹولز عام افادیت اور تکنیکی تعلیم کے لیے ہے۔ ہم 13 سال سے کم عمر بچوں سے کوئی ذاتی معلومات دانستہ طور پر جمع نہیں کرتے۔',
@@ -139,100 +135,100 @@ const PRIVACY_LOCALES = {
     s1Desc: 'تطبيق مفتاح تولز هو منظومة أدوات رقمية وتعليمية شاملة تحتوي على أكثر من 220 أداة محلية (PDF، استوديو الصور، المحولات، أدوات الصوت والفيديو، البرمجة والدورات التعليمية). تنطبق هذه السياسة على تطبيق أندرويد وموقع الويب.',
     s2Title: '2. البيانات التي لا نقوم بجمعها أو تخزينها أبداً',
     s2Items: [
-      'انعدام تتبع المستندات: لا نقرأ أو ننقل أو نخزن أي ملف PDF أو صورة أو فيديو على أي خادم خارجي.',
-      'انعدام تتبع الموقع الجغرافي: لا نصل أبداً إلى إحداثيات GPS أو موقعك الجغرافي.',
-      'انعدام الوصول للأسماء والرسائل: لا نطلب الوصول لجهات الاتصال أو سجل المكالمات أو الرسائل الخاصة.',
-      'انعدام بيع البيانات: لا نقوم ببيع أو تأجير أي بيانات مستخدم لأي طرف ثالث أو وسطاء بيانات.',
+      'عدم تتبع المستندات: لا نقوم بقراءة أو نقل أو حفظ ملفاتك على أي خادم سحابي.',
+      'عدم تتبع الموقع الجغرافي: لا نصل إطلاقاً إلى إحداثيات GPS أو موقعك.',
+      'عدم فحص جهات الاتصال أو المعرض: لا نصل لسجل المكالمات أو الرسائل أو جهات الاتصال.',
+      'عدم بيع البيانات: لا نقوم ببيع أو تأجير بيانات المستخدمين لأي طرف ثالث.',
     ],
-    s3Title: '3. استخدام مجاني 100٪ دون تسجيل أو تسجيل دخول',
-    s3Intro: 'يعمل مفتاح تولز بشكل مفتوح ومجاني تماماً دون إلزامك بإنشاء حساب أو تسجيل دخول. لجميع الأدوات الـ 220+:',
+    s3Title: '3. وصول مجاني بنسبة 100٪ دون تسجيل',
+    s3Intro: 'منصة مفتاح تولز مفتوحة ومجانية تماماً لجميع الأدوات دون الحاجة لحسابات إجبارية:',
     s3Items: [
-      'لا يلزم حساب: لا حاجة لكلمات مرور أو بطاقات ائتمان أو بريد إلكتروني إجباري.',
-      'لا تتبع للمستخدم: لا يتم إنشاء ملفات تعريف أو تتبع جلساتك.',
-      'تخزين محلي 100٪ على جهازك: تظل أدواتك الأخيرة والمفضلة وسجل التنزيلات داخل هاتفك فقط.',
+      'لا يلزم وجود حساب: لا توجد كلمات مرور أو بطاقات ائتمان إجبارية.',
+      'لا يوجد تتبع شخصي: لا نقوم بإنشاء ملفات شخصية للمستخدمين.',
+      'تخزين محلي 100٪: تظل الأدوات المفضلة والسجل محفوظة على جهازك فقط.',
     ],
-    s4Title: '4. سياسة الإعلانات والتوافق مع معايير Google AdMob',
-    s4Intro: 'للحفاظ على مجانية كافة الأدوات الـ 220+ لجميع المستخدمين، يعرض التطبيق إعلانات آمنة ومطابقة لمعايير Google AdMob:',
+    s4Title: '4. سياسة الإعلانات والتحليلات (الويب والتطبيق)',
+    s4Intro: 'للحفاظ على مجانية الأدوات لكافة المستخدمين، نستخدم إعلانات وتحليلات قياسية آمنة:',
     s4Items: [
-      'إعلانات فتح التطبيق (App Open): تظهر لوقت قصير عند بدء التطبيق مع زر تخطي واضح.',
-      'إعلانات البانر السفلية: إعلانات بانر هادئة وغير مزعجة أسفل الشاشات غير الحساسة.',
-      'الإعلانات البينية والمكافآت: تظهر بفواصل زمنية آمنة بعد إتمام المهام.',
-      'توافق AdMob: تخضع جميع الإعلانات بدقة لسياسات Google Play لحماية العائلة والأطفال.',
+      'عزل المستندات: تتم المعالجة محلياً داخل المتصفح، ولا ترسل الملفات لشبكات الإعلانات.',
+      'موقع الويب: يستخدم التخزين المحلي لتفضيلات المستخدم (المظهر واللغة)، مع Google Analytics و Google AdSense.',
+      'تطبيق أندرويد: يستخدم إعلانات Google AdMob المتوافقة مع سياسات عائلة Google Play.',
+      'الجهات الخارجية: Google AdMob و Google AdSense و Google Analytics 4 و Google Fonts.',
     ],
-    s5Title: '5. أذونات الجهاز ومبرراتها الصارمة',
-    permCamera: '📷 إذن الكاميرا: يُستخدم حصرياً عند مسح رموز QR والباركود، وتعالج الصور في الذاكرة الحية فوراً دون حفظ.',
-    permStorage: '📁 إذن التخزين والوسائط: يُستخدم فقط عندما تختار ملفاً أو صورة بنفسك للمعالجة أو التحويل.',
-    permInternet: '🌐 حالة الإنترنت: مطلوبة فقط لعرض إعلانات AdMob وتحميل وثائق الأدوات.',
-    permScoped: '🔒 توافق Scoped Storage: متوافق تماماً مع معايير أندرويد 14 و 15، لا يمكن للتطبيق الوصول لأي ملف خارج اختيارك الصريح.',
+    s5Title: '5. أذونات الجهاز وأسباب طلبها',
+    permCamera: '📷 إذن الكاميرا: يُطلب حصرياً لمسح رموز QR والباركود، وتتم المعالجة في الذاكرة دون تخزين.',
+    permStorage: '📁 إذن التخزين: يُستخدم فقط عند تحديدك للملفات المراد معالجتها أو تحويلها محلياً.',
+    permInternet: '🌐 الاتصال بالإنترنت: مخصص فقط لعرض الإعلانات وتحميل أصول الويب والتوثيق.',
+    permScoped: '🔒 التخزين المحدد (Scoped Storage): متوافق مع Android 14 و 15 لمنع الوصول لملفاتك الأخرى.',
     s6Title: '6. أمان البيانات والحذف الفوري للذاكرة المؤقتة',
-    s6Intro: 'نظراً لأننا لا نحتفظ بقواعد بيانات للمستخدمين على خوادم، فإنك تتمتع بالتحكم الكامل والمطلق في بياناتك المخزنة محلياً:',
-    methodATitle: 'الطريقة أ: حذف البيانات بضغطة زر واحدة داخل التطبيق',
-    methodADesc: 'يمكنك مسح السجل المحلي والملفات المؤقتة فوراً من خلال الإعدادات > "Clear Cache & History" أو من مركز الخصوصية.',
-    methodBTitle: 'الطريقة ب: التواصل المباشر مع المطور',
-    methodBDesc: 'لأي استفسار بخصوص الأمان والخصوصية، يمكنك مراسلة المطور مباشرة على: jrahmanansari132@gmail.com والرد خلال 24 ساعة.',
-    s6ZeroCloud: 'ضمان انعدام التخزين السحابي: عند إلغاء تثبيت التطبيق، يتم حذف كافة الملفات المؤقتة والبيانات تماماً من جهازك.',
-    s7Title: '7. خصوصية الأطفال (التوافق مع COPPA و GDPR-K)',
-    s7Desc: 'تم تصميم التطبيق للأغراض التعليمية والأدوات العامة. نحن لا نجمع أي معلومات تعريف شخصية من الأطفال دون سن 13 عاماً.',
+    s6Intro: 'بما أننا لا نحتفظ بقواعد بيانات سحابية، فإنك تملك السيطرة الكاملة على بياناتك المحلية:',
+    methodATitle: 'الطريقة الأولى: مسح البيانات بضغطة زر',
+    methodADesc: 'يمكنك مسح السجل والذاكرة المؤقتة فوراً من الإعدادات > "مسح الذاكرة المؤقتة والسجل".',
+    methodBTitle: 'الطريقة الثانية: التواصل مع فريق الدعم',
+    methodBDesc: 'لأي استفسارات حول الخصوصية، يرجى مراسلة فريق الدعم عبر: support@miftahtools.com. نرد خلال 24 ساعة.',
+    s6ZeroCloud: 'ضمان الحذف التام: يؤدي إلغاء تثبيت التطبيق إلى إزالة كافة ملفاته والذاكرة المؤقتة من جهازك فوراً.',
+    s7Title: '7. خصوصية الأطفال (توافق COPPA و GDPR-K)',
+    s7Desc: 'تم تصميم منصة مفتاح تولز للاستخدام العام والتعليمي، ولا نجمع معلومات من الأطفال دون 13 عاماً.',
     s8Title: '8. معايير الأمان والتشفير',
-    s8Desc: 'تتم كافة الاتصالات الشبكية المشروعة عبر تشفير TLS 1.3 المتطور. التطبيق خالٍ من أي مفاتيح سرية غير آمنة.',
-    dpoTitle: 'بيانات التواصل مع مسؤول حماية البيانات والمطور',
-    dpoDesc: 'لأي استفسارات قانونية أو فنية تتعلق بسياسة الخصوصية:',
+    s8Desc: 'تستخدم جميع الاتصالات تشفير TLS 1.3 المتطور، ولا توجد أي مفاتيح سرية في التطبيق.',
+    dpoTitle: 'التواصل مع مسؤول حماية البيانات',
+    dpoDesc: 'لأي استفسارات حول سياسة البيانات أو الخصوصية، يرجى التواصل مع فريق التطوير:',
     devName: 'جميل الرحمن أنصاري (المطور والناشر)',
-    devTeam: 'فريق تطوير مفتاح تولز',
-    contactBtn: 'التواصل مع فريق الخصوصية',
+    devTeam: 'فريق تطوير منصة مفتاح تولز',
+    contactBtn: 'تواصل مع فريق الخصوصية',
   },
   hi: {
     backBtn: 'मिफ्ताह टूल्स होम पर वापस जाएं',
-    badge: 'गूगल प्ले पॉलिसी व गोपनीयता प्रमाणित',
-    title: 'गोपनीयता नीति और डेटा सुरक्षा (Privacy Policy)',
+    badge: 'Google Play नीति व गोपनीयता प्रमाणित',
+    title: 'गोपनीयता नीति व डेटा सुरक्षा',
     meta: 'ऐप नाम: Miftah Tools | पैकेज: com.miftahtools.app | अंतिम अपडेट: सितंबर 2026',
-    highlightTitle: 'बुनियादी प्राइवेसी नीति: 100% ऑन-डिवाइस लोकल प्रोसेसिंग',
-    highlightDesc: 'मिफ्ताह टूल्स (Miftah Tools) में आपकी प्राइवेसी और सुरक्षा हमारी सर्वोच्च प्राथमिकता है। जब आप PDF कन्वर्ट करते हैं, फाइल मर्ज करते हैं, फोटो कंप्रेस करते हैं, QR कोड बनाते हैं या कोड फॉर्मेट करते हैं, तो यह सारा काम 100% आपके अपने फोन/कंप्यूटर के ब्राउज़र मेमोरी में ही होता है। आपकी कोई भी फाइल, फोटो या डॉक्यूमेंट किसी भी बाहरी सर्वर पर अपलोड या सेव नहीं होती है।',
+    highlightTitle: 'मूल गोपनीयता सिद्धांत: 100% ऑन-डिवाइस लोकल प्रोसेसिंग',
+    highlightDesc: 'मिफ्ताह टूल्स (Miftah Tools) में आपकी गोपनीयता और डेटा सुरक्षा हमारी सर्वोच्च प्राथमिकता है। जब आप PDF कन्वर्ट करते हैं, फाइलें जोड़ते हैं, फोटो कंप्रेस करते हैं या कोड फॉर्मेट करते हैं, तो यह सभी कार्य 100% आपके फोन या कंप्यूटर ब्राउज़र में होता है। आपकी फाइलें कभी भी किसी बाहरी सर्वर पर अपलोड या स्टोर नहीं की जाती हैं।',
     s1Title: '1. मिफ्ताह टूल्स का परिचय',
-    s1Desc: 'मिफ्ताह टूल्स एक संपूर्ण ऑल-इन-वन डिजिटल यूटिलिटी और लर्निंग प्लेटफॉर्म है जिसमें 220+ क्लाइंट-साइड टूल्स (PDF टूल्स, इमेज स्टूडियो, कन्वर्टर्स, ऑडियो/वीडियो टूल्स, कोडिंग यूटिलिटीज और स्किल्स कोर्सेज) शामिल हैं। यह प्राइवेसी पॉलिसी एंड्रॉइड ऐप और वेब ऐप दोनों पर लागू होती है।',
-    s2Title: '2. डेटा जो हम कभी भी एकत्र या स्टोर नहीं करते',
+    s1Desc: 'मिफ्ताह टूल्स एक ऑल-इन-वन डिजिटल यूटिलिटी और लर्निंग प्लेटफॉर्म है जिसमें 220+ क्लाइंट-साइड टूल्स शामिल हैं। यह नीति एंड्रॉइड ऐप और वेब एप्लिकेशन दोनों पर लागू होती है।',
+    s2Title: '2. डेटा जो हम कभी एकत्र या स्टोर नहीं करते',
     s2Items: [
-      'Zero Document Tracking: आपकी किसी भी PDF, फोटो, वीडियो, ऑडियो या टेक्स्ट फाइल को हम न तो पढ़ते हैं, न ही किसी सर्वर पर भेजते हैं।',
-      'Zero Location Tracking: हम आपकी GPS लोकेशन या भौगोलिक स्थान की जानकारी कभी नहीं लेते।',
-      'Zero Contact / Media Scraping: हम आपकी कांटेक्ट लिस्ट, कॉल लॉग्स, मैसेज या निजी फोटो गैलरी को कभी एक्सेस नहीं करते।',
-      'Zero Data Selling: हम यूजर का कोई भी डेटा किसी थर्ड-पार्टी, विज्ञापन कंपनी या डेटा ब्रोकर को कभी नहीं बेचते।',
+      'ज़ीरो डॉक्यूमेंट ट्रैकिंग: हम आपकी PDF, फोटो, वीडियो या टेक्स्ट फाइलों को किसी बाहरी सर्वर पर नहीं भेजते।',
+      'ज़ीरो लोकेशन ट्रैकिंग: हम आपकी GPS लोकेशन कभी एक्सेस या लॉग नहीं करते।',
+      'ज़ीरो कॉन्टैक्ट व मीडिया स्क्रैपिंग: हम आपके संपर्कों, कॉल लॉग या गैलरी को एक्सेस नहीं करते।',
+      'ज़ीरो डेटा बिक्री: हम उपयोगकर्ता डेटा किसी तीसरे पक्ष या विज्ञापनदाता को कभी नहीं बेचते।',
     ],
-    s3Title: '3. 100% लॉगिन-मुक्त और बिना रजिस्ट्रेशन',
-    s3Intro: 'मिफ्ताह टूल्स पूरी तरह से खुला, मुफ़्त और बिना किसी अकाउंट या लॉगिन के काम करता है। सभी 220+ टूल्स के लिए:',
+    s3Title: '3. 100% लॉगिन व पंजीकरण मुक्त पहुंच',
+    s3Intro: 'मिफ्ताह टूल्स बिना किसी अनिवार्य खाते या लॉगिन के पूरी तरह खुला और मुफ़्त है:',
     s3Items: [
-      'खाता बनाने की कोई आवश्यकता नहीं: न कोई पासवर्ड, न कोई अनिवार्य ईमेल।',
-      'कोई व्यक्तिगत ट्रैकिंग नहीं: न कोई प्रोफाइल निर्माण और न कोई गुप्त टेलीमेट्री।',
-      '100% लोकल डिवाइस स्टोरेज: आपके हालिया टूल्स, पसंदीदा टूल्स और डाउनलोड हिस्ट्री केवल आपके अपने फोन के लोकल कैश में सुरक्षित रहते हैं।',
+      'किसी खाते की आवश्यकता नहीं: कोई पासवर्ड या क्रेडिट कार्ड नहीं।',
+      'कोई व्यक्तिगत ट्रैकिंग नहीं: कोई व्यक्तिगत प्रोफ़ाइल निर्माण नहीं।',
+      '100% लोकल डिवाइस स्टोरेज: आपके बुकमार्क और कन्वर्शन इतिहास केवल आपके डिवाइस में सुरक्षित रहते हैं।',
     ],
-    s4Title: '4. विज्ञापन नीति और Google AdMob अनुपालन',
-    s4Intro: 'सभी 220+ टूल्स को सभी यूज़र्स के लिए हमेशा 100% मुफ़्त रखने हेतु ऐप में Google AdMob द्वारा सुरक्षित विज्ञापन दिखाए जाते हैं:',
+    s4Title: '4. विज्ञापन व एनालिटिक्स नीति (वेब व मोबाइल ऐप)',
+    s4Intro: 'सभी 220+ टूल्स को मुफ़्त बनाए रखने के लिए गैर-दखल देने वाले विज्ञापन व एनालिटिक्स उपयोग किए जाते हैं:',
     s4Items: [
-      'App Open Ad: ऐप खुलते समय 5 सेकंड के टाइमर और स्किप बटन के साथ।',
-      'Bottom Banner Ad: स्क्रीन के नीचे गैर-बाधक और सुरक्षित बैनर ऐड।',
-      'Interstitial & Rewarded Ads: कार्य पूरा होने पर सुरक्षित अंतराल के साथ दिखने वाले विज्ञापन।',
-      'AdMob Compliance: सभी विज्ञापन Google Play Family व बच्चों की सुरक्षा नीतियों के पूर्ण अनुकूल हैं।',
+      'दस्तावेज़ सुरक्षा: फाइलों की प्रोसेसिंग शत-प्रतिशत आपके डिवाइस में होती है, फाइलें कभी विज्ञापनों को नहीं भेजी जातीं।',
+      'वेबसाइट डेटा: वेबसाइट उपयोगकर्ता प्राथमिकताओं (थीम, भाषा) के लिए लोकल स्टोरेज, Google Analytics 4 और Google AdSense का उपयोग करती है।',
+      'एंड्रॉइड ऐप: मोबाइल ऐप Google Play परिवार नीति के अनुरूप Google AdMob विज्ञापनों का उपयोग करता है।',
+      'तृतीय पक्ष सेवाएं: Google AdMob, Google AdSense, Google Analytics 4, और Google Fonts।',
     ],
-    s5Title: '5. डिवाइस परमिशन और उनकी स्पष्ट आवश्यकता',
-    permCamera: '📷 कैमरा परमिशन: केवल QR कोड और बारकोड स्कैनिंग टूल्स के लिए इस्तेमाल होती है। फ्रेम्स मेमोरी में प्रोसेस होते हैं और कभी अपलोड नहीं होते।',
-    permStorage: '📁 स्टोरेज / मीडिया एक्सेस: केवल तभी इस्तेमाल होती है जब आप खुद एडिटिंग, कंप्रेशन या कन्वर्जन के लिए फाइल चुनते हैं।',
-    permInternet: '🌐 इंटरनेट व नेटवर्क स्टेट: केवल AdMob विज्ञापन और टूल डॉक्यूमेंटेशन लोड करने के लिए आवश्यक है।',
-    permScoped: '🔒 Scoped Storage अनुपालन: एंड्रॉइड 14 व 15 की नीतियों के अनुसार ऐप आपके द्वारा चुनी गई फाइल के बाहर किसी अन्य डेटा को एक्सेस नहीं कर सकता।',
-    s6Title: '6. डेटा सुरक्षा और स्थानीय डेटा डिलीट नीति',
-    s6Intro: 'चूँकि मिफ्ताह टूल्स सर्वर पर कोई डेटाबेस नहीं रखता, इसलिए आपके स्थानीय डेटा पर आपका 100% पूर्ण नियंत्रण है:',
-    methodATitle: 'विधि A: 1-क्लिक इन-ऐप डेटा डिलीट',
-    methodADesc: 'आप Settings > "Clear Cache & History" या Privacy Center में जाकर तुरंत सारा ऑफलाइन इतिहास और कैश डेटा डिलीट कर सकते हैं।',
-    methodBTitle: 'विधि B: डेवलपर से सीधा संपर्क',
-    methodBDesc: 'प्राइवेसी संबंधी किसी भी प्रश्न के लिए हमारे डेवलपर को ईमेल करें: jrahmanansari132@gmail.com। हम 24 घंटों में उत्तर देते हैं।',
-    s6ZeroCloud: '100% जीरो-क्लाउड गारंटी: ऐप को अनइंस्टॉल करते ही सभी ऐप-संबंधित फाइलें और कैश डेटा आपके डिवाइस से पूरी तरह स्वतः मिट जाता है।',
+    s5Title: '5. डिवाइस अनुमतियाँ और उनके कारण',
+    permCamera: '📷 कैमरा अनुमति: विशेष रूप से QR कोड और बारकोड स्कैन करने के लिए उपयोग की जाती है।',
+    permStorage: '📁 स्टोरेज व मीडिया: केवल तभी उपयोग की जाती है जब आप स्वयं प्रोसेसिंग के लिए फाइल चुनते हैं।',
+    permInternet: '🌐 इंटरनेट स्थिति: विज्ञापनों और वेब दस्तावेज़ीकरण को लोड करने के लिए आवश्यक है।',
+    permScoped: '🔒 स्कोप्ड स्टोरेज: एंड्रॉइड 14 व 15 नियमों के अनुरूप केवल चुनी गई फाइल तक पहुंच सीमित रखता है।',
+    s6Title: '6. डेटा सुरक्षा व त्वरित लोकल कैश निष्कासन',
+    s6Intro: 'चूंकि हम सर्वर पर कोई डेटाबेस नहीं रखते, आप अपने डिवाइस के डेटा पर पूर्ण नियंत्रण रखते हैं:',
+    methodATitle: 'तरीका A: 1-टैप इन-ऐप डेटा साफ़ करें',
+    methodADesc: 'आप सेटिंग्स > "Clear Cache & History" में जाकर तुरंत सारा कैश डेटा हटा सकते हैं।',
+    methodBTitle: 'तरीका B: सपोर्ट टीम से सहायता',
+    methodBDesc: 'गोपनीयता संबंधी किसी भी प्रश्न के लिए हमारी सपोर्ट टीम को सीधे ईमेल करें: support@miftahtools.com। हम 24 घंटों में उत्तर देते हैं।',
+    s6ZeroCloud: '100% ज़ीरो-क्लाउड गारंटी: ऐप अनइंस्टॉल करने से सभी लोकल फाइल्स तुरंत फोन से हट जाती हैं।',
     s7Title: '7. बच्चों की गोपनीयता (COPPA व GDPR-K अनुपालन)',
-    s7Desc: 'मिफ्ताह टूल्स सामान्य उपयोग और तकनीकी शिक्षा के लिए है। हम 13 वर्ष से कम आयु के बच्चों की व्यक्तिगत जानकारी जानबूझकर एकत्र नहीं करते हैं।',
+    s7Desc: 'मिफ्ताह टूल्स सामान्य उपयोगिता के लिए है। हम 13 वर्ष से कम आयु के बच्चों से कोई व्यक्तिगत डेटा एकत्र नहीं करते।',
     s8Title: '8. सुरक्षा व एन्क्रिप्शन मानक',
-    s8Desc: 'सभी नेटवर्क संचार उद्योग-मानक TLS 1.3 एन्क्रिप्शन द्वारा सुरक्षित हैं। क्लाइंट APK में कोई संवेदनशील सीक्रेट की शामिल नहीं हैं।',
+    s8Desc: 'सभी नेटवर्क संचार TLS 1.3 एन्क्रिप्शन का उपयोग करते हैं।',
     dpoTitle: 'डेवलपर व डेटा सुरक्षा अधिकारी संपर्क',
-    dpoDesc: 'प्राइवेसी प्रश्नों, डेटा डिलीशन या ऑडिट संबंधी प्रश्नों के लिए संपर्क करें:',
+    dpoDesc: 'गोपनीयता प्रश्नों के लिए हमारी विकास टीम से संपर्क करें:',
     devName: 'जमीलुर्रहमान अंसारी (डेवलपर व प्रकाशक)',
     devTeam: 'मिफ्ताह टूल्स डेवलपमेंट टीम',
-    contactBtn: 'प्राइवेसी टीम से संपर्क करें',
+    contactBtn: 'सपोर्ट टीम से संपर्क करें',
   },
 };
 
@@ -357,30 +353,30 @@ export default function PrivacyPage() {
 
           {/* Section 6: Data Deletion & Local Cache Purge */}
           <section className="space-y-4 p-5 sm:p-6 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/40">
-            <div className="flex items-center gap-2.5 text-emerald-900 dark:text-emerald-300 font-bold text-sm sm:text-base">
+            <h2 className="flex items-center gap-2.5 text-emerald-900 dark:text-emerald-300 font-bold text-sm sm:text-base">
               <UserX className="w-5 h-5 text-emerald-600 shrink-0" />
               <span>{loc.s6Title}</span>
-            </div>
+            </h2>
             <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
               {loc.s6Intro}
             </p>
             
             <div className="space-y-3 pt-1">
               <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900/60 space-y-1">
-                <h4 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   {loc.methodATitle}
-                </h4>
+                </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400">
                   {loc.methodADesc}
                 </p>
               </div>
 
               <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900/60 space-y-1">
-                <h4 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5 text-brand-600" />
                   {loc.methodBTitle}
-                </h4>
+                </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400">
                   {loc.methodBDesc}
                 </p>
@@ -412,7 +408,7 @@ export default function PrivacyPage() {
 
           {/* Section 9: Contact & Developer Info */}
           <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">{loc.dpoTitle}</h3>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">{loc.dpoTitle}</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {loc.dpoDesc}
             </p>
@@ -420,10 +416,10 @@ export default function PrivacyPage() {
               <div>
                 <p className="text-xs font-bold text-slate-900 dark:text-white">{loc.devName}</p>
                 <p className="text-xs text-slate-500">{loc.devTeam}</p>
-                <p className="text-xs font-mono text-brand-600 dark:text-brand-400 font-semibold mt-0.5">jrahmanansari132@gmail.com</p>
+                <p className="text-xs font-mono text-brand-600 dark:text-brand-400 font-semibold mt-0.5">support@miftahtools.com</p>
               </div>
               <a
-                href="mailto:jrahmanansari132@gmail.com?subject=Privacy%20Inquiry%20-%20Miftah%20Tools"
+                href="mailto:support@miftahtools.com?subject=Privacy%20Inquiry%20-%20Miftah%20Tools"
                 className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-all shadow-xs shrink-0 cursor-pointer"
               >
                 <Mail className="w-3.5 h-3.5" />
@@ -437,4 +433,3 @@ export default function PrivacyPage() {
     </div>
   );
 }
-

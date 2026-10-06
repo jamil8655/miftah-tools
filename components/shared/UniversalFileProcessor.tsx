@@ -328,7 +328,7 @@ export function UniversalFileProcessor({
               <span>Processing Completed Successfully!</span>
             </div>
             <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300">
-              {results.length} Files Ready
+              {results.length} {results.length === 1 ? 'File' : 'Files'} Ready
             </span>
           </div>
 

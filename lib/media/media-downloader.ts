@@ -1,3 +1,5 @@
+import { isSafePublicUrl } from '@/lib/core/url-validator';
+
 export interface MediaDownloadFormat {
   id: string;
   label: string;
@@ -28,12 +30,11 @@ export interface MediaMetadata {
 // MULTI-PROVIDER FAILOVER CLUSTER CONFIGURATION
 // ----------------------------------------------------
 
-// 1. RapidAPI Pool with Multiple Rotation Keys (Prevents Rate Limits)
-const RAPIDAPI_KEYS_POOL = [
-  'cd50e4fcacmsh242301138749f15p166a45jsn69e17ebc7265', // Primary Key
-  'f7f7a77d12msh63b51ee2bc3d67ep1a4d95jsn0c8d18408f62', // Backup Key 1
-  'b11e2f89f2msh3d8199214b62d85p118a80jsne07d8e6c7ab9', // Backup Key 2
-];
+// 1. RapidAPI Pool with Dynamic Environment Fallback
+const RAPIDAPI_KEYS_POOL: string[] = (process.env.NEXT_PUBLIC_RAPIDAPI_KEYS || '')
+  .split(',')
+  .map((k) => k.trim())
+  .filter(Boolean);
 
 const RAPIDAPI_HOST_PRIMARY = 'youtube-mp4-mp3-downloader.p.rapidapi.com';
 
@@ -345,6 +346,11 @@ export async function resolveCobaltStream(
  * Inspects social media URL and extracts downloadable streams directly on-site.
  */
 export async function fetchMediaMetadata(url: string): Promise<MediaMetadata> {
+  const check = isSafePublicUrl(url);
+  if (!check.safe) {
+    throw new Error(check.reason || 'Invalid or unsafe URL provided.');
+  }
+
   const { platform, platformName, id } = detectPlatform(url);
 
   let title = `${platformName} Media`;

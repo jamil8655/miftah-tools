@@ -190,7 +190,7 @@ export default function AccountPage() {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Support &amp; Contact</h3>
-                <p className="text-[11px] text-slate-500">Direct developer email: jrahmanansari132@gmail.com</p>
+                <p className="text-[11px] text-slate-500">Official support mailbox: support@miftahtools.com</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-slate-400" />

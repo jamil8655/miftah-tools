@@ -259,17 +259,20 @@ export function Header() {
 
           {/* Right Action Bar (Search + Notification + Menu Button / Profile) */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
-            {/* Desktop Install App Trigger */}
+            {/* Desktop Google Play Store Link */}
             {!isNativeApp && (
-              <button
-                type="button"
-                onClick={handleInstallClick}
-                className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold transition-all shadow-xs shrink-0"
-                title={loc.installApp}
+              <a
+                href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700 text-xs font-bold transition-all shadow-xs shrink-0 select-none"
+                title="Get Miftah Tools on Google Play"
               >
-                <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>{loc.installApp}</span>
-              </button>
+                <svg className="w-3.5 h-3.5 fill-current text-emerald-400 shrink-0" viewBox="0 0 24 24">
+                  <path d="M3.609 1.814L13.792 12 3.61 22.186c-.37-.36-.61-.88-.61-1.474V3.288c0-.594.24-1.114.61-1.474zM15.207 13.414l2.586 2.586-12.871 7.43 10.285-10.016zm0-2.828L4.922.57 17.793 8l-2.586 2.586zm1.414 1.414l3.779-2.182c.8-.462.8-1.214 0-1.676l-3.779-2.182-2.121 2.121 2.121 2.919z" />
+                </svg>
+                <span>Google Play</span>
+              </a>
             )}
 
             {/* Global Search Button */}
@@ -366,6 +369,28 @@ export function Header() {
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
+
+              {/* Google Play Store Card in Drawer */}
+              <a
+                href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMenuDrawerOpen(false)}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 text-white text-xs font-bold active:scale-98 transition-all shadow-md"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-white/20 text-white shadow-xs">
+                    <svg className="w-5 h-5 fill-current text-white" viewBox="0 0 24 24">
+                      <path d="M3.609 1.814L13.792 12 3.61 22.186c-.37-.36-.61-.88-.61-1.474V3.288c0-.594.24-1.114.61-1.474zM15.207 13.414l2.586 2.586-12.871 7.43 10.285-10.016zm0-2.828L4.922.57 17.793 8l-2.586 2.586zm1.414 1.414l3.779-2.182c.8-.462.8-1.214 0-1.676l-3.779-2.182-2.121 2.121 2.121 2.919z" />
+                    </svg>
+                  </div>
+                  <div className="text-left rtl:text-right">
+                    <div className="text-[9px] uppercase tracking-wider text-emerald-100 font-bold leading-none">Official Android App</div>
+                    <div className="text-xs font-black tracking-tight text-white leading-none mt-1">Get on Google Play</div>
+                  </div>
+                </div>
+                <ChevronRight className={`w-4 h-4 text-white ${isRTL ? 'rotate-180' : ''}`} />
+              </a>
 
               {/* Share App Action Card in Drawer */}
               <button

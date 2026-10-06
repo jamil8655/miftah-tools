@@ -6275,6 +6275,42 @@ export const TOOLS_LIST: ToolDefinition[] = [
       "media",
       "audio to text"
     ]
+  },
+  {
+    "id": "camera-scanner",
+    "slug": "camera-scanner",
+    "name": "Camera & Document Scanner",
+    "shortDesc": "Scan paper documents, receipts, and IDs with camera contrast filters and 1-click PDF/Word export.",
+    "fullDesc": "Capture physical documents, multi-page books, and receipts using your device camera or gallery, apply contrast enhancement filters, and export to multi-page PDF or Word document.",
+    "category": "ocr",
+    "icon": "Camera",
+    "popular": true,
+    "featured": true,
+    "isClientSide": true,
+    "acceptedMimeTypes": [
+      "image/*",
+      "application/pdf"
+    ],
+    "acceptedExtensions": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+      ".pdf"
+    ],
+    "maxFiles": 100,
+    "maxFileSizeMB": 500,
+    "outputExtension": "pdf",
+    "outputMimeType": "application/pdf",
+    "tags": [
+      "camera scanner",
+      "document scanner",
+      "cam scanner",
+      "scan document",
+      "receipt scanner",
+      "ocr",
+      "pdf scanner"
+    ]
   }
 ];
 
