@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Zap,
@@ -16,17 +16,18 @@ import {
   Type,
   Video,
   Bookmark,
-  Brain,
-  Calculator,
   Terminal,
   ShieldCheck,
   Search,
   X,
+  History,
+  CheckCircle2,
+  Sliders,
+  RefreshCw,
+  Calculator,
+  Lock,
+  Smartphone,
   ChevronRight,
-  Mic,
-  Camera,
-  Wand2,
-  Workflow,
 } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
 import { ToolCard } from '@/components/shared/ToolCard';
@@ -49,202 +50,247 @@ const categoryIconMap: Record<string, React.ElementType> = {
   calculator: Calculator,
   dev: Terminal,
   qr: QrCode,
-  ai: Brain,
 };
 
 const PAGE_LOCALES = {
   en: {
-    heroBadge: '✨ 220+ Free Tools & Document Utilities',
-    heroTitle: '220+ Free Online Tools for PDF, Documents, Images & Utilities',
-    heroSubtitle: 'Convert, compress, edit, calculate, and manage files with 100% private in-browser WebAssembly processing. No sign-up required.',
+    heroEyebrow: 'MIFTAH TOOLS',
+    heroHeading1: '220+ Digital Tools.',
+    heroHeading2: 'One Simple Workspace.',
+    heroSupporting: 'Convert, edit, compress and create with fast, privacy-focused tools designed to work directly in your browser.',
+    exploreAllCta: 'Explore All Tools →',
+    downloadAppCta: 'Download App',
     searchPlaceholder: 'Search 220+ tools (e.g. PDF to Word, OCR, Compress, QR)...',
-    clearSearch: 'Clear',
-    allToolsTab: 'All Tools',
-    frequentTools: 'Popular Quick Actions',
-    browseByCategory: 'Browse by Category',
-    directoryTitle: 'Tools Directory',
+    valueTools: '220+ Tools',
+    valueToolsDesc: 'Full Client-Side Suite',
+    valueFast: 'Fast Processing',
+    valueFastDesc: 'Ultra-Fast Local Engine',
+    valuePrivate: 'Private & Secure',
+    valuePrivateDesc: 'Files Stay on Your Device',
+    valueFree: 'Free Access',
+    valueFreeDesc: 'Zero Sign-In Required',
+    popularHeading: 'Popular Tools',
+    popularSubheading: 'Start with the tools people use most.',
+    exploreCategoryHeading: 'Explore by Category',
+    exploreCategorySubheading: 'Quickly find specialized utilities for your workflow.',
+    recentToolsHeading: 'Recent Tools',
+    allToolsTab: 'All Tools (220+)',
     toolsCount: (count: number) => `${count} tools`,
     noToolsFound: 'No tools found matching your search.',
     resetFilters: 'Reset filters',
-    viewAllTools: 'View All 220+ Tools Directory →',
-    trustPrivate: '100% In-Browser Privacy',
-    trustPrivateDesc: 'Files never leave your device',
-    trustEngine: '500 MB WASM Engine',
-    trustEngineDesc: 'Ultra-fast local processing',
-    trustFree: 'Zero Sign-In Required',
-    trustFreeDesc: 'Instant, free unlimited access',
-    bookmarked: (count: number) => `Bookmarked Tools (${count})`,
-    manageBookmarks: 'Manage Bookmarks →',
+    viewAllDirectoryTitle: 'Looking for more document, image, or developer utilities?',
+    viewAllDirectoryDesc: 'Find the right tool for PDF, documents, images, text, conversion and more in our catalog.',
+    viewAllDirectoryBtn: 'Explore All 220+ Tools →',
+    appBadge: 'OFFICIAL ANDROID APP',
+    appHeading: 'Miftah Tools on Android',
+    appSupporting: 'Your favorite tools, available wherever you need them with on-device processing.',
+    appBullet1: 'Free to use with zero data limits',
+    appBullet2: '100% On-device privacy protection',
+    appBullet3: 'Fast offline tools where supported',
+    categories: {
+      pdf: 'PDF & Documents',
+      image: 'Images',
+      text: 'Text',
+      compress: 'Converters',
+      media: 'Utilities',
+      security: 'Security',
+      dev: 'Developer Tools',
+      calculator: 'Other Tools',
+    },
+    popularTools: [
+      { id: 'pdf-to-docx', name: 'PDF to Word', desc: 'Convert PDF documents into editable Word files.', href: '/tools/pdf-to-docx', icon: FileText },
+      { id: 'compress-pdf', name: 'Compress PDF', desc: 'Reduce PDF file size without losing visual quality.', href: '/tools/compress-pdf', icon: Minimize2 },
+      { id: 'merge-pdf', name: 'Merge PDF', desc: 'Combine multiple PDF files into one clean document.', href: '/tools/merge-pdf', icon: Combine },
+      { id: 'pdf-editor', name: 'PDF Editor Studio', desc: 'Edit text, annotate, draw and fill PDF forms.', href: '/pdf-editor', icon: FileCheck },
+      { id: 'image-studio', name: 'Image Studio', desc: 'Resize, convert, crop and optimize images locally.', href: '/image-studio', icon: ImageIcon },
+      { id: 'ocr', name: 'OCR Image to Text', desc: 'Extract editable text from scanned documents and images.', href: '/ocr', icon: ScanText },
+    ],
   },
   ur: {
-    heroBadge: '✨ 220+ مفت آن لائن ٹولز اور دستاویز یوٹیلیٹیز',
-    heroTitle: 'مفت، تیز اور مکمل نجی آن لائن ٹولز',
-    heroSubtitle: 'دستاویزات میں ترمیم، تصاویر کی تبدیلی، میڈیا آپٹیمائزیشن اور ورک فلو آٹومیشن — بغیر کسی سرور اپلوڈ کے براہِ راست براؤزر میں۔',
+    heroEyebrow: 'مفتاح ٹولز',
+    heroHeading1: '220+ ڈیجیٹل ٹولز۔',
+    heroHeading2: 'ایک سادہ ورک اسپیس۔',
+    heroSupporting: 'براؤزر میں براہ راست تیز رفتار، نجی اور محفوظ ٹولز کے ذریعے فائلیں تبدیل کریں، کمپریس کریں اور بنائیں بغیر سرور اپلوڈ کے۔',
+    exploreAllCta: 'تمام ٹولز دیکھیں ←',
+    downloadAppCta: 'ایپ ڈاؤن لوڈ کریں',
     searchPlaceholder: '220+ ٹولز تلاش کریں (مثلاً پی ڈی ایف، امیج، او سی آر، کیو آر)...',
-    clearSearch: 'صاف کریں',
-    allToolsTab: 'تمام ٹولز',
-    frequentTools: 'مقبول ترین ٹولز',
-    browseByCategory: 'اقسام کے لحاظ سے دیکھیں',
-    directoryTitle: 'ٹولز ڈائرکٹری',
+    valueTools: '220+ ٹولز',
+    valueToolsDesc: 'مکمل کلائنٹ سائیڈ سوئیٹ',
+    valueFast: 'تیز رفتار پروسیسنگ',
+    valueFastDesc: 'انتہائی تیز لوکل انجن',
+    valuePrivate: 'مکمل رازداری و حفاظت',
+    valuePrivateDesc: 'فائلیں آپ کے ڈیوائس پر رہتی ہیں',
+    valueFree: 'مفت رسائی',
+    valueFreeDesc: 'بغیر سائن ان مکمل استعمال',
+    popularHeading: 'مقبول ٹولز',
+    popularSubheading: 'سب سے زیادہ استعمال ہونے والے ٹولز سے آغاز کریں۔',
+    exploreCategoryHeading: 'اقسام کے لحاظ سے دیکھیں',
+    exploreCategorySubheading: 'اپنی مطلوبہ کیٹیگری کے مطابق فوری ٹولز تلاش کریں۔',
+    recentToolsHeading: 'حالیہ استعمال شدہ ٹولز',
+    allToolsTab: 'تمام ٹولز (220+)',
     toolsCount: (count: number) => `${count} ٹولز`,
     noToolsFound: 'آپ کی تلاش کے مطابق کوئی ٹول نہیں ملا۔',
     resetFilters: 'فلٹرز ری سیٹ کریں',
-    viewAllTools: 'تمام 220+ ٹولز ڈائرکٹری دیکھیں ←',
-    trustPrivate: '100% مکمل مقامی رازداری',
-    trustPrivateDesc: 'فائلیں آپ کے ڈیوائس پر ہی رہتی ہیں',
-    trustEngine: '500 ایم بی لوکل انجن',
-    trustEngineDesc: 'بغیر انتظار تیز ترین پروسیسنگ',
-    trustFree: 'بغیر سائن ان مکمل رسائی',
-    trustFreeDesc: 'مفت اور لامحدود استعمال',
-    bookmarked: (count: number) => `محفوظ شدہ ٹولز (${count})`,
-    manageBookmarks: 'بک مارکس کا انتظام کریں ←',
+    viewAllDirectoryTitle: 'مزید دستاویز، تصویر یا کوڈنگ ٹولز تلاش کر رہے ہیں؟',
+    viewAllDirectoryDesc: 'پی ڈی ایف، دستاویزات، تصاویر، ٹیکسٹ اور دیگر مقاصد کے لیے 220+ ٹولز کا مکمل کیٹلاگ دریافت کریں۔',
+    viewAllDirectoryBtn: 'تمام 220+ ٹولز ڈائرکٹری دیکھیں ←',
+    appBadge: 'آفیشل اینڈرائیڈ ایپ',
+    appHeading: 'اینڈرائیڈ پر مفتاح ٹولز',
+    appSupporting: 'آپ کے پسندیدہ ٹولز، جب اور جہاں چاہیں تیز رفتار آن ڈیوائس پروسیسنگ کے ساتھ دستیاب۔',
+    appBullet1: 'لامحدود اور 100% مفت استعمال',
+    appBullet2: 'مکمل پرائیویٹ آن ڈیوائس پروسیسنگ',
+    appBullet3: 'تیز رفتار آف لائن ٹولز کی سہولت',
+    categories: {
+      pdf: 'پی ڈی ایف اور دستاویزات',
+      image: 'تصاویر',
+      text: 'ٹیکسٹ',
+      compress: 'کنورٹرز',
+      media: 'یوٹیلیٹیز',
+      security: 'سیکیورٹی',
+      dev: 'ڈویلپر ٹولز',
+      calculator: 'دیگر ٹولز',
+    },
+    popularTools: [
+      { id: 'pdf-to-docx', name: 'پی ڈی ایف سے ورڈ', desc: 'پی ڈی ایف کو قابل ترمیم ورڈ فائلوں میں تبدیل کریں۔', href: '/tools/pdf-to-docx', icon: FileText },
+      { id: 'compress-pdf', name: 'کمپریس پی ڈی ایف', desc: 'معیار برقرار رکھتے ہوئے فائل سائز کم کریں۔', href: '/tools/compress-pdf', icon: Minimize2 },
+      { id: 'merge-pdf', name: 'پی ڈی ایف یکجا کریں', desc: 'متعدد پی ڈی ایف فائلوں کو ایک فائل میں جوڑیں۔', href: '/tools/merge-pdf', icon: Combine },
+      { id: 'pdf-editor', name: 'پی ڈی ایف ایڈیٹر اسٹوڈیو', desc: 'پی ڈی ایف پر لکھیں، ڈرا کریں اور فارم پُر کریں۔', href: '/pdf-editor', icon: FileCheck },
+      { id: 'image-studio', name: 'امیج اسٹوڈیو', desc: 'تصاویر کا سائز تبدیل کریں، کروپ کریں اور کنورٹ کریں۔', href: '/image-studio', icon: ImageIcon },
+      { id: 'ocr', name: 'تصویر سے ٹیکسٹ (OCR)', desc: 'اسکین شدہ دستاویزات اور تصاویر سے ٹیکسٹ نکالیں۔', href: '/ocr', icon: ScanText },
+    ],
   },
   ar: {
-    heroBadge: '✨ أكثر من 220 أداة مجانية لمعالجة المستندات',
-    heroTitle: 'أدوات مجانية وآمنة وسريعة لمعالجة الملفات',
-    heroSubtitle: 'تحويل المستندات، وضغط الصور، وتعديل الوسائط، والبرمجة — خصوصية محلية تامة 100% داخل المتصفح.',
+    heroEyebrow: 'مفتاح تولز',
+    heroHeading1: '220+ أداة رقمية.',
+    heroHeading2: 'في مساحة عمل واحدة.',
+    heroSupporting: 'قم بتحويل المستندات، وتعديلها، وضغطها، وإنشائها باستخدام أدوات سريعة وآمنة تعمل مباشرة داخل متصفحك.',
+    exploreAllCta: 'استكشف جميع الأدوات ←',
+    downloadAppCta: 'تحميل التطبيق',
     searchPlaceholder: 'ابحث في 220+ أداة (مثل تحويل PDF، ضغط، OCR، QR)...',
-    clearSearch: 'مسح',
-    allToolsTab: 'جميع الأدوات',
-    frequentTools: 'الأدوات الأكثر استخداماً',
-    browseByCategory: 'تصفح حسب التصنيف',
-    directoryTitle: 'دليل الأدوات',
+    valueTools: '220+ أداة',
+    valueToolsDesc: 'مجموعة أدوات متكاملة',
+    valueFast: 'معالجة فائقة السرعة',
+    valueFastDesc: 'محرك محلي فوري',
+    valuePrivate: 'خصوصية وأمان 100%',
+    valuePrivateDesc: 'ملفاتك لا تغادر جهازك أبداً',
+    valueFree: 'وصول مجاني',
+    valueFreeDesc: 'بدون تسجيل دخول أو قيود',
+    popularHeading: 'الأدوات الأكثر استخداماً',
+    popularSubheading: 'ابدأ بالأدوات الأكثر شيوعاً واستخداماً.',
+    exploreCategoryHeading: 'استكشف حسب التصنيف',
+    exploreCategorySubheading: 'اعثر بسهولة على الأدوات المتخصصة لسير عملك.',
+    recentToolsHeading: 'الأدوات المستخدمة مؤخراً',
+    allToolsTab: 'جميع الأدوات (220+)',
     toolsCount: (count: number) => `${count} أداة`,
     noToolsFound: 'لم يتم العثور على أي أداة مطابقة لبحثك.',
     resetFilters: 'إعادة ضبط التصفية',
-    viewAllTools: 'استكشف دليل جميع الأدوات 220+ ←',
-    trustPrivate: 'خصوصية محلية 100%',
-    trustPrivateDesc: 'ملفاتك لا تغادر جهازك أبداً',
-    trustEngine: 'محرك WASM بسعة 500 ميجابايت',
-    trustEngineDesc: 'معالجة فورية وفائقة السرعة',
-    trustFree: 'استخدام فوري بدون تسجيل',
-    trustFreeDesc: 'وصول مجاني وغير محدود',
-    bookmarked: (count: number) => `الأدوات المحفوظة (${count})`,
-    manageBookmarks: 'إدارة الإشارات المرجعية ←',
+    viewAllDirectoryTitle: 'هل تبحث عن المزيد من أدوات المستندات والصور والمطورين؟',
+    viewAllDirectoryDesc: 'استكشف دليلاً شاملاً يضم أكثر من 220 أداة رقمية آمنة ومجانية.',
+    viewAllDirectoryBtn: 'استكشف دليل جميع الأدوات 220+ ←',
+    appBadge: 'تطبيق أندرويد الرسمي',
+    appHeading: 'مفتاح تولز على أندرويد',
+    appSupporting: 'أدواتك المفضلة متاحة أينما كنت مع معالجة محلية وسريعة على جهازك.',
+    appBullet1: 'مجاني بالكامل وبدون حدود للبيانات',
+    appBullet2: 'حماية كاملة للخصوصية على جهازك',
+    appBullet3: 'أدوات سريعة تعمل بدون اتصال بالإنترنت',
+    categories: {
+      pdf: 'PDF والمستندات',
+      image: 'الصور',
+      text: 'النصوص',
+      compress: 'محولات الصيغ',
+      media: 'الأدوات المساعدة',
+      security: 'الأمان والخصوصية',
+      dev: 'أدوات المطورين',
+      calculator: 'أدوات أخرى',
+    },
+    popularTools: [
+      { id: 'pdf-to-docx', name: 'تحويل PDF إلى Word', desc: 'تحويل مستندات PDF إلى ملفات Word قابلة للتعديل.', href: '/tools/pdf-to-docx', icon: FileText },
+      { id: 'compress-pdf', name: 'ضغط ملفات PDF', desc: 'تقليل حجم ملفات PDF مع الحفاظ على وضوحها.', href: '/tools/compress-pdf', icon: Minimize2 },
+      { id: 'merge-pdf', name: 'دمج وتجميع PDF', desc: 'دمج ملفات PDF متعددة في مستند واحد منظم.', href: '/tools/merge-pdf', icon: Combine },
+      { id: 'pdf-editor', name: 'استوديو محرر PDF', desc: 'تعديل النصوص وإضافة التوقيعات وملء النماذج.', href: '/pdf-editor', icon: FileCheck },
+      { id: 'image-studio', name: 'استوديو الصور', desc: 'تغيير الحجم، القص، وضغط الصور محلياً.', href: '/image-studio', icon: ImageIcon },
+      { id: 'ocr', name: 'استخراج النصوص (OCR)', desc: 'استخراج النصوص من الصور والمستندات الممسوحة ضوئياً.', href: '/ocr', icon: ScanText },
+    ],
   },
   hi: {
-    heroBadge: '✨ 220+ मुफ़्त ऑनलाइन टूल्स व दस्तावेज़ यूटिलिटीज',
-    heroTitle: 'फास्ट, प्राइवेट और मुफ़्त ऑनलाइन टूल्स',
-    heroSubtitle: 'दस्तावेज़ कस्टमाइज़ करें, इमेज कन्वर्ट करें, मीडिया ऑप्टिमाइज़ करें और वर्कफ़्लो ऑटोमेट करें — 100% इन-ब्राउज़र गोपनीयता।',
+    heroEyebrow: 'मिफ़्ताह टूल्स',
+    heroHeading1: '220+ डिजिटल टूल्स।',
+    heroHeading2: 'एक सरल वर्कस्पेस।',
+    heroSupporting: 'फ़ाइलें कन्वर्ट, एडिट, कंप्रेस और क्रिएट करें — ब्राउज़र में सीधे चलने वाले तेज़ और 100% प्राइवेट टूल्स के साथ।',
+    exploreAllCta: 'सभी टूल्स देखें →',
+    downloadAppCta: 'ऐप डाउनलोड करें',
     searchPlaceholder: '220+ टूल्स खोजें (उदा. PDF से Word, OCR, कंप्रेस, QR)...',
-    clearSearch: 'साफ़ करें',
-    allToolsTab: 'सभी टूल्स',
-    frequentTools: 'लोकप्रिय टूल्स',
-    browseByCategory: 'श्रेणियों के अनुसार ब्राउज़ करें',
-    directoryTitle: 'टूल्स निर्देशिका',
+    valueTools: '220+ टूल्स',
+    valueToolsDesc: 'संपूर्ण क्लाइंट-साइड सूट',
+    valueFast: 'फास्ट प्रोसेसिंग',
+    valueFastDesc: 'अल्ट्रा-फास्ट लोकल इंजन',
+    valuePrivate: 'गोपनीय व सुरक्षित',
+    valuePrivateDesc: 'फ़ाइलें आपके डिवाइस में सुरक्षित',
+    valueFree: 'मुफ़्त एक्सेस',
+    valueFreeDesc: 'बिना लॉगिन तुरंत उपयोग',
+    popularHeading: 'लोकप्रिय टूल्स',
+    popularSubheading: 'उन टूल्स से शुरू करें जिनका लोग सबसे अधिक उपयोग करते हैं।',
+    exploreCategoryHeading: 'श्रेणी के अनुसार खोजें',
+    exploreCategorySubheading: 'अपने काम के लिए विशिष्ट यूटिलिटीज तुरंत प्राप्त करें।',
+    recentToolsHeading: 'हाल ही में उपयोग किए गए टूल्स',
+    allToolsTab: 'सभी टूल्स (220+)',
     toolsCount: (count: number) => `${count} टूल्स`,
     noToolsFound: 'आपकी खोज से मेल खाता कोई टूल नहीं मिला।',
     resetFilters: 'फ़िल्टर रीसेट करें',
-    viewAllTools: 'सभी 220+ टूल्स डायरेक्टरी देखें →',
-    trustPrivate: '100% इन-ब्राउज़र गोपनीयता',
-    trustPrivateDesc: 'फ़ाइलें कभी डिवाइस से बाहर नहीं जातीं',
-    trustEngine: '500 MB स्थानीय WASM इंजन',
-    trustEngineDesc: 'अति-तीव्र प्रोसेसिंग',
-    trustFree: 'बिना लॉगिन मुफ़्त एक्सेस',
-    trustFreeDesc: 'तत्काल और असीमित उपयोग',
-    bookmarked: (count: number) => `बुकमार्क किए गए टूल्स (${count})`,
-    manageBookmarks: 'बुकमार्क प्रबंधित करें →',
+    viewAllDirectoryTitle: 'क्या आप अधिक दस्तावेज़, इमेज या कोडिंग टूल्स खोज रहे हैं?',
+    viewAllDirectoryDesc: 'PDF, दस्तावेज़, चित्र, टेक्स्ट और बहुत कुछ के लिए 220+ टूल्स की पूरी सूची देखें।',
+    viewAllDirectoryBtn: 'सभी 220+ टूल्स डायरेक्टरी देखें →',
+    appBadge: 'आधिकारिक एंड्रॉइड ऐप',
+    appHeading: 'एंड्रॉइड पर मिफ़्ताह टूल्स',
+    appSupporting: 'आपके पसंदीदा टूल्स, ऑन-डिवाइस प्रोसेसिंग के साथ कभी भी और कहीं भी उपलब्ध।',
+    appBullet1: 'बिना किसी सीमा के 100% मुफ़्त',
+    appBullet2: 'ऑन-डिवाइस पूर्ण गोपनीयता सुरक्षा',
+    appBullet3: 'तेज़ गति वाले ऑफ़लाइन टूल्स',
+    categories: {
+      pdf: 'PDF व दस्तावेज़',
+      image: 'इमेज',
+      text: 'टेक्स्ट',
+      compress: 'कन्वर्टर्स',
+      media: 'यूटिलिटीज',
+      security: 'सुरक्षा',
+      dev: 'डेवलपर टूल्स',
+      calculator: 'अन्य टूल्स',
+    },
+    popularTools: [
+      { id: 'pdf-to-docx', name: 'PDF से Word', desc: 'PDF दस्तावेज़ों को संपादन योग्य Word फ़ाइलों में बदलें।', href: '/tools/pdf-to-docx', icon: FileText },
+      { id: 'compress-pdf', name: 'PDF कंप्रेस करें', desc: 'क्वालिटी खोए बिना PDF फ़ाइल का आकार घटाएं।', href: '/tools/compress-pdf', icon: Minimize2 },
+      { id: 'merge-pdf', name: 'PDF मर्ज करें', desc: 'कई PDF फ़ाइलों को एक साफ दस्तावेज़ में जोड़ें।', href: '/tools/merge-pdf', icon: Combine },
+      { id: 'pdf-editor', name: 'PDF एडिटर स्टूडियो', desc: 'टेक्स्ट जोड़ें, एनोटेट करें और फ़ॉर्म भरें।', href: '/pdf-editor', icon: FileCheck },
+      { id: 'image-studio', name: 'इमेज स्टूडियो', desc: 'इमेज का आकार बदलें, क्रॉप करें और कन्वर्ट करें।', href: '/image-studio', icon: ImageIcon },
+      { id: 'ocr', name: 'फोटो से टेक्स्ट (OCR)', desc: 'स्कैन किए गए दस्तावेज़ों से संपादन योग्य टेक्स्ट निकालें।', href: '/ocr', icon: ScanText },
+    ],
   },
 };
 
-const POPULAR_QUICK_ACTIONS = [
-  { id: 'voice-to-text', name: 'Voice to Text (AI)', cat: 'voice', icon: Mic, color: 'bg-purple-600', isDirectPath: '/voice-to-text' },
-  { id: 'media-downloader', name: 'Video & Audio Saver', cat: 'media', icon: Video, color: 'bg-rose-600', isDirectPath: '/video-to-mp3' },
-  { id: 'pdf-to-docx', name: 'PDF to Word (OCR)', cat: 'pdf', icon: FileText, color: 'bg-indigo-600' },
-  { id: 'compress-pdf', name: 'Compress PDF', cat: 'pdf', icon: Minimize2, color: 'bg-emerald-600' },
-  { id: 'merge-pdf', name: 'Merge PDF', cat: 'pdf', icon: Combine, color: 'bg-blue-600' },
-  { id: 'camera-scanner', name: 'Camera Scanner', cat: 'ocr', icon: Camera, color: 'bg-teal-600', isDirectPath: '/camera-scanner' },
-  { id: 'pdf-editor', name: 'PDF Editor Studio', cat: 'pdf', icon: FileCheck, color: 'bg-violet-600', isDirectPath: '/pdf-editor' },
-  { id: 'pdf-signer', name: 'Sign & Stamp PDF', cat: 'pdf', icon: ShieldCheck, color: 'bg-amber-600', isDirectPath: '/pdf-signer' },
-  { id: 'image-resizer', name: 'Image Studio', cat: 'image', icon: ImageIcon, color: 'bg-cyan-600' },
-  { id: 'background-remover', name: 'Remove BG', cat: 'image', icon: Wand2, color: 'bg-pink-600' },
-  { id: 'qr-generator', name: 'QR Code Generator', cat: 'qr', icon: QrCode, color: 'bg-slate-800 dark:bg-slate-700' },
-  { id: 'workflows', name: 'Workflows Studio', cat: 'smart', icon: Workflow, color: 'bg-orange-600', isDirectPath: '/workflows' },
-];
-
-const POPULAR_CATEGORY_SECTIONS = [
-  {
-    id: 'pdf',
-    icon: FileText,
-    color: 'text-rose-600 dark:text-rose-400',
-    badgeStyle: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
-  },
-  {
-    id: 'document',
-    icon: FileCheck,
-    color: 'text-blue-600 dark:text-blue-400',
-    badgeStyle: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-  },
-  {
-    id: 'image',
-    icon: ImageIcon,
-    color: 'text-cyan-600 dark:text-cyan-400',
-    badgeStyle: 'bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
-  },
-  {
-    id: 'ocr',
-    icon: ScanText,
-    color: 'text-teal-600 dark:text-teal-400',
-    badgeStyle: 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800',
-  },
-  {
-    id: 'media',
-    icon: Video,
-    color: 'text-purple-600 dark:text-purple-400',
-    badgeStyle: 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-  },
-  {
-    id: 'compress',
-    icon: Minimize2,
-    color: 'bg-emerald-500',
-    badgeStyle: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-  },
-  {
-    id: 'text',
-    icon: Type,
-    color: 'text-violet-600 dark:text-violet-400',
-    badgeStyle: 'bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800',
-  },
-  {
-    id: 'qr',
-    icon: QrCode,
-    color: 'text-slate-700 dark:text-slate-300',
-    badgeStyle: 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700',
-  },
-  {
-    id: 'dev',
-    icon: Terminal,
-    color: 'text-emerald-600 dark:text-emerald-400',
-    badgeStyle: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-  },
-  {
-    id: 'calculator',
-    icon: Calculator,
-    color: 'text-indigo-600 dark:text-indigo-400',
-    badgeStyle: 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
-  },
-  {
-    id: 'security',
-    icon: ShieldCheck,
-    color: 'text-red-600 dark:text-red-400',
-    badgeStyle: 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
-  },
+const CATEGORY_ITEMS = [
+  { id: 'pdf', icon: FileText, key: 'pdf' },
+  { id: 'image', icon: ImageIcon, key: 'image' },
+  { id: 'text', icon: Type, key: 'text' },
+  { id: 'compress', icon: RefreshCw, key: 'compress' },
+  { id: 'media', icon: Sliders, key: 'media' },
+  { id: 'security', icon: ShieldCheck, key: 'security' },
+  { id: 'dev', icon: Terminal, key: 'dev' },
+  { id: 'calculator', icon: Calculator, key: 'calculator' },
 ];
 
 export default function HomePage() {
   const { language, isRTL } = useI18n();
-  const { favorites, pinnedTools } = useUserStore();
+  const { recentTools: storeRecentTools } = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const loc = PAGE_LOCALES[language] || PAGE_LOCALES.en;
 
-  const favoriteTools = useMemo(() => {
-    return TOOLS_LIST.filter(
-      (tool) =>
-        favorites.some((fav) => fav.id === tool.id || fav.id === tool.slug) ||
-        pinnedTools.includes(tool.id)
-    );
-  }, [favorites, pinnedTools]);
+  // Recent tools logic: only show if user has actual history items
+  const recentTools = useMemo(() => {
+    if (!storeRecentTools || storeRecentTools.length === 0) return [];
+    const recentIds = storeRecentTools.slice(0, 5).map((h) => h.toolId);
+    return TOOLS_LIST.filter((t) => recentIds.includes(t.id) || recentIds.includes(t.slug)).slice(0, 5);
+  }, [storeRecentTools]);
 
   const filteredTools = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -263,51 +309,71 @@ export default function HomePage() {
     });
   }, [searchQuery, activeCategory, language]);
 
-  // Group popular tools by each category for home page presentation
-  const categorizedSections = useMemo(() => {
-    return POPULAR_CATEGORY_SECTIONS.map((section) => {
-      const allCategoryTools = TOOLS_LIST.filter((t) => t.category === section.id);
-      const popular = allCategoryTools.filter((t) => t.popular || t.featured);
-      const selected = (popular.length >= 4 ? popular : allCategoryTools).slice(0, 4);
-      return {
-        ...section,
-        totalCount: allCategoryTools.length,
-        tools: selected,
-      };
-    }).filter((section) => section.tools.length > 0);
-  }, []);
-
   return (
-    <div className="w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen pb-12 transition-colors">
-      {/* 1. HERO BANNER (WEBSITE HEADER) */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-500/10 via-brand-500/5 to-transparent dark:from-brand-950/40 dark:via-slate-900/20 dark:to-transparent border-b border-slate-200/80 dark:border-slate-800/80 pt-8 pb-12 sm:pt-14 sm:pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-brand-500/10 dark:bg-brand-500/5 blur-3xl rounded-full pointer-events-none" />
+    <div className="w-full bg-[#FAFBFC] dark:bg-[#121820] text-[#182230] dark:text-slate-100 min-h-screen transition-colors">
+      
+      {/* ==================================================
+          1. HERO SECTION
+          ================================================== */}
+      <section className="relative overflow-hidden bg-white dark:bg-[#0c1017] border-b border-[#E1E7EC] dark:border-slate-800/80 pt-8 pb-10 sm:pt-14 sm:pb-16 px-4 sm:px-6 lg:px-8">
+        
+        {/* Subtle geometric pattern background */}
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none bg-[radial-gradient(#0B79B7_1px,transparent_1px)] [background-size:24px_24px]" />
 
-        <div className="max-w-5xl mx-auto text-center space-y-5 sm:space-y-6 relative z-10">
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-4xl mx-auto">
-            {loc.heroTitle}
+        <div className="max-w-4xl mx-auto text-center space-y-5 relative z-10">
+          
+          {/* Eyebrow Badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 border border-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] text-[11px] sm:text-xs font-bold uppercase tracking-widest">
+            <span>{loc.heroEyebrow}</span>
+          </div>
+
+          {/* Main Heading */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#182230] dark:text-white tracking-tight leading-[1.15] max-w-3xl mx-auto">
+            <span>{loc.heroHeading1}</span>
+            <span className="block text-[#0B79B7] dark:text-[#38a8f8] mt-1">{loc.heroHeading2}</span>
           </h1>
 
-          <p className="text-xs sm:text-base md:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            {loc.heroSubtitle}
+          {/* Supporting Text */}
+          <p className="text-sm sm:text-base md:text-lg text-[#687587] dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
+            {loc.heroSupporting}
           </p>
 
+          {/* Action CTAs */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Link
+              href="/tools"
+              onClick={() => triggerHaptic('selection')}
+              className="h-12 px-6 rounded-xl bg-[#0B79B7] hover:bg-[#075B8C] text-white font-bold text-sm shadow-md shadow-[#0B79B7]/20 active:scale-95 transition-all inline-flex items-center gap-2 select-none cursor-pointer"
+            >
+              <span>{loc.exploreAllCta}</span>
+            </Link>
+
+            <a
+              href="#android-app"
+              onClick={() => triggerHaptic('selection')}
+              className="h-12 px-5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#0B79B7] dark:text-[#38a8f8] border border-[#0B79B7]/40 dark:border-slate-700 font-bold text-sm shadow-xs active:scale-95 transition-all inline-flex items-center gap-2 select-none cursor-pointer"
+            >
+              <Smartphone className="w-4 h-4" />
+              <span>{loc.downloadAppCta}</span>
+            </a>
+          </div>
+
           {/* Real-time Global Search Input */}
-          <div className="max-w-2xl mx-auto pt-2">
-            <div className="relative flex items-center shadow-lg shadow-slate-900/5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-brand-500/30 dark:border-brand-500/40 focus-within:border-brand-600 dark:focus-within:border-brand-400 transition-all">
-              <Search className="w-5 h-5 text-brand-600 dark:text-brand-400 absolute left-4 rtl:left-auto rtl:right-4 pointer-events-none" />
+          <div className="max-w-2xl mx-auto pt-4">
+            <div className="relative flex items-center shadow-sm rounded-2xl bg-[#F5F7F9] dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 focus-within:border-[#0B79B7] dark:focus-within:border-[#0B79B7] focus-within:bg-white transition-all">
+              <Search className="w-5 h-5 text-[#0B79B7] dark:text-[#38a8f8] absolute left-4 rtl:left-auto rtl:right-4 pointer-events-none shrink-0" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={loc.searchPlaceholder}
-                className="w-full py-3.5 sm:py-4 pl-12 pr-12 rtl:pl-12 rtl:pr-12 bg-transparent text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none rounded-2xl font-medium"
+                className="w-full py-3.5 pl-12 pr-12 rtl:pl-12 rtl:pr-12 bg-transparent text-xs sm:text-sm text-[#182230] dark:text-white placeholder:text-[#687587] focus:outline-none rounded-2xl font-medium"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-4 rtl:right-auto rtl:left-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute right-4 rtl:right-auto rtl:left-4 p-1 rounded-lg text-[#687587] hover:text-[#182230] cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -315,140 +381,150 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* 3 Core Trust Badges */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 max-w-3xl mx-auto text-left rtl:text-right">
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+        </div>
+      </section>
+
+      {/* ==================================================
+          2. TRUST / VALUE STRIP (COMPACT 2x2 ON MOBILE, 4 IN A ROW ON DESKTOP)
+          ================================================== */}
+      <section className="border-b border-[#E1E7EC] dark:border-slate-800 bg-[#F5F7F9] dark:bg-[#0e141c]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+            
+            {/* Value 1: 220+ Tools */}
+            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC]/80 dark:border-slate-800 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] flex items-center justify-center shrink-0">
+                <Layers className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[#182230] dark:text-white truncate">{loc.valueTools}</p>
+                <p className="text-[10px] text-[#687587] dark:text-slate-400 truncate">{loc.valueToolsDesc}</p>
+              </div>
+            </div>
+
+            {/* Value 2: Fast Processing */}
+            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC]/80 dark:border-slate-800 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <Zap className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[#182230] dark:text-white truncate">{loc.valueFast}</p>
+                <p className="text-[10px] text-[#687587] dark:text-slate-400 truncate">{loc.valueFastDesc}</p>
+              </div>
+            </div>
+
+            {/* Value 3: Private & Secure */}
+            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC]/80 dark:border-slate-800 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustPrivate}</p>
-                <p className="text-[10px] text-slate-500 truncate">{loc.trustPrivateDesc}</p>
+                <p className="text-xs font-bold text-[#182230] dark:text-white truncate">{loc.valuePrivate}</p>
+                <p className="text-[10px] text-[#687587] dark:text-slate-400 truncate">{loc.valuePrivateDesc}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-800">
-                <Zap className="w-4 h-4" />
+            {/* Value 4: Free Access */}
+            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC]/80 dark:border-slate-800 shadow-xs">
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustEngine}</p>
-                <p className="text-[10px] text-slate-500 truncate">{loc.trustEngineDesc}</p>
+                <p className="text-xs font-bold text-[#182230] dark:text-white truncate">{loc.valueFree}</p>
+                <p className="text-[10px] text-[#687587] dark:text-slate-400 truncate">{loc.valueFreeDesc}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs">
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{loc.trustFree}</p>
-                <p className="text-[10px] text-slate-500 truncate">{loc.trustFreeDesc}</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* 2. STICKY CATEGORY FILTER BAR */}
-      <section className="sticky top-14 sm:top-16 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs py-2.5 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic('selection');
-              setActiveCategory('all');
-            }}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
-              activeCategory === 'all'
-                ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            {loc.allToolsTab} (220+)
-          </button>
-
-          {CATEGORIES_CONFIG.map((cat) => {
-            const Icon = categoryIconMap[cat.id] || FileText;
-            const isSelected = activeCategory === cat.id;
-            const localizedName = getLocalizedCategory(cat.id, language);
-
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => {
-                  triggerHaptic('selection');
-                  setActiveCategory(cat.id);
-                }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
-                  isSelected
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{localizedName}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 3. BOOKMARKED FAVORITES (IF ANY) */}
-      {favoriteTools.length > 0 && !searchQuery && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Bookmark className="w-3.5 h-3.5 fill-current" />
-              <span>{loc.bookmarked(favoriteTools.length)}</span>
-            </h2>
-            <Link href="/favorites" className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline">
-              {loc.manageBookmarks}
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {favoriteTools.slice(0, 4).map((tool) => (
-              <ToolCard key={`fav-${tool.id}`} tool={tool} />
-            ))}
+      {/* ==================================================
+          3. RECENT TOOLS (ONLY IF USER HAS ACTUAL HISTORY)
+          ================================================== */}
+      {recentTools.length > 0 && !searchQuery && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-bold text-[#182230] dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
+                <History className="w-3.5 h-3.5 text-[#0B79B7] dark:text-[#38a8f8]" />
+                <span>{loc.recentToolsHeading}</span>
+              </h2>
+              <Link href="/history" className="text-[11px] font-bold text-[#0B79B7] dark:text-[#38a8f8] hover:underline">
+                View All →
+              </Link>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              {recentTools.map((tool) => {
+                const localized = getLocalizedTool(tool, language);
+                return (
+                  <Link
+                    key={`recent-${tool.id}`}
+                    href={`/tools/${tool.slug || tool.id}`}
+                    className="px-3 py-1.5 rounded-xl bg-[#F5F7F9] dark:bg-slate-800 hover:bg-[#0B79B7]/10 text-xs font-bold text-[#182230] dark:text-slate-200 border border-[#E1E7EC] dark:border-slate-700 whitespace-nowrap transition-colors shrink-0"
+                  >
+                    {localized.name}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </section>
       )}
 
-      {/* 4. POPULAR QUICK ACTIONS GRID (TOP FLAGSHIPS) */}
-      {activeCategory === 'all' && !searchQuery && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-500" />
-              <span>{loc.frequentTools}</span>
-            </h2>
-            <Link href="/tools" className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
-              {loc.viewAllTools}
+      {/* ==================================================
+          4. POPULAR TOOLS SECTION (2-COLUMN GRID ON MOBILE)
+          ================================================== */}
+      {!searchQuery && activeCategory === 'all' && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-12 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-[#182230] dark:text-white tracking-tight">
+                {loc.popularHeading}
+              </h2>
+              <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400 mt-0.5">
+                {loc.popularSubheading}
+              </p>
+            </div>
+            <Link
+              href="/tools"
+              className="text-xs font-bold text-[#0B79B7] dark:text-[#38a8f8] hover:underline inline-flex items-center gap-1 self-start sm:self-auto pt-1"
+            >
+              <span>{loc.exploreAllCta}</span>
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
-            {POPULAR_QUICK_ACTIONS.map((action) => {
-              const Icon = action.icon;
-              const href = action.isDirectPath || `/tools/${action.id}`;
+          {/* 6 Flagship Tools (2 cols mobile, 3 cols tablet/desktop) */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            {loc.popularTools.map((tool) => {
+              const Icon = tool.icon;
               return (
                 <Link
-                  key={action.id}
-                  href={href}
-                  className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-brand-500 dark:hover:border-brand-500 hover:shadow-md transition-all flex items-center gap-3 group active:scale-95"
+                  key={tool.id}
+                  href={tool.href}
+                  onClick={() => triggerHaptic('selection')}
+                  className="group relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 hover:border-[#0B79B7]/50 dark:hover:border-[#0B79B7]/50 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between active:scale-[0.98] select-none"
                 >
-                  <div className={`w-10 h-10 rounded-xl ${action.color} text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform`}>
-                    <Icon className="w-5 h-5" />
+                  <div className="space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <Icon className="w-5 h-5" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <h3 className="text-xs sm:text-sm font-bold text-[#182230] dark:text-white group-hover:text-[#0B79B7] dark:group-hover:text-[#38a8f8] transition-colors line-clamp-1">
+                        {tool.name}
+                      </h3>
+                      <p className="text-[11px] sm:text-xs text-[#687587] dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        {tool.desc}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                      {action.name}
-                    </h3>
-                    <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                      {action.cat}
-                    </p>
+
+                  <div className="pt-3 mt-3 border-t border-[#E1E7EC]/60 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-[#0B79B7] dark:text-[#38a8f8]">
+                    <span className="text-[10px] text-[#687587] font-normal uppercase">Free • In-Browser</span>
+                    <span className={`transform transition-transform ${isRTL ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`}>
+                      →
+                    </span>
                   </div>
                 </Link>
               );
@@ -457,143 +533,198 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 5. MAIN CONTENT AREA */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        {/* A. CATEGORIZED POPULAR TOOLS SECTIONS (WHEN ON ALL & NO SEARCH) */}
-        {activeCategory === 'all' && !searchQuery ? (
-          <div className="space-y-12">
-            {categorizedSections.map((section, sectionIdx) => {
-              const SectionIcon = section.icon;
-              const localizedCatName = getLocalizedCategory(section.id, language);
+      {/* ==================================================
+          5. CATEGORY NAVIGATION ("Explore by Category")
+          ================================================== */}
+      {!searchQuery && activeCategory === 'all' && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-12 space-y-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-[#182230] dark:text-white tracking-tight">
+              {loc.exploreCategoryHeading}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400 mt-0.5">
+              {loc.exploreCategorySubheading}
+            </p>
+          </div>
+
+          {/* 8 Compact Category Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {CATEGORY_ITEMS.map((cat) => {
+              const Icon = cat.icon;
+              const categoryLabel = (loc.categories as any)[cat.key] || cat.id;
 
               return (
-                <section key={section.id} className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`p-2 rounded-xl border shrink-0 ${section.badgeStyle}`}>
-                        <SectionIcon className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
-                            {localizedCatName}
-                          </h3>
-                          <span className="px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                            {section.totalCount} tools
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHaptic('selection');
-                        setActiveCategory(section.id);
-                        window.scrollTo({ top: 300, behavior: 'smooth' });
-                      }}
-                      className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>View all {section.totalCount} {localizedCatName} →</span>
-                    </button>
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setActiveCategory(cat.id);
+                  }}
+                  className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 hover:border-[#0B79B7]/50 dark:hover:border-[#0B79B7]/50 shadow-xs hover:shadow-sm transition-all flex items-center gap-3 text-left rtl:text-right group cursor-pointer active:scale-95 select-none"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#F5F7F9] dark:bg-slate-800 text-[#0B79B7] dark:text-[#38a8f8] flex items-center justify-center shrink-0 group-hover:bg-[#0B79B7] group-hover:text-white transition-colors">
+                    <Icon className="w-4 h-4" />
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                    {section.tools.map((tool) => (
-                      <ToolCard key={tool.id} tool={tool} />
-                    ))}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-xs font-bold text-[#182230] dark:text-white truncate group-hover:text-[#0B79B7] transition-colors">
+                      {categoryLabel}
+                    </h3>
                   </div>
-
-                  {/* Ad slot in-between popular rows for monetization */}
-                  {(sectionIdx === 1 || sectionIdx === 4) && (
-                    <div className="pt-4">
-                      <NativeFeedAd />
-                    </div>
-                  )}
-                </section>
+                </button>
               );
             })}
-
-            {/* Full 220+ Directory CTA Card */}
-            <div className="mt-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-brand-600 via-indigo-600 to-purple-700 text-white shadow-xl space-y-4 text-center sm:text-left rtl:sm:text-right flex flex-col sm:flex-row items-center justify-between gap-6">
-              <div className="space-y-1.5 max-w-xl">
-                <span className="px-3 py-1 rounded-full bg-white/20 text-white text-[11px] font-bold uppercase tracking-wider">
-                  Full 220+ Tools Directory
-                </span>
-                <h3 className="text-lg sm:text-2xl font-black text-white">
-                  Looking for more document, image, or developer utilities?
-                </h3>
-                <p className="text-xs sm:text-sm text-brand-100/90 leading-relaxed">
-                  Explore our full catalog of 220+ client-side tools organized across 12 categories with instant in-browser processing.
-                </p>
-              </div>
-
-              <Link
-                href="/tools"
-                className="px-6 py-3.5 rounded-2xl bg-white hover:bg-brand-50 text-brand-700 hover:text-brand-800 font-black text-xs sm:text-sm shadow-lg active:scale-95 transition-all inline-flex items-center gap-2 shrink-0 select-none"
-              >
-                <span>Explore All 220+ Tools Directory</span>
-                <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-              </Link>
-            </div>
           </div>
-        ) : (
-          /* B. SEARCH OR CATEGORY FILTERED VIEW */
-          <div className="space-y-5">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                  {searchQuery
-                    ? 'Search Results'
-                    : `${getLocalizedCategory(activeCategory, language)} Tools`}
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                  {loc.toolsCount(filteredTools.length)}
-                </span>
-              </div>
+        </section>
+      )}
 
+      {/* ==================================================
+          6. SEARCH RESULTS OR FILTERED DIRECTORY
+          ================================================== */}
+      {(searchQuery || activeCategory !== 'all') && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black text-[#182230] dark:text-white uppercase tracking-wide">
+                {searchQuery
+                  ? 'Search Results'
+                  : `${getLocalizedCategory(activeCategory, language)} Tools`}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-[11px] font-bold text-[#182230] dark:text-slate-300">
+                {loc.toolsCount(filteredTools.length)}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCategory('all');
+                setSearchQuery('');
+              }}
+              className="text-xs font-bold text-[#0B79B7] dark:text-[#38a8f8] hover:underline cursor-pointer"
+            >
+              {loc.resetFilters}
+            </button>
+          </div>
+
+          {filteredTools.length === 0 ? (
+            <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-[#E1E7EC] dark:border-slate-800 p-8 space-y-3 shadow-xs">
+              <Search className="w-8 h-8 text-[#687587] mx-auto" />
+              <p className="text-sm font-bold text-[#687587]">{loc.noToolsFound}</p>
               <button
                 type="button"
                 onClick={() => {
                   setActiveCategory('all');
                   setSearchQuery('');
                 }}
-                className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                className="px-4 py-2 bg-[#0B79B7] text-white rounded-xl text-xs font-bold shadow-xs hover:bg-[#075B8C] transition-colors cursor-pointer"
               >
                 {loc.resetFilters}
               </button>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+              {filteredTools.map((tool) => (
+                <ToolCard key={tool.id} tool={tool} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-            {filteredTools.length === 0 ? (
-              <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 space-y-3 shadow-xs">
-                <Search className="w-8 h-8 text-slate-400 mx-auto" />
-                <p className="text-sm font-bold text-slate-600 dark:text-slate-400">{loc.noToolsFound}</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveCategory('all');
-                    setSearchQuery('');
-                  }}
-                  className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold shadow-xs hover:bg-brand-500 transition-colors cursor-pointer"
-                >
-                  {loc.resetFilters}
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-                {filteredTools.map((tool) => (
-                  <ToolCard key={tool.id} tool={tool} />
-                ))}
-              </div>
-            )}
+      {/* ==================================================
+          7. ANDROID APP PROMOTION SECTION
+          ================================================== */}
+      <section id="android-app" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+          
+          {/* Left Text and Features */}
+          <div className="space-y-4 max-w-xl text-left rtl:text-right">
+            <span className="inline-block px-3 py-1 rounded-full bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-extrabold uppercase tracking-wider">
+              {loc.appBadge}
+            </span>
+
+            <h2 className="text-2xl sm:text-3xl font-black text-[#182230] dark:text-white tracking-tight">
+              {loc.appHeading}
+            </h2>
+
+            <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400 leading-relaxed">
+              {loc.appSupporting}
+            </p>
+
+            <ul className="space-y-2 text-xs font-semibold text-[#182230] dark:text-slate-200">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{loc.appBullet1}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{loc.appBullet2}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{loc.appBullet3}</span>
+              </li>
+            </ul>
           </div>
-        )}
-      </div>
 
-      {/* Middle Banner Ad */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+          {/* Right Google Play Button Card */}
+          <div className="shrink-0 flex flex-col items-center gap-3">
+            <a
+              href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700/80 transition-all shadow-md active:scale-95 group select-none"
+              aria-label="Get Miftah Tools on Google Play"
+            >
+              <svg className="w-7 h-7 shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 512 512">
+                <path fill="#00D3FF" d="M30.4 17.8c-7.7 8.2-12.4 20.3-12.4 35.5v405.4c0 15.2 4.7 27.3 12.4 35.5l2.4 2.2 231-231v-5.8L32.8 15.6l-2.4 2.2z" />
+                <path fill="#FF3A44" d="M340.5 341.2l-76.7-76.7v-5.8l76.7-76.7 1.8 1 90.7 51.5c25.9 14.7 25.9 38.8 0 53.6l-90.7 51.5-1.8 1.6z" />
+                <path fill="#00E676" d="M342.3 342.8L263.8 264 32.8 495.2c8.5 9 22.7 10.1 38.6 1.1l270.9-153.5z" />
+                <path fill="#FFD400" d="M342.3 169.2L71.4 15.7C55.5 6.7 41.3 7.8 32.8 16.8L263.8 248l78.5-78.8z" />
+              </svg>
+              <div className="text-left rtl:text-right">
+                <div className="text-[9px] uppercase tracking-wider text-slate-300 font-bold leading-none">GET IT ON</div>
+                <div className="text-base font-black tracking-tight text-white leading-none mt-1">Google Play</div>
+              </div>
+            </a>
+            <p className="text-[11px] text-[#687587] text-center font-medium">100% Free • Verified Safe</p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ==================================================
+          8. ALL TOOLS DIRECTORY CTA BANNER
+          ================================================== */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
+        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#0B79B7] to-[#075B8C] text-white shadow-lg space-y-4 text-center sm:text-left rtl:sm:text-right flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-1.5 max-w-xl">
+            <span className="px-3 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider">
+              220+ Client-Side Tools
+            </span>
+            <h3 className="text-lg sm:text-2xl font-black text-white">
+              {loc.viewAllDirectoryTitle}
+            </h3>
+            <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed">
+              {loc.viewAllDirectoryDesc}
+            </p>
+          </div>
+
+          <Link
+            href="/tools"
+            className="h-12 px-6 rounded-xl bg-white hover:bg-slate-50 text-[#0B79B7] font-black text-xs sm:text-sm shadow-md active:scale-95 transition-all inline-flex items-center gap-2 shrink-0 select-none cursor-pointer"
+          >
+            <span>{loc.viewAllDirectoryBtn}</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* Subtle Bottom Ad Placement */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
         <AdSlot placement="in-feed" />
       </section>
+
     </div>
   );
 }

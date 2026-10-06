@@ -11,17 +11,28 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50: '#f0f7ff',
-          100: '#e0effe',
-          200: '#bae0fd',
-          300: '#7cc7fb',
-          400: '#38a8f8',
-          500: '#0e8ce9',
-          600: '#026fc7',
-          700: '#0358a1',
-          800: '#074b84',
-          900: '#0c3f6e',
-          950: '#082849',
+          50: '#f0f7fb',
+          100: '#e1eef7',
+          200: '#b8dcee',
+          300: '#75bfe0',
+          400: '#2ea1d0',
+          500: '#0B79B7', // Primary brand color
+          600: '#0B79B7',
+          700: '#075B8C', // Deep brand blue
+          800: '#094d75',
+          900: '#0c4162',
+          950: '#072a41',
+        },
+        miftah: {
+          primary: '#0B79B7',
+          deep: '#075B8C',
+          charcoal: '#1F2422',
+          warmwhite: '#FAFBFC',
+          softbg: '#F5F7F9',
+          border: '#E1E7EC',
+          text: '#182230',
+          secondary: '#687587',
+          gold: '#C8A96B',
         },
       },
       fontFamily: {

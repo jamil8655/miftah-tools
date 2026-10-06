@@ -1,65 +1,51 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Search,
   Sparkles,
-  Smartphone,
   Workflow,
-  GraduationCap,
-  Bell,
-  LogIn,
-  Info,
   HelpCircle,
   Menu,
   X,
-  User,
-  Settings as SettingsIcon,
-  ShieldCheck,
-  Download,
-  History,
   FileText,
   Star,
   ChevronRight,
+  ChevronDown,
   Globe2,
-  Share2,
+  Download,
+  History,
+  Info,
+  ShieldCheck,
+  Check,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
-import { useUserStore } from '@/lib/user/user-store';
 import { UnifiedSearchModal } from '@/components/search/UnifiedSearchModal';
-import { shareAppNative } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 
 const HEADER_LOCALES = {
   en: {
-    tagline: '220+ Client-Side Document & Productivity Tools',
-    installApp: 'Install App',
-    shareApp: 'Share App',
+    tagline: '220+ Digital Tools. One Simple Workspace.',
     search: 'Search',
-    searchTooltip: 'Quick Search (⌘K)',
+    searchTooltip: 'Search tools (⌘K)',
     navigationSection: 'Navigation',
     supportSection: 'Support & Legal',
     allTools: 'All 220+ Tools',
     workflows: 'Workflows Studio',
     downloads: 'Downloads Storage',
     history: 'Conversion History',
-    settings: 'App Settings',
-    account: 'My Account & Profile',
-    signInCreate: 'Sign In / Create Account',
+    favorites: 'Saved & Bookmarks',
     faq: 'FAQ & User Guide',
-    contact: 'Contact Developer',
+    contact: 'Contact Support',
     privacy: 'Privacy Policy',
-    terms: 'Terms & Conditions',
+    terms: 'Terms of Service',
     language: 'Language',
-    logout: 'Log Out',
     versionLabel: '220+ Client-Side Tools',
   },
   ur: {
-    tagline: '220+ کلائنٹ سائیڈ دستاویز اور پیداواری ٹولز',
-    installApp: 'ایپ انسٹال کریں',
-    shareApp: 'ایپ شیئر کریں',
+    tagline: '220+ ڈیجیٹل ٹولز۔ ایک سادہ ورک اسپیس۔',
     search: 'تلاش کریں',
     searchTooltip: 'فوری تلاش (⌘K)',
     navigationSection: 'نیویگیشن',
@@ -68,21 +54,16 @@ const HEADER_LOCALES = {
     workflows: 'ورک فلوز اسٹوڈیو',
     downloads: 'ڈاؤن لوڈز اسٹوریج',
     history: 'تبدیلی کی ہسٹری',
-    settings: 'ایپ سیٹنگز',
-    account: 'میرا اکاؤنٹ و پروفائل',
-    signInCreate: 'سائن ان / نیا اکاؤنٹ بنائیں',
+    favorites: 'محفوظ شدہ ٹولز',
     faq: 'عمومی سوالات و رہنمائی',
     contact: 'ڈویلپر سے رابطہ',
     privacy: 'پرائیویسی پالیسی',
     terms: 'شرائط و ضوابط',
     language: 'زبان منتخب کریں',
-    logout: 'لاگ آؤٹ',
     versionLabel: '220+ آف لائن ٹولز',
   },
   ar: {
-    tagline: '220+ أداة محلية متطورة للمستندات والإنتاجية',
-    installApp: 'تثبيت التطبيق',
-    shareApp: 'مشاركة التطبيق',
+    tagline: '220+ أداة رقمية في مساحة عمل واحدة.',
     search: 'بحث',
     searchTooltip: 'بحث سريع (⌘K)',
     navigationSection: 'التنقل',
@@ -91,21 +72,16 @@ const HEADER_LOCALES = {
     workflows: 'استوديو سير العمل',
     downloads: 'مساحة التنزيلات',
     history: 'سجل العمليات',
-    settings: 'إعدادات التطبيق',
-    account: 'حسابي والملف الشخصي',
-    signInCreate: 'تسجيل الدخول / إنشاء حساب',
+    favorites: 'الأدوات المحفوظة',
     faq: 'الأسئلة الشائعة والدليل',
-    contact: 'الاتصال بالمطور',
+    contact: 'الاتصال بالدعم',
     privacy: 'سياسة الخصوصية',
     terms: 'الشروط والأحكام',
     language: 'اللغة',
-    logout: 'تسجيل الخروج',
     versionLabel: '220+ أداة محلية',
   },
   hi: {
-    tagline: '220+ क्लाइंट-साइड दस्तावेज़ व उत्पादकता टूल्स',
-    installApp: 'ऐप इंस्टॉल करें',
-    shareApp: 'ऐप शेयर करें',
+    tagline: '220+ डिजिटल टूल्स। एक सरल वर्कस्पेस।',
     search: 'खोजें',
     searchTooltip: 'त्वरित खोज (⌘K)',
     navigationSection: 'नेविगेशन',
@@ -114,74 +90,55 @@ const HEADER_LOCALES = {
     workflows: 'वर्कफ़्लो स्टूडियो',
     downloads: 'डाउनलोड स्टोरेज',
     history: 'कन्वर्शन इतिहास',
-    settings: 'ऐप सेटिंग्स',
-    account: 'मेरा खाता व प्रोफ़ाइल',
-    signInCreate: 'साइन इन / खाता बनाएं',
+    favorites: 'बुकमार्क किए गए टूल्स',
     faq: 'अक्सर पूछे जाने वाले प्रश्न',
-    contact: 'डेवलपर से संपर्क करें',
+    contact: 'सपोर्ट से संपर्क करें',
     privacy: 'गोपनीयता नीति',
     terms: 'नियम व शर्तें',
     language: 'भाषा चुनें',
-    logout: 'लॉग आउट',
     versionLabel: '220+ ऑफ़लाइन टूल्स',
   },
 };
 
+const LANGUAGES = [
+  { id: 'en', label: 'English', native: 'English' },
+  { id: 'ur', label: 'Urdu', native: 'اردو' },
+  { id: 'ar', label: 'Arabic', native: 'العربية' },
+  { id: 'hi', label: 'Hindi', native: 'हिन्दी' },
+];
+
 export function Header() {
   const pathname = usePathname();
   const { t, language, setLanguage, isRTL } = useI18n();
-  const { unreadCount } = useUserStore();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuDrawerOpen, setIsMenuDrawerOpen] = useState(false);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [canInstall, setCanInstall] = useState(false);
-  const [isNativeApp, setIsNativeApp] = useState(false);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
   const loc = HEADER_LOCALES[language] || HEADER_LOCALES.en;
 
+  const currentLangObj = LANGUAGES.find((l) => l.id === language) || LANGUAGES[0];
+
+  // Close language dropdown on outside click
   useEffect(() => {
-    const isNative =
-      typeof window !== 'undefined' &&
-      (!!(window as any).Capacitor?.isNativePlatform?.() ||
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true ||
-        window.location.protocol === 'capacitor:');
-    setIsNativeApp(isNative);
-
-    if (isNative) return;
-
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setCanInstall(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setCanInstall(false);
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
+        setIsLangDropdownOpen(false);
       }
-      setDeferredPrompt(null);
-    } else {
-      alert('To install: Tap "Share" or "Menu" in your browser and select "Add to Home Screen".');
-    }
-  };
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 8);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Quick keyboard shortcut listener for ⌘K / Ctrl+K
+  // Keyboard shortcut listener for ⌘K / Ctrl+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -194,10 +151,10 @@ export function Header() {
   }, []);
 
   const navLinks = [
-    { label: t.nav.allTools || loc.allTools, href: '/tools', icon: Sparkles },
-    { label: t.nav.workflows || loc.workflows, href: '/workflows', icon: Workflow },
-    { label: t.footer.aboutPlatform || 'About', href: '/about', icon: Info },
-    { label: t.footer.faq || 'FAQ', href: '/faq', icon: HelpCircle },
+    { label: loc.allTools, href: '/tools', icon: Sparkles },
+    { label: loc.workflows, href: '/workflows', icon: Workflow },
+    { label: loc.faq, href: '/faq', icon: HelpCircle },
+    { label: loc.contact, href: '/contact', icon: Info },
   ];
 
   return (
@@ -206,13 +163,14 @@ export function Header() {
         dir={isRTL ? 'rtl' : 'ltr'}
         className={`sticky top-0 z-40 w-full max-w-full transition-all duration-200 safe-pt-header ${
           isScrolled
-            ? 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-md'
-            : 'bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs'
+            ? 'bg-[#FAFBFC]/95 dark:bg-[#121820]/95 backdrop-blur-md border-b border-[#E1E7EC] dark:border-slate-800 shadow-sm'
+            : 'bg-[#FAFBFC] dark:bg-[#121820] border-b border-[#E1E7EC] dark:border-slate-800/80'
         }`}
       >
-        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4 min-w-0">
-          {/* Left Area: Official Brand Logo & Name */}
-          <div className="flex items-center gap-2 sm:gap-6 min-w-0 shrink">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[70px] flex items-center justify-between gap-3 min-w-0">
+          
+          {/* LEFT: MIFTAH TOOLS Logo */}
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0 shrink">
             <Link
               href="/"
               className="flex items-center gap-2 group transition-transform active:scale-95 shrink-0 select-none py-1"
@@ -220,21 +178,21 @@ export function Header() {
             >
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-black text-xl sm:text-2xl tracking-tight text-brand-600 dark:text-brand-400 font-sans">
+                  <span className="font-black text-xl sm:text-2xl tracking-tight text-[#0B79B7] dark:text-[#38a8f8] font-sans">
                     MIFTAH
                   </span>
-                  <span className="px-2 py-0.5 rounded-md bg-brand-600 text-white text-[9px] sm:text-[10px] font-black tracking-widest uppercase shadow-xs">
+                  <span className="px-2 py-0.5 rounded-md bg-[#0B79B7] text-white text-[9px] sm:text-[10px] font-black tracking-widest uppercase shadow-xs">
                     TOOLS
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold hidden md:inline leading-none truncate mt-0.5">
+                <span className="text-[10px] text-[#687587] dark:text-slate-400 font-medium hidden md:inline leading-none truncate mt-0.5">
                   {loc.tagline}
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center gap-1 ml-2 rtl:mr-2 rtl:ml-0">
+            <nav className="hidden lg:flex items-center gap-1 ml-4 rtl:mr-4 rtl:ml-0">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href;
@@ -242,13 +200,13 @@ export function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                       isActive
-                        ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 shadow-xs'
-                        : 'text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-[#0B79B7]/10 text-[#0B79B7] dark:bg-[#0B79B7]/20 dark:text-[#38a8f8] font-bold shadow-xs'
+                        : 'text-[#182230] hover:text-[#0B79B7] dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                    <Icon className="w-3.5 h-3.5 text-[#0B79B7] dark:text-[#38a8f8]" />
                     <span>{link.label}</span>
                   </Link>
                 );
@@ -256,72 +214,104 @@ export function Header() {
             </nav>
           </div>
 
-          {/* Right Action Bar (Search + Notification + Menu Button / Profile) */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
-            {/* Desktop Google Play Store Link */}
-            {!isNativeApp && (
-              <a
-                href="https://play.google.com/store/apps/details?id=com.miftahtools.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden lg:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700/80 text-xs font-bold transition-all shadow-xs shrink-0 select-none group"
-                title="Get Miftah Tools on Google Play"
+          {/* RIGHT: Language Selector + Search + Menu */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+            
+            {/* 1. Language Dropdown Selector (Clean 🌐 English ▾) */}
+            <div className="relative" ref={langDropdownRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setIsLangDropdownOpen((prev) => !prev);
+                }}
+                className="h-10 px-2.5 sm:px-3 rounded-xl bg-white dark:bg-slate-900 text-[#182230] dark:text-slate-200 border border-[#E1E7EC] dark:border-slate-800 hover:border-[#0B79B7]/40 dark:hover:border-slate-700 transition-all flex items-center gap-1.5 text-xs font-semibold shadow-xs active:scale-95 select-none"
+                aria-label="Select Language"
+                aria-expanded={isLangDropdownOpen}
               >
-                <svg className="w-4 h-4 shrink-0 group-hover:scale-110 transition-transform" viewBox="0 0 512 512">
-                  <path fill="#00D3FF" d="M30.4 17.8c-7.7 8.2-12.4 20.3-12.4 35.5v405.4c0 15.2 4.7 27.3 12.4 35.5l2.4 2.2 231-231v-5.8L32.8 15.6l-2.4 2.2z" />
-                  <path fill="#FF3A44" d="M340.5 341.2l-76.7-76.7v-5.8l76.7-76.7 1.8 1 90.7 51.5c25.9 14.7 25.9 38.8 0 53.6l-90.7 51.5-1.8 1.6z" />
-                  <path fill="#00E676" d="M342.3 342.8L263.8 264 32.8 495.2c8.5 9 22.7 10.1 38.6 1.1l270.9-153.5z" />
-                  <path fill="#FFD400" d="M342.3 169.2L71.4 15.7C55.5 6.7 41.3 7.8 32.8 16.8L263.8 248l78.5-78.8z" />
-                </svg>
-                <span>Google Play</span>
-              </a>
-            )}
+                <Globe2 className="w-4 h-4 text-[#0B79B7] dark:text-[#38a8f8] shrink-0" />
+                <span className="hidden sm:inline">{currentLangObj.native}</span>
+                <span className="sm:hidden font-bold uppercase">{currentLangObj.id}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-[#687587] transition-transform duration-200 ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            {/* Global Search Button */}
+              {/* Language Dropdown Menu */}
+              {isLangDropdownOpen && (
+                <div
+                  className={`absolute top-full mt-2 w-44 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 ${
+                    isRTL ? 'left-0' : 'right-0'
+                  }`}
+                >
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-[#687587] dark:text-slate-400 uppercase tracking-wider border-b border-[#E1E7EC]/60 dark:border-slate-800">
+                    {loc.language}
+                  </div>
+                  {LANGUAGES.map((lang) => {
+                    const isSelected = language === lang.id;
+                    return (
+                      <button
+                        key={lang.id}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('selection');
+                          setLanguage(lang.id as any);
+                          setIsLangDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left rtl:text-right text-xs font-medium flex items-center justify-between transition-colors ${
+                          isSelected
+                            ? 'bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] font-bold'
+                            : 'text-[#182230] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{lang.native}</span>
+                          <span className="text-[10px] text-[#687587] dark:text-slate-500">({lang.label})</span>
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#0B79B7] dark:text-[#38a8f8]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 2. Global Search Button */}
             <button
               type="button"
-              onClick={() => setIsSearchOpen(true)}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5 text-xs font-medium shrink-0 shadow-xs active:scale-95"
+              onClick={() => {
+                triggerHaptic('selection');
+                setIsSearchOpen(true);
+              }}
+              className="h-10 px-3 sm:px-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#182230] dark:text-slate-200 border border-[#E1E7EC] dark:border-slate-800 transition-all flex items-center gap-2 text-xs font-semibold shrink-0 shadow-xs active:scale-95"
               title={loc.searchTooltip}
               aria-label={loc.search}
             >
-              <Search className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              <span className="hidden md:inline font-bold">{loc.search}</span>
+              <Search className="w-4 h-4 text-[#0B79B7] dark:text-[#38a8f8]" />
+              <span className="hidden md:inline text-xs font-medium text-[#687587] dark:text-slate-400">{loc.search} (⌘K)</span>
             </button>
 
-            {/* Notification Bell */}
-            <Link
-              href="/notifications"
-              className="relative p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all shrink-0 shadow-xs active:scale-95"
-              title={t.userDashboard.notificationsTitle}
-              aria-label="Notifications"
-            >
-              <Bell className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-brand-600 ring-2 ring-white dark:ring-slate-900" />
-              )}
-            </Link>
-
-            {/* Mobile & Android Menu (☰) Drawer Trigger */}
+            {/* 3. Mobile Menu (☰) Drawer Trigger */}
             <button
               type="button"
-              onClick={() => setIsMenuDrawerOpen(true)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 active:scale-95 transition-all flex items-center justify-center shrink-0 shadow-xs"
-              aria-label="Open App Menu"
+              onClick={() => {
+                triggerHaptic('selection');
+                setIsMenuDrawerOpen(true);
+              }}
+              className="h-10 w-10 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#182230] dark:text-slate-100 border border-[#E1E7EC] dark:border-slate-800 active:scale-95 transition-all flex items-center justify-center shrink-0 shadow-xs"
+              aria-label="Open Navigation Menu"
             >
-              <Menu className="w-5 h-5 text-slate-800 dark:text-slate-100" />
+              <Menu className="w-5 h-5 text-[#182230] dark:text-slate-100" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* Android Slide-over Navigation Drawer */}
+      {/* Slide-over Navigation Drawer */}
       {isMenuDrawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Backdrop Click Dismiss */}
+          {/* Backdrop */}
           <div
             onClick={() => setIsMenuDrawerOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
             aria-hidden="true"
           />
 
@@ -334,17 +324,17 @@ export function Header() {
           >
             <div className="space-y-6">
               {/* Drawer Top Header */}
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center justify-between border-b border-[#E1E7EC] dark:border-slate-800 pb-4">
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-black text-lg tracking-tight text-brand-600 dark:text-brand-400 font-sans">
+                    <span className="font-black text-lg tracking-tight text-[#0B79B7] dark:text-[#38a8f8] font-sans">
                       MIFTAH
                     </span>
-                    <span className="px-1.5 py-0.5 rounded-md bg-brand-600 text-white text-[9px] font-black tracking-wider uppercase shadow-xs">
+                    <span className="px-1.5 py-0.5 rounded-md bg-[#0B79B7] text-white text-[9px] font-black tracking-wider uppercase shadow-xs">
                       TOOLS
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{loc.versionLabel}</p>
+                  <p className="text-[10px] text-[#687587] font-semibold mt-0.5">{loc.versionLabel}</p>
                 </div>
 
                 <button
@@ -384,14 +374,13 @@ export function Header() {
 
               {/* Navigation Links Group */}
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">{loc.navigationSection}</p>
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#687587] px-2">{loc.navigationSection}</p>
                 {[
                   { label: loc.allTools, href: '/tools', icon: Sparkles },
                   { label: loc.workflows, href: '/workflows', icon: Workflow },
                   { label: loc.downloads, href: '/downloads', icon: Download },
                   { label: loc.history, href: '/history', icon: History },
-                  { label: 'Saved & Favorites', href: '/favorites', icon: Star },
-                  { label: loc.settings, href: '/settings', icon: SettingsIcon },
+                  { label: loc.favorites, href: '/favorites', icon: Star },
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
@@ -399,13 +388,13 @@ export function Header() {
                       key={item.href}
                       href={item.href}
                       onClick={() => setIsMenuDrawerOpen(false)}
-                      className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold active:bg-slate-200 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#182230] dark:text-slate-200 text-xs font-bold active:bg-slate-200 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                        <Icon className="w-4 h-4 text-[#0B79B7] dark:text-[#38a8f8]" />
                         <span>{item.label}</span>
                       </div>
-                      <ChevronRight className={`w-3.5 h-3.5 text-slate-400 ${isRTL ? 'rotate-180' : ''}`} />
+                      <ChevronRight className={`w-3.5 h-3.5 text-[#687587] ${isRTL ? 'rotate-180' : ''}`} />
                     </Link>
                   );
                 })}
@@ -413,7 +402,7 @@ export function Header() {
 
               {/* Help & Support Group */}
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2">{loc.supportSection}</p>
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#687587] px-2">{loc.supportSection}</p>
                 {[
                   { label: loc.faq, href: '/faq', icon: HelpCircle },
                   { label: loc.contact, href: '/contact', icon: Info },
@@ -426,46 +415,22 @@ export function Header() {
                       key={item.href}
                       href={item.href}
                       onClick={() => setIsMenuDrawerOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium active:bg-slate-200 transition-colors"
+                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-[#687587] dark:text-slate-300 text-xs font-medium active:bg-slate-200 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-slate-400" />
+                        <Icon className="w-4 h-4 text-[#687587]" />
                         <span>{item.label}</span>
                       </div>
-                      <ChevronRight className={`w-3.5 h-3.5 text-slate-400 ${isRTL ? 'rotate-180' : ''}`} />
+                      <ChevronRight className={`w-3.5 h-3.5 text-[#687587] ${isRTL ? 'rotate-180' : ''}`} />
                     </Link>
                   );
                 })}
               </div>
             </div>
 
-            {/* Bottom Language Switcher & Sign Out */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-bold flex items-center gap-1.5">
-                  <Globe2 className="w-3.5 h-3.5" /> {loc.language}
-                </span>
-                <div className="flex items-center gap-1">
-                  {[
-                    { id: 'en', label: 'EN' },
-                    { id: 'ur', label: 'UR' },
-                    { id: 'hi', label: 'HI' },
-                    { id: 'ar', label: 'AR' },
-                  ].map((l) => (
-                    <button
-                      key={l.id}
-                      onClick={() => setLanguage(l.id as any)}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                        language === l.id
-                          ? 'bg-brand-600 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                      }`}
-                    >
-                      {l.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {/* Bottom Copyright info */}
+            <div className="pt-4 border-t border-[#E1E7EC] dark:border-slate-800 text-[11px] text-[#687587] text-center">
+              © 2026 Miftah Tools
             </div>
           </div>
         </div>
