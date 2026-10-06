@@ -284,10 +284,6 @@ export default function HomePage() {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-64 bg-brand-500/10 dark:bg-brand-500/5 blur-3xl rounded-full pointer-events-none" />
 
         <div className="max-w-5xl mx-auto text-center space-y-5 sm:space-y-6 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs sm:text-sm font-black shadow-xs">
-            <span>{loc.heroBadge}</span>
-          </div>
-
           <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight max-w-4xl mx-auto">
             {loc.heroTitle}
           </h1>
