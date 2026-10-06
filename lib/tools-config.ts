@@ -6181,6 +6181,39 @@ export const TOOLS_LIST: ToolDefinition[] = [
     ]
   },
   {
+    "id": "live-speech-translator",
+    "slug": "live-speech-translator",
+    "name": "Live Speech Translator",
+    "shortDesc": "Real-time multilingual live voice translator with continuous speech recognition and instant audio output.",
+    "fullDesc": "Translate spoken words in real time with instant speech recognition, automatic language detection, and continuous voice playback across 20+ languages.",
+    "category": "text",
+    "icon": "Languages",
+    "popular": true,
+    "featured": true,
+    "isClientSide": true,
+    "acceptedMimeTypes": [
+      "*/*"
+    ],
+    "acceptedExtensions": [
+      ".mp3",
+      ".wav",
+      ".m4a"
+    ],
+    "maxFiles": 1,
+    "maxFileSizeMB": 50,
+    "outputExtension": "txt",
+    "outputMimeType": "text/plain",
+    "tags": [
+      "live speech translator",
+      "voice translator",
+      "speech translator",
+      "real time translator",
+      "urdu translator",
+      "arabic translator",
+      "hindi translator"
+    ]
+  },
+  {
     "id": "voice-to-text",
     "slug": "voice-to-text",
     "name": "Voice to Text",

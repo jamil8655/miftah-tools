@@ -27,6 +27,9 @@ const TOOL_ALIASES: Record<string, string> = {
   'voice-to-text': 'voice-to-text',
   'speech-to-text': 'voice-to-text',
   'audio-to-text': 'voice-to-text',
+  'speech-translator': 'live-speech-translator',
+  'voice-translator': 'live-speech-translator',
+  'live-translator': 'live-speech-translator',
 };
 
 function resolveTool(identifier: string) {

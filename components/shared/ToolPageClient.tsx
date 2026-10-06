@@ -140,6 +140,7 @@ import { WorkflowBuilder } from '@/components/workflows/WorkflowBuilder';
 import { TextCipherStudio } from '@/components/security/TextCipherStudio';
 import { AiStudio } from '@/components/ai/AiStudio';
 import { VoiceToTextStudio } from '@/components/voice/VoiceToTextStudio';
+import { LiveSpeechTranslator } from '@/components/translator/LiveSpeechTranslator';
 
 interface ToolPageClientProps {
   tool: ToolDefinition;
@@ -567,6 +568,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'whisper-voice-to-text'
   ) {
     customWorkspace = <VoiceToTextStudio />;
+  } else if (
+    tool.id === 'live-speech-translator' ||
+    tool.slug === 'live-speech-translator' ||
+    tool.id === 'speech-translator' ||
+    tool.slug === 'speech-translator' ||
+    tool.id === 'voice-translator' ||
+    tool.slug === 'voice-translator'
+  ) {
+    customWorkspace = <LiveSpeechTranslator />;
   }
 
   // Centralized real processing dispatcher
