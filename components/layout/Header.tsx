@@ -287,21 +287,6 @@ export function Header() {
               <span className="hidden md:inline font-bold">{loc.search}</span>
             </button>
 
-            {/* Quick Share App Button (Desktop only, available in drawer on mobile) */}
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                shareAppNative(language);
-              }}
-              className="hidden md:inline-flex p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all items-center gap-1.5 text-xs font-medium shrink-0 shadow-xs active:scale-95"
-              title={loc.shareApp}
-              aria-label={loc.shareApp}
-            >
-              <Share2 className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              <span className="hidden xl:inline font-bold">{loc.shareApp}</span>
-            </button>
-
             {/* Notification Bell */}
             <Link
               href="/notifications"
@@ -391,25 +376,6 @@ export function Header() {
                 </div>
                 <ChevronRight className={`w-4 h-4 text-white ${isRTL ? 'rotate-180' : ''}`} />
               </a>
-
-              {/* Share App Action Card in Drawer */}
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic('selection');
-                  setIsMenuDrawerOpen(false);
-                  shareAppNative(language);
-                }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-brand-500/10 via-indigo-500/10 to-purple-500/10 dark:from-brand-950/50 dark:to-indigo-950/50 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs font-bold active:scale-98 transition-all shadow-xs"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="p-1.5 rounded-xl bg-brand-600 text-white shadow-xs">
-                    <Share2 className="w-4 h-4" />
-                  </div>
-                  <span className="font-black">{loc.shareApp}</span>
-                </div>
-                <ChevronRight className={`w-4 h-4 text-brand-500 ${isRTL ? 'rotate-180' : ''}`} />
-              </button>
 
               {/* Navigation Links Group */}
               <div className="space-y-1">

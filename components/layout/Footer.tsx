@@ -200,18 +200,6 @@ export function Footer() {
                     <div className="text-[11px] font-black tracking-tight text-white leading-none mt-0.5">Google Play</div>
                   </div>
                 </a>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('selection');
-                    shareAppNative(language);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-brand-50 dark:bg-slate-800 dark:hover:bg-brand-950/50 text-slate-700 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all active:scale-95 shadow-xs"
-                >
-                  <Share2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                  <span>{loc.shareApp}</span>
-                </button>
               </div>
             </div>
 

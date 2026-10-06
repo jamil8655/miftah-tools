@@ -736,31 +736,7 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* 6. Share App Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 p-4 sm:p-5 text-white shadow-md flex items-center justify-between gap-3">
-        <div className="space-y-0.5">
-          <h2 className="text-sm sm:text-base font-black">
-            {loc.shareAppTitle}
-          </h2>
-          <p className="text-xs text-brand-100/90 line-clamp-1">
-            {loc.shareAppDesc}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            triggerHaptic('medium');
-            shareAppNative(language as any);
-          }}
-          className="px-4 py-2 rounded-xl bg-white text-brand-700 hover:bg-brand-50 text-xs font-black flex items-center gap-1.5 shrink-0 active:scale-95 transition-all shadow-xs cursor-pointer"
-        >
-          <Share2 className="w-3.5 h-3.5 text-brand-600" />
-          <span>{loc.shareAppBtn}</span>
-        </button>
-      </div>
-
-      {/* 7. Legal, Policies & Support */}
+      {/* 6. Legal, Policies & Support */}
       <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-slate-600 dark:text-slate-400" />
