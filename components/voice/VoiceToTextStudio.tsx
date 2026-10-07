@@ -352,13 +352,14 @@ export function VoiceToTextStudio() {
         const processed = autoCorrectEnabled ? autoCorrectSpokenText(text, selectedLang) : text;
         setLiveInterim(processed);
 
-        const allSegments = [...liveFinalBufferRef.current];
-        if (processed.trim()) {
-          allSegments.push(processed.trim());
-        }
-        const formatted = applySmartPunctuationAndParagraphs(allSegments, selectedLang);
-        if (formatted) {
-          setTranscription(formatted);
+        const committed = liveFinalBufferRef.current.length > 0
+          ? applySmartPunctuationAndParagraphs(liveFinalBufferRef.current, selectedLang)
+          : '';
+
+        if (committed && processed.trim()) {
+          setTranscription(`${committed}\n\n${processed.trim()}`);
+        } else if (processed.trim()) {
+          setTranscription(processed.trim());
         }
       },
       onFinal: (text: string) => {
