@@ -455,7 +455,27 @@ export function LiveSpeechTranslator() {
           isFinal: true,
         };
 
-        setTranscript((prev) => [...prev, newSegment]);
+        setTranscript((prev) => {
+          if (prev.length > 0) {
+            const lastSeg = prev[prev.length - 1];
+            if (
+              lastSeg.speaker === currentSpeaker &&
+              (cleanText.startsWith(lastSeg.originalText) ||
+                cleanText.includes(lastSeg.originalText) ||
+                lastSeg.originalText.startsWith(cleanText))
+            ) {
+              const updated = [...prev];
+              updated[updated.length - 1] = {
+                ...lastSeg,
+                originalText: cleanText,
+                translatedText: translated,
+                timestamp: Date.now(),
+              };
+              return updated;
+            }
+          }
+          return [...prev, newSegment];
+        });
 
         // Auto TTS playback
         if (settings.voiceOutput && translated) {

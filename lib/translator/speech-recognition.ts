@@ -7,6 +7,56 @@ export interface SpeechRecognitionCallbacks {
   onStateChange?: (isListening: boolean) => void;
 }
 
+export function deduplicateSentenceStream(sentences: string[]): string[] {
+  if (!sentences || sentences.length === 0) return [];
+
+  const cleanList: string[] = [];
+
+  for (const raw of sentences) {
+    const s = raw.trim();
+    if (!s) continue;
+
+    if (cleanList.length === 0) {
+      cleanList.push(s);
+      continue;
+    }
+
+    const lastIdx = cleanList.length - 1;
+    const prev = cleanList[lastIdx];
+
+    // 1. Exact duplicate check
+    if (s === prev) {
+      continue;
+    }
+
+    // 2. Current string is an expansion of previous (s starts with prev or contains prev)
+    if (s.startsWith(prev) || (s.length > prev.length && s.includes(prev))) {
+      cleanList[lastIdx] = s;
+      continue;
+    }
+
+    // 3. Previous string is an expansion of current (ignore shorter rollback)
+    if (prev.startsWith(s)) {
+      continue;
+    }
+
+    // 4. Word-level overlap check (if first majority of words match, replace)
+    const prevWords = prev.split(/\s+/);
+    const currWords = s.split(/\s+/);
+    if (prevWords.length >= 2 && currWords.length >= prevWords.length) {
+      const matchCount = prevWords.filter((w, i) => currWords[i] === w).length;
+      if (matchCount / prevWords.length >= 0.7) {
+        cleanList[lastIdx] = s;
+        continue;
+      }
+    }
+
+    cleanList.push(s);
+  }
+
+  return cleanList;
+}
+
 function normalizeBcp47(bcp47: string): string {
   if (!bcp47) return 'ur-IN';
   const clean = bcp47.trim();
@@ -111,11 +161,11 @@ export class SpeechRecognitionController {
   private commitText(text: string, confidence: number = 0.95) {
     const clean = text.trim();
     if (!clean) return;
-    if (clean === this.lastCommittedText) return;
+
+    this.finalsHistory = deduplicateSentenceStream([...this.finalsHistory, clean]);
     this.lastCommittedText = clean;
     this.latestInterimText = '';
 
-    this.finalsHistory.push(clean);
     this.callbacks.onAudioLevel?.(80);
     this.callbacks.onTranscriptUpdate?.(this.finalsHistory, '');
     this.callbacks.onFinal?.(clean, confidence);
@@ -127,13 +177,13 @@ export class SpeechRecognitionController {
       this.silenceTimerId = null;
     }
 
-    // Auto-commit on pause of 1.2s
+    // Auto-commit on pause of 1.4s
     this.silenceTimerId = setTimeout(() => {
       if (this.latestInterimText && this.latestInterimText.trim()) {
         const textToCommit = this.latestInterimText.trim();
         this.commitText(textToCommit, 0.92);
       }
-    }, 1200);
+    }, 1400);
   }
 
   private initRecognition() {
@@ -208,7 +258,7 @@ export class SpeechRecognitionController {
         }
 
         this.lastSessionFinals = currentFinals;
-        const allFinals = [...this.finalsHistory, ...currentFinals];
+        const allFinals = deduplicateSentenceStream([...this.finalsHistory, ...currentFinals]);
 
         this.callbacks.onAudioLevel?.(Math.floor(Math.random() * 40) + 50);
 
@@ -225,8 +275,7 @@ export class SpeechRecognitionController {
         if (latestNewFinalChunk) {
           this.latestInterimText = '';
           if (this.silenceTimerId) clearTimeout(this.silenceTimerId);
-          this.lastCommittedText = latestNewFinalChunk;
-          this.callbacks.onFinal?.(latestNewFinalChunk, confidence);
+          this.commitText(latestNewFinalChunk, confidence);
         }
       };
 
@@ -279,7 +328,7 @@ export class SpeechRecognitionController {
           const uncommitted = this.latestInterimText.trim();
           this.commitText(uncommitted, 0.90);
         } else if (this.lastSessionFinals.length > 0) {
-          this.finalsHistory = [...this.finalsHistory, ...this.lastSessionFinals];
+          this.finalsHistory = deduplicateSentenceStream([...this.finalsHistory, ...this.lastSessionFinals]);
           this.lastSessionFinals = [];
           this.lastReportedFinalIndex = -1;
         }

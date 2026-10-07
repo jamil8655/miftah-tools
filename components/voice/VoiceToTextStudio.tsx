@@ -41,7 +41,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { TextToSpeechController } from '@/lib/translator/text-to-speech';
 import { autoCorrectSpokenText } from '@/lib/translator/auto-correct';
-import { SpeechRecognitionController } from '@/lib/translator/speech-recognition';
+import { SpeechRecognitionController, deduplicateSentenceStream } from '@/lib/translator/speech-recognition';
 
 export const TOP_FLAGSHIP_LANGS = [
   { code: 'ur', label: 'اردو', flag: '🇵🇰' },
@@ -280,12 +280,13 @@ export function VoiceToTextStudio() {
   };
 
   const applySmartPunctuationAndParagraphs = (sentences: string[], lang: string): string => {
-    if (sentences.length === 0) return '';
+    const deduplicated = deduplicateSentenceStream(sentences);
+    if (deduplicated.length === 0) return '';
     const isRtl = lang === 'ur' || lang === 'ar';
     const paragraphs: string[] = [];
     let currentParagraph: string[] = [];
 
-    sentences.forEach((sentence) => {
+    deduplicated.forEach((sentence) => {
       let s = sentence.trim();
       if (!s) return;
 
@@ -306,7 +307,7 @@ export function VoiceToTextStudio() {
 
       currentParagraph.push(s);
 
-      if (currentParagraph.length >= 2) {
+      if (currentParagraph.length >= 3) {
         paragraphs.push(currentParagraph.join(' '));
         currentParagraph = [];
       }
