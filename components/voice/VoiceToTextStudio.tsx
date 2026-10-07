@@ -51,7 +51,7 @@ export const TOP_FLAGSHIP_LANGS = [
 ];
 
 const LANGUAGES = [
-  { code: 'ur', label: 'Urdu', flag: '🇵🇰', bcp47: 'ur-PK' },
+  { code: 'ur', label: 'Urdu', flag: '🇵🇰', bcp47: 'ur-IN' },
   { code: 'hi', label: 'Hindi', flag: '🇮🇳', bcp47: 'hi-IN' },
   { code: 'ar', label: 'Arabic', flag: '🇸🇦', bcp47: 'ar-SA' },
   { code: 'en', label: 'English', flag: '🇺🇸', bcp47: 'en-US' },

@@ -7,11 +7,26 @@ export interface SpeechRecognitionCallbacks {
   onStateChange?: (isListening: boolean) => void;
 }
 
+function normalizeBcp47(bcp47: string): string {
+  if (!bcp47) return 'ur-IN';
+  const clean = bcp47.trim();
+  if (clean === 'ur' || clean === 'ur-PK' || clean === 'ur_PK') {
+    return 'ur-IN';
+  }
+  if (clean === 'ar' || clean === 'ar_SA') {
+    return 'ar-SA';
+  }
+  if (clean === 'hi' || clean === 'hi_IN') {
+    return 'hi-IN';
+  }
+  return clean;
+}
+
 export class SpeechRecognitionController {
   private recognition: any = null;
   private isListening: boolean = false;
   private shouldKeepListening: boolean = false;
-  private currentLanguageBcp47: string = 'ur-PK';
+  private currentLanguageBcp47: string = 'ur-IN';
   private callbacks: SpeechRecognitionCallbacks;
   private visualizerIntervalId: any = null;
   private restartTimeoutId: any = null;
@@ -36,7 +51,7 @@ export class SpeechRecognitionController {
     return hasWebSpeech || hasAndroidSpeech;
   }
 
-  public start(bcp47Lang: string = 'ur-PK') {
+  public start(bcp47Lang: string = 'ur-IN') {
     if (!SpeechRecognitionController.isSupported()) {
       this.callbacks.onError(
         'Live speech recognition is not supported in this browser. Please try Google Chrome, Microsoft Edge, or Safari.'
@@ -44,7 +59,7 @@ export class SpeechRecognitionController {
       return;
     }
 
-    this.currentLanguageBcp47 = bcp47Lang;
+    this.currentLanguageBcp47 = normalizeBcp47(bcp47Lang);
     this.shouldKeepListening = true;
     this.finalsHistory = [];
     this.lastSessionFinals = [];
@@ -87,6 +102,8 @@ export class SpeechRecognitionController {
     }
 
     // Direct synchronous start to preserve mobile User Gesture token
+    this.isListening = true;
+    this.callbacks.onStateChange?.(true);
     this.initRecognition();
     this.startSimulatedVisualizer();
   }
@@ -110,13 +127,13 @@ export class SpeechRecognitionController {
       this.silenceTimerId = null;
     }
 
-    // After 1.3s of silence after interim speech on mobile or desktop, commit interim text
+    // Auto-commit on pause of 1.2s
     this.silenceTimerId = setTimeout(() => {
       if (this.latestInterimText && this.latestInterimText.trim()) {
         const textToCommit = this.latestInterimText.trim();
         this.commitText(textToCommit, 0.92);
       }
-    }, 1300);
+    }, 1200);
   }
 
   private initRecognition() {
@@ -139,8 +156,13 @@ export class SpeechRecognitionController {
       this.lastSessionFinals = [];
       this.lastReportedFinalIndex = -1;
 
+      const isMobile =
+        typeof navigator !== 'undefined' &&
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
       this.recognition = new SpeechRecognitionClass();
-      this.recognition.continuous = true;
+      // On mobile browsers, continuous = false prevents mobile Web Speech service crashes
+      this.recognition.continuous = !isMobile;
       this.recognition.interimResults = true;
       this.recognition.maxAlternatives = 1;
       this.recognition.lang = this.currentLanguageBcp47;
@@ -219,6 +241,7 @@ export class SpeechRecognitionController {
         }
         if (error === 'not-allowed' || error === 'service-not-allowed') {
           this.shouldKeepListening = false;
+          this.isListening = false;
           this.callbacks.onError(
             'Microphone access was denied. Please allow microphone permission in your browser.'
           );
@@ -226,12 +249,14 @@ export class SpeechRecognitionController {
           return;
         }
         if (error === 'language-not-supported') {
-          if (this.currentLanguageBcp47.startsWith('ur')) {
-            this.currentLanguageBcp47 = this.currentLanguageBcp47 === 'ur-PK' ? 'ur-IN' : 'ur';
-          } else if (this.currentLanguageBcp47.startsWith('hi')) {
-            this.currentLanguageBcp47 = 'hi';
-          } else if (this.currentLanguageBcp47.startsWith('ar')) {
+          if (this.currentLanguageBcp47 === 'ur-IN') {
+            this.currentLanguageBcp47 = 'ur-PK';
+          } else if (this.currentLanguageBcp47 === 'ur-PK') {
+            this.currentLanguageBcp47 = 'ur';
+          } else if (this.currentLanguageBcp47 === 'ar-SA') {
             this.currentLanguageBcp47 = 'ar';
+          } else if (this.currentLanguageBcp47 === 'hi-IN') {
+            this.currentLanguageBcp47 = 'hi';
           }
           try {
             this.recognition.lang = this.currentLanguageBcp47;
@@ -249,8 +274,6 @@ export class SpeechRecognitionController {
       };
 
       this.recognition.onend = () => {
-        this.isListening = false;
-
         // If there is uncommitted interim text when onend triggers (typical on mobile Android Chrome)
         if (this.latestInterimText && this.latestInterimText.trim()) {
           const uncommitted = this.latestInterimText.trim();
@@ -269,8 +292,9 @@ export class SpeechRecognitionController {
                 this.initRecognition();
               } catch {}
             }
-          }, 150);
+          }, 80);
         } else {
+          this.isListening = false;
           this.callbacks.onStateChange?.(false);
           this.callbacks.onAudioLevel?.(0);
         }
@@ -286,7 +310,7 @@ export class SpeechRecognitionController {
               this.initRecognition();
             } catch {}
           }
-        }, 400);
+        }, 200);
       } else {
         this.callbacks.onError(err?.message || 'Failed to initialize speech recognition.');
         this.stop();
@@ -306,10 +330,10 @@ export class SpeechRecognitionController {
   }
 
   public setLanguage(bcp47Lang: string) {
-    this.currentLanguageBcp47 = bcp47Lang;
+    this.currentLanguageBcp47 = normalizeBcp47(bcp47Lang);
     if (typeof window !== 'undefined' && (window as any).AndroidSpeech) {
       try {
-        (window as any).AndroidSpeech.startListening(bcp47Lang);
+        (window as any).AndroidSpeech.startListening(this.currentLanguageBcp47);
       } catch {}
       return;
     }

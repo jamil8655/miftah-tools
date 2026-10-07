@@ -2,7 +2,7 @@ import { LanguageOption } from './types';
 
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: 'en', label: 'English', nativeName: 'English', flag: '🇺🇸', bcp47: 'en-US' },
-  { code: 'ur', label: 'Urdu', nativeName: 'اردو', flag: '🇵🇰', bcp47: 'ur-PK', isRTL: true },
+  { code: 'ur', label: 'Urdu', nativeName: 'اردو', flag: '🇵🇰', bcp47: 'ur-IN', isRTL: true },
   { code: 'ar', label: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', bcp47: 'ar-SA', isRTL: true },
   { code: 'hi', label: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', bcp47: 'hi-IN' },
   { code: 'bn', label: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩', bcp47: 'bn-BD' },
