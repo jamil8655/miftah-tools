@@ -42,6 +42,7 @@ import { TextToSpeechController } from '@/lib/translator/text-to-speech';
 import { autoCorrectSpokenText } from '@/lib/translator/auto-correct';
 import { TranslationSegment, TranslatorSettings } from '@/lib/translator/types';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
 
 const TOP_FLAGSHIP_LANGS = [
@@ -674,36 +675,141 @@ export function LiveSpeechTranslator() {
     saveAs(blob, `miftah-translation-${Date.now()}.txt`);
   };
 
-  // Export as PDF
-  const handleExportPdf = () => {
-    triggerHaptic('selection');
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('Miftah Tools — Live Speech Translation Session', 14, 18);
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 25);
-    doc.text(`Language Pair: ${sourceLangObj.label} -> ${targetLangObj.label}`, 14, 31);
-    doc.line(14, 35, 196, 35);
+  // Export as PDF (100% Unicode & RTL safe for Urdu, Hindi, Arabic, Bengali, English)
+  const handleExportPdf = async () => {
+    if (transcript.length === 0) return;
+    triggerHaptic('medium');
 
-    let y = 43;
-    doc.setFontSize(11);
-    doc.setTextColor(30);
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '794px';
+    container.style.minHeight = '1123px';
+    container.style.padding = '44px 48px';
+    container.style.backgroundColor = '#ffffff';
+    container.style.color = '#0f172a';
+    container.style.fontFamily = "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    container.style.boxSizing = 'border-box';
 
-    transcript.forEach((s, idx) => {
-      if (y > 270) {
-        doc.addPage();
-        y = 20;
+    const getFontFamilyForLang = (lang: string) => {
+      if (lang === 'ur' || lang === 'ar') {
+        return "'Noto Nastaliq Urdu', 'Amiri', 'Segoe UI', Tahoma, Arial, sans-serif";
       }
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${idx + 1}. [${s.sourceLang.toUpperCase()}]: ${s.originalText}`, 14, y);
-      y += 6;
-      doc.setFont('helvetica', 'normal');
-      doc.text(`   [${s.targetLang.toUpperCase()}]: ${s.translatedText}`, 14, y);
-      y += 10;
-    });
+      if (lang === 'hi') {
+        return "'Noto Sans Devanagari', 'Mangal', 'Segoe UI', Tahoma, Arial, sans-serif";
+      }
+      return "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    };
 
-    doc.save(`miftah-translation-${Date.now()}.pdf`);
+    const segmentsHtml = transcript
+      .map((s, idx) => {
+        const srcRtl = isRTLLanguage(s.sourceLang);
+        const tgtRtl = isRTLLanguage(s.targetLang);
+        const srcFont = getFontFamilyForLang(s.sourceLang);
+        const tgtFont = getFontFamilyForLang(s.targetLang);
+        const srcLabel = getLanguageOption(s.sourceLang).label;
+        const tgtLabel = getLanguageOption(s.targetLang).label;
+        const speakerName = s.speaker === 'user' ? 'Speaker 1' : 'Speaker 2';
+
+        const escapeHtml = (text: string) =>
+          text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br/>');
+
+        return `
+          <div style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background-color: #ffffff; page-break-inside: avoid;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 11px; color: #64748b; border-bottom: 1px dashed #f1f5f9; padding-bottom: 8px; direction: ltr;">
+              <span style="font-weight: 700; color: #0284c7;">#${idx + 1} • ${speakerName}</span>
+              <span>${new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            
+            <div style="margin-bottom: 12px;">
+              <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; direction: ltr;">
+                ${srcLabel} (${s.sourceLang.toUpperCase()})
+              </div>
+              <p style="margin: 0; font-size: 15px; line-height: 1.8; color: #1e293b; direction: ${srcRtl ? 'rtl' : 'ltr'}; text-align: ${srcRtl ? 'right' : 'left'}; font-family: ${srcFont};">
+                ${escapeHtml(s.originalText)}
+              </p>
+            </div>
+
+            <div style="background-color: #f8fafc; border-radius: 8px; padding: 12px; border-left: 3px solid #0284c7;">
+              <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #0284c7; margin-bottom: 4px; direction: ltr;">
+                Translated to ${tgtLabel} (${s.targetLang.toUpperCase()})
+              </div>
+              <p style="margin: 0; font-size: 15px; line-height: 1.8; color: #0f172a; font-weight: 500; direction: ${tgtRtl ? 'rtl' : 'ltr'}; text-align: ${tgtRtl ? 'right' : 'left'}; font-family: ${tgtFont};">
+                ${escapeHtml(s.translatedText)}
+              </p>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    container.innerHTML = `
+      <div style="border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; direction: ltr;">
+        <div>
+          <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Live Speech Translation Record</h1>
+          <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">
+            Pair: <strong>${sourceLangObj.label} ⇄ ${targetLangObj.label}</strong> • Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #f0f9ff; padding: 4px 10px; border-radius: 9999px; border: 1px solid #bae6fd;">Miftah Tools</span>
+        </div>
+      </div>
+      <div>
+        ${segmentsHtml}
+      </div>
+      <div style="border-top: 1px solid #f1f5f9; margin-top: 32px; padding-top: 12px; text-align: center; font-size: 10px; color: #94a3b8; direction: ltr;">
+        Generated via Miftah Tools (miftahtools.com/live-speech-translator) • Free & Real-Time Multilingual Speech
+      </div>
+    `;
+
+    document.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`miftah-translation-${Date.now()}.pdf`);
+      triggerHaptic('success');
+    } catch (err) {
+      console.error('PDF export error:', err);
+    } finally {
+      if (container.parentNode) {
+        document.body.removeChild(container);
+      }
+    }
   };
 
   // Format elapsed time (MM:SS)

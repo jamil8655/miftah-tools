@@ -38,6 +38,7 @@ import {
 import { Document, Paragraph, TextRun, Packer, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { TextToSpeechController } from '@/lib/translator/text-to-speech';
 import { autoCorrectSpokenText } from '@/lib/translator/auto-correct';
 import { SpeechRecognitionController } from '@/lib/translator/speech-recognition';
@@ -574,47 +575,105 @@ export function VoiceToTextStudio() {
     saveAs(blob, `miftah_transcription_${Date.now()}.docx`);
   };
 
-  // Download PDF
-  const handleDownloadPdf = () => {
+  // Download PDF (100% Unicode & RTL safe for Urdu, Hindi, Arabic, Bengali, English)
+  const handleDownloadPdf = async () => {
     if (!transcription) return;
     triggerHaptic('medium');
 
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const isRtl = selectedLang === 'ur' || selectedLang === 'ar';
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 45;
-    const maxLineWidth = pageWidth - margin * 2;
+    const langLabel = LANGUAGES.find((l) => l.code === selectedLang)?.label || 'Transcription';
 
-    doc.setFontSize(16);
-    doc.text('Voice to Text Transcription', margin, 50);
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '794px';
+    container.style.minHeight = '1123px';
+    container.style.padding = '48px 56px';
+    container.style.backgroundColor = '#ffffff';
+    container.style.color = '#0f172a';
+    container.style.fontFamily = isRtl
+      ? "'Noto Nastaliq Urdu', 'Amiri', 'Segoe UI', Tahoma, Arial, sans-serif"
+      : selectedLang === 'hi'
+      ? "'Noto Sans Devanagari', 'Mangal', 'Segoe UI', Tahoma, Arial, sans-serif"
+      : "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+    container.style.direction = isRtl ? 'rtl' : 'ltr';
+    container.style.boxSizing = 'border-box';
 
-    doc.setFontSize(10);
-    doc.setTextColor(120, 120, 120);
-    doc.text(`Generated via Miftah Tools • ${new Date().toLocaleDateString()}`, margin, 70);
+    const paragraphsHtml = transcription
+      .split(/\r?\n\r?\n/)
+      .map(
+        (p) =>
+          `<p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.85; text-align: ${
+            isRtl ? 'right' : 'left'
+          }; color: #1e293b;">${p
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\n/g, '<br/>')}</p>`
+      )
+      .join('');
 
-    doc.setDrawColor(220, 220, 220);
-    doc.line(margin, 80, pageWidth - margin, 80);
+    container.innerHTML = `
+      <div style="border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; direction: ltr;">
+        <div>
+          <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Voice to Text Transcription</h1>
+          <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">Language: <strong>${langLabel}</strong> • Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 4px 10px; border-radius: 9999px; border: 1px solid #bfdbfe;">Miftah Tools</span>
+        </div>
+      </div>
+      <div style="direction: ${isRtl ? 'rtl' : 'ltr'};">
+        ${paragraphsHtml}
+      </div>
+      <div style="border-top: 1px solid #f1f5f9; margin-top: 36px; padding-top: 12px; text-align: center; font-size: 10px; color: #94a3b8; direction: ltr;">
+        Generated via Miftah Tools (miftahtools.com/voice-to-text) • 100% Private & Free
+      </div>
+    `;
 
-    doc.setFontSize(12);
-    doc.setTextColor(30, 30, 30);
+    document.body.appendChild(container);
 
-    const splitLines = doc.splitTextToSize(transcription, maxLineWidth);
-    let y = 110;
+    try {
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
 
-    for (let i = 0; i < splitLines.length; i++) {
-      if (y > doc.internal.pageSize.getHeight() - 50) {
-        doc.addPage();
-        y = 50;
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
       }
-      if (isRtl) {
-        doc.text(splitLines[i], pageWidth - margin, y, { align: 'right' });
-      } else {
-        doc.text(splitLines[i], margin, y);
+
+      pdf.save(`miftah_transcription_${Date.now()}.pdf`);
+      triggerHaptic('success');
+    } catch (err) {
+      console.error('PDF export error:', err);
+    } finally {
+      if (container.parentNode) {
+        document.body.removeChild(container);
       }
-      y += 20;
     }
-
-    doc.save(`miftah_transcription_${Date.now()}.pdf`);
   };
 
   const formatSeconds = (sec: number) => {
