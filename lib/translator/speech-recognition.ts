@@ -15,9 +15,12 @@ export class SpeechRecognitionController {
   private callbacks: SpeechRecognitionCallbacks;
   private visualizerIntervalId: any = null;
   private restartTimeoutId: any = null;
+  private silenceTimerId: any = null;
   private finalsHistory: string[] = [];
   private lastSessionFinals: string[] = [];
   private lastReportedFinalIndex: number = -1;
+  private latestInterimText: string = '';
+  private lastCommittedText: string = '';
 
   constructor(callbacks: SpeechRecognitionCallbacks) {
     this.callbacks = callbacks;
@@ -33,7 +36,7 @@ export class SpeechRecognitionController {
     return hasWebSpeech || hasAndroidSpeech;
   }
 
-  public async start(bcp47Lang: string = 'ur-PK') {
+  public start(bcp47Lang: string = 'ur-PK') {
     if (!SpeechRecognitionController.isSupported()) {
       this.callbacks.onError(
         'Live speech recognition is not supported in this browser. Please try Google Chrome, Microsoft Edge, or Safari.'
@@ -46,6 +49,8 @@ export class SpeechRecognitionController {
     this.finalsHistory = [];
     this.lastSessionFinals = [];
     this.lastReportedFinalIndex = -1;
+    this.latestInterimText = '';
+    this.lastCommittedText = '';
 
     // Check for native Android WebView bridge first
     const hasAndroidSpeech = typeof window !== 'undefined' && Boolean((window as any).AndroidSpeech);
@@ -54,15 +59,13 @@ export class SpeechRecognitionController {
         if (eventType === 'onPartialResults') {
           if (data && data.trim()) {
             this.callbacks.onAudioLevel?.(65);
+            this.latestInterimText = data.trim();
             this.callbacks.onTranscriptUpdate?.(this.finalsHistory, data.trim());
             this.callbacks.onInterim?.(data.trim());
           }
         } else if (eventType === 'onResults') {
           if (data && data.trim()) {
-            this.finalsHistory.push(data.trim());
-            this.callbacks.onAudioLevel?.(80);
-            this.callbacks.onTranscriptUpdate?.(this.finalsHistory, '');
-            this.callbacks.onFinal?.(data.trim(), 0.95);
+            this.commitText(data.trim(), 0.95);
           }
         } else if (eventType === 'onError') {
           console.warn('Android speech event error:', data);
@@ -83,23 +86,37 @@ export class SpeechRecognitionController {
       return;
     }
 
-    // For standard web browsers, ensure microphone permission dialog is prompted if not granted yet
-    if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Immediately stop and release the tracks to guarantee zero audio hardware locking
-        stream.getTracks().forEach((track) => track.stop());
-      } catch (err: any) {
-        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          this.callbacks.onError('Microphone access was denied. Please allow microphone permission in your browser.');
-          this.callbacks.onStateChange?.(false);
-          return;
-        }
-      }
-    }
-
+    // Direct synchronous start to preserve mobile User Gesture token
     this.initRecognition();
     this.startSimulatedVisualizer();
+  }
+
+  private commitText(text: string, confidence: number = 0.95) {
+    const clean = text.trim();
+    if (!clean) return;
+    if (clean === this.lastCommittedText) return;
+    this.lastCommittedText = clean;
+    this.latestInterimText = '';
+
+    this.finalsHistory.push(clean);
+    this.callbacks.onAudioLevel?.(80);
+    this.callbacks.onTranscriptUpdate?.(this.finalsHistory, '');
+    this.callbacks.onFinal?.(clean, confidence);
+  }
+
+  private resetSilenceTimer() {
+    if (this.silenceTimerId) {
+      clearTimeout(this.silenceTimerId);
+      this.silenceTimerId = null;
+    }
+
+    // After 1.3s of silence after interim speech on mobile or desktop, commit interim text
+    this.silenceTimerId = setTimeout(() => {
+      if (this.latestInterimText && this.latestInterimText.trim()) {
+        const textToCommit = this.latestInterimText.trim();
+        this.commitText(textToCommit, 0.92);
+      }
+    }, 1300);
   }
 
   private initRecognition() {
@@ -173,15 +190,20 @@ export class SpeechRecognitionController {
 
         this.callbacks.onAudioLevel?.(Math.floor(Math.random() * 40) + 50);
 
+        if (interimTranscript) {
+          this.latestInterimText = interimTranscript;
+          this.callbacks.onInterim?.(interimTranscript);
+          this.resetSilenceTimer();
+        }
+
         if (this.callbacks.onTranscriptUpdate) {
           this.callbacks.onTranscriptUpdate(allFinals, interimTranscript);
         }
 
-        if (interimTranscript) {
-          this.callbacks.onInterim?.(interimTranscript);
-        }
-
         if (latestNewFinalChunk) {
+          this.latestInterimText = '';
+          if (this.silenceTimerId) clearTimeout(this.silenceTimerId);
+          this.lastCommittedText = latestNewFinalChunk;
           this.callbacks.onFinal?.(latestNewFinalChunk, confidence);
         }
       };
@@ -204,14 +226,18 @@ export class SpeechRecognitionController {
           return;
         }
         if (error === 'language-not-supported') {
-          if (this.currentLanguageBcp47 === 'ur-PK') {
-            this.currentLanguageBcp47 = 'ur-IN';
-            try {
-              this.recognition.lang = 'ur-IN';
-              this.recognition.start();
-              return;
-            } catch {}
+          if (this.currentLanguageBcp47.startsWith('ur')) {
+            this.currentLanguageBcp47 = this.currentLanguageBcp47 === 'ur-PK' ? 'ur-IN' : 'ur';
+          } else if (this.currentLanguageBcp47.startsWith('hi')) {
+            this.currentLanguageBcp47 = 'hi';
+          } else if (this.currentLanguageBcp47.startsWith('ar')) {
+            this.currentLanguageBcp47 = 'ar';
           }
+          try {
+            this.recognition.lang = this.currentLanguageBcp47;
+            this.recognition.start();
+            return;
+          } catch {}
         }
         if (error === 'audio-capture') {
           this.callbacks.onError('Microphone hardware error or mic is in use by another app.');
@@ -224,14 +250,18 @@ export class SpeechRecognitionController {
 
       this.recognition.onend = () => {
         this.isListening = false;
-        if (this.shouldKeepListening) {
-          // Commit last session finals into finalsHistory so they don't get lost across auto-restarts
-          if (this.lastSessionFinals.length > 0) {
-            this.finalsHistory = [...this.finalsHistory, ...this.lastSessionFinals];
-            this.lastSessionFinals = [];
-            this.lastReportedFinalIndex = -1;
-          }
 
+        // If there is uncommitted interim text when onend triggers (typical on mobile Android Chrome)
+        if (this.latestInterimText && this.latestInterimText.trim()) {
+          const uncommitted = this.latestInterimText.trim();
+          this.commitText(uncommitted, 0.90);
+        } else if (this.lastSessionFinals.length > 0) {
+          this.finalsHistory = [...this.finalsHistory, ...this.lastSessionFinals];
+          this.lastSessionFinals = [];
+          this.lastReportedFinalIndex = -1;
+        }
+
+        if (this.shouldKeepListening) {
           if (this.restartTimeoutId) clearTimeout(this.restartTimeoutId);
           this.restartTimeoutId = setTimeout(() => {
             if (this.shouldKeepListening) {
@@ -239,7 +269,7 @@ export class SpeechRecognitionController {
                 this.initRecognition();
               } catch {}
             }
-          }, 200);
+          }, 150);
         } else {
           this.callbacks.onStateChange?.(false);
           this.callbacks.onAudioLevel?.(0);
@@ -256,7 +286,7 @@ export class SpeechRecognitionController {
               this.initRecognition();
             } catch {}
           }
-        }, 500);
+        }, 400);
       } else {
         this.callbacks.onError(err?.message || 'Failed to initialize speech recognition.');
         this.stop();
@@ -293,6 +323,16 @@ export class SpeechRecognitionController {
   public stop() {
     this.shouldKeepListening = false;
     this.isListening = false;
+
+    if (this.silenceTimerId) {
+      clearTimeout(this.silenceTimerId);
+      this.silenceTimerId = null;
+    }
+
+    if (this.latestInterimText && this.latestInterimText.trim()) {
+      const textToCommit = this.latestInterimText.trim();
+      this.commitText(textToCommit, 0.90);
+    }
 
     if (typeof window !== 'undefined' && (window as any).AndroidSpeech) {
       try {
