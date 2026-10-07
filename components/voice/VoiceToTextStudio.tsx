@@ -26,6 +26,7 @@ import {
   AlignRight,
   Languages,
   Zap,
+  Wand2,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -38,6 +39,14 @@ import { Document, Paragraph, TextRun, Packer, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import { TextToSpeechController } from '@/lib/translator/text-to-speech';
+import { autoCorrectSpokenText } from '@/lib/translator/auto-correct';
+
+export const TOP_FLAGSHIP_LANGS = [
+  { code: 'ur', label: 'اردو', flag: '🇵🇰' },
+  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+];
 
 const LANGUAGES = [
   { code: 'ur', label: 'Urdu', flag: '🇵🇰', bcp47: 'ur-PK' },
@@ -211,6 +220,7 @@ export function VoiceToTextStudio() {
   // Tabs: 'record' or 'upload'
   const [activeTab, setActiveTab] = useState<'record' | 'upload'>('record');
   const [selectedLang, setSelectedLang] = useState<string>(currentLang === 'en' ? 'en' : currentLang === 'ar' ? 'ar' : currentLang === 'hi' ? 'hi' : 'ur');
+  const [autoCorrectEnabled, setAutoCorrectEnabled] = useState<boolean>(true);
 
   // Recording states
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -300,6 +310,10 @@ export function VoiceToTextStudio() {
     sentences.forEach((sentence) => {
       let s = sentence.trim();
       if (!s) return;
+
+      if (autoCorrectEnabled) {
+        s = autoCorrectSpokenText(s, lang);
+      }
 
       if (!isRtl && lang !== 'hi') {
         s = s.charAt(0).toUpperCase() + s.slice(1);
@@ -404,10 +418,14 @@ export function VoiceToTextStudio() {
         (window as any).__onAndroidSpeechEvent = (eventType: string, data: string) => {
           if (eventType === 'onPartialResults') {
             if (data && data.trim()) {
-              setLiveInterim(data.trim());
+              const processed = autoCorrectEnabled ? autoCorrectSpokenText(data.trim(), selectedLang) : data.trim();
+              setLiveInterim(processed);
             }
           } else if (eventType === 'onResults') {
-            const cleaned = data ? data.trim() : '';
+            let cleaned = data ? data.trim() : '';
+            if (autoCorrectEnabled) {
+              cleaned = autoCorrectSpokenText(cleaned, selectedLang);
+            }
             if (cleaned.length > 0) {
               liveFinalBufferRef.current.push(cleaned);
               setLiveInterim('');
@@ -449,7 +467,10 @@ export function VoiceToTextStudio() {
               const text = result[0].transcript;
 
               if (result.isFinal) {
-                const cleaned = text.trim();
+                let cleaned = text.trim();
+                if (autoCorrectEnabled) {
+                  cleaned = autoCorrectSpokenText(cleaned, selectedLang);
+                }
                 if (cleaned.length > 0) {
                   liveFinalBufferRef.current.push(cleaned);
                 }
@@ -458,6 +479,9 @@ export function VoiceToTextStudio() {
               }
             }
 
+            if (autoCorrectEnabled && interimStr.trim()) {
+              interimStr = autoCorrectSpokenText(interimStr, selectedLang);
+            }
             setLiveInterim(interimStr);
 
             const allSegments = [...liveFinalBufferRef.current];
@@ -839,15 +863,38 @@ export function VoiceToTextStudio() {
           </div>
         </div>
 
-        {/* Spoken Language Selector Bar */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-            <Languages className="w-4 h-4 text-brand-400" />
-            <span>{loc.langLabel}:</span>
+        {/* Spoken Language Selector & Auto-Correct Bar */}
+        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col gap-3.5">
+          {/* Top 4 Flagship Languages + Auto-Correct Toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
+              <Languages className="w-4 h-4 text-brand-400" />
+              <span>{loc.langLabel}:</span>
+            </div>
+
+            {/* Auto-Correct Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setAutoCorrectEnabled(!autoCorrectEnabled);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm ${
+                autoCorrectEnabled
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/10'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+              }`}
+            >
+              <Wand2 className={`w-3.5 h-3.5 ${autoCorrectEnabled ? 'text-emerald-400' : 'text-slate-400'}`} />
+              <span>{autoCorrectEnabled ? 'الفاظ کی خودکار درستگی: فعال (ON)' : 'خودکار درستگی: بند (OFF)'}</span>
+              <span className={`w-2 h-2 rounded-full ${autoCorrectEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
-            {LANGUAGES.map((lang) => {
+          {/* Quick-Pick 4 Flagship Buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-semibold text-slate-400">بنیادی زبانیں:</span>
+            {TOP_FLAGSHIP_LANGS.map((lang) => {
               const isSelected = selectedLang === lang.code;
               return (
                 <button
@@ -857,10 +904,37 @@ export function VoiceToTextStudio() {
                     triggerHaptic('light');
                     setSelectedLang(lang.code);
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                     isSelected
-                      ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30 ring-1 ring-brand-400'
-                      : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/80'
+                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 ring-2 ring-brand-400/50 scale-[1.02]'
+                      : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 hover:border-slate-600'
+                  }`}
+                >
+                  <span className="text-sm">{lang.flag}</span>
+                  <span>{lang.label}</span>
+                  {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping ml-0.5" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Other Languages */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="text-[11px] font-semibold text-slate-400">دیگر زبانیں:</span>
+            {LANGUAGES.filter(l => !TOP_FLAGSHIP_LANGS.some(f => f.code === l.code)).map((lang) => {
+              const isSelected = selectedLang === lang.code;
+              return (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setSelectedLang(lang.code);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-brand-600 text-white shadow-sm ring-1 ring-brand-400'
+                      : 'bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50'
                   }`}
                 >
                   <span>{lang.flag}</span>

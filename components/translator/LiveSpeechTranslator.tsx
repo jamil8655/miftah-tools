@@ -30,6 +30,7 @@ import {
   Languages,
   Radio,
   Send,
+  Wand2,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -38,15 +39,23 @@ import { SUPPORTED_LANGUAGES, getLanguageOption, isRTLLanguage } from '@/lib/tra
 import { translateSpeechText } from '@/lib/translator/translation-engine';
 import { SpeechRecognitionController } from '@/lib/translator/speech-recognition';
 import { TextToSpeechController } from '@/lib/translator/text-to-speech';
+import { autoCorrectSpokenText } from '@/lib/translator/auto-correct';
 import { TranslationSegment, TranslatorSettings } from '@/lib/translator/types';
 import jsPDF from 'jspdf';
 import { saveAs } from 'file-saver';
+
+const TOP_FLAGSHIP_LANGS = [
+  { code: 'ur', label: 'اردو', flag: '🇵🇰' },
+  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+];
 
 const TRANSLATOR_LOCALES = {
   en: {
     backBtn: 'Back',
     title: 'Live Speech Translator',
-    subtitle: 'Speak naturally. Watch words convert to text and translate in real-time instantly.',
+    subtitle: 'Speak naturally. Watch words convert to text and translate in real-time with smart auto-correct.',
     iSpeak: 'I speak',
     translateTo: 'Translate to',
     autoDetect: 'Auto Detect',
@@ -56,6 +65,8 @@ const TRANSLATOR_LOCALES = {
     stopBtn: 'Stop Listening',
     voiceOutputOn: 'Voice: ON',
     voiceOutputOff: 'Voice: OFF',
+    autoCorrectOn: 'Auto-Correct: ON',
+    autoCorrectOff: 'Auto-Correct: OFF',
     singleMode: 'Single Speaker',
     convoMode: 'Conversation Mode',
     liveSpokenTitle: 'Live Spoken (Original)',
@@ -101,7 +112,7 @@ const TRANSLATOR_LOCALES = {
   ur: {
     backBtn: 'واپس',
     title: 'لائیو اسپیچ ٹرانسلیٹر',
-    subtitle: 'آپ بولتے جائیں، الفاظ ساتھ ساتھ لکھتے جائیں گے اور فوری ریئل ٹائم لائیو ترجمہ ہوتا جائے گا۔',
+    subtitle: 'آپ بولتے جائیں، الفاظ ساتھ ساتھ لکھتے جائیں گے اور خودکار درستگی کے ساتھ فوری لائیو ترجمہ ہوتا جائے گا۔',
     iSpeak: 'میری زبان',
     translateTo: 'ترجمہ کی زبان',
     autoDetect: 'خودکار شناخت',
@@ -111,6 +122,8 @@ const TRANSLATOR_LOCALES = {
     stopBtn: 'روکیں',
     voiceOutputOn: 'آواز: آن',
     voiceOutputOff: 'آواز: آف',
+    autoCorrectOn: 'خودکار درستگی: آن',
+    autoCorrectOff: 'خودکار درستگی: آف',
     singleMode: 'انفرادی انداز',
     convoMode: 'مکالمہ / دو طرفہ گفتگو',
     liveSpokenTitle: 'لائیو اصل آواز (Original)',
@@ -156,7 +169,7 @@ const TRANSLATOR_LOCALES = {
   ar: {
     backBtn: 'رجوع',
     title: 'المترجم الصوتي المباشر',
-    subtitle: 'تحدث بطبيعتك، وستتحول الكلمات إلى نص وترجمة مباشرة في الوقت الفعلي فوراً.',
+    subtitle: 'تحدث بطبيعتك، وستتحول الكلمات إلى نص وترجمة مباشرة في الوقت الفعلي مع التصحيح الذكي.',
     iSpeak: 'أتحدث لغة',
     translateTo: 'الترجمة إلى',
     autoDetect: 'كشف تلقائي',
@@ -166,6 +179,8 @@ const TRANSLATOR_LOCALES = {
     stopBtn: 'إيقاف الاستماع',
     voiceOutputOn: 'الصوت: مفعّل',
     voiceOutputOff: 'الصوت: معطّل',
+    autoCorrectOn: 'التصحيح التلقائي: مفعّل',
+    autoCorrectOff: 'التصحيح التلقائي: معطّل',
     singleMode: 'متحدث فردي',
     convoMode: 'محادثة ثنائية',
     liveSpokenTitle: 'النص الصوتي المباشر (الأصل)',
@@ -211,7 +226,7 @@ const TRANSLATOR_LOCALES = {
   hi: {
     backBtn: 'वापस',
     title: 'लाइव स्पीच ट्रांसलेटर',
-    subtitle: 'आप बोलते जाएं, शब्द तुरंत टाइप होते जाएंगे और रीयल-टाइम में लाइव अनुवाद होता जाएगा।',
+    subtitle: 'आप बोलते जाएं, शब्द तुरंत टाइप होते जाएंगे और स्मार्ट ऑटो-करेक्ट के साथ रीयल-टाइम में अनुवाद होता जाएगा।',
     iSpeak: 'मेरी भाषा',
     translateTo: 'अनुवाद की भाषा',
     autoDetect: 'स्वतः पहचान',
@@ -221,6 +236,8 @@ const TRANSLATOR_LOCALES = {
     stopBtn: 'रोकें',
     voiceOutputOn: 'आवाज़: चालू',
     voiceOutputOff: 'आवाज़: बंद',
+    autoCorrectOn: 'ऑटो-करेक्ट: चालू',
+    autoCorrectOff: 'ऑटो-करेक्ट: बंद',
     singleMode: 'सिंगल स्पीकर',
     convoMode: 'बातचीत (कन्वर्सेशन) मोड',
     liveSpokenTitle: 'लाइव बोली गई आवाज़ (मूल)',
@@ -282,6 +299,7 @@ export function LiveSpeechTranslator() {
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [currentSpeaker, setCurrentSpeaker] = useState<'user' | 'peer'>('user');
+  const [autoCorrectEnabled, setAutoCorrectEnabled] = useState<boolean>(true);
 
   // Conversation history
   const [transcript, setTranscript] = useState<TranslationSegment[]>([]);
@@ -382,7 +400,7 @@ export function LiveSpeechTranslator() {
         } finally {
           setIsLiveTranslating(false);
         }
-      }, 160); // 160ms responsive debounce for stream typing
+      }, 140); // 140ms lightning-fast debounce for live translation stream
     },
     [sourceLang, targetLang, settings.conversationMode, currentSpeaker]
   );
@@ -390,26 +408,31 @@ export function LiveSpeechTranslator() {
   // Interim handler called as syllables/words are spoken
   const handleInterimSpeech = useCallback(
     (text: string) => {
-      setLiveSpokenText(text);
-      triggerLiveTranslation(text);
+      const activeSrc = settings.conversationMode && currentSpeaker === 'peer' ? targetLang : sourceLang;
+      const processedText = autoCorrectEnabled ? autoCorrectSpokenText(text, activeSrc) : text;
+      
+      setLiveSpokenText(processedText);
+      triggerLiveTranslation(processedText);
     },
-    [triggerLiveTranslation]
+    [triggerLiveTranslation, autoCorrectEnabled, settings.conversationMode, currentSpeaker, sourceLang, targetLang]
   );
 
   // Final committed sentence speech recognition handler
   const handleFinalSpeech = useCallback(
     async (finalText: string, confidence: number) => {
-      const cleanText = finalText.trim();
-      if (!cleanText) return;
+      const activeSrc = settings.conversationMode && currentSpeaker === 'peer' ? targetLang : sourceLang;
+      const activeTgt = settings.conversationMode && currentSpeaker === 'peer' ? sourceLang : targetLang;
+      const activeTgtObj = getLanguageOption(activeTgt);
 
+      const cleanText = autoCorrectEnabled
+        ? autoCorrectSpokenText(finalText.trim(), activeSrc)
+        : finalText.trim();
+
+      if (!cleanText) return;
       if (cleanText === lastFinalTextRef.current) return;
       lastFinalTextRef.current = cleanText;
 
       markToolUsed();
-
-      const activeSrc = settings.conversationMode && currentSpeaker === 'peer' ? targetLang : sourceLang;
-      const activeTgt = settings.conversationMode && currentSpeaker === 'peer' ? sourceLang : targetLang;
-      const activeTgtObj = getLanguageOption(activeTgt);
 
       // Update live displays
       setLiveSpokenText(cleanText);
@@ -459,6 +482,7 @@ export function LiveSpeechTranslator() {
       settings.speechSpeed,
       currentSpeaker,
       markToolUsed,
+      autoCorrectEnabled,
     ]
   );
 
@@ -521,6 +545,18 @@ export function LiveSpeechTranslator() {
     };
   }, []);
 
+  // Quick switch source language
+  const handleQuickSelectSource = (code: string) => {
+    triggerHaptic('selection');
+    setSourceLang(code);
+    setLiveSpokenText('');
+    setLiveTranslatedText('');
+    if (isListening && recognitionControllerRef.current) {
+      const newBcp = getLanguageOption(code).bcp47;
+      recognitionControllerRef.current.setLanguage(newBcp);
+    }
+  };
+
   // Swap Source and Target Languages
   const handleSwapLanguages = () => {
     triggerHaptic('selection');
@@ -548,16 +584,17 @@ export function LiveSpeechTranslator() {
     try {
       const activeSrc = sourceLang;
       const activeTgt = targetLang;
-      const response = await translateSpeechText(manualText.trim(), activeSrc, activeTgt);
-      const translated = response.translatedText || manualText.trim();
+      const cleanManual = autoCorrectEnabled ? autoCorrectSpokenText(manualText.trim(), activeSrc) : manualText.trim();
+      const response = await translateSpeechText(cleanManual, activeSrc, activeTgt);
+      const translated = response.translatedText || cleanManual;
 
-      setLiveSpokenText(manualText.trim());
+      setLiveSpokenText(cleanManual);
       setLiveTranslatedText(translated);
 
       const newSegment: TranslationSegment = {
         id: `seg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         speaker: 'user',
-        originalText: manualText.trim(),
+        originalText: cleanManual,
         translatedText: translated,
         sourceLang: activeSrc,
         targetLang: activeTgt,
@@ -697,7 +734,7 @@ export function LiveSpeechTranslator() {
                 {loc.title}
               </h1>
               <span className="px-2 py-0.5 rounded-full bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-extrabold uppercase">
-                ⚡ Real-Time
+                ⚡ Real-Time Auto-Correct
               </span>
             </div>
             <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400">
@@ -744,9 +781,40 @@ export function LiveSpeechTranslator() {
       )}
 
       {/* ==================================================
-          2. LANGUAGE SELECTION BAR (WITH PROMINENT SWAP)
+          2. LANGUAGE SELECTION BAR WITH 4 FLAGSHIP QUICK PILLS
           ================================================== */}
       <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs space-y-4">
+        
+        {/* Flagship 4-Language Quick Selector Strip */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E1E7EC]/60 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-[#687587] dark:text-slate-400">
+            <Languages className="w-4 h-4 text-[#0B79B7]" />
+            <span>{loc.iSpeak}:</span>
+          </div>
+
+          <div className="flex items-center flex-wrap gap-1.5">
+            {TOP_FLAGSHIP_LANGS.map((fl) => {
+              const isSelected = sourceLang === fl.code;
+              return (
+                <button
+                  key={fl.code}
+                  type="button"
+                  onClick={() => handleQuickSelectSource(fl.code)}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                    isSelected
+                      ? 'bg-[#0B79B7] text-white shadow-xs ring-2 ring-[#0B79B7]/40'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                  }`}
+                >
+                  <span>{fl.flag}</span>
+                  <span>{fl.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Detailed Dual Dropdown Selector with Swap */}
         <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto,1fr] items-center gap-3">
           
           {/* Source Language Picker */}
@@ -760,15 +828,7 @@ export function LiveSpeechTranslator() {
             <div className="relative">
               <select
                 value={sourceLang}
-                onChange={(e) => {
-                  setSourceLang(e.target.value);
-                  setLiveSpokenText('');
-                  setLiveTranslatedText('');
-                  if (isListening && recognitionControllerRef.current) {
-                    const newBcp = getLanguageOption(e.target.value).bcp47;
-                    recognitionControllerRef.current.setLanguage(newBcp);
-                  }
-                }}
+                onChange={(e) => handleQuickSelectSource(e.target.value)}
                 className="w-full h-12 px-4 rounded-2xl bg-[#F5F7F9] dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-sm font-bold text-[#182230] dark:text-white focus:outline-none focus:border-[#0B79B7] appearance-none cursor-pointer"
               >
                 {SUPPORTED_LANGUAGES.map((lang) => (
@@ -822,9 +882,26 @@ export function LiveSpeechTranslator() {
 
         </div>
 
-        {/* Quick Mode & Voice Output Toggles Strip */}
+        {/* Quick Mode & Feature Toggles Strip */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E1E7EC]/60 dark:border-slate-800">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
+            {/* Auto-Correct Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setAutoCorrectEnabled(!autoCorrectEnabled);
+              }}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer ${
+                autoCorrectEnabled
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-[#687587] border-[#E1E7EC] dark:border-slate-700'
+              }`}
+            >
+              <Wand2 className="w-3.5 h-3.5 text-amber-600" />
+              <span>{autoCorrectEnabled ? loc.autoCorrectOn : loc.autoCorrectOff}</span>
+            </button>
+
             {/* Voice Output Toggle */}
             <button
               type="button"
@@ -1071,11 +1148,17 @@ export function LiveSpeechTranslator() {
             </div>
 
             {liveSpokenText && (
-              <div className="flex items-center justify-end gap-1.5 pt-1">
+              <div className="flex items-center justify-between pt-1">
+                {autoCorrectEnabled && (
+                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Auto-Corrected</span>
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => handleSpeak(liveSpokenText, sourceLang)}
-                  className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 text-[#0B79B7] border border-[#E1E7EC] dark:border-slate-700 cursor-pointer"
+                  className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 text-[#0B79B7] border border-[#E1E7EC] dark:border-slate-700 cursor-pointer ml-auto rtl:mr-auto rtl:ml-0"
                   title="Listen"
                 >
                   <Volume2 className="w-3.5 h-3.5" />
