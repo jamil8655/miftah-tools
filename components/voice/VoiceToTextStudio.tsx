@@ -348,29 +348,27 @@ export function VoiceToTextStudio() {
     }
 
     const controller = new SpeechRecognitionController({
-      onInterim: (text: string) => {
-        const processed = autoCorrectEnabled ? autoCorrectSpokenText(text, selectedLang) : text;
-        setLiveInterim(processed);
+      onTranscriptUpdate: (finals: string[], interim: string) => {
+        liveFinalBufferRef.current = finals;
+        const correctedFinals = finals.map((s) =>
+          autoCorrectEnabled ? autoCorrectSpokenText(s, selectedLang) : s
+        );
+        const formatted = applySmartPunctuationAndParagraphs(correctedFinals, selectedLang);
 
-        const committed = liveFinalBufferRef.current.length > 0
-          ? applySmartPunctuationAndParagraphs(liveFinalBufferRef.current, selectedLang)
+        const processedInterim = interim.trim()
+          ? (autoCorrectEnabled ? autoCorrectSpokenText(interim.trim(), selectedLang) : interim.trim())
           : '';
 
-        if (committed && processed.trim()) {
-          setTranscription(`${committed}\n\n${processed.trim()}`);
-        } else if (processed.trim()) {
-          setTranscription(processed.trim());
-        }
-      },
-      onFinal: (text: string) => {
-        const cleanText = autoCorrectEnabled ? autoCorrectSpokenText(text.trim(), selectedLang) : text.trim();
-        if (cleanText) {
-          liveFinalBufferRef.current.push(cleanText);
-          setLiveInterim('');
-          const formatted = applySmartPunctuationAndParagraphs(liveFinalBufferRef.current, selectedLang);
-          if (formatted) {
-            setTranscription(formatted);
-          }
+        setLiveInterim(processedInterim);
+
+        if (formatted && processedInterim) {
+          setTranscription(`${formatted}\n\n${processedInterim}`);
+        } else if (formatted) {
+          setTranscription(formatted);
+        } else if (processedInterim) {
+          setTranscription(processedInterim);
+        } else {
+          setTranscription('');
         }
       },
       onError: (errMsg: string) => {

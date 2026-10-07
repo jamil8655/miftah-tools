@@ -1,6 +1,7 @@
 export interface SpeechRecognitionCallbacks {
-  onInterim: (text: string) => void;
-  onFinal: (text: string, confidence: number) => void;
+  onInterim?: (text: string) => void;
+  onFinal?: (text: string, confidence: number) => void;
+  onTranscriptUpdate?: (finals: string[], interim: string) => void;
   onError: (errorMessage: string) => void;
   onAudioLevel?: (level: number) => void; // 0 to 100 for visualizer
   onStateChange?: (isListening: boolean) => void;
@@ -14,6 +15,9 @@ export class SpeechRecognitionController {
   private callbacks: SpeechRecognitionCallbacks;
   private visualizerIntervalId: any = null;
   private restartTimeoutId: any = null;
+  private finalsHistory: string[] = [];
+  private lastSessionFinals: string[] = [];
+  private lastReportedFinalIndex: number = -1;
 
   constructor(callbacks: SpeechRecognitionCallbacks) {
     this.callbacks = callbacks;
@@ -39,6 +43,9 @@ export class SpeechRecognitionController {
 
     this.currentLanguageBcp47 = bcp47Lang;
     this.shouldKeepListening = true;
+    this.finalsHistory = [];
+    this.lastSessionFinals = [];
+    this.lastReportedFinalIndex = -1;
 
     // Check for native Android WebView bridge first
     const hasAndroidSpeech = typeof window !== 'undefined' && Boolean((window as any).AndroidSpeech);
@@ -47,12 +54,15 @@ export class SpeechRecognitionController {
         if (eventType === 'onPartialResults') {
           if (data && data.trim()) {
             this.callbacks.onAudioLevel?.(65);
-            this.callbacks.onInterim(data.trim());
+            this.callbacks.onTranscriptUpdate?.(this.finalsHistory, data.trim());
+            this.callbacks.onInterim?.(data.trim());
           }
         } else if (eventType === 'onResults') {
           if (data && data.trim()) {
+            this.finalsHistory.push(data.trim());
             this.callbacks.onAudioLevel?.(80);
-            this.callbacks.onFinal(data.trim(), 0.95);
+            this.callbacks.onTranscriptUpdate?.(this.finalsHistory, '');
+            this.callbacks.onFinal?.(data.trim(), 0.95);
           }
         } else if (eventType === 'onError') {
           console.warn('Android speech event error:', data);
@@ -109,6 +119,9 @@ export class SpeechRecognitionController {
         this.recognition = null;
       }
 
+      this.lastSessionFinals = [];
+      this.lastReportedFinalIndex = -1;
+
       this.recognition = new SpeechRecognitionClass();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
@@ -133,31 +146,43 @@ export class SpeechRecognitionController {
       };
 
       this.recognition.onresult = (event: any) => {
+        const currentFinals: string[] = [];
         let interimTranscript = '';
-        let finalTranscript = '';
+        let latestNewFinalChunk = '';
         let confidence = 0.95;
 
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        for (let i = 0; i < event.results.length; ++i) {
           const result = event.results[i];
-          const transcriptChunk = result[0]?.transcript || '';
+          const text = result[0]?.transcript?.trim() || '';
+          if (!text) continue;
+
           if (result.isFinal) {
-            finalTranscript += transcriptChunk;
-            if (result[0]?.confidence) {
-              confidence = result[0].confidence;
+            currentFinals.push(text);
+            if (i > this.lastReportedFinalIndex) {
+              this.lastReportedFinalIndex = i;
+              latestNewFinalChunk = text;
+              if (result[0]?.confidence) confidence = result[0].confidence;
             }
           } else {
-            interimTranscript += transcriptChunk;
+            interimTranscript += (interimTranscript ? ' ' : '') + text;
           }
         }
 
+        this.lastSessionFinals = currentFinals;
+        const allFinals = [...this.finalsHistory, ...currentFinals];
+
         this.callbacks.onAudioLevel?.(Math.floor(Math.random() * 40) + 50);
 
-        if (interimTranscript.trim()) {
-          this.callbacks.onInterim(interimTranscript.trim());
+        if (this.callbacks.onTranscriptUpdate) {
+          this.callbacks.onTranscriptUpdate(allFinals, interimTranscript);
         }
 
-        if (finalTranscript.trim()) {
-          this.callbacks.onFinal(finalTranscript.trim(), confidence);
+        if (interimTranscript) {
+          this.callbacks.onInterim?.(interimTranscript);
+        }
+
+        if (latestNewFinalChunk) {
+          this.callbacks.onFinal?.(latestNewFinalChunk, confidence);
         }
       };
 
@@ -179,7 +204,6 @@ export class SpeechRecognitionController {
           return;
         }
         if (error === 'language-not-supported') {
-          // If language like ur-PK isn't supported on device, fallback to ur or hi-IN
           if (this.currentLanguageBcp47 === 'ur-PK') {
             this.currentLanguageBcp47 = 'ur-IN';
             try {
@@ -201,6 +225,13 @@ export class SpeechRecognitionController {
       this.recognition.onend = () => {
         this.isListening = false;
         if (this.shouldKeepListening) {
+          // Commit last session finals into finalsHistory so they don't get lost across auto-restarts
+          if (this.lastSessionFinals.length > 0) {
+            this.finalsHistory = [...this.finalsHistory, ...this.lastSessionFinals];
+            this.lastSessionFinals = [];
+            this.lastReportedFinalIndex = -1;
+          }
+
           if (this.restartTimeoutId) clearTimeout(this.restartTimeoutId);
           this.restartTimeoutId = setTimeout(() => {
             if (this.shouldKeepListening) {
