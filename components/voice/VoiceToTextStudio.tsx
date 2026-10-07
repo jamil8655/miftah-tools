@@ -279,12 +279,29 @@ export function VoiceToTextStudio() {
     return found?.bcp47 || 'ur-PK';
   };
 
+  const isQuestionSentence = (sentence: string, lang: string): boolean => {
+    const s = sentence.trim();
+    if (/[?؟]$/.test(s)) return true;
+    if (lang === 'ur') {
+      return /(^|\s)(کیا|کیسے|کیسا|کیسی|کیوں|کہاں|کب|کتنا|کتنے|کتنی|کون|کدھر|کس\s*طرح|خیریت\s*سے\s*ہیں|کیسے\s*ہو)(\s|$)/i.test(s);
+    }
+    if (lang === 'hi') {
+      return /(^|\s)(क्या|कैसे|कैसा|कैसी|क्यों|कहाँ|कहा|कब|कितना|कितने|कितनी|कौन|किधर|किस\s*तरह)(\s|$)/i.test(s);
+    }
+    if (lang === 'ar') {
+      return /(^|\s)(هل|ماذا|ما|لماذا|كيف|أين|متى|كم|من|أيهما)(\s|$)/i.test(s);
+    }
+    if (lang === 'en') {
+      return /^(what|how|why|where|when|who|which|whose|whom|is|are|can|could|will|would|do|does|did|have|has)\b/i.test(s);
+    }
+    return false;
+  };
+
   const applySmartPunctuationAndParagraphs = (sentences: string[], lang: string): string => {
     const deduplicated = deduplicateSentenceStream(sentences);
     if (deduplicated.length === 0) return '';
     const isRtl = lang === 'ur' || lang === 'ar';
-    const paragraphs: string[] = [];
-    let currentParagraph: string[] = [];
+    const lines: string[] = [];
 
     deduplicated.forEach((sentence) => {
       let s = sentence.trim();
@@ -298,26 +315,25 @@ export function VoiceToTextStudio() {
         s = s.charAt(0).toUpperCase() + s.slice(1);
       }
 
-      if (!/[.!?۔،।]$/.test(s)) {
-        if (lang === 'ur') s += '۔';
-        else if (lang === 'hi') s += '।';
-        else if (lang === 'ar') s += '.';
-        else s += '.';
+      const isQuestion = isQuestionSentence(s, lang);
+
+      if (!/[.!?۔،।؟]$/.test(s)) {
+        if (lang === 'ur') {
+          s += isQuestion ? '؟' : '۔';
+        } else if (lang === 'hi') {
+          s += isQuestion ? '?' : '।';
+        } else if (lang === 'ar') {
+          s += isQuestion ? '؟' : '.';
+        } else {
+          s += isQuestion ? '?' : '.';
+        }
       }
 
-      currentParagraph.push(s);
-
-      if (currentParagraph.length >= 3) {
-        paragraphs.push(currentParagraph.join(' '));
-        currentParagraph = [];
-      }
+      lines.push(s);
     });
 
-    if (currentParagraph.length > 0) {
-      paragraphs.push(currentParagraph.join(' '));
-    }
-
-    return paragraphs.join('\n\n');
+    // Each completed sentence / statement cleanly on a new line
+    return lines.join('\n\n');
   };
 
   // Start Live Microphone Recording & Real-time Recognition
@@ -539,22 +555,25 @@ export function VoiceToTextStudio() {
     triggerHaptic('medium');
 
     const isRtl = selectedLang === 'ur' || selectedLang === 'ar';
-    const paragraphs = transcription.split(/\r?\n\r?\n/).map(
-      (para) =>
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: para,
-              size: 26,
-              font: isRtl ? 'Amiri' : 'Arial',
-              rightToLeft: isRtl,
-            }),
-          ],
-          spacing: { after: 200, line: 360 },
-          bidirectional: isRtl,
-          alignment: isRtl ? AlignmentType.RIGHT : AlignmentType.LEFT,
-        })
-    );
+    const paragraphs = transcription
+      .split(/\r?\n+/)
+      .filter((p) => p.trim())
+      .map(
+        (para) =>
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: para.trim(),
+                size: 26,
+                font: isRtl ? 'Amiri' : 'Arial',
+                rightToLeft: isRtl,
+              }),
+            ],
+            spacing: { after: 180, line: 360 },
+            bidirectional: isRtl,
+            alignment: isRtl ? AlignmentType.RIGHT : AlignmentType.LEFT,
+          })
+      );
 
     const doc = new Document({
       sections: [
@@ -602,12 +621,13 @@ export function VoiceToTextStudio() {
     container.style.boxSizing = 'border-box';
 
     const paragraphsHtml = transcription
-      .split(/\r?\n\r?\n/)
+      .split(/\r?\n+/)
+      .filter((p) => p.trim())
       .map(
         (p) =>
-          `<p style="margin: 0 0 16px 0; font-size: 15px; line-height: 1.85; text-align: ${
+          `<p style="margin: 0 0 14px 0; font-size: 15px; line-height: 1.85; text-align: ${
             isRtl ? 'right' : 'left'
-          }; color: #1e293b;">${p
+          }; color: #1e293b;">${p.trim()
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
