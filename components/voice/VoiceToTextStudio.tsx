@@ -40,6 +40,7 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import { TextToSpeechController } from '@/lib/translator/text-to-speech';
 import { autoCorrectSpokenText } from '@/lib/translator/auto-correct';
+import { SpeechRecognitionController } from '@/lib/translator/speech-recognition';
 
 export const TOP_FLAGSHIP_LANGS = [
   { code: 'ur', label: 'اردو', flag: '🇵🇰' },
@@ -241,20 +242,12 @@ export function VoiceToTextStudio() {
   // Result state
   const [transcription, setTranscription] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
+  const [audioLevel, setAudioLevel] = useState<number>(0);
 
   // Audio & Speech Recognition Refs
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const animFrameRef = useRef<number | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  // Live Web Speech Recognition Engine Ref
-  const recognitionRef = useRef<any>(null);
+  const recognitionControllerRef = useRef<SpeechRecognitionController | null>(null);
   const liveFinalBufferRef = useRef<string[]>([]);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
@@ -267,32 +260,16 @@ export function VoiceToTextStudio() {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
+    if (recognitionControllerRef.current) {
+      try {
+        recognitionControllerRef.current.stop();
+      } catch (_) {}
+      recognitionControllerRef.current = null;
     }
     if (typeof window !== 'undefined' && (window as any).AndroidSpeech) {
       try {
         (window as any).AndroidSpeech.stopListening();
       } catch (_) {}
-    }
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.onend = null;
-        recognitionRef.current.onerror = null;
-        recognitionRef.current.stop();
-      } catch (_) {}
-      recognitionRef.current = null;
-    }
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      try {
-        audioContextRef.current.close();
-      } catch (_) {}
-      audioContextRef.current = null;
     }
   };
 
@@ -342,13 +319,12 @@ export function VoiceToTextStudio() {
   };
 
   // Start Live Microphone Recording & Real-time Recognition
-  const handleStartRecording = async () => {
+  const handleStartRecording = () => {
     setMicError(null);
     setErrorMessage(null);
     setLiveInterim('');
     setTranscription('');
     liveFinalBufferRef.current = [];
-    audioChunksRef.current = [];
 
     // Prompt native runtime permissions on Android
     if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.requestAppPermissions) {
@@ -357,182 +333,67 @@ export function VoiceToTextStudio() {
       } catch (_) {}
     }
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-          sampleRate: 48000,
-        },
-      });
+    const bcp47 = getBcp47Lang(selectedLang);
 
-      mediaStreamRef.current = stream;
-      audioChunksRef.current = [];
-
-      // Audio Analyser for Visualizer
-      try {
-        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        if (AudioCtx) {
-          const audioCtx = new AudioCtx();
-          audioContextRef.current = audioCtx;
-          const source = audioCtx.createMediaStreamSource(stream);
-          const analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 64;
-          source.connect(analyser);
-          analyserRef.current = analyser;
-          drawVisualizer();
-        }
-      } catch (_) {}
-
-      // Start MediaRecorder for recording buffer (used for Whisper fallback or audio file handling)
-      try {
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : MediaRecorder.isTypeSupported('audio/mp4')
-          ? 'audio/mp4'
-          : 'audio/wav';
-
-        const recorder = new MediaRecorder(stream, { mimeType });
-        mediaRecorderRef.current = recorder;
-
-        recorder.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) {
-            audioChunksRef.current.push(e.data);
-          }
-        };
-
-        recorder.start(500);
-      } catch (recErr) {
-        console.warn('MediaRecorder error:', recErr);
-      }
-
-      const bcp47 = getBcp47Lang(selectedLang);
-      const hasAndroidSpeech = typeof window !== 'undefined' && Boolean((window as any).AndroidSpeech);
-
-      if (hasAndroidSpeech) {
-        // Native Android Speech Recognition Bridge
-        (window as any).__onAndroidSpeechEvent = (eventType: string, data: string) => {
-          if (eventType === 'onPartialResults') {
-            if (data && data.trim()) {
-              const processed = autoCorrectEnabled ? autoCorrectSpokenText(data.trim(), selectedLang) : data.trim();
-              setLiveInterim(processed);
-            }
-          } else if (eventType === 'onResults') {
-            let cleaned = data ? data.trim() : '';
-            if (autoCorrectEnabled) {
-              cleaned = autoCorrectSpokenText(cleaned, selectedLang);
-            }
-            if (cleaned.length > 0) {
-              liveFinalBufferRef.current.push(cleaned);
-              setLiveInterim('');
-              const formatted = applySmartPunctuationAndParagraphs(
-                liveFinalBufferRef.current,
-                selectedLang
-              );
-              if (formatted) {
-                setTranscription(formatted);
-              }
-            }
-          } else if (eventType === 'onError') {
-            console.warn('Android Speech recognizer notice:', data);
-          }
-        };
-
-        try {
-          (window as any).AndroidSpeech.startListening(bcp47);
-        } catch (e) {
-          console.warn('AndroidSpeech start error:', e);
-        }
-      } else {
-        // Native Web Speech Recognition (Browser)
-        const SpeechRecognitionClass =
-          (window as unknown as { SpeechRecognition: any }).SpeechRecognition ||
-          (window as unknown as { webkitSpeechRecognition: any }).webkitSpeechRecognition;
-
-        if (SpeechRecognitionClass) {
-          const recognition = new SpeechRecognitionClass();
-          recognition.continuous = true;
-          recognition.interimResults = true;
-          recognition.maxAlternatives = 1;
-          recognition.lang = bcp47;
-
-          recognition.onresult = (event: any) => {
-            let interimStr = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-              const result = event.results[i];
-              const text = result[0].transcript;
-
-              if (result.isFinal) {
-                let cleaned = text.trim();
-                if (autoCorrectEnabled) {
-                  cleaned = autoCorrectSpokenText(cleaned, selectedLang);
-                }
-                if (cleaned.length > 0) {
-                  liveFinalBufferRef.current.push(cleaned);
-                }
-              } else {
-                interimStr += text;
-              }
-            }
-
-            if (autoCorrectEnabled && interimStr.trim()) {
-              interimStr = autoCorrectSpokenText(interimStr, selectedLang);
-            }
-            setLiveInterim(interimStr);
-
-            const allSegments = [...liveFinalBufferRef.current];
-            if (interimStr.trim()) {
-              allSegments.push(interimStr.trim());
-            }
-
-            const formatted = applySmartPunctuationAndParagraphs(
-              allSegments,
-              selectedLang
-            );
-            if (formatted) {
-              setTranscription(formatted);
-            }
-          };
-
-          recognition.onerror = (e: any) => {
-            if (e.error === 'not-allowed') {
-              setMicError(loc.micErrorPermission);
-            }
-          };
-
-          recognition.onend = () => {
-            if (mediaStreamRef.current && mediaStreamRef.current.active) {
-              try {
-                recognition.start();
-              } catch (_) {}
-            }
-          };
-
-          try {
-            recognition.start();
-            recognitionRef.current = recognition;
-          } catch (e) {
-            console.warn('SpeechRecognition start error:', e);
-          }
-        }
-      }
-
-      setIsRecording(true);
-      setRecordingSeconds(0);
-      triggerHaptic('medium');
-
-      timerIntervalRef.current = setInterval(() => {
-        setRecordingSeconds((prev) => prev + 1);
-      }, 1000);
-    } catch (err: any) {
-      console.error('Microphone access failed:', err);
-      setMicError(loc.micErrorPermission);
-      triggerHaptic('error');
+    if (!SpeechRecognitionController.isSupported()) {
+      setMicError(loc.micErrorPermission || 'Live speech recognition is not supported in this browser. Please use Google Chrome, Edge or Safari.');
+      return;
     }
+
+    if (recognitionControllerRef.current) {
+      try {
+        recognitionControllerRef.current.stop();
+      } catch (_) {}
+      recognitionControllerRef.current = null;
+    }
+
+    const controller = new SpeechRecognitionController({
+      onInterim: (text: string) => {
+        const processed = autoCorrectEnabled ? autoCorrectSpokenText(text, selectedLang) : text;
+        setLiveInterim(processed);
+
+        const allSegments = [...liveFinalBufferRef.current];
+        if (processed.trim()) {
+          allSegments.push(processed.trim());
+        }
+        const formatted = applySmartPunctuationAndParagraphs(allSegments, selectedLang);
+        if (formatted) {
+          setTranscription(formatted);
+        }
+      },
+      onFinal: (text: string) => {
+        const cleanText = autoCorrectEnabled ? autoCorrectSpokenText(text.trim(), selectedLang) : text.trim();
+        if (cleanText) {
+          liveFinalBufferRef.current.push(cleanText);
+          setLiveInterim('');
+          const formatted = applySmartPunctuationAndParagraphs(liveFinalBufferRef.current, selectedLang);
+          if (formatted) {
+            setTranscription(formatted);
+          }
+        }
+      },
+      onError: (errMsg: string) => {
+        console.warn('Speech Recognition error:', errMsg);
+        setMicError(errMsg);
+      },
+      onAudioLevel: (level: number) => {
+        setAudioLevel(level);
+      },
+      onStateChange: (listening: boolean) => {
+        setIsRecording(listening);
+      },
+    });
+
+    recognitionControllerRef.current = controller;
+    controller.start(bcp47);
+    setIsRecording(true);
+    setRecordingSeconds(0);
+    triggerHaptic('medium');
+
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    timerIntervalRef.current = setInterval(() => {
+      setRecordingSeconds((prev) => prev + 1);
+    }, 1000);
   };
 
   // Stop Live Recording
@@ -540,33 +401,19 @@ export function VoiceToTextStudio() {
     triggerHaptic('medium');
     setIsRecording(false);
     setLiveInterim('');
+    setAudioLevel(0);
 
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
 
-    if (typeof window !== 'undefined' && (window as any).AndroidSpeech) {
+    if (recognitionControllerRef.current) {
       try {
-        (window as any).AndroidSpeech.stopListening();
+        recognitionControllerRef.current.stop();
       } catch (_) {}
+      recognitionControllerRef.current = null;
     }
-
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (_) {}
-    }
-
-    const recordedChunksSnapshot = [...audioChunksRef.current];
-
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try {
-        mediaRecorderRef.current.stop();
-      } catch (_) {}
-    }
-
-    cleanupRecordingResources();
 
     if (liveFinalBufferRef.current.length > 0) {
       const formatted = applySmartPunctuationAndParagraphs(
@@ -575,63 +422,7 @@ export function VoiceToTextStudio() {
       );
       setTranscription(formatted);
       triggerHaptic('success');
-    } else {
-      // Automatic Fallback: Process recorded audio chunks with Whisper AI
-      setTimeout(() => {
-        const chunksToProcess = audioChunksRef.current.length > 0 ? audioChunksRef.current : recordedChunksSnapshot;
-        if (chunksToProcess.length > 0) {
-          const audioBlob = new Blob(chunksToProcess, { type: 'audio/webm' });
-          if (audioBlob.size > 500) {
-            processAudioForTranscription(audioBlob);
-          } else {
-            setErrorMessage('Audio recording was too short. Please speak clearly and try again.');
-          }
-        } else {
-          setErrorMessage('No speech detected. Please speak into the microphone.');
-        }
-      }, 350);
     }
-  };
-
-  // Draw Audio Frequency Waveform Visualizer
-  const drawVisualizer = () => {
-    if (!analyserRef.current || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const analyser = analyserRef.current;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    const renderFrame = () => {
-      animFrameRef.current = requestAnimationFrame(renderFrame);
-      analyser.getByteFrequencyData(dataArray);
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const barCount = 32;
-      const barWidth = (canvas.width / barCount) - 3;
-      let x = 0;
-
-      for (let i = 0; i < barCount; i++) {
-        const val = dataArray[i] || 0;
-        const barHeight = Math.max(4, (val / 255) * canvas.height * 0.85);
-
-        const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
-        gradient.addColorStop(0, '#2563eb');
-        gradient.addColorStop(0.5, '#4f46e5');
-        gradient.addColorStop(1, '#06b6d4');
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.roundRect(x, (canvas.height - barHeight) / 2, barWidth, barHeight, 4);
-        ctx.fill();
-
-        x += barWidth + 3;
-      }
-    };
-
-    renderFrame();
   };
 
   // Handle Audio File Selection
@@ -903,6 +694,9 @@ export function VoiceToTextStudio() {
                   onClick={() => {
                     triggerHaptic('light');
                     setSelectedLang(lang.code);
+                    if (isRecording && recognitionControllerRef.current) {
+                      recognitionControllerRef.current.setLanguage(getBcp47Lang(lang.code));
+                    }
                   }}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                     isSelected
@@ -930,6 +724,9 @@ export function VoiceToTextStudio() {
                   onClick={() => {
                     triggerHaptic('light');
                     setSelectedLang(lang.code);
+                    if (isRecording && recognitionControllerRef.current) {
+                      recognitionControllerRef.current.setLanguage(getBcp47Lang(lang.code));
+                    }
                   }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
                     isSelected
@@ -1000,12 +797,26 @@ export function VoiceToTextStudio() {
         {/* TAB 1: Live Voice Recording */}
         {activeTab === 'record' && (
           <div className="flex flex-col items-center justify-center py-4 sm:py-6 space-y-6">
-            {/* Visualizer Waveform Canvas */}
-            <div className="w-full max-w-md h-20 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden p-2 relative shadow-inner">
-              <canvas ref={canvasRef} width={420} height={70} className="w-full h-full" />
-              {!isRecording && (
-                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-400">
-                  {loc.readyToRecord}
+            {/* Visualizer Waveform Equalizer */}
+            <div className="w-full max-w-md h-20 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden p-3 relative shadow-inner">
+              {isRecording ? (
+                <div className="flex items-center justify-center gap-1.5 w-full h-full px-2">
+                  {Array.from({ length: 28 }).map((_, idx) => {
+                    const factor = Math.sin((idx / 28) * Math.PI);
+                    const barHeight = Math.max(16, Math.min(95, (audioLevel * factor * 1.5) + ((idx % 3) * 12)));
+                    return (
+                      <div
+                        key={idx}
+                        className="flex-1 bg-gradient-to-t from-brand-600 via-indigo-500 to-cyan-400 rounded-full transition-all duration-100"
+                        style={{ height: `${barHeight}%` }}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400">
+                  <Mic className="w-4 h-4 text-slate-400" />
+                  <span>{loc.readyToRecord}</span>
                 </div>
               )}
             </div>
