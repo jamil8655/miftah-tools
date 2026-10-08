@@ -38,8 +38,9 @@ export async function getWhisperPipeline(
     onProgress?.(10, 'Initializing Whisper Speech Recognition Engine...');
 
     try {
-      // Dynamic import to support client-side bundling without SSR breakage
-      const { pipeline, env } = await import('@xenova/transformers');
+      // Dynamic runtime import to prevent build-time bundling failures
+      const importDynamic = (moduleName: string) => new Function(`return import('${moduleName}')`)();
+      const { pipeline, env } = await importDynamic('@xenova/transformers');
 
       // Configure Transformers.js cache & execution environment
       env.allowLocalModels = false;
