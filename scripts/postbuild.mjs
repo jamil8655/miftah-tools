@@ -11,5 +11,10 @@ const htaccessDest = path.join(rootDir, 'out', '.htaccess');
 
 if (fs.existsSync(htaccessSrc) && fs.existsSync(path.join(rootDir, 'out'))) {
   fs.copyFileSync(htaccessSrc, htaccessDest);
-  console.log('? Copied public/.htaccess to out/.htaccess for Hostinger / Apache hosting');
+  console.log('✓ Copied public/.htaccess to out/.htaccess for Hostinger / Apache hosting');
 }
+
+const nojekyllDest = path.join(rootDir, 'out', '.nojekyll');
+fs.writeFileSync(nojekyllDest, '# Disable Jekyll for GitHub Pages\n');
+console.log('✓ Created out/.nojekyll for GitHub Pages CSS & JS asset serving');
+
