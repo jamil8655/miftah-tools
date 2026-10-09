@@ -17,6 +17,7 @@ import { triggerHaptic } from '@/lib/motion/motion-system';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { adManager } from '@/lib/ads/AdManager';
 import { ToolSeoContent } from '@/components/shared/ToolSeoContent';
+import { LiveRatingStudio } from '@/components/ratings/LiveRatingStudio';
 
 interface ToolLayoutProps {
   tool: ToolDefinition;
@@ -383,6 +384,14 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
 
       {/* Responsive Ad Space for Monetization */}
       <AdSlot placement="tool-bottom" />
+
+      {/* Live User Ratings & Feedback for this Tool */}
+      <div className="pt-4">
+        <LiveRatingStudio
+          initialToolName={localized.name}
+          initialToolSlug={tool.slug}
+        />
+      </div>
 
       {/* Comprehensive SEO Content, How-To Guide, Specifications, FAQs & Related Tools */}
       <ToolSeoContent tool={tool} />

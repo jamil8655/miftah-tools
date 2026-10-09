@@ -36,8 +36,10 @@ import {
   Sparkles,
   HelpCircle,
   Cpu,
+  Star,
 } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
+import { LiveRatingStudio } from '@/components/ratings/LiveRatingStudio';
 import { ToolCard } from '@/components/shared/ToolCard';
 import { NativeFeedAd } from '@/components/ads/NativeFeedAd';
 import { AdSlot } from '@/components/ads/AdSlot';
@@ -1199,22 +1201,11 @@ export default function HomePage() {
 
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
           
-          {/* Eyebrow Badge & Rating Stars Pill */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-            {/* Eyebrow Badge with Micro Pulse */}
+          {/* Clean Eyebrow Badge */}
+          <div className="flex items-center justify-center">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 border border-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] text-[11px] sm:text-xs font-bold uppercase tracking-widest select-none shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#0B79B7] animate-pulse" />
               <span>{loc.heroEyebrow}</span>
-            </div>
-
-            {/* Rating Stars & Trust Pill */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-amber-800 dark:text-amber-200 text-[11px] sm:text-xs font-bold select-none shadow-xs">
-              <div className="flex items-center text-amber-500 gap-0.5 text-xs">
-                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-              </div>
-              <span className="font-black text-[#182230] dark:text-white">{loc.ratingScore}</span>
-              <span className="text-amber-500/40 font-normal">|</span>
-              <span className="text-[#687587] dark:text-slate-300 font-semibold">{loc.ratingLabel}</span>
             </div>
           </div>
 
@@ -1361,18 +1352,28 @@ export default function HomePage() {
           ================================================== */}
       {recentTools.length > 0 && !searchQuery && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] flex items-center justify-center shrink-0">
-                  <History className="w-3.5 h-3.5" />
+          <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-sky-500/[0.04] via-brand-500/[0.02] to-purple-500/[0.04] dark:from-slate-900 dark:to-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-sm space-y-4 relative overflow-hidden">
+            
+            {/* Header with Title and Clear/History Action Links */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0B79B7] to-sky-400 text-white flex items-center justify-center shrink-0 shadow-sm shadow-[#0B79B7]/20">
+                  <History className="w-4 h-4" />
                 </div>
-                <h2 className="text-xs sm:text-sm font-black text-[#182230] dark:text-white uppercase tracking-wider">
-                  {loc.recentToolsHeading}
-                </h2>
-                <span className="px-2 py-0.5 rounded-full bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-extrabold">
-                  {recentTools.length}
-                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xs sm:text-sm font-black text-[#182230] dark:text-white tracking-tight">
+                      {loc.recentToolsHeading}
+                    </h2>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-black border border-[#0B79B7]/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0B79B7] animate-pulse" />
+                      <span>{recentTools.length}</span>
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-[#687587] dark:text-slate-400 hidden sm:block">
+                    Jump right back into your active workflows and recently launched tools
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-3">
@@ -1382,39 +1383,65 @@ export default function HomePage() {
                     triggerHaptic('light');
                     clearRecentTools?.();
                   }}
-                  className="text-[11px] font-bold text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all cursor-pointer select-none"
                 >
                   {loc.recentToolsClear}
                 </button>
                 <Link
                   href="/history"
-                  className="text-[11px] font-bold text-[#0B79B7] dark:text-[#38a8f8] hover:underline flex items-center gap-0.5"
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-[11px] font-bold text-[#0B79B7] dark:text-[#38a8f8] hover:border-[#0B79B7] shadow-xs active:scale-95 transition-all flex items-center gap-1"
                 >
                   <span>{loc.recentToolsViewAll}</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
+            {/* Grid of Elevated Recent Tool Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
               {recentTools.map((tool) => {
                 const localized = getLocalizedTool(tool, language);
+                const localizedCat = getLocalizedCategory(tool.category, language);
+                
                 return (
                   <Link
                     key={`recent-${tool.id}`}
                     href={`/tools/${tool.slug || tool.id}`}
                     onClick={() => triggerHaptic('selection')}
-                    className="p-3 rounded-xl bg-[#F5F7F9] dark:bg-slate-800/80 hover:bg-[#0B79B7]/10 hover:border-[#0B79B7]/40 border border-[#E1E7EC] dark:border-slate-700/80 transition-all duration-200 flex items-center gap-2.5 group select-none shadow-xs"
+                    className="group relative p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-850/90 border border-[#E1E7EC] dark:border-slate-800 hover:border-[#0B79B7]/60 dark:hover:border-[#0B79B7]/60 shadow-xs hover:shadow-md hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 flex flex-col justify-between select-none overflow-hidden"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-700 text-[#0B79B7] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform text-xs font-black">
-                      ⚡
+                    {/* Top Accent Gradient Bar */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0B79B7] via-sky-400 to-indigo-500 opacity-60 group-hover:opacity-100 transition-opacity" />
+
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0B79B7]/10 to-sky-500/10 dark:bg-slate-800 text-[#0B79B7] dark:text-[#38a8f8] flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-[#0B79B7] group-hover:text-white transition-all shadow-xs">
+                          <Zap className="w-4 h-4" />
+                        </div>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider truncate max-w-[85px]">
+                          {localizedCat || tool.category}
+                        </span>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        <h3 className="text-xs sm:text-sm font-bold text-[#182230] dark:text-white group-hover:text-[#0B79B7] dark:group-hover:text-[#38a8f8] transition-colors truncate">
+                          {localized?.name || tool.name}
+                        </h3>
+                        <p className="text-[10px] sm:text-[11px] text-[#687587] dark:text-slate-400 line-clamp-1 leading-normal">
+                          {localized?.shortDesc || 'Instant file processing'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-[#182230] dark:text-white truncate group-hover:text-[#0B79B7] transition-colors">
-                        {localized?.name || tool.name}
-                      </p>
-                      <p className="text-[10px] text-[#687587] dark:text-slate-400 truncate uppercase font-semibold">
-                        {tool.category || 'Tool'}
-                      </p>
+
+                    <div className="pt-2.5 mt-2.5 border-t border-[#E1E7EC]/60 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-[#0B79B7] dark:text-[#38a8f8]">
+                      <span className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Ready</span>
+                      </span>
+                      <span className="group-hover:translate-x-1 transition-transform flex items-center gap-0.5">
+                        <span>Open</span>
+                        <ChevronRight className="w-3 h-3" />
+                      </span>
                     </div>
                   </Link>
                 );
@@ -1752,6 +1779,28 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      {/* ==================================================
+          9. LIVE USER RATINGS & COMMUNITY REVIEWS
+          ================================================== */}
+      {!searchQuery && activeCategory === 'all' && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-6">
+          <div className="text-center space-y-2 mb-8">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-bold uppercase tracking-wider">
+              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>Live User Ratings</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#182230] dark:text-white tracking-tight">
+              Community Ratings & Verified Reviews
+            </h2>
+            <p className="text-xs sm:text-sm text-[#687587] dark:text-slate-400 max-w-xl mx-auto">
+              Real feedback and ratings submitted live by people using Miftah Tools digital utilities.
+            </p>
+          </div>
+
+          <LiveRatingStudio />
+        </section>
+      )}
 
       {/* ==================================================
           10. FREQUENTLY ASKED QUESTIONS (EXPANDABLE DROPDOWN FAQ - PLACED AT THE BOTTOM)
