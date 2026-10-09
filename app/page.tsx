@@ -294,6 +294,75 @@ function RealCalcCategoryIcon({ className = "w-6 h-6" }: { className?: string })
   );
 }
 
+function getRecentToolIcon(tool: any, className = "w-6 h-6") {
+  const id = (tool.slug || tool.id || '').toLowerCase();
+  const cat = (tool.category || '').toLowerCase();
+
+  if (id.includes('pdf-to-docx') || id.includes('pdf-to-word')) return <RealPdfToWordIcon className={className} />;
+  if (id.includes('voice-to-text') || id.includes('speech-to-text')) return <RealVoiceToTextIcon className={className} />;
+  if (id.includes('speech-translator') || id.includes('voice-translator')) return <RealSpeechTranslatorIcon className={className} />;
+  if (id.includes('compress-pdf') || id.includes('pdf-compress')) return <RealCompressPdfIcon className={className} />;
+  if (id.includes('image-studio') || id.includes('image-compress') || id.includes('crop-image')) return <RealImageStudioIcon className={className} />;
+  if (id.includes('ocr') || id.includes('text-extract')) return <RealOcrIcon className={className} />;
+  if (id.includes('camera-scanner') || id.includes('doc-scan')) return <RealCameraScannerIcon className={className} />;
+  if (id.includes('media-downloader') || id.includes('video-downloader')) return <RealMediaDownloaderIcon className={className} />;
+  if (id.includes('qr') || id.includes('barcode')) return <RealQrBarcodeIcon className={className} />;
+  if (id.includes('pdf-editor') || id.includes('edit-pdf')) return <RealPdfEditorIcon className={className} />;
+  if (id.includes('merge-pdf') || id.includes('combine-pdf')) return <RealMergePdfIcon className={className} />;
+
+  // Category based resolution
+  if (cat.includes('pdf')) return <RealPdfCategoryIcon className={className} />;
+  if (cat.includes('image')) return <RealImageCategoryIcon className={className} />;
+  if (cat.includes('text')) return <RealTextCategoryIcon className={className} />;
+  if (cat.includes('compress') || cat.includes('convert')) return <RealConverterCategoryIcon className={className} />;
+  if (cat.includes('media') || cat.includes('video') || cat.includes('audio')) return <RealUtilityCategoryIcon className={className} />;
+  if (cat.includes('security') || cat.includes('protect')) return <RealSecurityCategoryIcon className={className} />;
+  if (cat.includes('dev') || cat.includes('code')) return <RealDevCategoryIcon className={className} />;
+  if (cat.includes('calc')) return <RealCalcCategoryIcon className={className} />;
+
+  return <RealUtilityCategoryIcon className={className} />;
+}
+
+function getRecentToolAccent(tool: any) {
+  const id = (tool.slug || tool.id || '').toLowerCase();
+  const cat = (tool.category || '').toLowerCase();
+
+  if (id.includes('pdf') || cat.includes('pdf')) {
+    return {
+      topGradient: 'from-rose-500 via-red-400 to-pink-500',
+      badgeBg: 'bg-rose-50 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200/60 dark:border-rose-900/60',
+      iconGlow: 'group-hover:border-rose-300 dark:group-hover:border-rose-700',
+    };
+  }
+  if (id.includes('voice') || id.includes('audio') || cat.includes('audio')) {
+    return {
+      topGradient: 'from-purple-500 via-indigo-400 to-fuchsia-500',
+      badgeBg: 'bg-purple-50 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border-purple-200/60 dark:border-purple-900/60',
+      iconGlow: 'group-hover:border-purple-300 dark:group-hover:border-purple-700',
+    };
+  }
+  if (id.includes('image') || cat.includes('image')) {
+    return {
+      topGradient: 'from-sky-500 via-cyan-400 to-blue-500',
+      badgeBg: 'bg-sky-50 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300 border-sky-200/60 dark:border-sky-900/60',
+      iconGlow: 'group-hover:border-sky-300 dark:group-hover:border-sky-700',
+    };
+  }
+  if (id.includes('qr') || id.includes('barcode')) {
+    return {
+      topGradient: 'from-teal-500 via-emerald-400 to-teal-600',
+      badgeBg: 'bg-teal-50 text-teal-700 dark:bg-teal-950/70 dark:text-teal-300 border-teal-200/60 dark:border-teal-900/60',
+      iconGlow: 'group-hover:border-teal-300 dark:group-hover:border-teal-700',
+    };
+  }
+
+  return {
+    topGradient: 'from-[#0B79B7] via-sky-400 to-indigo-500',
+    badgeBg: 'bg-blue-50 text-[#075B8C] dark:bg-blue-950/70 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/60',
+    iconGlow: 'group-hover:border-[#0B79B7]/40',
+  };
+}
+
 const PAGE_LOCALES = {
   en: {
     heroEyebrow: 'MIFTAH TOOLS',
@@ -1348,11 +1417,11 @@ export default function HomePage() {
       </section>
 
       {/* ==================================================
-          3. RECENT TOOLS (HIGH-END MODERN SLEEK CARDS)
+          3. RECENT TOOLS (HIGH-END MODERN SLEEK CARDS WITH DEDICATED ICONS)
           ================================================== */}
       {recentTools.length > 0 && !searchQuery && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-sky-500/[0.04] via-brand-500/[0.02] to-purple-500/[0.04] dark:from-slate-900 dark:to-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-sm space-y-4 relative overflow-hidden">
+          <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-sky-500/[0.05] via-brand-500/[0.03] to-purple-500/[0.05] dark:from-slate-900/90 dark:to-slate-900/90 border border-[#E1E7EC] dark:border-slate-800 shadow-sm space-y-4 relative overflow-hidden backdrop-blur-xs">
             
             {/* Header with Title and Clear/History Action Links */}
             <div className="flex items-center justify-between gap-3">
@@ -1367,16 +1436,16 @@ export default function HomePage() {
                     </h2>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-black border border-[#0B79B7]/20">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#0B79B7] animate-pulse" />
-                      <span>{recentTools.length}</span>
+                      <span>{recentTools.length} active</span>
                     </span>
                   </div>
                   <p className="text-[10px] text-[#687587] dark:text-slate-400 hidden sm:block">
-                    Jump right back into your active workflows and recently launched tools
+                    Quickly resume recently used tools with one-click direct access
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -1397,28 +1466,29 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Grid of Elevated Recent Tool Cards */}
+            {/* Grid of Elevated Recent Tool Cards with Dedicated Real Icons */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
               {recentTools.map((tool) => {
                 const localized = getLocalizedTool(tool, language);
                 const localizedCat = getLocalizedCategory(tool.category, language);
+                const accent = getRecentToolAccent(tool);
                 
                 return (
                   <Link
                     key={`recent-${tool.id}`}
                     href={`/tools/${tool.slug || tool.id}`}
                     onClick={() => triggerHaptic('selection')}
-                    className="group relative p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-850/90 border border-[#E1E7EC] dark:border-slate-800 hover:border-[#0B79B7]/60 dark:hover:border-[#0B79B7]/60 shadow-xs hover:shadow-md hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 flex flex-col justify-between select-none overflow-hidden"
+                    className="group relative p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/90 border border-[#E1E7EC] dark:border-slate-700/80 hover:border-[#0B79B7] dark:hover:border-[#0B79B7] shadow-xs hover:shadow-lg hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 flex flex-col justify-between select-none overflow-hidden"
                   >
                     {/* Top Accent Gradient Bar */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0B79B7] via-sky-400 to-indigo-500 opacity-60 group-hover:opacity-100 transition-opacity" />
+                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${accent.topGradient} opacity-70 group-hover:opacity-100 transition-opacity`} />
 
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-1.5">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#0B79B7]/10 to-sky-500/10 dark:bg-slate-800 text-[#0B79B7] dark:text-[#38a8f8] flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-[#0B79B7] group-hover:text-white transition-all shadow-xs">
-                          <Zap className="w-4 h-4" />
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-xs">
+                          {getRecentToolIcon(tool, "w-8 h-8")}
                         </div>
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wider truncate max-w-[85px]">
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border uppercase tracking-wider truncate max-w-[80px] ${accent.badgeBg}`}>
                           {localizedCat || tool.category}
                         </span>
                       </div>
@@ -1428,18 +1498,18 @@ export default function HomePage() {
                           {localized?.name || tool.name}
                         </h3>
                         <p className="text-[10px] sm:text-[11px] text-[#687587] dark:text-slate-400 line-clamp-1 leading-normal">
-                          {localized?.shortDesc || 'Instant file processing'}
+                          {localized?.shortDesc || 'Instant on-device file tool'}
                         </p>
                       </div>
                     </div>
 
-                    <div className="pt-2.5 mt-2.5 border-t border-[#E1E7EC]/60 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-[#0B79B7] dark:text-[#38a8f8]">
+                    <div className="pt-2.5 mt-2.5 border-t border-[#E1E7EC]/60 dark:border-slate-700/60 flex items-center justify-between text-[10px] font-bold text-[#0B79B7] dark:text-[#38a8f8]">
                       <span className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         <span>Ready</span>
                       </span>
-                      <span className="group-hover:translate-x-1 transition-transform flex items-center gap-0.5">
-                        <span>Open</span>
+                      <span className="group-hover:translate-x-1 transition-transform flex items-center gap-0.5 font-bold">
+                        <span>Launch</span>
                         <ChevronRight className="w-3 h-3" />
                       </span>
                     </div>

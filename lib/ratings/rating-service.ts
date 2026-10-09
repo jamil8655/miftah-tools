@@ -5,6 +5,8 @@ import {
   collection,
   doc,
   setDoc,
+  updateDoc,
+  deleteDoc,
   getDocs,
   query,
   orderBy,
@@ -25,7 +27,10 @@ export interface RatingReview {
   toolName?: string;
   comment: string;
   createdAt: number;
+  updatedAt?: number;
+  formattedDate?: string;
   verified: boolean;
+  isOwner?: boolean;
 }
 
 export interface RatingStats {
@@ -40,64 +45,32 @@ export interface RatingStats {
   };
 }
 
-const LOCAL_STORAGE_KEY = 'miftah_live_ratings_cache_v2';
-const USER_RATED_KEY = 'miftah_user_has_rated';
-
-// Initial verified reviews to show immediately while real reviews sync
-const DEFAULT_INITIAL_REVIEWS: RatingReview[] = [
-  {
-    id: 'rev_initial_1',
-    userName: 'Muhammad Zaid',
-    userEmail: 'zaid.tech***@gmail.com',
-    rating: 5,
-    toolName: 'PDF to Word (OCR)',
-    toolSlug: 'pdf-to-docx',
-    comment: 'Urdu and Arabic OCR text extraction was amazingly fast and perfectly accurate without formatting issues. Saved me hours!',
-    createdAt: Date.now() - 1000 * 60 * 60 * 3,
-    verified: true,
-  },
-  {
-    id: 'rev_initial_2',
-    userName: 'Farhan Ansari',
-    userEmail: 'farhan.ans***@gmail.com',
-    rating: 5,
-    toolName: 'Live Speech Translator',
-    toolSlug: 'live-speech-translator',
-    comment: 'Real-time voice translation between Urdu, Arabic and English is smooth and works completely free in browser.',
-    createdAt: Date.now() - 1000 * 60 * 60 * 12,
-    verified: true,
-  },
-  {
-    id: 'rev_initial_3',
-    userName: 'Ayesha Siddiqua',
-    userEmail: 'ayesha.s***@outlook.com',
-    rating: 5,
-    toolName: 'Compress PDF',
-    toolSlug: 'compress-pdf',
-    comment: 'Reduced my 45MB scanned document to 4.2MB with crisp readability. 100% private on-device processing.',
-    createdAt: Date.now() - 1000 * 60 * 60 * 28,
-    verified: true,
-  },
-  {
-    id: 'rev_initial_4',
-    userName: 'Tariq Mahmood',
-    userEmail: 'tariq.m***@gmail.com',
-    rating: 5,
-    toolName: 'Voice to Text (AI)',
-    toolSlug: 'voice-to-text',
-    comment: 'Transcribed a 20 minute lecture effortlessly with exact punctuation and line breaks. Highly recommended!',
-    createdAt: Date.now() - 1000 * 60 * 60 * 48,
-    verified: true,
-  },
-];
+const LOCAL_STORAGE_KEY = 'miftah_live_ratings_cache_v3';
+const MY_REVIEWS_STORAGE_KEY = 'miftah_my_authored_reviews';
 
 /**
- * Calculates aggregate stats from list of reviews
+ * Formats timestamp to readable Date and Time (e.g. "10 Oct 2026, 03:30 AM")
+ */
+export function formatFullDateTime(timestamp: number): string {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  return date.toLocaleString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+/**
+ * Calculates aggregate stats from purely real reviews
  */
 export function calculateRatingStats(reviews: RatingReview[]): RatingStats {
   if (!reviews || reviews.length === 0) {
     return {
-      averageRating: 5.0,
+      averageRating: 0,
       totalReviews: 0,
       distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
     };
@@ -122,22 +95,67 @@ export function calculateRatingStats(reviews: RatingReview[]): RatingStats {
 }
 
 /**
- * Loads cached reviews from localStorage
+ * Helper to get list of review IDs authored on this device
+ */
+export function getMyAuthoredReviewIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(MY_REVIEWS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.warn('Error reading authored review IDs:', err);
+  }
+  return [];
+}
+
+/**
+ * Record a newly authored review ID locally
+ */
+export function saveMyAuthoredReviewId(id: string) {
+  if (typeof window === 'undefined' || !id) return;
+  try {
+    const current = getMyAuthoredReviewIds();
+    if (!current.includes(id)) {
+      localStorage.setItem(MY_REVIEWS_STORAGE_KEY, JSON.stringify([id, ...current]));
+    }
+  } catch (err) {
+    console.warn('Error saving authored review ID:', err);
+  }
+}
+
+/**
+ * Remove an authored review ID locally
+ */
+export function removeMyAuthoredReviewId(id: string) {
+  if (typeof window === 'undefined' || !id) return;
+  try {
+    const current = getMyAuthoredReviewIds();
+    localStorage.setItem(MY_REVIEWS_STORAGE_KEY, JSON.stringify(current.filter((i) => i !== id)));
+  } catch (err) {
+    console.warn('Error removing authored review ID:', err);
+  }
+}
+
+/**
+ * Loads cached reviews from localStorage (Zero fake reviews)
  */
 export function getCachedReviews(): RatingReview[] {
-  if (typeof window === 'undefined') return DEFAULT_INITIAL_REVIEWS;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (err) {
     console.warn('Error reading cached ratings:', err);
   }
-  return DEFAULT_INITIAL_REVIEWS;
+  return [];
 }
 
 /**
@@ -156,53 +174,60 @@ export function setCachedReviews(reviews: RatingReview[]) {
  * Subscribes to live reviews from Firestore in real-time
  */
 export function subscribeToLiveRatings(
-  onUpdate: (reviews: RatingReview[], stats: RatingStats) => void
+  onUpdate: (reviews: RatingReview[], stats: RatingStats) => void,
+  currentUserId?: string,
+  currentUserEmail?: string
 ): Unsubscribe {
-  // Start with cached/default reviews immediately
+  // Start with locally cached real reviews
   const initial = getCachedReviews();
   onUpdate(initial, calculateRatingStats(initial));
 
   try {
     const ratingsRef = collection(db, 'ratings_reviews');
-    const q = query(ratingsRef, orderBy('createdAt', 'desc'), limit(50));
+    const q = query(ratingsRef, orderBy('createdAt', 'desc'), limit(100));
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        if (!snapshot.empty) {
-          const firestoreReviews: RatingReview[] = [];
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            firestoreReviews.push({
-              id: docSnap.id,
-              userId: data.userId || '',
-              userName: data.userName || 'Verified User',
-              userEmail: data.userEmail || '',
-              userPhoto: data.userPhoto || '',
-              rating: Number(data.rating) || 5,
-              toolSlug: data.toolSlug || '',
-              toolName: data.toolName || 'General Platform',
-              comment: data.comment || '',
-              createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : (data.createdAt || Date.now()),
-              verified: data.verified ?? true,
-            });
+        const firestoreReviews: RatingReview[] = [];
+        const myIds = getMyAuthoredReviewIds();
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const docId = docSnap.id;
+          const createdTimestamp = data.createdAt?.toMillis
+            ? data.createdAt.toMillis()
+            : (typeof data.createdAt === 'number' ? data.createdAt : Date.now());
+
+          const isOwner =
+            myIds.includes(docId) ||
+            (Boolean(currentUserId) && data.userId === currentUserId) ||
+            (Boolean(currentUserEmail) && data.rawUserEmail === currentUserEmail);
+
+          firestoreReviews.push({
+            id: docId,
+            userId: data.userId || '',
+            userName: data.userName || 'Verified User',
+            userEmail: data.userEmail || '',
+            userPhoto: data.userPhoto || '',
+            rating: Number(data.rating) || 5,
+            toolSlug: data.toolSlug || '',
+            toolName: data.toolName || 'Miftah Tools',
+            comment: data.comment || '',
+            createdAt: createdTimestamp,
+            updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : data.updatedAt,
+            formattedDate: formatFullDateTime(createdTimestamp),
+            verified: data.verified ?? true,
+            isOwner,
           });
+        });
 
-          // Merge with initial reviews to preserve community showcase if database has few
-          const mergedMap = new Map<string, RatingReview>();
-          DEFAULT_INITIAL_REVIEWS.forEach((r) => mergedMap.set(r.id, r));
-          firestoreReviews.forEach((r) => mergedMap.set(r.id, r));
-
-          const allReviews = Array.from(mergedMap.values()).sort((a, b) => b.createdAt - a.createdAt);
-          setCachedReviews(allReviews);
-          onUpdate(allReviews, calculateRatingStats(allReviews));
-        } else {
-          // If Firestore collection is newly empty, seed defaults
-          onUpdate(DEFAULT_INITIAL_REVIEWS, calculateRatingStats(DEFAULT_INITIAL_REVIEWS));
-        }
+        // Cache real reviews only
+        setCachedReviews(firestoreReviews);
+        onUpdate(firestoreReviews, calculateRatingStats(firestoreReviews));
       },
       (error) => {
-        console.warn('Firestore ratings subscription fallback to local cache:', error);
+        console.warn('Firestore ratings subscription warning:', error);
         const cached = getCachedReviews();
         onUpdate(cached, calculateRatingStats(cached));
       }
@@ -229,19 +254,21 @@ export async function submitLiveRating(params: {
   comment: string;
 }): Promise<{ success: boolean; review?: RatingReview; error?: string }> {
   try {
-    const trimmedName = (params.userName || '').trim() || 'Genuine User';
+    const trimmedName = (params.userName || '').trim() || 'Verified User';
     const trimmedComment = (params.comment || '').trim();
     const cleanRating = Math.max(1, Math.min(5, Math.round(params.rating || 5)));
+    const now = Date.now();
 
-    // Mask email for user privacy (e.g. jamil***@gmail.com)
+    // Mask email for public privacy (e.g. jam***@gmail.com)
     let maskedEmail = '';
-    if (params.userEmail && params.userEmail.includes('@')) {
-      const [local, domain] = params.userEmail.split('@');
+    const rawEmail = (params.userEmail || '').trim();
+    if (rawEmail && rawEmail.includes('@')) {
+      const [local, domain] = rawEmail.split('@');
       const visiblePart = local.slice(0, Math.min(3, local.length));
       maskedEmail = `${visiblePart}***@${domain}`;
     }
 
-    const reviewId = `rev_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const reviewId = `rev_${now}_${Math.random().toString(36).substring(2, 7)}`;
     const newReview: RatingReview = {
       id: reviewId,
       userId: params.userId || '',
@@ -252,24 +279,26 @@ export async function submitLiveRating(params: {
       toolSlug: params.toolSlug || '',
       toolName: params.toolName || 'Miftah Tools',
       comment: trimmedComment,
-      createdAt: Date.now(),
+      createdAt: now,
+      formattedDate: formatFullDateTime(now),
       verified: true,
+      isOwner: true,
     };
 
-    // 1. Immediately update localStorage so user sees it right away
+    // Save author ownership token locally
+    saveMyAuthoredReviewId(reviewId);
+
+    // Update local cache immediately
     const current = getCachedReviews();
     const updated = [newReview, ...current.filter((r) => r.id !== reviewId)];
     setCachedReviews(updated);
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(USER_RATED_KEY, 'true');
-    }
-
-    // 2. Persist to Firestore
+    // Save to Firestore
     try {
       const docRef = doc(db, 'ratings_reviews', reviewId);
       await setDoc(docRef, {
         userId: params.userId || null,
+        rawUserEmail: rawEmail || null,
         userName: trimmedName,
         userEmail: maskedEmail,
         userPhoto: params.userPhoto || null,
@@ -280,14 +309,97 @@ export async function submitLiveRating(params: {
         createdAt: serverTimestamp(),
         verified: true,
         submittedAt: new Date().toISOString(),
+        deviceInfo: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 80) : 'web',
       });
     } catch (dbErr) {
-      console.warn('Firestore write warning (saved locally):', dbErr);
+      console.warn('Firestore write sync error (cached locally):', dbErr);
     }
 
     return { success: true, review: newReview };
   } catch (err: any) {
     console.error('Failed to submit rating:', err);
     return { success: false, error: err.message || 'Failed to submit rating' };
+  }
+}
+
+/**
+ * Updates an existing rating review in Firestore
+ */
+export async function updateLiveRating(
+  reviewId: string,
+  params: {
+    rating: number;
+    comment: string;
+    toolName?: string;
+    userName?: string;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const cleanRating = Math.max(1, Math.min(5, Math.round(params.rating || 5)));
+    const trimmedComment = (params.comment || '').trim();
+    const now = Date.now();
+
+    // Update local cache
+    const current = getCachedReviews();
+    const updated = current.map((r) => {
+      if (r.id === reviewId) {
+        return {
+          ...r,
+          rating: cleanRating,
+          comment: trimmedComment,
+          toolName: params.toolName || r.toolName,
+          userName: params.userName || r.userName,
+          updatedAt: now,
+        };
+      }
+      return r;
+    });
+    setCachedReviews(updated);
+
+    // Update Firestore
+    try {
+      const docRef = doc(db, 'ratings_reviews', reviewId);
+      await updateDoc(docRef, {
+        rating: cleanRating,
+        comment: trimmedComment,
+        ...(params.toolName ? { toolName: params.toolName } : {}),
+        ...(params.userName ? { userName: params.userName } : {}),
+        updatedAt: serverTimestamp(),
+        lastEditedAt: new Date().toISOString(),
+      });
+    } catch (dbErr) {
+      console.warn('Firestore update error:', dbErr);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Failed to update rating:', err);
+    return { success: false, error: err.message || 'Failed to update rating' };
+  }
+}
+
+/**
+ * Deletes a rating review from Firestore
+ */
+export async function deleteLiveRating(reviewId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Remove from local cache
+    const current = getCachedReviews();
+    const updated = current.filter((r) => r.id !== reviewId);
+    setCachedReviews(updated);
+    removeMyAuthoredReviewId(reviewId);
+
+    // Delete from Firestore
+    try {
+      const docRef = doc(db, 'ratings_reviews', reviewId);
+      await deleteDoc(docRef);
+    } catch (dbErr) {
+      console.warn('Firestore delete error:', dbErr);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Failed to delete rating:', err);
+    return { success: false, error: err.message || 'Failed to delete rating' };
   }
 }
