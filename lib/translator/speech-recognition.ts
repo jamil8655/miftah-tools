@@ -132,10 +132,16 @@ export class SpeechRecognitionController {
           if (data && data.trim()) {
             this.commitText(data.trim(), 0.95);
           }
+        } else if (eventType === 'onRmsChanged') {
+          const db = parseFloat(data);
+          if (!isNaN(db)) {
+            const normalized = Math.max(15, Math.min(100, Math.round((db + 2) * 10)));
+            this.callbacks.onAudioLevel?.(normalized);
+          }
         } else if (eventType === 'onError') {
           console.warn('Android speech event error:', data);
           if (data && data.toLowerCase().includes('permission')) {
-            this.callbacks.onError('Microphone permission missing in app.');
+            this.callbacks.onError('Microphone permission missing in app. Please grant microphone access in settings.');
           }
         }
       };

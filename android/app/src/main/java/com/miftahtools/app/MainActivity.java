@@ -457,7 +457,37 @@ public class MainActivity extends BridgeActivity {
         private SpeechRecognizer speechRecognizer;
         private Intent speechIntent;
         private boolean isExplicitListening = false;
-        private String currentLangCode = "hi-IN";
+        private String currentLangCode = "ur-IN";
+        private final android.os.Handler speechHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+
+        private final Runnable restartRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!isExplicitListening) return;
+                try {
+                    safeDestroyRecognizer();
+                    initAndStartRecognizer();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        private void scheduleRestart(long delayMillis) {
+            if (!isExplicitListening) return;
+            speechHandler.removeCallbacks(restartRunnable);
+            speechHandler.postDelayed(restartRunnable, delayMillis);
+        }
+
+        private void safeDestroyRecognizer() {
+            if (speechRecognizer != null) {
+                try {
+                    speechRecognizer.cancel();
+                    speechRecognizer.destroy();
+                } catch (Exception ignored) {}
+                speechRecognizer = null;
+            }
+        }
 
         @JavascriptInterface
         public boolean isSpeechRecognitionAvailable() {
@@ -468,8 +498,15 @@ public class MainActivity extends BridgeActivity {
         public void startListening(String languageCode) {
             runOnUiThread(() -> {
                 try {
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                        requestNativePermissions();
+                        sendSpeechEvent("onError", "Microphone permission missing in app.");
+                        return;
+                    }
                     isExplicitListening = true;
-                    currentLangCode = (languageCode != null && !languageCode.isEmpty()) ? languageCode : "hi-IN";
+                    speechHandler.removeCallbacks(restartRunnable);
+                    currentLangCode = (languageCode != null && !languageCode.isEmpty()) ? languageCode : "ur-IN";
+                    safeDestroyRecognizer();
                     initAndStartRecognizer();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -479,12 +516,8 @@ public class MainActivity extends BridgeActivity {
         }
 
         private void initAndStartRecognizer() {
-            if (speechRecognizer != null) {
-                try {
-                    speechRecognizer.destroy();
-                } catch (Exception ignored) {}
-                speechRecognizer = null;
-            }
+            if (!isExplicitListening) return;
+            safeDestroyRecognizer();
 
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
             speechIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -493,7 +526,12 @@ public class MainActivity extends BridgeActivity {
             speechIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
             speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, currentLangCode);
             speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, currentLangCode);
-            speechIntent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"hi-IN", "ur-PK", "ar-SA", "en-US"});
+            speechIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
+            speechIntent.putExtra("android.speech.extra.DICTATION_MODE", true);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L);
+            speechIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 1500L);
+            speechIntent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"ur-IN", "ur-PK", "hi-IN", "ar-SA", "en-US"});
 
             speechRecognizer.setRecognitionListener(new RecognitionListener() {
                 @Override
@@ -522,17 +560,22 @@ public class MainActivity extends BridgeActivity {
                 @Override
                 public void onError(int error) {
                     String errorMsg = getSpeechErrorMsg(error);
-                    sendSpeechEvent("onError", errorMsg);
-                    if (isExplicitListening && (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
-                        runOnUiThread(() -> {
-                            if (isExplicitListening) {
-                                try {
-                                    if (speechRecognizer != null) {
-                                        speechRecognizer.startListening(speechIntent);
-                                    }
-                                } catch (Exception ignored) {}
-                            }
-                        });
+                    if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) {
+                        isExplicitListening = false;
+                        sendSpeechEvent("onError", errorMsg);
+                        return;
+                    }
+
+                    // For timeouts, busy states, or temporary disconnects: auto-recover without aborting user session
+                    if (isExplicitListening) {
+                        if (error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                            scheduleRestart(80);
+                        } else if (error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || error == SpeechRecognizer.ERROR_CLIENT || error == SpeechRecognizer.ERROR_AUDIO) {
+                            scheduleRestart(200);
+                        } else {
+                            sendSpeechEvent("onError", errorMsg);
+                            scheduleRestart(350);
+                        }
                     }
                 }
 
@@ -546,15 +589,7 @@ public class MainActivity extends BridgeActivity {
                         }
                     }
                     if (isExplicitListening) {
-                        runOnUiThread(() -> {
-                            if (isExplicitListening) {
-                                try {
-                                    if (speechRecognizer != null) {
-                                        speechRecognizer.startListening(speechIntent);
-                                    }
-                                } catch (Exception ignored) {}
-                            }
-                        });
+                        scheduleRestart(100);
                     }
                 }
 
@@ -580,13 +615,8 @@ public class MainActivity extends BridgeActivity {
         public void stopListening() {
             runOnUiThread(() -> {
                 isExplicitListening = false;
-                try {
-                    if (speechRecognizer != null) {
-                        speechRecognizer.stopListening();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                speechHandler.removeCallbacksAndMessages(null);
+                safeDestroyRecognizer();
             });
         }
 
@@ -594,15 +624,8 @@ public class MainActivity extends BridgeActivity {
         public void cancelListening() {
             runOnUiThread(() -> {
                 isExplicitListening = false;
-                try {
-                    if (speechRecognizer != null) {
-                        speechRecognizer.cancel();
-                        speechRecognizer.destroy();
-                        speechRecognizer = null;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                speechHandler.removeCallbacksAndMessages(null);
+                safeDestroyRecognizer();
             });
         }
 
@@ -625,7 +648,7 @@ public class MainActivity extends BridgeActivity {
             switch (error) {
                 case SpeechRecognizer.ERROR_AUDIO: return "Audio recording error";
                 case SpeechRecognizer.ERROR_CLIENT: return "Client side error";
-                case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS: return "Microphone permission missing";
+                case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS: return "Microphone permission missing in app";
                 case SpeechRecognizer.ERROR_NETWORK: return "Network connection error";
                 case SpeechRecognizer.ERROR_NETWORK_TIMEOUT: return "Network timeout";
                 case SpeechRecognizer.ERROR_NO_MATCH: return "No speech recognized";
