@@ -134,8 +134,6 @@ import { ImageToPdfStudio } from '@/components/image/ImageToPdfStudio';
 import { UnifiedImageStudio } from '@/components/image/UnifiedImageStudio';
 import { OcrStudio } from '@/components/ocr/OcrStudio';
 import { CameraScannerStudio } from '@/components/camera/CameraScannerStudio';
-import { PdfSignatureStudio } from '@/components/pdf/PdfSignatureStudio';
-import { MarkItDownStudio } from '@/components/tools/MarkItDownStudio';
 import { WorkflowBuilder } from '@/components/workflows/WorkflowBuilder';
 import { TextCipherStudio } from '@/components/security/TextCipherStudio';
 import { AiStudio } from '@/components/ai/AiStudio';
@@ -334,6 +332,9 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
   } else if (tool.id === 'image-palette') {
     customWorkspace = <ColorPaletteStudio />;
   } else if (
+    tool.id === 'pdf-split' ||
+    tool.slug === 'split-pdf' ||
+    tool.id === 'split-pdf' ||
     tool.id === 'pdf-organizer' ||
     tool.slug === 'organize-pdf' ||
     tool.id === 'pdf-reorder-pages' ||
@@ -358,9 +359,25 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'pdf-insert-blank-page' ||
     tool.slug === 'insert-blank-pdf-page' ||
     tool.id === 'pdf-extract-pages' ||
-    tool.slug === 'extract-pdf-pages'
+    tool.slug === 'extract-pdf-pages' ||
+    tool.id === 'pdf-extract-selected' ||
+    tool.slug === 'extract-selected-pages' ||
+    tool.id === 'pdf-extract-odd' ||
+    tool.slug === 'extract-odd-pages' ||
+    tool.id === 'pdf-extract-even' ||
+    tool.slug === 'extract-even-pages' ||
+    tool.id === 'pdf-remove-blank' ||
+    tool.slug === 'remove-blank-pages'
   ) {
-    customWorkspace = <PdfOrganizerStudio />;
+    const defaultMode =
+      tool.id.includes('delete') || tool.slug.includes('delete')
+        ? 'delete'
+        : tool.id.includes('extract') || tool.slug.includes('extract')
+        ? 'extract'
+        : tool.id.includes('split') || tool.slug.includes('split')
+        ? 'extract'
+        : 'organize';
+    customWorkspace = <PdfOrganizerStudio initialMode={defaultMode} />;
   } else if (
     tool.id === 'markdown-editor' ||
     tool.id === 'markdown-to-html' ||
@@ -505,31 +522,6 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'scanner'
   ) {
     customWorkspace = <CameraScannerStudio />;
-  } else if (
-    tool.id === 'pdf-signer' ||
-    tool.slug === 'pdf-signer' ||
-    tool.id === 'pdf-sign' ||
-    tool.slug === 'sign-pdf' ||
-    tool.id === 'sign-pdf' ||
-    tool.id === 'digital-signature' ||
-    tool.slug === 'digital-signature' ||
-    tool.id === 'pdf-add-stamp' ||
-    tool.slug === 'add-stamp-to-pdf' ||
-    tool.slug === 'stamp-pdf' ||
-    tool.id === 'stamp-pdf' ||
-    tool.id === 'pdf-stamp' ||
-    tool.slug === 'pdf-stamp'
-  ) {
-    customWorkspace = <PdfSignatureStudio />;
-  } else if (
-    tool.id === 'markitdown' ||
-    tool.slug === 'markitdown' ||
-    tool.id === 'ai-document-converter' ||
-    tool.slug === 'ai-document-converter' ||
-    tool.id === 'document-to-markdown' ||
-    tool.slug === 'document-to-markdown'
-  ) {
-    customWorkspace = <MarkItDownStudio />;
   } else if (
     tool.id === 'workflows' ||
     tool.slug === 'workflows' ||
@@ -868,7 +860,6 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       ((tool.category === 'pdf' || tool.outputExtension === 'pdf') && (tool.id.includes('compress') || tool.slug.includes('compress')))
     ) {
       const results = [];
-      let targetLimit = options.targetSizeLimit || 'auto';
       let targetKb = options.targetKb;
       if (!targetKb) {
         const slugMatch = (tool.slug + ' ' + tool.id).match(/(\d+)\s*kb/i);
@@ -879,7 +870,13 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
           targetKb = parseInt(slugMatchMb[1]) * 1024;
         } else if (tool.id === 'pdf-extreme-compress') {
           targetKb = 200;
+        } else {
+          targetKb = 100;
         }
+      }
+      let targetLimit = options.targetSizeLimit || `${targetKb}kb`;
+      if (targetLimit === 'auto') {
+        targetLimit = `${targetKb}kb`;
       }
 
       for (let i = 0; i < files.length; i++) {
@@ -1226,6 +1223,8 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
           targetKb = parseInt(slugMatch[1]);
         } else if (slugMatchMb) {
           targetKb = parseInt(slugMatchMb[1]) * 1024;
+        } else {
+          targetKb = 100;
         }
       }
       const qualityFactor = options.quality ?? 0.75;

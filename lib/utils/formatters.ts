@@ -58,7 +58,8 @@ export function calculatePercentageSaved(originalSize: number, newSize: number):
 let pdfjsPromise: Promise<any> | null = null;
 
 /**
- * Universal PDF.js engine loader with multi-CDN and dynamic bundle fallback.
+ * Universal PDF.js engine loader with local bundled assets, multi-CDN and dynamic bundle fallback.
+ * Works seamlessly in web browsers and Android WebView (Capacitor) without CORS/worker restrictions.
  */
 export async function getPdfJsLib(): Promise<any> {
   if (typeof window === 'undefined') return null;
@@ -70,6 +71,67 @@ export async function getPdfJsLib(): Promise<any> {
   if (pdfjsPromise) return pdfjsPromise;
 
   pdfjsPromise = (async () => {
+    const setupWorker = (lib: any, workerUrl: string) => {
+      try {
+        // In Android WebView and cross-origin environments, create a Blob URL to avoid SecurityError
+        const blob = new Blob([`importScripts("${workerUrl}");`], { type: 'application/javascript' });
+        lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+      } catch (_) {
+        lib.GlobalWorkerOptions.workerSrc = workerUrl;
+      }
+    };
+
+    // 1. Primary: Local Bundled Assets (Zero latency, 100% offline, works natively in Capacitor Android)
+    try {
+      const isLocalReady = await new Promise<boolean>((resolve) => {
+        if ((window as any).pdfjsLib) return resolve(true);
+
+        const script = document.createElement('script');
+        script.src = '/pdf.min.js';
+        script.async = true;
+        const timer = setTimeout(() => {
+          script.remove();
+          resolve(false);
+        }, 3000);
+
+        script.onload = () => {
+          clearTimeout(timer);
+          const lib = (window as any).pdfjsLib;
+          if (lib) {
+            setupWorker(lib, '/pdf.worker.min.js');
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        };
+        script.onerror = () => {
+          clearTimeout(timer);
+          script.remove();
+          resolve(false);
+        };
+        document.head.appendChild(script);
+      });
+
+      if (isLocalReady && (window as any).pdfjsLib) {
+        return (window as any).pdfjsLib;
+      }
+    } catch (_) {
+      // Continue to dynamic import or CDN
+    }
+
+    // 2. Secondary: Dynamic bundle import
+    try {
+      const pdfjs = await import('pdfjs-dist');
+      if (pdfjs) {
+        setupWorker(pdfjs, '/pdf.worker.min.js');
+        (window as any).pdfjsLib = pdfjs;
+        return pdfjs;
+      }
+    } catch (importErr) {
+      console.warn('PDF.js dynamic import skipped, trying CDNs:', importErr);
+    }
+
+    // 3. Tertiary: High-speed CDNs with Blob Worker
     const CDNS = [
       {
         main: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
@@ -94,13 +156,13 @@ export async function getPdfJsLib(): Promise<any> {
           const timeout = setTimeout(() => {
             script.remove();
             reject(new Error('CDN timeout'));
-          }, 7000);
+          }, 5000);
 
           script.onload = () => {
             clearTimeout(timeout);
             const lib = (window as any).pdfjsLib;
             if (lib) {
-              lib.GlobalWorkerOptions.workerSrc = cdn.worker;
+              setupWorker(lib, cdn.worker);
               resolve();
             } else {
               reject(new Error('pdfjsLib not defined on window'));
@@ -120,18 +182,6 @@ export async function getPdfJsLib(): Promise<any> {
       } catch (err) {
         console.warn(`PDF.js CDN failed (${cdn.main}), trying fallback...`, err);
       }
-    }
-
-    // Dynamic bundle import fallback
-    try {
-      const pdfjs = await import('pdfjs-dist');
-      if (pdfjs) {
-        pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version || '3.11.174'}/pdf.worker.min.js`;
-        (window as any).pdfjsLib = pdfjs;
-        return pdfjs;
-      }
-    } catch (importErr) {
-      console.error('All PDF.js sources failed:', importErr);
     }
 
     throw new Error('Could not initialize PDF rendering engine. Please check your internet connection.');

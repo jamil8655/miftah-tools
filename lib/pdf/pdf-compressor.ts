@@ -158,7 +158,7 @@ export async function compressPdfAdvanced(
             const pct = Math.round(15 + (pageNum / pageCount) * 78);
             onProgress?.(pct, `Rendering page ${pageNum} of ${pageCount} with sharp clarity...`);
 
-            if (pageNum % 2 === 0 || pageCount > 15) {
+            if (pageNum % 2 === 0 || pageCount > 10) {
               await new Promise((resolve) => setTimeout(resolve, 8));
             }
 
@@ -181,25 +181,23 @@ export async function compressPdfAdvanced(
                 viewport,
               }).promise;
 
-              const jpegDataUrl = canvas.toDataURL('image/jpeg', quality);
-              const base64Data = jpegDataUrl.split(',')[1];
-              const binaryString = window.atob(base64Data);
-              const len = binaryString.length;
-              const bytes = new Uint8Array(len);
-              for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+              const jpegBlob = await new Promise<Blob | null>((resolve) =>
+                canvas.toBlob(resolve, 'image/jpeg', quality)
+              );
+
+              if (jpegBlob) {
+                const bytes = new Uint8Array(await jpegBlob.arrayBuffer());
+                const embeddedImg = await newPdf.embedJpg(bytes);
+                const origViewport = page.getViewport({ scale: 1.0 });
+                const pdfPage = newPdf.addPage([origViewport.width, origViewport.height]);
+
+                pdfPage.drawImage(embeddedImg, {
+                  x: 0,
+                  y: 0,
+                  width: origViewport.width,
+                  height: origViewport.height,
+                });
               }
-
-              const embeddedImg = await newPdf.embedJpg(bytes);
-              const origViewport = page.getViewport({ scale: 1.0 });
-              const pdfPage = newPdf.addPage([origViewport.width, origViewport.height]);
-
-              pdfPage.drawImage(embeddedImg, {
-                x: 0,
-                y: 0,
-                width: origViewport.width,
-                height: origViewport.height,
-              });
             }
 
             canvas.width = 0;
@@ -225,24 +223,17 @@ export async function compressPdfAdvanced(
           bestCandidateUnderTarget = rasterBytes;
         }
 
-        // Quality-preserving iterative calibration loop (up to 12 progressive passes)
+        // Fast high-precision adaptive calibration (up to 4 passes max, quadratic area scaling)
         if (hasTargetKb && (!bestCandidateUnderTarget || rasterBytes.byteLength > targetBytes)) {
-          for (let pass = 0; pass < 12; pass++) {
+          for (let pass = 0; pass < 4; pass++) {
             const overshootRatio = rasterBytes.byteLength / safetyTargetBytes;
+            const areaScaleFactor = Math.sqrt(safetyTargetBytes / rasterBytes.byteLength);
 
-            // Prioritize preserving resolution scale first, adjust quality gently
-            if (currentQuality > 0.45) {
-              currentQuality = Math.max(0.35, currentQuality / Math.max(1.05, overshootRatio) * 0.95);
-            } else if (currentScale > 1.05) {
-              currentScale = Math.max(0.85, currentScale / Math.sqrt(Math.max(1.05, overshootRatio)) * 0.94);
-              currentQuality = Math.max(0.30, currentQuality * 0.92);
-            } else {
-              currentScale = Math.max(0.35, currentScale * 0.85);
-              currentQuality = Math.max(0.16, currentQuality * 0.85);
-            }
+            currentScale = Math.max(0.35, Math.min(baseScale, currentScale * Math.min(0.92, areaScaleFactor * 0.96)));
+            currentQuality = Math.max(0.20, Math.min(baseQuality, currentQuality * Math.min(0.92, areaScaleFactor * 0.94)));
 
             onProgress?.(
-              Math.min(98, 75 + (pass + 1) * 2),
+              Math.min(98, 75 + (pass + 1) * 6),
               `Optimizing clarity & size (${(rasterBytes.byteLength / 1024).toFixed(0)} KB ➔ Target ${(targetBytes / 1024).toFixed(0)} KB)...`
             );
 
@@ -257,16 +248,16 @@ export async function compressPdfAdvanced(
 
           // Emergency fail-safe: if still above targetBytes, force downscale until byteLength <= targetBytes
           if (!bestCandidateUnderTarget || bestCandidateUnderTarget.byteLength > targetBytes) {
-            let forcedScale = Math.min(0.60, Math.sqrt(safetyTargetBytes / (originalSize || safetyTargetBytes * 2)) * 0.88);
-            let forcedQuality = 0.35;
-            for (let emergency = 0; emergency < 8; emergency++) {
-              const forcedBytes = await renderPdfWithParams(Math.max(0.20, forcedScale), Math.max(0.12, forcedQuality));
+            let forcedScale = Math.min(0.55, Math.sqrt(safetyTargetBytes / (originalSize || safetyTargetBytes * 2)) * 0.85);
+            let forcedQuality = 0.30;
+            for (let emergency = 0; emergency < 5; emergency++) {
+              const forcedBytes = await renderPdfWithParams(Math.max(0.18, forcedScale), Math.max(0.12, forcedQuality));
               if (forcedBytes.byteLength <= targetBytes) {
                 bestCandidateUnderTarget = forcedBytes;
                 break;
               }
-              forcedScale *= 0.80;
-              forcedQuality *= 0.80;
+              forcedScale *= 0.78;
+              forcedQuality *= 0.78;
             }
           }
 
@@ -290,29 +281,32 @@ export async function compressPdfAdvanced(
   const validCandidates: Uint8Array[] = [];
 
   // Check structural candidate
-  if (structuralBytes && structuralBytes.byteLength < originalSize) {
-    validCandidates.push(structuralBytes);
+  if (structuralBytes) {
+    if (hasTargetKb) {
+      if (structuralBytes.byteLength <= targetBytes) validCandidates.push(structuralBytes);
+    } else if (structuralBytes.byteLength < originalSize) {
+      validCandidates.push(structuralBytes);
+    }
   }
 
   // Check raster candidate
-  if (rasterBytes && rasterBytes.byteLength < originalSize) {
-    validCandidates.push(rasterBytes);
+  if (rasterBytes) {
+    if (hasTargetKb) {
+      if (rasterBytes.byteLength <= targetBytes) validCandidates.push(rasterBytes);
+    } else if (rasterBytes.byteLength < originalSize) {
+      validCandidates.push(rasterBytes);
+    }
   }
 
   if (hasTargetKb) {
-    // If target KB was requested:
-    // Strictly filter candidates that satisfy <= targetBytes
-    const targetSatisfying = validCandidates.filter((c) => c.byteLength <= targetBytes);
-
-    if (targetSatisfying.length > 0) {
-      // Pick the highest quality one (largest byte length <= targetBytes)
-      chosenBytes = targetSatisfying.reduce((prev, curr) => (curr.byteLength > prev.byteLength ? curr : prev));
+    if (validCandidates.length > 0) {
+      // Pick the best quality candidate that is <= targetBytes
+      chosenBytes = validCandidates.reduce((prev, curr) => (curr.byteLength > prev.byteLength ? curr : prev));
       isReduced = chosenBytes.byteLength < originalSize;
     } else if (rasterBytes && rasterBytes.byteLength <= targetBytes) {
       chosenBytes = rasterBytes;
       isReduced = true;
     } else {
-      // CRITICAL: NEVER return a file > targetBytes when a target was requested!
       throw new Error(`Could not compress file to under ${(targetBytes / 1024).toFixed(0)} KB (${finalTargetKb >= 1024 ? (finalTargetKb / 1024).toFixed(1) + ' MB' : finalTargetKb + ' KB'}). Please try a slightly larger target size.`);
     }
   } else {

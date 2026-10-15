@@ -185,10 +185,29 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
     triggerHaptic('medium');
 
     if (activeTab === 'compress') {
-      if (compressedResult) {
+      let blobToSave = compressedResult?.blob;
+      if (!blobToSave) {
+        setIsCompressing(true);
+        try {
+          const { compressImageToTargetKB } = await import('@/lib/image/image-manipulator');
+          const res = await compressImageToTargetKB(imageFile, targetKb, targetFormat as any);
+          blobToSave = res.blob;
+          setCompressedResult({
+            blob: res.blob,
+            dataUrl: res.dataUrl,
+            finalKB: Math.round(res.blob.size / 1024),
+          });
+        } catch (e) {
+          console.error('Direct compression error:', e);
+        } finally {
+          setIsCompressing(false);
+        }
+      }
+
+      if (blobToSave) {
         const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
         const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_compressed_${targetKb}kb.${ext}`;
-        downloadSingleFile(compressedResult.blob, outName);
+        downloadSingleFile(blobToSave, outName);
         return;
       }
     }
@@ -208,15 +227,36 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
     );
   };
 
-  const handleShareOutput = () => {
+  const handleShareOutput = async () => {
     if (!imageFile) return;
     triggerHaptic('light');
 
-    if (activeTab === 'compress' && compressedResult) {
-      const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
-      const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_compressed_${targetKb}kb.${ext}`;
-      shareDownloadedFile({ name: outName, blob: compressedResult.blob, mimeType: targetFormat });
-      return;
+    if (activeTab === 'compress') {
+      let blobToShare = compressedResult?.blob;
+      if (!blobToShare) {
+        setIsCompressing(true);
+        try {
+          const { compressImageToTargetKB } = await import('@/lib/image/image-manipulator');
+          const res = await compressImageToTargetKB(imageFile, targetKb, targetFormat as any);
+          blobToShare = res.blob;
+          setCompressedResult({
+            blob: res.blob,
+            dataUrl: res.dataUrl,
+            finalKB: Math.round(res.blob.size / 1024),
+          });
+        } catch (e) {
+          console.error('Direct share compression error:', e);
+        } finally {
+          setIsCompressing(false);
+        }
+      }
+
+      if (blobToShare) {
+        const ext = targetFormat === 'image/png' ? 'png' : targetFormat === 'image/webp' ? 'webp' : 'jpg';
+        const outName = `${imageFile.name.replace(/\.[^/.]+$/, '')}_compressed_${targetKb}kb.${ext}`;
+        shareDownloadedFile({ name: outName, blob: blobToShare, mimeType: targetFormat });
+        return;
+      }
     }
 
     const canvas = canvasRef.current;

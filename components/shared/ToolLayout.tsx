@@ -73,6 +73,17 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
   const [isMounted, setIsMounted] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [options, setOptions] = useState<Record<string, any>>(() => {
+    let defaultTargetKb = 100;
+    const slugMatch = (tool.slug + ' ' + tool.id).match(/(\d+)\s*kb/i);
+    const slugMatchMb = (tool.slug + ' ' + tool.id).match(/(\d+)\s*mb/i);
+    if (slugMatch) {
+      defaultTargetKb = parseInt(slugMatch[1]);
+    } else if (slugMatchMb) {
+      defaultTargetKb = parseInt(slugMatchMb[1]) * 1024;
+    } else if (tool.id === 'pdf-extreme-compress') {
+      defaultTargetKb = 200;
+    }
+
     const initial: Record<string, any> = {
       quality: 0.75,
       level: 'medium',
@@ -80,6 +91,10 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
       angle: '90',
       splitMode: 'all',
       orientation: 'portrait',
+      targetKb: defaultTargetKb,
+      targetSizeLimit: `${defaultTargetKb}kb`,
+      customNumValue: defaultTargetKb.toString(),
+      customNumUnit: 'kb',
     };
     tool.options?.forEach((opt) => {
       initial[opt.id] = opt.defaultValue;
@@ -132,6 +147,7 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
     setProgress(10);
     setProgressStatus(loc.initStatus);
     setErrorMessage(null);
+    setResults(null); // Clear previous results to prevent downloading old files on failure
 
     try {
       const outputFiles = await onProcess(selectedFiles, options, (pct, status) => {
