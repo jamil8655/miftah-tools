@@ -895,22 +895,328 @@ export function ToolOptionControls({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Opacity ({Math.round((options.opacity ?? 0.3) * 100)}%):
-                </label>
-                <input
-                  type="range"
-                  dir="ltr"
-                  min={0.05}
-                  max={0.95}
-                  step={0.05}
-                  value={options.opacity ?? 0.3}
-                  onChange={(e) => updateOption('opacity', parseFloat(e.target.value))}
-                  className="w-full accent-rose-600 mt-2 cursor-pointer"
-                />
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Color Palette:</label>
+                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                  {[
+                    { hex: '#ef4444', label: 'Red' },
+                    { hex: '#334155', label: 'Dark' },
+                    { hex: '#94a3b8', label: 'Gray' },
+                    { hex: '#2563eb', label: 'Blue' },
+                    { hex: '#059669', label: 'Green' },
+                    { hex: '#ea580c', label: 'Orange' },
+                  ].map((c) => (
+                    <button
+                      key={c.hex}
+                      type="button"
+                      onClick={() => updateOption('color', c.hex)}
+                      style={{ backgroundColor: c.hex }}
+                      title={c.label}
+                      className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                        (options.color || '#ff0000').toLowerCase() === c.hex.toLowerCase()
+                          ? 'border-white dark:border-slate-900 ring-2 ring-rose-500 scale-110'
+                          : 'border-transparent hover:scale-105'
+                      }`}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={options.color || '#ff0000'}
+                    onChange={(e) => updateOption('color', e.target.value)}
+                    className="w-7 h-7 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer bg-transparent"
+                    title="Custom Color"
+                  />
+                </div>
               </div>
             </div>
           )}
+
+          {/* WATERMARK POSITION SELECTOR (9-POINT GRID + DIAGONAL + TILE + CUSTOM) */}
+          <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Move className="w-3.5 h-3.5 text-rose-500" />
+                <span>Watermark Placement / Position:</span>
+              </label>
+              <span className="text-[10px] font-mono font-bold text-rose-600 dark:text-rose-400 capitalize">
+                {(options.position || 'center-diagonal').replace('-', ' ')}
+              </span>
+            </div>
+
+            {/* Quick Placement Modes */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {[
+                { id: 'center-diagonal', label: '⤢ Diagonal', desc: 'Classic 45° across center' },
+                { id: 'center', label: '⏺ Center', desc: 'Exact page center' },
+                { id: 'tile', label: '▦ Full Page Tile', desc: 'Repeated across grid' },
+                { id: 'custom', label: '⚙ Custom X/Y', desc: 'Anywhere on page' },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => {
+                    updateOption('position', m.id);
+                    if (m.id === 'center-diagonal' && options.rotation === undefined) {
+                      updateOption('rotation', 45);
+                    }
+                  }}
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold border transition-all text-left flex flex-col gap-0.5 ${
+                    (options.position || 'center-diagonal') === m.id
+                      ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 shadow-xs'
+                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <span>{m.label}</span>
+                  <span className="text-[9px] font-normal opacity-70 truncate">{m.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* 9-Point Visual Page Grid */}
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">
+                Or tap a position directly on page:
+              </span>
+              <div className="max-w-[220px] mx-auto grid grid-cols-3 gap-1.5 p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-inner">
+                {[
+                  { id: 'top-left', label: '↖ Top L' },
+                  { id: 'top-center', label: '↑ Top' },
+                  { id: 'top-right', label: '↗ Top R' },
+                  { id: 'middle-left', label: '← Mid L' },
+                  { id: 'center', label: '⏺ Center' },
+                  { id: 'middle-right', label: '→ Mid R' },
+                  { id: 'bottom-left', label: '↙ Btm L' },
+                  { id: 'bottom-center', label: '↓ Btm' },
+                  { id: 'bottom-right', label: '↘ Btm R' },
+                ].map((pos) => (
+                  <button
+                    key={pos.id}
+                    type="button"
+                    onClick={() => updateOption('position', pos.id)}
+                    className={`py-2 px-1 text-[10px] font-bold rounded-lg border text-center transition-all ${
+                      options.position === pos.id
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-xs scale-105'
+                        : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-rose-400'
+                    }`}
+                  >
+                    {pos.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Coordinates Sliders (if custom selected) */}
+            {options.position === 'custom' && (
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    <span>Horizontal X:</span>
+                    <span className="font-mono text-rose-600">{options.customX ?? 50}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={options.customX ?? 50}
+                    onChange={(e) => updateOption('customX', parseInt(e.target.value, 10))}
+                    className="w-full accent-rose-600 cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[9px] text-slate-400 font-mono">
+                    <span>Left (0%)</span>
+                    <span>Right (100%)</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    <span>Vertical Y:</span>
+                    <span className="font-mono text-rose-600">{options.customY ?? 50}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={options.customY ?? 50}
+                    onChange={(e) => updateOption('customY', parseInt(e.target.value, 10))}
+                    className="w-full accent-rose-600 cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[9px] text-slate-400 font-mono">
+                    <span>Bottom (0%)</span>
+                    <span>Top (100%)</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ROTATION, OPACITY & SIZE */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+            {/* Rotation */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span>Rotation:</span>
+                <span className="font-mono text-rose-600">
+                  {options.rotation !== undefined ? `${options.rotation}°` : options.position === 'center-diagonal' || !options.position ? '45°' : '0°'}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-1">
+                {[
+                  { deg: 0, label: '0°' },
+                  { deg: 45, label: '45°' },
+                  { deg: -45, label: '-45°' },
+                  { deg: 90, label: '90°' },
+                ].map((d) => (
+                  <button
+                    key={d.deg}
+                    type="button"
+                    onClick={() => updateOption('rotation', d.deg)}
+                    className={`py-1 text-[10px] font-bold rounded-lg border transition-all ${
+                      (options.rotation === d.deg || (options.rotation === undefined && d.deg === 45 && (options.position === 'center-diagonal' || !options.position)))
+                        ? 'bg-rose-600 text-white border-rose-600'
+                        : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-transparent hover:border-slate-300'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="range"
+                min={-90}
+                max={90}
+                value={options.rotation !== undefined ? options.rotation : options.position === 'center-diagonal' || !options.position ? 45 : 0}
+                onChange={(e) => updateOption('rotation', parseInt(e.target.value, 10))}
+                className="w-full accent-rose-600 cursor-pointer"
+              />
+            </div>
+
+            {/* Opacity */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span>Opacity:</span>
+                <span className="font-mono text-rose-600">
+                  {Math.round((options.opacity ?? 0.3) * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                dir="ltr"
+                min={0.05}
+                max={0.95}
+                step={0.05}
+                value={options.opacity ?? 0.3}
+                onChange={(e) => updateOption('opacity', parseFloat(e.target.value))}
+                className="w-full accent-rose-600 mt-2 cursor-pointer"
+              />
+              <div className="flex justify-between text-[9px] text-slate-400 font-mono">
+                <span>Faint (5%)</span>
+                <span>Bold (95%)</span>
+              </div>
+            </div>
+
+            {/* Size / Scale */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span>Stamp Size:</span>
+                <span className="font-mono text-rose-600">{options.fontSize ? `${options.fontSize} pt` : 'Auto'}</span>
+              </div>
+              <div className="grid grid-cols-4 gap-1">
+                {[
+                  { size: 22, label: 'S' },
+                  { size: 36, label: 'M' },
+                  { size: 52, label: 'L' },
+                  { size: 70, label: 'XL' },
+                ].map((s) => (
+                  <button
+                    key={s.size}
+                    type="button"
+                    onClick={() => updateOption('fontSize', s.size)}
+                    className={`py-1 text-[10px] font-bold rounded-lg border transition-all ${
+                      options.fontSize === s.size
+                        ? 'bg-rose-600 text-white border-rose-600'
+                        : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-transparent hover:border-slate-300'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="range"
+                min={14}
+                max={90}
+                value={options.fontSize || 36}
+                onChange={(e) => updateOption('fontSize', parseInt(e.target.value, 10))}
+                className="w-full accent-rose-600 cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {/* Page Range */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Apply To Pages:</span>
+            <div className="flex rounded-xl bg-slate-100 dark:bg-slate-900 p-0.5">
+              {[
+                { id: 'all', label: L.allPages },
+                { id: 'first', label: L.firstPageOnly },
+                { id: 'except-first', label: L.exceptFirstPage },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => updateOption('pageRange', p.id)}
+                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+                    (options.pageRange || 'all') === p.id
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4B. REMOVE WATERMARK CONTROLS */}
+      {isPdfRemoveWatermark && (
+        <div className="space-y-4 p-5 rounded-3xl bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
+            <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Trash2 className="w-4 h-4 text-rose-500" />
+              <span>Watermark Cleaner Settings</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+              <Sparkles className="w-3 h-3" />
+              <span>Smart Purge Active</span>
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span>Specific Watermark Text to Remove (Optional):</span>
+                <span className="text-[10px] text-slate-400 font-normal">Leave blank for Auto-Detect All</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. CONFIDENTIAL, DRAFT, SAMPLE, Company Name..."
+                value={options.targetKeyword ?? ''}
+                onChange={(e) => updateOption('targetKeyword', e.target.value)}
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold placeholder:text-slate-400"
+              />
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200 space-y-1.5">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Lossless Vector Watermark Stripping</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300/90">
+                स्वचालित रूप से बैकग्राउंड वॉटरमार्क, ट्रांसपेरेंट स्टैम्प, एनोटेशन लेयर्स और आर्टिफ़ैक्ट ओवरले को हटा दिया जाएगा। आपके दस्तावेज़ का मुख्य टेक्स्ट, फ़ॉन्ट और इमेज बिल्कुल साफ और उच्च गुणवत्ता में सुरक्षित रहेंगे।
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
