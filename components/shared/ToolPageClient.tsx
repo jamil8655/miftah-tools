@@ -497,9 +497,12 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.id === 'make-pdf-searchable' ||
     tool.slug === 'make-pdf-searchable' ||
     tool.id === 'extract-text-image' ||
-    tool.slug === 'extract-text-from-image'
+    tool.slug === 'extract-text-from-image' ||
+    tool.id === 'image-to-searchable-pdf' ||
+    tool.slug === 'image-to-searchable-pdf' ||
+    tool.category === 'ocr'
   ) {
-    customWorkspace = <OcrStudio />;
+    customWorkspace = <OcrStudio toolId={tool.id} />;
   } else if (
     tool.id === 'pdf-to-image' ||
     tool.id === 'pdf-to-jpg' ||
