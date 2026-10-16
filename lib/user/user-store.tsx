@@ -13,6 +13,7 @@ import {
   markNotificationReadFirestore,
   uploadUserProfilePhoto,
 } from '@/lib/firebase/firestore-service';
+import { recordActionAndMaybePromptReview } from '@/components/ratings/InAppReviewPrompt';
 
 export interface EnrolledCourseState {
   courseId: string;
@@ -318,6 +319,7 @@ export function UserStoreProvider({ children }: { children: React.ReactNode }) {
       const filtered = prev.filter((t) => t.toolId !== toolId);
       const next = [updatedItem, ...filtered].slice(0, 10);
       localStorage.setItem('nexora_recent_tools', JSON.stringify(next));
+      recordActionAndMaybePromptReview();
       return next;
     });
   };

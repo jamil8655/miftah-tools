@@ -263,3 +263,36 @@ export const requestNativeAppPermissions = (): void => {
   }
 };
 
+/**
+ * Trigger Official Google Play In-App Review Dialog
+ */
+export const requestInAppReviewNative = (): boolean => {
+  if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.requestInAppReview) {
+    try {
+      (window as any).AndroidDownloader.requestInAppReview();
+      return true;
+    } catch (e) {
+      console.warn('Native requestInAppReview notice:', e);
+    }
+  }
+  return false;
+};
+
+/**
+ * Open Miftah Tools App Review Page on Google Play Store
+ */
+export const openPlayStorePageNative = (): void => {
+  if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.openPlayStoreReview) {
+    try {
+      (window as any).AndroidDownloader.openPlayStoreReview();
+      return;
+    } catch (e) {
+      console.warn('Native openPlayStoreReview notice:', e);
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.open('https://play.google.com/store/apps/details?id=com.miftahtools.app', '_blank');
+  }
+};
+
+

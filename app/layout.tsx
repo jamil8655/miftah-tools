@@ -64,6 +64,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { InAppReviewPrompt } from '@/components/ratings/InAppReviewPrompt';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -166,6 +168,7 @@ export default function RootLayout({
                 <ServiceWorkerRegister />
                 <StickyBottomAd />
                 <AppOpenAd />
+                <InAppReviewPrompt />
               </UserStoreProvider>
             </I18nProvider>
           </AuthProvider>

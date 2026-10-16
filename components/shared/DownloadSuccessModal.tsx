@@ -22,6 +22,7 @@ import { shareFileNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { recordActionAndMaybePromptReview } from '@/components/ratings/InAppReviewPrompt';
 
 const DOWNLOAD_MODAL_LOCALES = {
   en: {
@@ -84,6 +85,7 @@ export function DownloadSuccessModal({ fileInfo, onClose }: DownloadSuccessModal
   useEffect(() => {
     if (fileInfo) {
       triggerHaptic('success');
+      recordActionAndMaybePromptReview();
     }
   }, [fileInfo]);
 

@@ -34,6 +34,11 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
+import com.google.android.gms.tasks.Task;
+
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
 
@@ -76,6 +81,51 @@ public class MainActivity extends BridgeActivity {
                 return ContextCompat.checkSelfPermission(mContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
             }
             return true;
+        }
+
+        @JavascriptInterface
+        public void requestInAppReview() {
+            runOnUiThread(() -> {
+                try {
+                    ReviewManager manager = ReviewManagerFactory.create(MainActivity.this);
+                    Task<ReviewInfo> request = manager.requestReviewFlow();
+                    request.addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            ReviewInfo reviewInfo = task.getResult();
+                            Task<Void> flow = manager.launchReviewFlow(MainActivity.this, reviewInfo);
+                            flow.addOnCompleteListener(flowTask -> {
+                                // Review flow finished successfully
+                            });
+                        } else {
+                            openPlayStoreReview();
+                        }
+                    });
+                } catch (Exception e) {
+                    openPlayStoreReview();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openPlayStoreReview() {
+            runOnUiThread(() -> {
+                try {
+                    Uri uri = Uri.parse("market://details?id=" + getPackageName());
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                                    Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                                    Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    try {
+                        Intent webIntent = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()));
+                        startActivity(webIntent);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            });
         }
 
         @JavascriptInterface
