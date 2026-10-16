@@ -14,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
+import { useIsNativeApp } from '@/lib/native/android-bridge';
 
 const FOOTER_LOCALES = {
   en: {
@@ -155,6 +156,7 @@ const FOOTER_LOCALES = {
 };
 
 export function Footer() {
+  const isNative = useIsNativeApp();
   const { language, isRTL } = useI18n();
   const loc = FOOTER_LOCALES[language] || FOOTER_LOCALES.en;
 
@@ -165,6 +167,11 @@ export function Footer() {
     support: false,
     legal: false,
   });
+
+  // Never render the massive web marketing footer in the native Android app
+  if (isNative) {
+    return null;
+  }
 
   const toggleSection = (key: string) => {
     setOpenSections((prev) => ({

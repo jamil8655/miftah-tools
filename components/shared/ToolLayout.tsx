@@ -18,6 +18,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 import { adManager } from '@/lib/ads/AdManager';
 import { ToolSeoContent } from '@/components/shared/ToolSeoContent';
 import { LiveRatingStudio } from '@/components/ratings/LiveRatingStudio';
+import { useIsNativeApp } from '@/lib/native/android-bridge';
 
 interface ToolLayoutProps {
   tool: ToolDefinition;
@@ -66,6 +67,7 @@ const TOOL_LAYOUT_LOCALES = {
 };
 
 export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps) {
+  const isNative = useIsNativeApp();
   const { t, language, isRTL } = useI18n();
   const { addHistory, addDownload, recordToolUsage } = useUserStore();
   const localized = getLocalizedTool(tool, language);
@@ -235,7 +237,9 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
   return (
     <div
       dir={isMounted && isRTL ? 'rtl' : 'ltr'}
-      className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-5 animate-in fade-in duration-200 pb-20"
+      className={`max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-5 animate-in fade-in duration-200 ${
+        isNative ? 'pb-28' : 'pb-20'
+      }`}
     >
       {/* Breadcrumbs */}
       <Breadcrumbs
@@ -396,8 +400,8 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
         />
       </div>
 
-      {/* Comprehensive SEO Content, How-To Guide, Specifications, FAQs & Related Tools */}
-      <ToolSeoContent tool={tool} />
+      {/* Comprehensive SEO Content, How-To Guide, Specifications, FAQs & Related Tools (Web only — hidden in native Android app) */}
+      {!isNative && <ToolSeoContent tool={tool} />}
     </div>
   );
 }

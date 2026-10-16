@@ -47,6 +47,7 @@ import { useI18n } from '@/lib/i18n/i18n-context';
 import { useUserStore } from '@/lib/user/user-store';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { getLocalizedTool, getLocalizedCategory } from '@/lib/i18n/catalog-translations';
+import { useIsNativeApp } from '@/lib/native/android-bridge';
 
 /* ==================================================
    REAL STYLED MULTI-TONE ICONS FOR FLAGSHIP TOOLS
@@ -1222,6 +1223,7 @@ const PAGE_LOCALES = {
   },
 };
 export default function HomePage() {
+  const isNative = useIsNativeApp();
   const { language, isRTL } = useI18n();
   const { recentTools: storeRecentTools, clearRecentTools } = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -1255,12 +1257,59 @@ export default function HomePage() {
   }, [searchQuery, activeCategory, language]);
 
   return (
-    <div className="w-full bg-[#FAFBFC] dark:bg-[#121820] text-[#182230] dark:text-slate-100 min-h-screen transition-colors">
+    <div className={`w-full bg-[#FAFBFC] dark:bg-[#121820] text-[#182230] dark:text-slate-100 min-h-screen transition-colors ${isNative ? 'pb-28' : 'pb-6'}`}>
       
-      {/* ==================================================
-          1. HERO SECTION (ENHANCED MODERN PRODUCT COMPOSITION)
-          ================================================== */}
-      <section className="relative overflow-hidden bg-white dark:bg-[#0c1017] border-b border-[#E1E7EC] dark:border-slate-800/80 pt-10 pb-12 sm:pt-16 sm:pb-20 px-4 sm:px-6 lg:px-8">
+      {isNative ? (
+        /* ==================================================
+           NATIVE ANDROID APP HEADER: SNAPPY SEARCH & BRANDING
+           ================================================== */
+        <section className="bg-white dark:bg-[#0c1017] border-b border-[#E1E7EC] dark:border-slate-800/80 pt-3 pb-3.5 px-4 shadow-2xs">
+          <div className="max-w-4xl mx-auto space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-black text-lg text-[#0B79B7] dark:text-[#38a8f8] tracking-tight">
+                  MIFTAH
+                </span>
+                <span className="px-1.5 py-0.5 rounded-md bg-[#0B79B7] text-white text-[9px] font-black uppercase tracking-wider">
+                  APP
+                </span>
+              </div>
+              <span className="text-[11px] font-bold text-[#687587] dark:text-slate-400">
+                {language === 'ur' ? '220+ آف لائن ٹولز' : language === 'hi' ? '220+ सुरक्षित टूल्स' : '220+ Client-Side Tools'}
+              </span>
+            </div>
+
+            {/* Snappy In-App Search Bar */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-[#0B79B7] dark:text-[#38a8f8] absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={language === 'ur' ? 'کوئی بھی ٹول تلاش کریں (مثال: PDF, Word, Audio)...' : language === 'hi' ? 'कोई भी टूल खोजें (जैसे: PDF, Word, Audio)...' : 'Search 220+ tools (e.g. PDF, Word, Audio)...'}
+                className="w-full h-11 pl-10 pr-9 rtl:pl-9 rtl:pr-10 rounded-2xl bg-[#F5F7F9] dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 text-xs sm:text-sm font-medium focus:outline-none focus:border-[#0B79B7] focus:bg-white dark:focus:bg-slate-800 transition-all text-[#182230] dark:text-white placeholder:text-[#687587]"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setSearchQuery('');
+                  }}
+                  className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  aria-label="Clear Search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+      ) : (
+        /* ==================================================
+           1. HERO SECTION (ENHANCED MODERN PRODUCT COMPOSITION - WEB ONLY)
+           ================================================== */
+        <section className="relative overflow-hidden bg-white dark:bg-[#0c1017] border-b border-[#E1E7EC] dark:border-slate-800/80 pt-10 pb-12 sm:pt-16 sm:pb-20 px-4 sm:px-6 lg:px-8">
         
         {/* Subtle geometric pattern background */}
         <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none bg-[radial-gradient(#0B79B7_1px,transparent_1px)] [background-size:24px_24px]" />
@@ -1360,10 +1409,12 @@ export default function HomePage() {
 
         </div>
       </section>
+      )}
 
       {/* ==================================================
-          2. TRUST / VALUE STRIP (COMPACT 2x2 ON MOBILE, 4 IN A ROW ON DESKTOP)
+          2. TRUST / VALUE STRIP (COMPACT 2x2 ON MOBILE, 4 IN A ROW ON DESKTOP) (WEB ONLY)
           ================================================== */}
+      {!isNative && (
       <section className="border-b border-[#E1E7EC] dark:border-slate-800 bg-[#F5F7F9] dark:bg-[#0e141c]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
@@ -1415,6 +1466,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ==================================================
           3. RECENT TOOLS (HIGH-END MODERN SLEEK CARDS WITH DEDICATED ICONS)
@@ -1690,9 +1742,9 @@ export default function HomePage() {
       )}
 
       {/* ==================================================
-          7. WHY MIFTAH TOOLS? (INTERACTIVE ACCORDION / DROPDOWN)
+          7. WHY MIFTAH TOOLS? (INTERACTIVE ACCORDION / DROPDOWN) (WEB ONLY)
           ================================================== */}
-      {!searchQuery && activeCategory === 'all' && (
+      {!isNative && !searchQuery && activeCategory === 'all' && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 space-y-6">
           <div className="text-center max-w-2xl mx-auto space-y-1">
             <h2 className="text-2xl sm:text-3xl font-black text-[#182230] dark:text-white tracking-tight">
@@ -1763,8 +1815,9 @@ export default function HomePage() {
       )}
 
       {/* ==================================================
-          8. ANDROID APP PROMOTION SECTION
+          8. ANDROID APP PROMOTION SECTION (WEB ONLY)
           ================================================== */}
+      {!isNative && (
       <section id="android-app" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16">
         <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
           
@@ -1823,10 +1876,12 @@ export default function HomePage() {
 
         </div>
       </section>
+      )}
 
       {/* ==================================================
-          9. ALL TOOLS DIRECTORY CTA BANNER
+          9. ALL TOOLS DIRECTORY CTA BANNER (WEB ONLY)
           ================================================== */}
+      {!isNative && (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6">
         <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#0B79B7] to-[#075B8C] text-white shadow-lg space-y-4 text-center sm:text-left rtl:sm:text-right flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-1.5 max-w-xl">
@@ -1849,11 +1904,12 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+      )}
 
       {/* ==================================================
-          9. LIVE USER RATINGS & COMMUNITY REVIEWS
+          9. LIVE USER RATINGS & COMMUNITY REVIEWS (WEB ONLY)
           ================================================== */}
-      {!searchQuery && activeCategory === 'all' && (
+      {!isNative && !searchQuery && activeCategory === 'all' && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-6">
           <div className="text-center space-y-2 mb-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-bold uppercase tracking-wider">
@@ -1873,9 +1929,9 @@ export default function HomePage() {
       )}
 
       {/* ==================================================
-          10. FREQUENTLY ASKED QUESTIONS (EXPANDABLE DROPDOWN FAQ - PLACED AT THE BOTTOM)
+          10. FREQUENTLY ASKED QUESTIONS (EXPANDABLE DROPDOWN FAQ - PLACED AT THE BOTTOM) (WEB ONLY)
           ================================================== */}
-      {!searchQuery && activeCategory === 'all' && (
+      {!isNative && !searchQuery && activeCategory === 'all' && (
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-12 space-y-5">
           <div className="text-center space-y-1">
             <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0B79B7]/10 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-bold uppercase tracking-wider">

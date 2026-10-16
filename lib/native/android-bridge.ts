@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -10,7 +11,24 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
 
 export const isNativeAndroid = (): boolean => {
-  return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+  if (typeof window === 'undefined') return false;
+  return (
+    (window as any).Capacitor?.isNativePlatform?.() ||
+    window.location.protocol === 'capacitor:' ||
+    (window as any).AndroidDownloader !== undefined ||
+    (window as any).AndroidSpeech !== undefined ||
+    (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android')
+  );
+};
+
+export const useIsNativeApp = (): boolean => {
+  const [isNative, setIsNative] = useState(false);
+
+  useEffect(() => {
+    setIsNative(isNativeAndroid());
+  }, []);
+
+  return isNative;
 };
 
 /**
