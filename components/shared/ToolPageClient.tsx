@@ -797,18 +797,25 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       return results;
     }
 
-    // 7. PDF WATERMARK
-    if (tool.id === 'pdf-watermark') {
-      onProgress(40, 'Applying watermark stamp to all pages...');
+    if (tool.id === 'pdf-watermark' || tool.slug === 'watermark-pdf' || tool.id === 'watermark-pdf') {
+      onProgress(40, 'Applying watermark stamp to pages...');
       const results = [];
       for (const f of files) {
         const buffer = await f.arrayBuffer();
         const stampedBytes = await watermarkPdf(
           buffer,
-          options.text || 'CONFIDENTIAL',
-          options.opacity ? parseFloat(options.opacity) : 0.3,
-          options.color || '#ff0000',
-          options.watermarkImage || options.image || options.headerImage
+          {
+            watermarkText: options.text || 'CONFIDENTIAL',
+            opacity: options.opacity !== undefined ? parseFloat(options.opacity) : 0.3,
+            colorHex: options.color || '#ff0000',
+            watermarkImage: options.watermarkImage || options.image || options.headerImage,
+            position: options.position || 'center-diagonal',
+            customX: options.customX,
+            customY: options.customY,
+            rotation: options.rotation !== undefined ? Number(options.rotation) : (options.position === 'center-diagonal' || !options.position ? 45 : 0),
+            fontSize: options.fontSize ? Number(options.fontSize) : undefined,
+            pageRange: options.pageRange || 'all',
+          }
         );
         const blob = new Blob([stampedBytes as any], { type: 'application/pdf' });
         results.push({
@@ -1741,11 +1748,23 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     }
 
     if (tool.id === 'pdf-remove-watermark' || tool.slug === 'remove-watermark-pdf') {
-      onProgress(40, 'Cleaning watermark elements...');
-      const buf = await files[0].arrayBuffer();
-      const cleaned = await removePdfWatermark(buf);
-      const blob = new Blob([cleaned as any], { type: 'application/pdf' });
-      return [{ name: `cleaned-${files[0].name}`, originalSize: files[0].size, processedSize: blob.size, blob }];
+      onProgress(40, 'Deep cleaning watermark elements...');
+      const results = [];
+      for (const f of files) {
+        const buf = await f.arrayBuffer();
+        const cleaned = await removePdfWatermark(buf, {
+          targetKeyword: options.targetKeyword,
+          mode: options.mode,
+        });
+        const blob = new Blob([cleaned as any], { type: 'application/pdf' });
+        results.push({
+          name: `cleaned-${f.name}`,
+          originalSize: f.size,
+          processedSize: blob.size,
+          blob,
+        });
+      }
+      return results;
     }
 
     if (tool.id === 'reverse-text' || tool.id === 'reverse-lines' || tool.slug === 'reverse-text' || tool.slug === 'reverse-lines') {
