@@ -392,13 +392,15 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
       {/* Responsive Ad Space for Monetization */}
       <AdSlot placement="tool-bottom" />
 
-      {/* Live User Ratings & Feedback for this Tool */}
-      <div className="pt-4">
-        <LiveRatingStudio
-          initialToolName={localized.name}
-          initialToolSlug={tool.slug}
-        />
-      </div>
+      {/* Live User Ratings & Feedback for this Tool (Web only — hidden in native Android app) */}
+      {!isNative && (
+        <div className="pt-4">
+          <LiveRatingStudio
+            initialToolName={localized.name}
+            initialToolSlug={tool.slug}
+          />
+        </div>
+      )}
 
       {/* Comprehensive SEO Content, How-To Guide, Specifications, FAQs & Related Tools (Web only — hidden in native Android app) */}
       {!isNative && <ToolSeoContent tool={tool} />}
