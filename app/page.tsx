@@ -39,6 +39,7 @@ import {
   Star,
 } from 'lucide-react';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
+import { ToolDefinition } from '@/lib/types';
 import { LiveRatingStudio } from '@/components/ratings/LiveRatingStudio';
 import { ToolCard } from '@/components/shared/ToolCard';
 import { HorizontalRecentToolsCarousel } from '@/components/shared/HorizontalRecentToolsCarousel';
@@ -1263,23 +1264,32 @@ const OLD_APP_LOCALES = {
   },
 };
 
-const OLD_APP_QUICK_ACTIONS = [
-  { id: 'voice-to-text', color: 'bg-rose-500', fallbackIcon: Mic },
-  { id: 'media-downloader', color: 'bg-purple-600', fallbackIcon: Video },
-  { id: 'camera-scanner', color: 'bg-blue-600', fallbackIcon: Camera },
+const NATIVE_APP_QUICK_ACTIONS = [
   { id: 'pdf-to-docx', color: 'bg-indigo-600', fallbackIcon: FileText },
   { id: 'compress-pdf', color: 'bg-emerald-600', fallbackIcon: Minimize2 },
   { id: 'merge-pdf', color: 'bg-sky-500', fallbackIcon: Combine },
-  { id: 'pdf-editor', color: 'bg-amber-500', fallbackIcon: Layers },
-  { id: 'markitdown', color: 'bg-fuchsia-600', fallbackIcon: Sparkles },
+  { id: 'voice-to-text', color: 'bg-rose-500', fallbackIcon: Mic },
+  { id: 'media-downloader', color: 'bg-purple-600', fallbackIcon: Video },
+  { id: 'camera-scanner', color: 'bg-blue-600', fallbackIcon: Camera },
   { id: 'background-remover', color: 'bg-pink-500', fallbackIcon: Sparkles },
+  { id: 'watermark-pdf', color: 'bg-amber-500', fallbackIcon: Layers },
   { id: 'image-resizer', color: 'bg-cyan-600', fallbackIcon: ImageIcon },
   { id: 'qr-generator', color: 'bg-teal-600', fallbackIcon: QrCode },
-  { id: 'workflows', color: 'bg-orange-500', fallbackIcon: Zap },
-  { id: 'video-to-mp3', color: 'bg-violet-600', fallbackIcon: Video },
-  { id: 'audio-booster', color: 'bg-lime-600', fallbackIcon: Zap },
-  { id: 'pdf-signer', color: 'bg-slate-700', fallbackIcon: FileCheck },
   { id: 'docx-to-pdf', color: 'bg-blue-500', fallbackIcon: FileText },
+  { id: 'video-to-mp3', color: 'bg-violet-600', fallbackIcon: Video },
+];
+
+const NATIVE_POPULAR_TOOL_IDS = [
+  'pdf-to-docx',
+  'compress-pdf',
+  'merge-pdf',
+  'voice-to-text',
+  'camera-scanner',
+  'background-remover',
+  'watermark-pdf',
+  'video-to-mp3',
+  'image-resizer',
+  'docx-to-pdf',
 ];
 
 function NativeAppHome() {
@@ -1330,6 +1340,13 @@ function NativeAppHome() {
       pinnedTools.includes(tool.id)
   );
 
+  // Top 10 Flagship Popular Tools for Native Android
+  const popularTools = React.useMemo(() => {
+    return NATIVE_POPULAR_TOOL_IDS
+      .map((id) => TOOLS_LIST.find((t) => t.id === id || t.slug === id))
+      .filter((t): t is ToolDefinition => Boolean(t));
+  }, []);
+
   return (
     <div className="space-y-6 sm:space-y-8 pt-2 sm:pt-4 pb-28 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
       {/* 1. BOOKMARKED FAVORITES (Conditional on real user saving) */}
@@ -1369,7 +1386,7 @@ function NativeAppHome() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-          {OLD_APP_QUICK_ACTIONS.map((def) => {
+          {NATIVE_APP_QUICK_ACTIONS.map((def) => {
             const tool = TOOLS_LIST.find((t) => t.id === def.id || t.slug === def.id);
             const localized = tool ? getLocalizedTool(tool, language) : null;
             const title = localized?.name || def.id;
@@ -1411,40 +1428,34 @@ function NativeAppHome() {
         <AdSlot placement="in-feed" />
       </section>
 
-      {/* 4. TOOL DIRECTORY GRID (All Tools) */}
+      {/* 4. TOP 10 POPULAR TOOLS (Curated & Polished for Native Android) */}
       <section id="tools-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
             {loc.popularTools}
           </h2>
-          <span className="text-[11px] text-slate-400 font-semibold">{loc.toolsCount(TOOLS_LIST.length)}</span>
+          <span className="text-[11px] text-slate-400 font-semibold">{popularTools.length} Top Tools</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {TOOLS_LIST.slice(0, 32).map((tool, idx) => (
-            <React.Fragment key={tool.id}>
-              <ToolCard tool={tool} />
-              {idx === 7 && <NativeFeedAd />}
-              {idx === 19 && <NativeFeedAd />}
-            </React.Fragment>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
+          {popularTools.map((tool) => (
+            <ToolCard key={tool.id} tool={tool} />
           ))}
         </div>
 
-        {TOOLS_LIST.length > 32 && (
-          <div className="text-center pt-4">
-            <Link
-              href="/tools"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-xs hover:border-brand-500 shadow-xs active:scale-95 transition-all"
-            >
-              <span>{loc.exploreDirectory(TOOLS_LIST.length)}</span>
-              {isRTL ? (
-                <ArrowRight className="w-4 h-4 text-brand-600 rotate-180" />
-              ) : (
-                <ArrowRight className="w-4 h-4 text-brand-600" />
-              )}
-            </Link>
-          </div>
-        )}
+        <div className="text-center pt-4">
+          <Link
+            href="/tools"
+            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-xs hover:border-brand-500 shadow-xs active:scale-95 transition-all"
+          >
+            <span>{loc.exploreDirectory(TOOLS_LIST.length)}</span>
+            {isRTL ? (
+              <ArrowRight className="w-4 h-4 text-brand-600 rotate-180" />
+            ) : (
+              <ArrowRight className="w-4 h-4 text-brand-600" />
+            )}
+          </Link>
+        </div>
       </section>
     </div>
   );

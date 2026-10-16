@@ -125,8 +125,17 @@ export function InAppReviewPrompt() {
       // Small delay so user finishes admiring their downloaded file before prompt appears
       setTimeout(() => {
         if (checkShouldPrompt(force)) {
-          setIsOpen(true);
-          triggerHaptic('medium');
+          if (isNativeAndroid()) {
+            // Directly trigger official Google Play In-App Review API without any web UI
+            const triggered = requestInAppReviewNative();
+            if (!triggered) {
+              openPlayStorePageNative();
+            }
+            localStorage.setItem(STORAGE_KEYS.REVIEW_DONE, 'true');
+          } else {
+            setIsOpen(true);
+            triggerHaptic('medium');
+          }
         }
       }, 1200);
     };
@@ -136,9 +145,14 @@ export function InAppReviewPrompt() {
     // 2. Also check on mount after initial session activity
     const timer = setTimeout(() => {
       if (checkShouldPrompt(false)) {
-        setIsOpen(true);
+        if (isNativeAndroid()) {
+          requestInAppReviewNative();
+          localStorage.setItem(STORAGE_KEYS.REVIEW_DONE, 'true');
+        } else {
+          setIsOpen(true);
+        }
       }
-    }, 8000);
+    }, 12000);
 
     return () => {
       window.removeEventListener('miftah:trigger-review-prompt', handleTrigger);
@@ -237,7 +251,7 @@ export function InAppReviewPrompt() {
     handleSnooze();
   };
 
-  if (!isOpen) return null;
+  if (isNativeAndroid() || !isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
