@@ -9,20 +9,132 @@ import {
   Packer,
   PageBreak,
   ImageRun,
+  AlignmentType,
 } from 'docx';
 import { runOcr } from '@/lib/ocr/ocr-engine';
 import { getPdfJsLib } from '@/lib/utils/formatters';
 
+export interface PdfToDocxOptions {
+  language?: 'auto' | 'ara' | 'urd' | 'eng' | string;
+  forceRtl?: boolean | 'auto';
+  preserveExactFontSize?: boolean;
+  cleanArtifacts?: boolean;
+  normalizeArabic?: boolean;
+}
+
 /**
- * High-Fidelity Client-Side PDF to Word (DOCX) Converter Engine with Deep OCR.
- * Monotonic progress guaranteed (never jumps backwards).
+ * Normalizes Unicode text, decomposes Arabic/Urdu presentation forms to base characters,
+ * removes unprintable/null controls, strips unmapped Private Use Area (PUA) bullet codes,
+ * and converts geometric circle/square markers into clean bullets.
+ */
+export function cleanAndNormalizePdfText(str: string): string {
+  if (!str) return '';
+
+  // 1. Convert Unicode Presentation Forms (Arabic/Urdu glyphs) to base connected Unicode
+  // NFKC decomposes presentation forms (U+FB50-U+FDFF, U+FE70-U+FEFF) into natural Arabic
+  let cleaned = str.normalize('NFKC');
+
+  // 2. Strip non-printable ASCII control characters (nulls, breaks, escapes)
+  cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+  // 3. Remove raw CID font artifact patterns like "(cid:123)"
+  cleaned = cleaned.replace(/\(cid:\d+\)/g, '');
+
+  // 4. Handle Private Use Area (PUA) characters \uE000-\uF8FF, \uFFF0-\uFFFF
+  // Convert common Wingdings/Symbol bullet characters to clean bullet • (\u2022)
+  cleaned = cleaned.replace(/[\uF0A7\uF0B7\uF0D8\uF0E0\uF02D]/g, '•');
+  // Strip unmapped PUA characters which otherwise render as empty boxes, circles or question marks in Word
+  cleaned = cleaned.replace(/[\uE000-\uF8FF\uFFF0-\uFFFF]/g, '');
+
+  // 5. Normalize geometric shape circles and stray boxes:
+  // \u25CF (Black Circle), \u25CB (White Circle), \u25E6 (White Bullet), \u25AA, \u25AB
+  cleaned = cleaned.replace(/[\u25CF\u25CB\u25E6\u25AA\u25AB\u2023\u2043]/g, '•');
+
+  // 6. Remove replacement character \uFFFD (rendered as  or question mark circle)
+  cleaned = cleaned.replace(/\uFFFD/g, '');
+
+  // 7. Strip zero-width & invisible spaces, EXCEPT \u200C (ZWNJ which is required for Urdu/Persian)
+  cleaned = cleaned.replace(/[\uFEFF\u200B\u200D\u2060]/g, '');
+
+  return cleaned;
+}
+
+/**
+ * Detects whether a string is predominantly Right-to-Left (Arabic, Urdu, Persian, Pashto, Hebrew).
+ */
+export function isRtlText(text: string): boolean {
+  if (!text) return false;
+  const rtlMatches = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u0590-\u05FF]/g);
+  const rtlChars = rtlMatches ? rtlMatches.length : 0;
+  const nonSpaceLength = text.replace(/[\s\d\p{P}]/gu, '').length;
+  if (nonSpaceLength === 0) return rtlChars > 0;
+  return rtlChars / nonSpaceLength >= 0.25;
+}
+
+/**
+ * Detects if an Arabic/Urdu string was written in reversed visual character order and fixes it.
+ */
+export function fixArabicVisualReversal(text: string): string {
+  if (!text) return text;
+  const words = text.split(/\s+/);
+  let reversedSignals = 0;
+  let normalSignals = 0;
+
+  for (const w of words) {
+    if (w.length >= 3) {
+      if (w.startsWith('ة') || w.endsWith('ال')) reversedSignals++;
+      if (
+        w.startsWith('ال') ||
+        w.startsWith('لل') ||
+        w.startsWith('بال') ||
+        w.startsWith('كال') ||
+        w.startsWith('فال') ||
+        w.endsWith('ة') ||
+        w.endsWith('ات') ||
+        w.endsWith('ين') ||
+        w.endsWith('ون')
+      ) {
+        normalSignals++;
+      }
+    }
+  }
+
+  if (reversedSignals > normalSignals && reversedSignals >= 1) {
+    return words
+      .map((w) => {
+        if (/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(w)) {
+          return [...w].reverse().join('');
+        }
+        return w;
+      })
+      .join(' ');
+  }
+  return text;
+}
+
+interface RawPdfItem {
+  str: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fontSize: number;
+  isBold: boolean;
+  isItalic: boolean;
+  isRtl: boolean;
+}
+
+/**
+ * Ultra High-Fidelity Client-Side PDF to Word (DOCX) Converter Engine with Deep OCR,
+ * Native Right-To-Left (RTL) Arabic/Urdu Support, Artifact Cleansing, and Exact Font Size Matching.
  */
 export async function pdfToDocx(
   file: File | Blob,
-  onProgress?: (percent: number, status: string) => void
+  onProgress?: (percent: number, status: string) => void,
+  options?: PdfToDocxOptions
 ): Promise<Blob> {
   const fileName = (file as File).name || 'document.pdf';
-  
+
   // If user dropped an image file into the PDF converter, route to Image-to-Word
   if (
     file.type?.startsWith('image/') ||
@@ -46,7 +158,7 @@ export async function pdfToDocx(
   }
 
   const arrayBuffer = await file.arrayBuffer();
-  updateProgress(18, 'Reading document structure...');
+  updateProgress(18, 'Reading document structure & layout...');
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
   const pdfDoc = await loadingTask.promise;
   const totalPages = pdfDoc.numPages;
@@ -64,121 +176,217 @@ export async function pdfToDocx(
 
     try {
       const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.0 });
+      const pageWidth = viewport.width || 595;
       const textContent = await page.getTextContent();
-      const items = (textContent.items || []) as any[];
+      const rawItems = (textContent.items || []) as any[];
 
-      // Extract existing digital text
-      const digitalText = items.map((i) => i.str || '').join(' ').trim();
+      // Filter and clean items
+      const validItems: RawPdfItem[] = [];
 
-      if (items.length > 0 && digitalText.length > 0) {
-        // 1. Digital PDF Vector Layout Reconstruction
-        items.sort((a, b) => {
-          const yDiff = b.transform[5] - a.transform[5];
-          if (Math.abs(yDiff) > 4) return yDiff;
-          return a.transform[4] - b.transform[4];
+      for (const item of rawItems) {
+        const rawStr = item.str || '';
+        let cleanStr = cleanAndNormalizePdfText(rawStr);
+        cleanStr = fixArabicVisualReversal(cleanStr);
+
+        if (!cleanStr.trim() && !item.hasEOL) {
+          continue;
+        }
+
+        const x = item.transform ? item.transform[4] : 0;
+        const y = item.transform ? item.transform[5] : 0;
+        const scaleX = item.transform ? Math.hypot(item.transform[0], item.transform[1]) : 12;
+        const scaleY = item.transform ? Math.hypot(item.transform[2], item.transform[3]) : 12;
+        const computedSize = Math.max(scaleX, scaleY, item.height || 12);
+        const fontSize = Math.max(8, Math.min(72, Math.round(computedSize)));
+
+        const fontName = (item.fontName || '').toLowerCase();
+        const isBold =
+          fontName.includes('bold') ||
+          fontName.includes('black') ||
+          fontName.includes('heavy') ||
+          fontName.includes('semi') ||
+          fontName.includes('demi');
+        const isItalic = fontName.includes('italic') || fontName.includes('oblique');
+        const itemRtl = isRtlText(cleanStr);
+
+        validItems.push({
+          str: cleanStr,
+          x,
+          y,
+          width: item.width || 0,
+          height: item.height || fontSize,
+          fontSize,
+          isBold,
+          isItalic,
+          isRtl: itemRtl,
         });
+      }
 
-        const lines: { y: number; fontSize: number; text: string; isBold: boolean }[] = [];
-        let currentLine = { y: items[0].transform[5], fontSize: items[0].height || 12, text: '', isBold: false };
+      if (validItems.length > 0) {
+        // Group items into horizontal lines based on vertical tolerance
+        const lines: { y: number; items: RawPdfItem[] }[] = [];
 
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          const str = item.str || '';
-          const y = item.transform[5];
-          const fontName = (item.fontName || '').toLowerCase();
-          const isBold = fontName.includes('bold') || fontName.includes('black') || fontName.includes('heavy');
-          const fontSize = Math.round(item.height || item.transform[0] || 12);
-
-          if (Math.abs(y - currentLine.y) > 6) {
-            if (currentLine.text.trim()) {
-              lines.push({ ...currentLine, text: currentLine.text.trim() });
-            }
-            currentLine = { y, fontSize, text: str, isBold };
+        for (const it of validItems) {
+          const existingLine = lines.find(
+            (l) => Math.abs(l.y - it.y) <= Math.max(3.5, it.fontSize * 0.45)
+          );
+          if (existingLine) {
+            existingLine.items.push(it);
+            existingLine.y =
+              (existingLine.y * (existingLine.items.length - 1) + it.y) /
+              existingLine.items.length;
           } else {
-            currentLine.text += (currentLine.text.length > 0 && !currentLine.text.endsWith(' ') ? ' ' : '') + str;
-            if (isBold) currentLine.isBold = true;
-            if (fontSize > currentLine.fontSize) currentLine.fontSize = fontSize;
-          }
-        }
-        if (currentLine.text.trim()) {
-          lines.push({ ...currentLine, text: currentLine.text.trim() });
-        }
-
-        let paragraphBuffer: { text: string; isBold: boolean; fontSize: number }[] = [];
-
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-
-          if (line.fontSize >= 18) {
-            if (paragraphBuffer.length > 0) {
-              docChildren.push(buildParagraph(paragraphBuffer));
-              paragraphBuffer = [];
-            }
-            docChildren.push(
-              new Paragraph({
-                text: line.text,
-                heading: HeadingLevel.HEADING_1,
-                spacing: { before: 240, after: 120 },
-              })
-            );
-          } else if (line.fontSize >= 14) {
-            if (paragraphBuffer.length > 0) {
-              docChildren.push(buildParagraph(paragraphBuffer));
-              paragraphBuffer = [];
-            }
-            docChildren.push(
-              new Paragraph({
-                text: line.text,
-                heading: HeadingLevel.HEADING_2,
-                spacing: { before: 180, after: 80 },
-              })
-            );
-          } else {
-            paragraphBuffer.push(line);
-            if (line.text.endsWith('.') || line.text.endsWith('!') || line.text.endsWith('?')) {
-              docChildren.push(buildParagraph(paragraphBuffer));
-              paragraphBuffer = [];
-            }
+            lines.push({ y: it.y, items: [it] });
           }
         }
 
-        if (paragraphBuffer.length > 0) {
-          docChildren.push(buildParagraph(paragraphBuffer));
+        // Sort lines from top of the page down to bottom (PDF Y is 0 at bottom)
+        lines.sort((a, b) => b.y - a.y);
+
+        for (const line of lines) {
+          const fullLineText = line.items.map((i) => i.str).join(' ').trim();
+          if (!fullLineText) continue;
+
+          // Determine line direction (RTL for Arabic/Urdu vs LTR for English/Hindi)
+          const isLineRtl =
+            options?.forceRtl === true
+              ? true
+              : options?.forceRtl === false
+              ? false
+              : isRtlText(fullLineText);
+
+          // Horizontal sorting within the line:
+          // In RTL (Arabic/Urdu), reading starts from the rightmost word (highest X) moving leftward.
+          // In LTR (English), reading starts from the leftmost word (lowest X) moving rightward.
+          if (isLineRtl) {
+            line.items.sort((a, b) => b.x - a.x);
+          } else {
+            line.items.sort((a, b) => a.x - b.x);
+          }
+
+          // Merge adjacent items into coherent TextRuns with exact font sizes and styling
+          const runs: { text: string; fontSize: number; isBold: boolean; isItalic: boolean; isRtl: boolean }[] = [];
+          for (let i = 0; i < line.items.length; i++) {
+            const it = line.items[i];
+            const prev = runs[runs.length - 1];
+
+            if (
+              prev &&
+              prev.fontSize === it.fontSize &&
+              prev.isBold === it.isBold &&
+              prev.isItalic === it.isItalic &&
+              prev.isRtl === it.isRtl
+            ) {
+              const needsSpace = !prev.text.endsWith(' ') && !it.str.startsWith(' ');
+              prev.text += (needsSpace ? ' ' : '') + it.str;
+            } else {
+              runs.push({
+                text: it.str,
+                fontSize: it.fontSize,
+                isBold: it.isBold,
+                isItalic: it.isItalic,
+                isRtl: it.isRtl || isLineRtl,
+              });
+            }
+          }
+
+          const maxFontSize = Math.max(...line.items.map((i) => i.fontSize));
+          const minX = Math.min(...line.items.map((i) => i.x));
+          const maxX = Math.max(...line.items.map((i) => i.x + i.width));
+          const lineWidth = maxX - minX;
+          const lineCenter = minX + lineWidth / 2;
+          const pageCenter = pageWidth / 2;
+          const isCentered = !isLineRtl && Math.abs(lineCenter - pageCenter) < 40 && lineWidth < pageWidth * 0.7;
+
+          const isHeading = maxFontSize >= 16 && fullLineText.length < 120;
+
+          // Alignment determination
+          const alignment = isLineRtl
+            ? AlignmentType.RIGHT
+            : isCentered
+            ? AlignmentType.CENTER
+            : AlignmentType.LEFT;
+
+          const textRunObjects = runs.map(
+            (r) =>
+              new TextRun({
+                text: r.text,
+                bold: r.isBold,
+                italics: r.isItalic,
+                // Exact font size in half-points: 12pt -> 24, 18pt -> 36, 24pt -> 48
+                size: Math.max(16, Math.min(144, r.fontSize * 2)),
+                rightToLeft: isLineRtl,
+                font: isLineRtl
+                  ? { name: 'Traditional Arabic', cs: 'Traditional Arabic', ascii: 'Calibri' }
+                  : { name: 'Calibri', ascii: 'Calibri' },
+              })
+          );
+
+          docChildren.push(
+            new Paragraph({
+              children: textRunObjects,
+              bidirectional: isLineRtl,
+              alignment,
+              spacing: {
+                before: isHeading ? 160 : 30,
+                after: isHeading ? 80 : 30,
+                line: 276,
+              },
+              heading: isHeading
+                ? maxFontSize >= 22
+                  ? HeadingLevel.HEADING_1
+                  : HeadingLevel.HEADING_2
+                : undefined,
+            })
+          );
         }
+
         updateProgress(pageNextPct, `Finished page ${pageNum} of ${totalPages}`);
       } else {
         // 2. SCANNED / IMAGE PDF -> RUN OPTICAL CHARACTER RECOGNITION (OCR)
         updateProgress(pageBasePct + 2, `Scanned page ${pageNum} detected. Extracting text via OCR...`);
 
         const ocrScale = totalPages > 15 ? 1.25 : totalPages > 6 ? 1.5 : 1.85;
-        const viewport = page.getViewport({ scale: ocrScale });
+        const pageViewport = page.getViewport({ scale: ocrScale });
         const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        canvas.width = pageViewport.width;
+        canvas.height = pageViewport.height;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         if (ctx) {
-          await page.render({ canvasContext: ctx, viewport }).promise;
+          await page.render({ canvasContext: ctx, viewport: pageViewport }).promise;
           const pageDataUrl = canvas.toDataURL('image/png');
 
           try {
             updateProgress(pageBasePct + 4, `Reading characters from page ${pageNum}...`);
-            const ocrResult = await runOcr(pageDataUrl, 'eng');
+            const ocrLang = options?.language === 'ara' || options?.language === 'urd'
+              ? 'ara'
+              : options?.language || 'eng';
+            const ocrResult = await runOcr(pageDataUrl, ocrLang);
 
             if (ocrResult.text && ocrResult.text.trim()) {
               const rawParagraphs = ocrResult.text.split(/\n\s*\n/);
               for (const pText of rawParagraphs) {
-                const cleanP = pText.trim().replace(/\n/g, ' ');
+                let cleanP = cleanAndNormalizePdfText(pText.trim().replace(/\n/g, ' '));
+                cleanP = fixArabicVisualReversal(cleanP);
                 if (cleanP) {
+                  const isP_Rtl = options?.forceRtl === true || isRtlText(cleanP);
                   docChildren.push(
                     new Paragraph({
                       children: [
                         new TextRun({
                           text: cleanP,
-                          size: 24, // 12pt
+                          size: 24, // 12pt standard
+                          rightToLeft: isP_Rtl,
+                          font: isP_Rtl
+                            ? { name: 'Traditional Arabic', cs: 'Traditional Arabic', ascii: 'Calibri' }
+                            : { name: 'Calibri', ascii: 'Calibri' },
                         }),
                       ],
-                      spacing: { after: 140 },
+                      bidirectional: isP_Rtl,
+                      alignment: isP_Rtl ? AlignmentType.RIGHT : AlignmentType.LEFT,
+                      spacing: { after: 120, line: 276 },
                     })
                   );
                 }
@@ -241,7 +449,7 @@ export async function pdfToDocx(
 
   const doc = new Document({
     title: fileName.replace(/\.[^/.]+$/, ''),
-    description: 'Converted from PDF with OCR by Miftah Tools',
+    description: 'Converted from PDF with high-fidelity layout by Miftah Tools',
     sections: [
       {
         properties: {},
@@ -554,14 +762,29 @@ export async function textToWordDocx(text: string, title: string = 'Document'): 
 
   let isFirst = true;
   for (const block of rawBlocks) {
-    const clean = block.trim();
+    let clean = cleanAndNormalizePdfText(block.trim());
+    clean = fixArabicVisualReversal(clean);
     if (!clean) continue;
+
+    const isBlockRtl = isRtlText(clean);
 
     if (isFirst && clean.length < 80 && !clean.includes('\n')) {
       paragraphs.push(
         new Paragraph({
-          text: clean,
+          children: [
+            new TextRun({
+              text: clean,
+              bold: true,
+              size: 32, // 16pt
+              rightToLeft: isBlockRtl,
+              font: isBlockRtl
+                ? { name: 'Traditional Arabic', cs: 'Traditional Arabic', ascii: 'Calibri' }
+                : { name: 'Calibri', ascii: 'Calibri' },
+            }),
+          ],
           heading: HeadingLevel.HEADING_1,
+          bidirectional: isBlockRtl,
+          alignment: isBlockRtl ? AlignmentType.RIGHT : AlignmentType.LEFT,
           spacing: { before: 200, after: 120 },
         })
       );
@@ -571,8 +794,20 @@ export async function textToWordDocx(text: string, title: string = 'Document'): 
       const lines = clean.split('\n');
       paragraphs.push(
         new Paragraph({
-          children: lines.map((l, idx) => new TextRun({ text: l + (idx < lines.length - 1 ? '\n' : '') })),
-          spacing: { after: 140 },
+          children: lines.map(
+            (l, idx) =>
+              new TextRun({
+                text: l + (idx < lines.length - 1 ? '\n' : ''),
+                size: 24, // 12pt standard
+                rightToLeft: isBlockRtl,
+                font: isBlockRtl
+                  ? { name: 'Traditional Arabic', cs: 'Traditional Arabic', ascii: 'Calibri' }
+                  : { name: 'Calibri', ascii: 'Calibri' },
+              })
+          ),
+          bidirectional: isBlockRtl,
+          alignment: isBlockRtl ? AlignmentType.RIGHT : AlignmentType.LEFT,
+          spacing: { after: 140, line: 276 },
         })
       );
     }

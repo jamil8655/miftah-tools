@@ -18,6 +18,7 @@ import {
   zipToStructuredMarkdown,
   universalMarkItDown,
 } from './markitdown-engine';
+import { removePdfWatermark as deepRemovePdfWatermark } from '@/lib/pdf/pdf-manipulator';
 
 export {
   docxToStructuredMarkdown,
@@ -1585,12 +1586,11 @@ export async function sortPdfPages(buffer: ArrayBuffer, direction: 'asc' | 'desc
   return await newDoc.save({ useObjectStreams: true });
 }
 
-export async function removePdfWatermark(buffer: ArrayBuffer): Promise<Uint8Array> {
-  const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
-  // Clean document info and sanitize annotations
-  pdfDoc.setSubject('');
-  pdfDoc.setKeywords([]);
-  return await pdfDoc.save({ useObjectStreams: true });
+export async function removePdfWatermark(
+  buffer: ArrayBuffer,
+  options?: { targetKeyword?: string; mode?: 'smart' | 'scanned' }
+): Promise<Uint8Array> {
+  return await deepRemovePdfWatermark(buffer, options);
 }
 
 export function reverseText(text: string, mode: 'characters' | 'words' | 'lines'): string {

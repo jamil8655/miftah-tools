@@ -2,7 +2,7 @@
 
 import React, { useRef } from 'react';
 import { ToolDefinition } from '@/lib/types';
-import { Sliders, Zap, Layers, RotateCw, Stamp, Hash, Scissors, FileImage, Maximize2, Lock, Unlock, Settings2, HelpCircle, FileText, Image as ImageIcon, UploadCloud, X, AlignLeft, AlignCenter, AlignRight, Palette, Type, Target, Check, SlidersHorizontal, ChevronDown, Info } from 'lucide-react';
+import { Sliders, Zap, Layers, RotateCw, Stamp, Hash, Scissors, FileImage, Maximize2, Lock, Unlock, Settings2, HelpCircle, FileText, Image as ImageIcon, UploadCloud, X, AlignLeft, AlignCenter, AlignRight, Palette, Type, Target, Check, SlidersHorizontal, ChevronDown, Info, Grid, Move, Trash2, Sparkles } from 'lucide-react';
 import { formatBytes, formatBytesDual } from '@/lib/utils/formatters';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
@@ -35,7 +35,15 @@ export function ToolOptionControls({
   const isPdfCompress = tool.id.includes('compress') && tool.category === 'pdf';
   const isPdfSplit = (tool.id.includes('split') || tool.id.includes('extract')) && tool.category === 'pdf';
   const isPdfRotate = tool.id.includes('rotate') && tool.category === 'pdf';
-  const isPdfWatermark = tool.id.includes('watermark');
+  const isPdfWatermark =
+    (tool.id.includes('watermark') || tool.slug.includes('watermark')) &&
+    !tool.id.includes('remove') &&
+    !tool.slug.includes('remove');
+  const isPdfRemoveWatermark =
+    tool.id.includes('remove-watermark') ||
+    tool.slug.includes('remove-watermark') ||
+    ((tool.id.includes('watermark') || tool.slug.includes('watermark')) &&
+      (tool.id.includes('remove') || tool.slug.includes('remove')));
   const isPdfPageNumbers = tool.id.includes('page-numbers') || tool.id.includes('number');
   const isImageToPdf = tool.id.includes('image-to-pdf') || tool.id.includes('images-to-pdf');
   const isPdfHeaderFooter =

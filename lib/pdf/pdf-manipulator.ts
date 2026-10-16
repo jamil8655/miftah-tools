@@ -1,4 +1,14 @@
-import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
+import {
+  PDFDocument,
+  rgb,
+  degrees,
+  StandardFonts,
+  PDFName,
+  PDFArray,
+  PDFDict,
+  PDFRawStream,
+  decodePDFRawStream,
+} from 'pdf-lib';
 import jsPDF from 'jspdf';
 import { marked } from 'marked';
 
@@ -184,16 +194,69 @@ export async function reversePdfPages(pdfBuffer: ArrayBuffer): Promise<Uint8Arra
   return await reorderPdfPages(pdfBuffer, reverseOrder);
 }
 
+export type WatermarkPosition =
+  | 'center-diagonal'
+  | 'center'
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'middle-left'
+  | 'middle-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+  | 'tile'
+  | 'custom';
+
+export interface WatermarkOptions {
+  watermarkText?: string;
+  opacity?: number;
+  colorHex?: string;
+  watermarkImage?: string;
+  position?: WatermarkPosition;
+  customX?: number; // 0-100 percentage
+  customY?: number; // 0-100 percentage
+  rotation?: number; // degrees
+  fontSize?: number; // pt size
+  pageRange?: 'all' | 'first' | 'except-first';
+}
+
+export interface RemoveWatermarkOptions {
+  targetKeyword?: string;
+  mode?: 'smart' | 'scanned';
+}
+
 /**
- * Add a diagonal or centered text watermark stamp to all pages.
+ * Add a highly customizable watermark (text or image) to PDF pages.
+ * Supports 9-point grid placement, classic diagonal, full-page tiling, and custom coordinates.
  */
 export async function watermarkPdf(
   pdfBuffer: ArrayBuffer,
-  watermarkText: string = 'CONFIDENTIAL',
-  opacity: number = 0.3,
-  colorHex: string = '#ff0000',
-  watermarkImage?: string
+  watermarkTextOrOptions: string | WatermarkOptions = 'CONFIDENTIAL',
+  legacyOpacity?: number,
+  legacyColorHex?: string,
+  legacyWatermarkImage?: string,
+  extraOptions?: Partial<WatermarkOptions>
 ): Promise<Uint8Array> {
+  const opts: WatermarkOptions =
+    typeof watermarkTextOrOptions === 'object' && watermarkTextOrOptions !== null
+      ? watermarkTextOrOptions
+      : {
+          watermarkText: watermarkTextOrOptions || 'CONFIDENTIAL',
+          opacity: legacyOpacity,
+          colorHex: legacyColorHex,
+          watermarkImage: legacyWatermarkImage,
+          ...extraOptions,
+        };
+
+  const watermarkText = opts.watermarkText ?? 'CONFIDENTIAL';
+  const opacity = opts.opacity !== undefined ? Number(opts.opacity) : 0.3;
+  const colorHex = opts.colorHex || '#ff0000';
+  const position: WatermarkPosition = (opts.position as WatermarkPosition) || 'center-diagonal';
+  const customX = opts.customX ?? 50;
+  const customY = opts.customY ?? 50;
+  const pageRange = opts.pageRange || 'all';
+
   const doc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
   const pages = doc.getPages();
@@ -203,15 +266,17 @@ export async function watermarkPdf(
   const b = parseInt(colorHex.slice(5, 7), 16) / 255 || 0.1;
 
   let embeddedImg: any = null;
-  if (watermarkImage) {
+  if (opts.watermarkImage) {
     try {
-      const base64Data = watermarkImage.includes(',') ? watermarkImage.split(',')[1] : watermarkImage;
+      const base64Data = opts.watermarkImage.includes(',')
+        ? opts.watermarkImage.split(',')[1]
+        : opts.watermarkImage;
       const binaryString = atob(base64Data);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-      if (watermarkImage.includes('png') || watermarkImage.startsWith('data:image/png')) {
+      if (opts.watermarkImage.includes('png') || opts.watermarkImage.startsWith('data:image/png')) {
         embeddedImg = await doc.embedPng(bytes);
       } else {
         embeddedImg = await doc.embedJpg(bytes);
@@ -221,34 +286,364 @@ export async function watermarkPdf(
     }
   }
 
-  pages.forEach((page) => {
-    const { width, height } = page.getSize();
+  pages.forEach((page, idx) => {
+    // Page range filter
+    if (pageRange === 'first' && idx !== 0) return;
+    if (pageRange === 'except-first' && idx === 0) return;
 
-    if (embeddedImg) {
-      const maxW = width * 0.5;
-      const aspect = embeddedImg.height / embeddedImg.width;
-      const imgW = maxW;
-      const imgH = maxW * aspect;
-      page.drawImage(embeddedImg, {
-        x: (width - imgW) / 2,
-        y: (height - imgH) / 2,
-        width: imgW,
-        height: imgH,
-        opacity,
-      });
+    const { width, height } = page.getSize();
+    const margin = 36; // 0.5 inch margin
+
+    if (position === 'tile') {
+      // ▦ Full Page Tiled / Repeating Watermark
+      const tileCols = 3;
+      const tileRows = 4;
+      const tileAngle = opts.rotation !== undefined ? opts.rotation : 35;
+      const tileRad = (tileAngle * Math.PI) / 180;
+      const tCos = Math.cos(tileRad);
+      const tSin = Math.sin(tileRad);
+
+      if (embeddedImg) {
+        const itemW = width * 0.18;
+        const aspect = embeddedImg.height / embeddedImg.width;
+        const itemH = itemW * aspect;
+
+        for (let c = 0; c < tileCols; c++) {
+          for (let rIdx = 0; rIdx < tileRows; rIdx++) {
+            const cx = (width / tileCols) * (c + 0.5);
+            const cy = (height / tileRows) * (rIdx + 0.5);
+            page.drawImage(embeddedImg, {
+              x: cx - itemW / 2,
+              y: cy - itemH / 2,
+              width: itemW,
+              height: itemH,
+              opacity: Math.max(0.05, opacity * 0.7),
+              rotate: degrees(tileAngle),
+            });
+          }
+        }
+      } else if (watermarkText) {
+        const tileSize = opts.fontSize || Math.min(width, height) / 22;
+        const itemW = font.widthOfTextAtSize(watermarkText, tileSize);
+        const itemH = font.heightAtSize(tileSize);
+        const tOffsetX = (itemW / 2) * tCos - (itemH / 2) * tSin;
+        const tOffsetY = (itemW / 2) * tSin + (itemH / 2) * tCos;
+
+        for (let c = 0; c < tileCols; c++) {
+          for (let rIdx = 0; rIdx < tileRows; rIdx++) {
+            const cx = (width / tileCols) * (c + 0.5);
+            const cy = (height / tileRows) * (rIdx + 0.5);
+            page.drawText(watermarkText, {
+              x: cx - tOffsetX,
+              y: cy - tOffsetY,
+              size: tileSize,
+              font,
+              color: rgb(r, g, b),
+              opacity: Math.max(0.05, opacity * 0.7),
+              rotate: degrees(tileAngle),
+            });
+          }
+        }
+      }
+      return;
     }
 
-    if (watermarkText) {
-      const textSize = Math.min(width, height) / 10;
+    // Determine target rotation & dimensions for single placement
+    let targetRotation = opts.rotation !== undefined ? opts.rotation : 0;
+    if (position === 'center-diagonal') {
+      targetRotation = opts.rotation !== undefined ? opts.rotation : 45;
+    }
+
+    let itemW = 0;
+    let itemH = 0;
+    let calculatedSize = 0;
+
+    if (embeddedImg) {
+      const maxW = width * (opts.fontSize ? opts.fontSize / 100 : 0.4);
+      const aspect = embeddedImg.height / embeddedImg.width;
+      itemW = maxW;
+      itemH = maxW * aspect;
+    } else if (watermarkText) {
+      calculatedSize =
+        opts.fontSize ||
+        (position === 'center-diagonal' ? Math.min(width, height) / 10 : Math.min(width, height) / 14);
+      itemW = font.widthOfTextAtSize(watermarkText, calculatedSize);
+      itemH = font.heightAtSize(calculatedSize);
+    }
+
+    let targetCenterX = width / 2;
+    let targetCenterY = height / 2;
+
+    switch (position) {
+      case 'center':
+      case 'center-diagonal':
+        targetCenterX = width / 2;
+        targetCenterY = height / 2;
+        break;
+      case 'top-left':
+        targetCenterX = margin + itemW / 2;
+        targetCenterY = height - margin - itemH / 2;
+        break;
+      case 'top-center':
+        targetCenterX = width / 2;
+        targetCenterY = height - margin - itemH / 2;
+        break;
+      case 'top-right':
+        targetCenterX = width - margin - itemW / 2;
+        targetCenterY = height - margin - itemH / 2;
+        break;
+      case 'middle-left':
+        targetCenterX = margin + itemW / 2;
+        targetCenterY = height / 2;
+        break;
+      case 'middle-right':
+        targetCenterX = width - margin - itemW / 2;
+        targetCenterY = height / 2;
+        break;
+      case 'bottom-left':
+        targetCenterX = margin + itemW / 2;
+        targetCenterY = margin + itemH / 2;
+        break;
+      case 'bottom-center':
+        targetCenterX = width / 2;
+        targetCenterY = margin + itemH / 2;
+        break;
+      case 'bottom-right':
+        targetCenterX = width - margin - itemW / 2;
+        targetCenterY = margin + itemH / 2;
+        break;
+      case 'custom':
+        targetCenterX = width * (Math.max(0, Math.min(100, customX)) / 100);
+        targetCenterY = height * (Math.max(0, Math.min(100, customY)) / 100);
+        break;
+    }
+
+    const rad = (targetRotation * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const offsetX = (itemW / 2) * cos - (itemH / 2) * sin;
+    const offsetY = (itemW / 2) * sin + (itemH / 2) * cos;
+    const drawX = targetCenterX - offsetX;
+    const drawY = targetCenterY - offsetY;
+
+    if (embeddedImg) {
+      page.drawImage(embeddedImg, {
+        x: drawX,
+        y: drawY,
+        width: itemW,
+        height: itemH,
+        opacity,
+        rotate: degrees(targetRotation),
+      });
+    } else if (watermarkText) {
       page.drawText(watermarkText, {
-        x: width / 4,
-        y: height / 2,
-        size: textSize,
+        x: drawX,
+        y: drawY,
+        size: calculatedSize,
         font,
         color: rgb(r, g, b),
         opacity,
-        rotate: degrees(45),
+        rotate: degrees(targetRotation),
       });
+    }
+  });
+
+  return await doc.save({ useObjectStreams: true });
+}
+
+/**
+ * Remove watermarks from all pages of a PDF document.
+ * Deeply purges:
+ * 1. Annotation watermarks and stamps (/Annots, /Watermark, /Stamp)
+ * 2. Optional Content Groups / Layer watermarks (/OCProperties)
+ * 3. Marked Content Artifact blocks (/Artifact, /Watermark)
+ * 4. Overlay content streams and text/image watermark blocks
+ */
+export async function removePdfWatermark(
+  pdfBuffer: ArrayBuffer,
+  options?: RemoveWatermarkOptions
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+  const pages = doc.getPages();
+
+  const userKeywords = (options?.targetKeyword || '')
+    .split(/[,;\n]/)
+    .map((w) => w.trim().toLowerCase())
+    .filter(Boolean);
+
+  const defaultKeywords = [
+    'watermark',
+    'confidential',
+    'sample',
+    'draft',
+    'do not copy',
+    'preview',
+    'evaluation',
+    'demo',
+    'restricted',
+    'provisional',
+    'internal use only',
+    'copyright',
+  ];
+
+  const allKeywords = Array.from(new Set([...defaultKeywords, ...userKeywords]));
+
+  // Clean document catalog metadata & layers
+  try {
+    doc.setSubject('');
+    doc.setKeywords([]);
+    const catalog = doc.catalog;
+    if (catalog.get(PDFName.of('OCProperties'))) {
+      catalog.delete(PDFName.of('OCProperties'));
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  pages.forEach((page) => {
+    // 1. Purge Watermark and Stamp Annotations
+    try {
+      const annots = page.node.Annots();
+      if (annots && annots.size() > 0) {
+        const cleanedAnnots: any[] = [];
+        for (let i = 0; i < annots.size(); i++) {
+          const item = annots.get(i);
+          const annot = doc.context.lookup(item);
+          if (annot instanceof PDFDict) {
+            const subtype = annot.get(PDFName.of('Subtype'))?.toString() || '';
+            const contents = annot.get(PDFName.of('Contents'))?.toString() || '';
+            const nm = annot.get(PDFName.of('NM'))?.toString() || '';
+            const t = annot.get(PDFName.of('T'))?.toString() || '';
+            const combined = `${subtype} ${contents} ${nm} ${t}`.toLowerCase();
+
+            const isWatermark =
+              subtype === '/Watermark' ||
+              subtype === '/Stamp' ||
+              allKeywords.some((kw) => combined.includes(kw));
+
+            if (!isWatermark) {
+              cleanedAnnots.push(item);
+            }
+          } else {
+            cleanedAnnots.push(item);
+          }
+        }
+        page.node.set(PDFName.of('Annots'), doc.context.obj(cleanedAnnots));
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // 2. Remove PieceInfo / Artifact dictionary entries
+    try {
+      page.node.delete(PDFName.of('PieceInfo'));
+    } catch (e) {
+      // ignore
+    }
+
+    // 3. Clean Content Streams
+    try {
+      const rawContents = page.node.get(PDFName.of('Contents'));
+      if (!rawContents) return;
+
+      const derefContents = doc.context.lookup(rawContents);
+      const streamRefs: any[] = [];
+
+      if (derefContents instanceof PDFArray) {
+        for (let i = 0; i < derefContents.size(); i++) {
+          streamRefs.push(derefContents.get(i));
+        }
+      } else if (derefContents instanceof PDFRawStream) {
+        streamRefs.push(rawContents);
+      }
+
+      const keptStreams: any[] = [];
+
+      for (const ref of streamRefs) {
+        const streamObj = doc.context.lookup(ref);
+        if (!(streamObj instanceof PDFRawStream)) {
+          keptStreams.push(ref);
+          continue;
+        }
+
+        let streamText = '';
+        try {
+          const decoded = decodePDFRawStream(streamObj).decode();
+          streamText = Buffer.from(decoded).toString('latin1');
+        } catch {
+          keptStreams.push(ref);
+          continue;
+        }
+
+        // A. Remove Marked Content Artifact blocks: /Artifact ... BDC ... EMC
+        let cleaned = streamText.replace(
+          /\/(?:Artifact|Watermark|Stamp)[\s\S]*?(?:BDC|BMC)[\s\S]*?EMC\s*/gi,
+          ''
+        );
+
+        // B. Filter graphics/text blocks
+        const blocks = cleaned.split(/(?=(?:^|\n)\s*q\b)/g);
+        const retainedBlocks: string[] = [];
+
+        for (const block of blocks) {
+          const lower = block.toLowerCase();
+
+          let matchKeyword = false;
+          for (const kw of allKeywords) {
+            if (lower.includes(kw)) {
+              matchKeyword = true;
+              break;
+            }
+            const hex = Buffer.from(kw).toString('hex').toLowerCase();
+            if (lower.includes(hex)) {
+              matchKeyword = true;
+              break;
+            }
+          }
+
+          if (matchKeyword) {
+            continue; // drop watermark block
+          }
+
+          // Check if it's a rotated translucent text or graphic watermark:
+          // e.g. ExtGState opacity (/GS... gs) combined with rotated matrix (Tm)
+          const hasGs = /\/GS\S*\s+gs/i.test(block);
+          const tmMatch =
+            /([0-9\.\-]+)\s+([0-9\.\-]+)\s+([0-9\.\-]+)\s+([0-9\.\-]+)\s+([0-9\.\-]+)\s+([0-9\.\-]+)\s+Tm/i.exec(
+              block
+            );
+          if (hasGs && tmMatch) {
+            const a = Math.abs(parseFloat(tmMatch[1]));
+            const bVal = Math.abs(parseFloat(tmMatch[2]));
+            if (a > 0.08 && a < 0.98 && bVal > 0.08 && bVal < 0.98) {
+              continue; // drop rotated translucent stamp block
+            }
+          }
+
+          retainedBlocks.push(block);
+        }
+
+        const finalStreamStr = retainedBlocks.join('\n').trim();
+
+        // If the stream is effectively empty after watermark removal, drop it
+        if (!finalStreamStr || finalStreamStr === 'q\nQ' || finalStreamStr === 'q Q') {
+          continue;
+        }
+
+        if (finalStreamStr !== streamText.trim()) {
+          const newFlateStream = doc.context.flateStream(finalStreamStr);
+          const newRef = doc.context.register(newFlateStream);
+          keptStreams.push(newRef);
+        } else {
+          keptStreams.push(ref);
+        }
+      }
+
+      if (keptStreams.length > 0) {
+        page.node.set(PDFName.of('Contents'), doc.context.obj(keptStreams));
+      }
+    } catch (e) {
+      console.warn('Could not clean content stream for page:', e);
     }
   });
 

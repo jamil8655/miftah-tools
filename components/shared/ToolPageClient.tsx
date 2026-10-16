@@ -96,6 +96,7 @@ import { VisualPdfEditor } from '@/components/pdf/VisualPdfEditor';
 import { PdfProtectStudio } from '@/components/pdf/PdfProtectStudio';
 import { PdfOrganizerStudio } from '@/components/pdf/PdfOrganizerStudio';
 import { PdfToImagesStudio } from '@/components/pdf/PdfToImagesStudio';
+import { PdfToWordStudio } from '@/components/pdf/PdfToWordStudio';
 import { QrGenerator } from '@/components/qr/QrGenerator';
 import { BarcodeStudio } from '@/components/qr/BarcodeStudio';
 import { JsonStudio } from '@/components/dev/JsonStudio';
@@ -186,6 +187,15 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
     tool.slug === 'pdf-unlock'
   ) {
     customWorkspace = <PdfProtectStudio mode="unlock" />;
+  } else if (
+    tool.id === 'pdf-to-docx' ||
+    tool.id === 'pdf-to-doc' ||
+    tool.id === 'pdf-to-word' ||
+    tool.slug === 'pdf-to-word' ||
+    tool.slug === 'pdf-to-docx' ||
+    tool.slug === 'pdf-to-doc'
+  ) {
+    customWorkspace = <PdfToWordStudio />;
   } else if (tool.id === 'qr-generator' || tool.category === 'qr' || tool.slug === 'qr-code-generator') {
     customWorkspace = <QrGenerator />;
   } else if (tool.id === 'barcode-generator' || tool.slug === 'barcode-generator') {
