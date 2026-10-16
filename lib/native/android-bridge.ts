@@ -15,6 +15,7 @@ export const isNativeAndroid = (): boolean => {
   return (
     (window as any).Capacitor?.isNativePlatform?.() ||
     window.location.protocol === 'capacitor:' ||
+    (window.location.protocol === 'https:' && window.location.hostname === 'localhost' && !window.location.port) ||
     (window as any).AndroidDownloader !== undefined ||
     (window as any).AndroidSpeech !== undefined ||
     (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android')

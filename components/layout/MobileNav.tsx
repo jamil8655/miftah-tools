@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Home, LayoutGrid, Workflow, ArrowDownToLine, Settings2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
+import { isNativeAndroid } from '@/lib/native/android-bridge';
 
 /**
  * Standard Production Android Bottom Navigation Bar
@@ -19,11 +20,7 @@ export function MobileNav() {
 
   React.useEffect(() => {
     setMounted(true);
-    const isNative =
-      typeof window !== 'undefined' &&
-      (!!(window as any).Capacitor?.isNativePlatform?.() ||
-        window.location.protocol === 'capacitor:');
-    setIsNativeApp(isNative);
+    setIsNativeApp(isNativeAndroid());
   }, []);
 
   // Web users on mobile/desktop browsers will NEVER see the bottom tab bar.
