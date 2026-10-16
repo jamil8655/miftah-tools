@@ -1,38 +1,38 @@
 # ProGuard / R8 Configuration for Miftah Tools Android App
-# Hardened for Release Obfuscation, Anti-Tampering, Size Reduction, and Debug Log Stripping
+# Optimized for Google Play DEX Code Obfuscation Threshold (> 25%), Size Reduction, and Security
 
-# Preserve AndroidX Core and Activity EdgeToEdge
--keep class androidx.activity.** { *; }
--keep interface androidx.activity.** { *; }
--keep class androidx.core.** { *; }
+# Maximize Obfuscation by repackaging obfuscated classes
+-repackageclasses 'com.miftahtools.app.obf'
+-allowaccessmodification
 
-# Capacitor core and native bridge
--keep public class com.getcapacitor.** { *; }
--keep class com.getcapacitor.community.** { *; }
--keep class com.codetrixstudio.** { *; }
+# Capacitor Core, Bridge, and Plugins
+-keep public class * extends com.getcapacitor.Plugin {
+    public <init>(...);
+    public <methods>;
+}
 -keepclasseswithmembers class * {
     @com.getcapacitor.PluginMethod public *;
 }
-
-# Google Mobile Ads / AdMob SDK
--keep class com.google.android.gms.ads.** { *; }
--keep interface com.google.android.gms.ads.** { *; }
--keep class com.google.android.gms.common.** { *; }
--keep class com.google.android.gms.internal.ads.** { *; }
-
-# Firebase Android SDK
--keep class com.google.firebase.** { *; }
--keep interface com.google.firebase.** { *; }
+-keep class com.getcapacitor.BridgeActivity { *; }
+-keep class com.getcapacitor.Bridge { *; }
+-keep class com.getcapacitor.PluginHandle { *; }
+-keep class com.getcapacitor.JSObject { *; }
+-keep class com.getcapacitor.JSArray { *; }
+-keep class com.codetrixstudio.capacitor.GoogleAuth.** { *; }
 
 # WebView Javascript Interfaces & Native Bridges
 -keepattributes JavascriptInterface
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
--keep class com.miftahtools.app.MainActivity$AndroidDownloaderInterface { *; }
--keep class com.miftahtools.app.MainActivity$AndroidSpeechInterface { *; }
+-keepclassmembers class com.miftahtools.app.MainActivity$AndroidDownloaderInterface {
+    <methods>;
+}
+-keepclassmembers class com.miftahtools.app.MainActivity$AndroidSpeechInterface {
+    <methods>;
+}
 
-# Keep data models, enum values, and parcelables
+# Keep standard Enum & Parcelable methods
 -keepclassmembers enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);
@@ -41,7 +41,7 @@
     public static final android.os.Parcelable$Creator *;
 }
 
-# Strip Android android.util.Log calls in release builds to prevent info leakage
+# Strip Android android.util.Log calls in release builds for performance & security
 -assumenosideeffects class android.util.Log {
     public static boolean isLoggable(java.lang.String, int);
     public static int v(...);
