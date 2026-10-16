@@ -50,31 +50,21 @@ export async function generateMetadata({ params }: { params: { toolSlug: string 
   const tool = resolveTool(params.toolSlug);
   if (!tool) {
     return {
-      title: 'Tool Not Found',
+      title: 'Tool Not Found — MiftahTools',
     };
   }
 
-  const title = `${tool.name} — Free Online Tool`;
-  const description = tool.fullDesc || tool.shortDesc;
+  const canonicalUrl = `https://miftahtools.com/tools/${tool.slug}/`;
 
   return {
-    title,
-    description,
-    keywords: tool.tags?.join(', ') || 'online tools, pdf, image converter, video downloader',
+    title: `${tool.name} Online Free — ${tool.shortDesc} | MiftahTools`,
+    description: tool.fullDesc || tool.shortDesc,
     alternates: {
-      canonical: `https://miftahtools.com/${tool.slug}`,
+      canonical: canonicalUrl,
     },
-    openGraph: {
-      title: `${tool.name} — Free Online Tool | Miftah Tools`,
-      description,
-      type: 'website',
-      url: `https://miftahtools.com/${tool.slug}`,
-      siteName: 'Miftah Tools',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${tool.name} — Free Online Tool | Miftah Tools`,
-      description,
+    robots: {
+      index: false,
+      follow: true,
     },
   };
 }
@@ -83,28 +73,26 @@ export default function ToolSlugPage({ params }: { params: { toolSlug: string } 
   const tool = resolveTool(params.toolSlug);
   if (!tool) notFound();
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: tool.name,
-    description: tool.fullDesc || tool.shortDesc,
-    applicationCategory: 'UtilitiesApplication',
-    operatingSystem: 'All',
-    browserRequirements: 'Requires JavaScript. Requires HTML5.',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-  };
+  const canonicalUrl = `https://miftahtools.com/tools/${tool.slug}/`;
 
   return (
     <>
+      <link rel="canonical" href={canonicalUrl} />
+      <meta httpEquiv="refresh" content={`0;url=${canonicalUrl}`} />
       <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: `window.location.replace("${canonicalUrl}");`,
+        }}
       />
-      <ToolPageClient tool={tool} />
+      <div className="max-w-2xl mx-auto py-20 px-4 text-center space-y-4">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Redirecting to {tool.name}...</h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          This tool has moved to its permanent URL. If you are not redirected automatically, please{' '}
+          <a href={canonicalUrl} className="text-brand-600 dark:text-brand-400 font-bold underline">
+            click here to open {tool.name}
+          </a>.
+        </p>
+      </div>
     </>
   );
 }

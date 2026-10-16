@@ -180,12 +180,19 @@ export function generateHowToSteps(tool: ToolDefinition): { step: number; title:
   ];
 }
 
+import { getToolFaqs as getSpecializedFaqs } from './tool-seo-helper';
+
 /**
  * Generates tailored FAQs for any tool.
  */
 export function generateToolFaqs(tool: ToolDefinition): { question: string; answer: string }[] {
   if (tool.faq && tool.faq.length >= 3) {
     return tool.faq;
+  }
+
+  const specialized = getSpecializedFaqs(tool);
+  if (specialized && specialized.length >= 3) {
+    return specialized;
   }
 
   const name = tool.name;

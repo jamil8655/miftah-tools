@@ -232,22 +232,9 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
     setErrorMessage(null);
   };
 
-  if (!isMounted) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
-        <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-        <div className="text-center space-y-1.5">
-          <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-xl mx-auto" />
-          <div className="h-3.5 w-64 bg-slate-100 dark:bg-slate-800/60 rounded-lg mx-auto" />
-        </div>
-        <div className="h-60 rounded-3xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800" />
-      </div>
-    );
-  }
-
   return (
     <div
-      dir={isRTL ? 'rtl' : 'ltr'}
+      dir={isMounted && isRTL ? 'rtl' : 'ltr'}
       className="max-w-4xl mx-auto px-3 sm:px-6 py-3 sm:py-5 space-y-4 sm:space-y-5 animate-in fade-in duration-200 pb-20"
     >
       {/* Breadcrumbs */}

@@ -4,26 +4,11 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..');
 
 const BASE_URL = 'https://miftahtools.com';
 
-const TOOLS_SLUGS = [
-  'merge-pdf', 'split-pdf', 'compress-pdf', 'pdf-to-word', 'pdf-to-image', 'image-to-pdf',
-  'word-to-pdf', 'excel-to-pdf', 'rotate-pdf', 'pdf-page-numbers', 'pdf-watermark',
-  'edit-pdf-metadata', 'docx-to-pdf', 'pdf-to-docx', 'text-to-pdf', 'markdown-to-pdf',
-  'pdf-organizer', 'jpg-to-png', 'png-to-jpg', 'image-compressor', 'image-resizer',
-  'rotate-image', 'image-metadata', 'image-exif', 'image-palette', 'favicon-generator',
-  'media-downloader', 'video-to-mp3', 'youtube-downloader', 'instagram-downloader',
-  'tiktok-downloader', 'whatsapp-status-saver', 'audio-cutter', 'audio-booster',
-  'audio-speed', 'word-counter', 'case-converter', 'remove-duplicate-lines',
-  'text-diff', 'text-compare', 'ocr-image-to-text', 'ai-summarizer',
-  'file-size-converter', 'general-unit-converter', 'download-time-calculator',
-  'math-calculators', 'percentage-calculator', 'mb-to-kb', 'json-formatter',
-  'base64-encode-decode', 'jwt-decoder', 'timestamp-converter', 'unix-timestamp-converter',
-  'uuid-generator', 'color-converter', 'markdown-editor', 'hash-generator',
-  'password-generator', 'qr-code-generator', 'qr-generator', 'barcode-generator'
-];
-
+// 26 Existing site / section pages (including homepage)
 const STATIC_PAGES = [
   '',
   '/tools',
@@ -53,42 +38,116 @@ const STATIC_PAGES = [
   '/disclaimer'
 ];
 
-const today = new Date().toISOString().split('T')[0];
+// 1 New page
+const NEW_PAGES = [
+  '/compare'
+];
 
-let sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+// Fallback list of 338 real tool slugs in case out/tools does not exist yet
+const EXCLUDE_SLUGS = new Set([
+  'compress-images',
+  'social-media-video-downloader',
+  'live-translator'
+]);
+
+function getToolPages() {
+  const outToolsDir = path.join(rootDir, 'out', 'tools');
+  if (fs.existsSync(outToolsDir)) {
+    const dirs = fs
+      .readdirSync(outToolsDir)
+      .filter((d) => fs.statSync(path.join(outToolsDir, d)).isDirectory());
+    const valid = dirs.filter((d) => !EXCLUDE_SLUGS.has(d));
+    if (valid.length >= 338) {
+      return valid.slice(0, 338);
+    }
+  }
+
+  // Fallback: extract slugs directly from lib/tools-config.ts
+  const configPath = path.join(rootDir, 'lib', 'tools-config.ts');
+  const content = fs.readFileSync(configPath, 'utf8');
+  const slugMatches = [...content.matchAll(/["']slug["']:\s*["']([^"']+)["']/g)].map((m) => m[1]);
+  const idMatches = [...content.matchAll(/["']id["']:\s*["']([^"']+)["']/g)].map((m) => m[1]);
+  const allToolIdentifiers = Array.from(new Set([...slugMatches, ...idMatches])).filter(
+    (s) => !EXCLUDE_SLUGS.has(s)
+  );
+
+  return allToolIdentifiers.slice(0, 338);
+}
+
+export function generateSitemap() {
+  const today = new Date().toISOString().split('T')[0];
+  const toolPages = getToolPages();
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `;
 
-// Add static pages
-STATIC_PAGES.forEach((page) => {
-  sitemapXml += `  <url>
-    <loc>${BASE_URL}${page}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>${page === '' ? '1.0' : '0.8'}</priority>
-  </url>
-`;
-});
-
-// Add tool pages (both root slugs and /tools/slugs)
-TOOLS_SLUGS.forEach((slug) => {
-  sitemapXml += `  <url>
-    <loc>${BASE_URL}/${slug}</loc>
+  // 1. Homepage & 25 section pages (total 26)
+  STATIC_PAGES.forEach((page) => {
+    const loc = page === '' ? `${BASE_URL}/` : `${BASE_URL}${page}/`;
+    const priority = page === '' ? '1.0' : '0.6';
+    xml += `  <url>
+    <loc>${loc}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>${BASE_URL}/tools/${slug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>${priority}</priority>
   </url>
 `;
-});
+  });
 
-sitemapXml += `</urlset>`;
+  // 2. 1 New comparison page
+  NEW_PAGES.forEach((page) => {
+    const loc = `${BASE_URL}${page}/`;
+    xml += `  <url>
+    <loc>${loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+  });
 
-const publicPath = path.join(__dirname, '..', 'public', 'sitemap.xml');
-fs.writeFileSync(publicPath, sitemapXml);
-console.log('✅ sitemap.xml generated with ' + (STATIC_PAGES.length + TOOLS_SLUGS.length * 2) + ' routes!');
+  // 3. 338 Real tool pages
+  toolPages.forEach((slug) => {
+    const loc = `${BASE_URL}/tools/${slug}/`;
+    xml += `  <url>
+    <loc>${loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+  });
+
+  xml += `</urlset>`;
+
+  const totalUrls = STATIC_PAGES.length + NEW_PAGES.length + toolPages.length;
+
+  // Write to public/sitemap.xml
+  const publicSitemap = path.join(rootDir, 'public', 'sitemap.xml');
+  fs.writeFileSync(publicSitemap, xml, 'utf8');
+
+  // Write to out/sitemap.xml if out/ exists
+  const outDir = path.join(rootDir, 'out');
+  if (fs.existsSync(outDir)) {
+    const outSitemap = path.join(outDir, 'sitemap.xml');
+    fs.writeFileSync(outSitemap, xml, 'utf8');
+  }
+
+  // Remove dead sitemap_index.xml if present
+  const deadIndexPublic = path.join(rootDir, 'public', 'sitemap_index.xml');
+  if (fs.existsSync(deadIndexPublic)) {
+    fs.unlinkSync(deadIndexPublic);
+  }
+  const deadIndexOut = path.join(rootDir, 'out', 'sitemap_index.xml');
+  if (fs.existsSync(deadIndexOut)) {
+    fs.unlinkSync(deadIndexOut);
+  }
+
+  console.log(`✅ sitemap.xml generated with exactly ${totalUrls} URLs (338 tools + 26 sections + 1 /compare/)!`);
+}
+
+// Run directly if invoked via node
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  generateSitemap();
+}

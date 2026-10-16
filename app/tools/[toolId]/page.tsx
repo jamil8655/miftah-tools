@@ -46,34 +46,44 @@ export function generateStaticParams() {
   return [...directParams, ...aliasParams];
 }
 
+import { getCompleteToolSeo } from '@/lib/seo/seo-engine';
+
 export async function generateMetadata({ params }: { params: { toolId: string } }): Promise<Metadata> {
   const tool = resolveTool(params.toolId);
   if (!tool) {
     return {
-      title: 'Tool Not Found',
+      title: 'Tool Not Found — MiftahTools',
     };
   }
 
-  const title = `${tool.name} — Free Online Tool`;
-  const description = tool.fullDesc || tool.shortDesc;
+  const title = `${tool.name} Online Free — ${tool.shortDesc} | MiftahTools`;
+  let description = (tool.fullDesc || tool.shortDesc || `Use ${tool.name} free online with MiftahTools.`).trim();
+  if (description.length < 140) {
+    description = `${description} 100% free with private client-side processing on MiftahTools.`;
+  }
+  if (description.length > 160) {
+    description = description.slice(0, 157) + '...';
+  }
+
+  const canonicalUrl = `https://miftahtools.com/tools/${tool.slug}/`;
 
   return {
     title,
     description,
-    keywords: tool.tags?.join(', ') || 'online tools, pdf, image converter, video downloader',
+    keywords: tool.tags?.join(', ') || `${tool.name.toLowerCase()}, online tools, free utility, miftah tools`,
     alternates: {
-      canonical: `https://miftahtools.com/tools/${tool.slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${tool.name} — Free Online Tool | Miftah Tools`,
+      title,
       description,
       type: 'website',
-      url: `https://miftahtools.com/tools/${tool.slug}`,
-      siteName: 'Miftah Tools',
+      url: canonicalUrl,
+      siteName: 'MiftahTools',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${tool.name} — Free Online Tool | Miftah Tools`,
+      title,
       description,
     },
   };
@@ -83,27 +93,19 @@ export default function ToolPage({ params }: { params: { toolId: string } }) {
   const tool = resolveTool(params.toolId);
   if (!tool) notFound();
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: tool.name,
-    description: tool.fullDesc || tool.shortDesc,
-    applicationCategory: 'UtilitiesApplication',
-    operatingSystem: 'All',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: 'USD',
-    },
-  };
+  const seo = getCompleteToolSeo(tool);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {seo.jsonLd.map((schema, index) => (
+        <script
+          key={index}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
       <ToolPageClient tool={tool} />
     </>
   );
 }
+

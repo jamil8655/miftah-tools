@@ -13,6 +13,11 @@
   # 2. Prevent directory listings
   Options -Indexes
 
+  # 2b. 301 Redirect root tool URLs to /tools/<slug>/
+  RewriteCond %{REQUEST_URI} !^/tools/
+  RewriteCond %{DOCUMENT_ROOT}/tools/$1/index.html -f
+  RewriteRule ^([a-zA-Z0-9_-]+)/?$ /tools/$1/ [R=301,L]
+
   # 3. Serve existing files directly
   RewriteCond %{REQUEST_FILENAME} -f
   RewriteRule ^ - [L]
