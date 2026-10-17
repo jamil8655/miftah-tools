@@ -402,8 +402,10 @@ export async function compressImageToTargetKB(
       }
     }
 
-    if (!finalBlob || finalBlob.size > hardMaxBytes) {
-      throw new Error(`Unable to compress image to under ${(hardMaxBytes / 1024).toFixed(0)} KB (${targetKB >= 1024 ? (targetKB / 1024).toFixed(1) + ' MB' : targetKB + ' KB'}). Please try a slightly higher target size.`);
+    if (!finalBlob) {
+      finalBlob = (await renderCandidate(Math.max(16, Math.round(origW * 0.1)), Math.max(16, Math.round(origH * 0.1)), 0.1)) || file;
+      finalW = Math.max(16, Math.round(origW * 0.1));
+      finalH = Math.max(16, Math.round(origH * 0.1));
     }
 
     const dataUrl = URL.createObjectURL(finalBlob);

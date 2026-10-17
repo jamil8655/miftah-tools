@@ -157,7 +157,7 @@ export async function compressPdfAdvanced(
 
         onProgress?.(15, `Compressing ${pageCount} page(s) (Target: ${(targetBytes / 1024).toFixed(0)} KB)...`);
 
-        const isUltraLow = hasTargetKb && targetKb <= 35;
+        const isUltraLow = finalTargetKb !== undefined && finalTargetKb <= 35;
 
         const renderPdfWithParams = async (scale: number, quality: number, forceGrayscale = false): Promise<Uint8Array> => {
           const newPdf = await PDFDocument.create();
