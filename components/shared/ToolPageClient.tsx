@@ -15,7 +15,7 @@ import {
   textToPdf,
   markdownToPdf,
 } from '@/lib/pdf/pdf-manipulator';
-import { compressPdfAdvanced } from '@/lib/pdf/pdf-compressor';
+import { compressPdfAdvanced, compressPdfStructural } from '@/lib/pdf/pdf-compressor';
 import { protectPdfWithPassword, unlockPdf } from '@/lib/pdf/pdf-encryptor';
 import {
   convertImage,
@@ -902,34 +902,51 @@ export function ToolPageClient({ tool }: ToolPageClientProps) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const buffer = await file.arrayBuffer();
-        const compressRes = await compressPdfAdvanced(
-          buffer,
-          {
-            level: options.level || 'medium',
-            targetSizeLimit: targetLimit,
-            targetKb: targetKb,
-            quality: options.quality,
-          },
-          (pct, status) => {
-            const overallPct = Math.round(((i + pct / 100) / files.length) * 100);
-            onProgress(overallPct, status);
-          }
-        );
+        let finalBytes: Uint8Array | null = null;
 
-        let finalBytes = compressRes.bytes;
-        if (targetKb && targetKb > 0 && finalBytes.byteLength > targetKb * 1024) {
-          const reattempt = await compressPdfAdvanced(
+        try {
+          const compressRes = await compressPdfAdvanced(
             buffer,
             {
-              level: 'extreme',
-              targetKb: Math.floor(targetKb * 0.90),
+              level: options.level || 'medium',
+              targetSizeLimit: targetLimit,
+              targetKb: targetKb,
+              quality: options.quality,
+            },
+            (pct, status) => {
+              const overallPct = Math.round(((i + pct / 100) / files.length) * 100);
+              onProgress(overallPct, status);
             }
           );
-          if (reattempt.bytes && reattempt.bytes.byteLength < finalBytes.byteLength) {
-            finalBytes = reattempt.bytes;
+          finalBytes = compressRes.bytes;
+        } catch (compErr) {
+          console.warn('Advanced PDF compression error, falling back:', compErr);
+          try {
+            finalBytes = await compressPdfStructural(buffer);
+          } catch {
+            finalBytes = new Uint8Array(buffer);
           }
         }
-        const blob = new Blob([finalBytes as any], { type: 'application/pdf' });
+
+        if (targetKb && targetKb > 0 && finalBytes && finalBytes.byteLength > targetKb * 1024) {
+          try {
+            const reattempt = await compressPdfAdvanced(
+              buffer,
+              {
+                level: 'extreme',
+                targetKb: Math.max(1, Math.floor(targetKb * 0.90)),
+              }
+            );
+            if (reattempt.bytes && reattempt.bytes.byteLength < finalBytes.byteLength) {
+              finalBytes = reattempt.bytes;
+            }
+          } catch {
+            // Reattempt is best-effort
+          }
+        }
+
+        const safeBytes = finalBytes || new Uint8Array(buffer);
+        const blob = new Blob([safeBytes as any], { type: 'application/pdf' });
         results.push({
           name: `compressed-${file.name}`,
           originalSize: file.size,
