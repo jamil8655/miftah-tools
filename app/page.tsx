@@ -1460,12 +1460,43 @@ function NativeAppHome() {
 function WebAppHome() {
   const isNative = false;
   const { language, isRTL } = useI18n();
-  const { recentTools: storeRecentTools, clearRecentTools } = useUserStore();
+  const { recentTools: storeRecentTools, clearRecentTools, pinnedTools, favorites } = useUserStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [openWhyIndex, setOpenWhyIndex] = useState<number | null>(0);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const loc = PAGE_LOCALES[language] || PAGE_LOCALES.en;
+
+  // Pinned shortcuts / user added home tools
+  const pinnedList = useMemo(() => {
+    return TOOLS_LIST.filter(
+      (tool) =>
+        (pinnedTools && pinnedTools.includes(tool.id)) ||
+        (favorites && favorites.some((fav) => fav.id === tool.id || fav.id === tool.slug))
+    );
+  }, [pinnedTools, favorites]);
+
+  // Auto-scroll and highlight when arriving from "Add to Home Page"
+  React.useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pinnedId = urlParams.get('pinned') || sessionStorage.getItem('miftah_last_pinned_tool');
+      if (pinnedId) {
+        const timer = setTimeout(() => {
+          const el = document.getElementById(`pinned-tool-${pinnedId}`) || document.getElementById(`tool-card-${pinnedId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.03]');
+            setTimeout(() => {
+              el.classList.remove('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.03]');
+            }, 3500);
+          }
+        }, 150);
+        sessionStorage.removeItem('miftah_last_pinned_tool');
+        return () => clearTimeout(timer);
+      }
+    } catch (_) {}
+  }, []);
 
   // Recent tools logic: only show if user has actual history items
   const recentTools = useMemo(() => {
@@ -1701,6 +1732,57 @@ function WebAppHome() {
           </div>
         </div>
       </section>
+      )}
+
+      {/* ==================================================
+          2.5 PINNED TOOLS / HOME PAGE SHORTCUTS (WEB APP DASHBOARD)
+          ================================================== */}
+      {pinnedList.length > 0 && !searchQuery && (
+        <section id="pinned-tools" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 scroll-mt-20">
+          <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-brand-500/[0.07] via-indigo-500/[0.05] to-purple-500/[0.07] dark:from-brand-950/40 dark:via-slate-900/90 dark:to-purple-950/40 border border-brand-200/80 dark:border-brand-800/60 shadow-md space-y-4 relative overflow-hidden backdrop-blur-xs">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-brand-500/25">
+                  <Pin className="w-4 h-4 fill-current rotate-45" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                      <span>{loc.pinnedToolsHeading || 'Pinned to Home Page'}</span>
+                    </h2>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-500/15 dark:bg-brand-500/25 text-brand-700 dark:text-brand-300 text-[10px] font-black border border-brand-500/30">
+                      <Sparkles className="w-3 h-3 text-brand-600 dark:text-brand-400" />
+                      <span>{pinnedList.length}</span>
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
+                    {loc.pinnedToolsSub || 'Your custom shortcuts for instant one-click access'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/favorites"
+                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:border-brand-500 shadow-xs active:scale-95 transition-all flex items-center gap-1"
+                >
+                  <span>{language === 'ur' ? 'تمام شارٹ کٹس دیکھیں ←' : language === 'hi' ? 'सभी शॉर्टकट्स देखें →' : 'Manage Shortcuts →'}</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Grid of Pinned Tool Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              {pinnedList.map((tool) => (
+                <div key={`pinned-${tool.id}`} id={`pinned-tool-${tool.id}`} className="transition-all duration-300">
+                  <ToolCard tool={tool} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       )}
 
       {/* ==================================================
