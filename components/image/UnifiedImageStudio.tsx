@@ -40,15 +40,18 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
   const originalImageRef = useRef<HTMLImageElement | null>(null);
 
   const SLIDER_STOPS = [
-    { pos: 0, kb: 20 },
-    { pos: 12, kb: 50 },
-    { pos: 25, kb: 100 },
-    { pos: 38, kb: 200 },
-    { pos: 52, kb: 500 },
+    { pos: 0, kb: 1 },
+    { pos: 8, kb: 10 },
+    { pos: 16, kb: 20 },
+    { pos: 25, kb: 50 },
+    { pos: 35, kb: 100 },
+    { pos: 45, kb: 200 },
+    { pos: 55, kb: 500 },
     { pos: 66, kb: 1024 },  // 1 MB
-    { pos: 78, kb: 2048 },  // 2 MB
-    { pos: 88, kb: 5120 },  // 5 MB
-    { pos: 100, kb: 10240 },// 10 MB
+    { pos: 76, kb: 2048 },  // 2 MB
+    { pos: 85, kb: 5120 },  // 5 MB
+    { pos: 93, kb: 10240 }, // 10 MB
+    { pos: 100, kb: 20480 },// 20 MB
   ];
 
   const kbToSliderPos = (kb: number): number => {
@@ -62,28 +65,31 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
         return Math.round(s1.pos + ratio * (s2.pos - s1.pos));
       }
     }
-    return 25;
+    return 35;
   };
 
   const sliderPosToKb = (pos: number): number => {
-    if (pos <= 0) return 20;
-    if (pos >= 100) return 10240;
+    if (pos <= 0) return 1;
+    if (pos >= 100) return 20480;
     for (let i = 0; i < SLIDER_STOPS.length - 1; i++) {
       const s1 = SLIDER_STOPS[i];
       const s2 = SLIDER_STOPS[i + 1];
       if (pos >= s1.pos && pos <= s2.pos) {
         const ratio = (pos - s1.pos) / (s2.pos - s1.pos);
         const rawKb = s1.kb + ratio * (s2.kb - s1.kb);
-        if (rawKb < 200) return Math.round(rawKb / 5) * 5;
+        if (rawKb < 15) return Math.max(1, Math.round(rawKb));
+        if (rawKb < 50) return Math.round(rawKb / 5) * 5;
+        if (rawKb < 200) return Math.round(rawKb / 10) * 10;
         if (rawKb < 1000) return Math.round(rawKb / 25) * 25;
-        return Math.round(rawKb / 100) * 100;
+        if (rawKb < 5000) return Math.round(rawKb / 256) * 256;
+        return Math.round(rawKb / 512) * 512;
       }
     }
     return 100;
   };
 
   const updateTargetKbWithSync = (kb: number) => {
-    const validKb = Math.max(10, kb);
+    const validKb = Math.max(1, kb);
     setTargetKb(validKb);
     if (validKb >= 1024) {
       const mbVal = (validKb / 1024).toFixed(validKb % 1024 === 0 ? 0 : 1);
@@ -465,15 +471,14 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
                     className="w-full accent-brand-600 h-2.5 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer transition-all"
                   />
                   <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                    <span>1 KB</span>
                     <span>20 KB</span>
-                    <span>50 KB</span>
                     <span>100 KB</span>
-                    <span>200 KB</span>
                     <span>500 KB</span>
                     <span>1 MB</span>
-                    <span>2 MB</span>
                     <span>5 MB</span>
                     <span>10 MB</span>
+                    <span>20 MB</span>
                   </div>
                 </div>
 
@@ -495,7 +500,7 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
                         const val = parseFloat(str);
                         if (!isNaN(val) && val > 0) {
                           const kb = customUnit === 'mb' ? Math.round(val * 1024) : Math.round(val);
-                          setTargetKb(Math.max(10, kb));
+                          setTargetKb(Math.max(1, kb));
                         }
                       }}
                       className="w-24 sm:w-28 px-3 py-1.5 text-xs font-mono font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -510,7 +515,7 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
                             const val = parseFloat(customNumInput);
                             if (!isNaN(val) && val > 0) {
                               const kb = u === 'mb' ? Math.round(val * 1024) : Math.round(val);
-                              setTargetKb(Math.max(10, kb));
+                              setTargetKb(Math.max(1, kb));
                             }
                           }}
                           className={`px-2.5 py-1 text-xs font-extrabold uppercase rounded-lg transition-all ${
@@ -527,8 +532,8 @@ export function UnifiedImageStudio({ initialTab = 'filter' }: UnifiedImageStudio
                 </div>
 
                 {/* Quick Presets */}
-                <div className="grid grid-cols-4 gap-1.5">
-                  {[20, 50, 100, 200, 500, 1024, 2048, 5120].map((kb) => (
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
+                  {[1, 10, 20, 50, 100, 200, 500, 1024, 2048, 5120, 10240, 20480].map((kb) => (
                     <button
                       key={kb}
                       type="button"
