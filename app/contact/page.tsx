@@ -10,7 +10,7 @@ const CONTACT_LOCALES = {
     title: 'We’d Love to Hear From You',
     subtitle: 'Have a question, feedback, feature request, or custom integration inquiry? Get in touch with our team.',
     emailCardTitle: 'Email Support',
-    emailCardDesc: 'support@miftahtools.com',
+    emailCardDesc: 'support.miftahtools@gmail.com',
     responseCardTitle: 'Response Time',
     responseCardDesc: 'We typically reply to all inquiries within 12-24 business hours.',
     privacyCardTitle: 'Privacy Guarantee',
@@ -39,7 +39,7 @@ const CONTACT_LOCALES = {
     title: 'ہم آپ کے تاثرات اور پیغامات کے منتظر ہیں',
     subtitle: 'کیا آپ کا کوئی سوال، تجویز، نئی فیچر کی درخواست یا رابطہ ہے؟ ہماری ٹیم سے رابطہ کریں۔',
     emailCardTitle: 'ای میل سپورٹ',
-    emailCardDesc: 'support@miftahtools.com',
+    emailCardDesc: 'support.miftahtools@gmail.com',
     responseCardTitle: 'جواب کا وقت',
     responseCardDesc: 'ہم عموماً 12 سے 24 کاروباری گھنٹوں کے اندر تمام پیغامات کا جواب دیتے ہیں۔',
     privacyCardTitle: 'پرائیویسی کی ضمانت',
@@ -68,7 +68,7 @@ const CONTACT_LOCALES = {
     title: 'يسعدنا دائماً الاستماع إليك والتواصل معك',
     subtitle: 'هل لديك أي استفسار أو ملاحظة أو اقتراح لأداة جديدة؟ تواصل مباشرة مع فريق العمل.',
     emailCardTitle: 'الدعم عبر البريد',
-    emailCardDesc: 'support@miftahtools.com',
+    emailCardDesc: 'support.miftahtools@gmail.com',
     responseCardTitle: 'وقت الاستجابة',
     responseCardDesc: 'نقوم بالرد على جميع الرسائل عادة خلال 12 إلى 24 ساعة عمل.',
     privacyCardTitle: 'ضمان الخصوصية',
@@ -97,7 +97,7 @@ const CONTACT_LOCALES = {
     title: 'हम आपसे संवाद करने के लिए सदैव तत्पर हैं',
     subtitle: 'क्या आपका कोई प्रश्न, सुझाव, नए टूल का अनुरोध या कोई समस्या है? हमारी टीम से संपर्क करें।',
     emailCardTitle: 'ईमेल सपोर्ट',
-    emailCardDesc: 'support@miftahtools.com',
+    emailCardDesc: 'support.miftahtools@gmail.com',
     responseCardTitle: 'प्रतिक्रिया समय',
     responseCardDesc: 'हम आमतौर पर 12 से 24 कार्य घंटों के भीतर सभी प्रश्नों का उत्तर देते हैं।',
     privacyCardTitle: 'गोपनीयता गारंटी',
@@ -148,7 +148,7 @@ ${formData.message}
 
 Sent from MiftahTools App`;
 
-    const mailtoUrl = `mailto:support@miftahtools.com?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(bodyContent)}`;
+    const mailtoUrl = `mailto:support.miftahtools@gmail.com?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(bodyContent)}`;
     
     try {
       window.location.href = mailtoUrl;
@@ -180,7 +180,7 @@ Sent from MiftahTools App`;
           <div className="space-y-4">
             <h2 className="sr-only">Contact Details & Channels</h2>
             <a 
-              href="mailto:support@miftahtools.com"
+              href="mailto:support.miftahtools@gmail.com"
               className="block p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs hover:border-brand-500 transition-colors group cursor-pointer"
             >
               <div className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -190,7 +190,7 @@ Sent from MiftahTools App`;
                 {loc.emailCardTitle}
                 <span className="text-[10px] text-brand-600 font-semibold">Send Directly →</span>
               </h3>
-              <p className="text-[11px] text-slate-500 font-mono">support@miftahtools.com</p>
+              <p className="text-[11px] text-slate-500 font-mono">support.miftahtools@gmail.com</p>
             </a>
 
             <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-xs">
@@ -226,7 +226,7 @@ Sent from MiftahTools App`;
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                   <a
-                    href={`mailto:support@miftahtools.com?subject=${encodeURIComponent(`[MiftahTools Support] ${formData.subject} - ${formData.name}`)}&body=${encodeURIComponent(formData.message)}`}
+                    href={`mailto:support.miftahtools@gmail.com?subject=${encodeURIComponent(`[MiftahTools Support] ${formData.subject} - ${formData.name}`)}&body=${encodeURIComponent(formData.message)}`}
                     className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Mail className="w-3.5 h-3.5" />

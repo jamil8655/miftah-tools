@@ -27,6 +27,7 @@ import {
   Languages,
   Zap,
   Wand2,
+  ChevronDown,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -223,6 +224,24 @@ export function VoiceToTextStudio() {
   const [activeTab, setActiveTab] = useState<'record' | 'upload'>('record');
   const [selectedLang, setSelectedLang] = useState<string>(currentLang === 'en' ? 'en' : currentLang === 'ar' ? 'ar' : currentLang === 'hi' ? 'hi' : 'ur');
   const [autoCorrectEnabled, setAutoCorrectEnabled] = useState<boolean>(true);
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState<boolean>(false);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
+        setIsLangMenuOpen(false);
+      }
+    };
+    if (isLangMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isLangMenuOpen]);
 
   // Recording states
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -734,91 +753,87 @@ export function VoiceToTextStudio() {
         </div>
 
         {/* Spoken Language Selector & Auto-Correct Bar */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col gap-3.5">
-          {/* Top 4 Flagship Languages + Auto-Correct Toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-              <Languages className="w-4 h-4 text-brand-400" />
-              <span>{loc.langLabel}:</span>
+        <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+          {/* Collapsible Spoken Language Picker */}
+          <div className="relative" ref={langDropdownRef}>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <Languages className="w-4 h-4 text-brand-400" />
+                <span>{loc.langLabel}:</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsLangMenuOpen(!isLangMenuOpen);
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer bg-slate-800 hover:bg-slate-700/80 text-white border border-slate-700 shadow-sm active:scale-95"
+              >
+                <span className="text-base">{LANGUAGES.find(l => l.code === selectedLang)?.flag || '🌐'}</span>
+                <span className="font-semibold text-slate-100">{LANGUAGES.find(l => l.code === selectedLang)?.label || selectedLang}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isLangMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
             </div>
 
-            {/* Auto-Correct Toggle */}
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                setAutoCorrectEnabled(!autoCorrectEnabled);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm ${
-                autoCorrectEnabled
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/10'
-                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
-              }`}
-            >
-              <Wand2 className={`w-3.5 h-3.5 ${autoCorrectEnabled ? 'text-emerald-400' : 'text-slate-400'}`} />
-              <span>{autoCorrectEnabled ? 'الفاظ کی خودکار درستگی: فعال (ON)' : 'خودکار درستگی: بند (OFF)'}</span>
-              <span className={`w-2 h-2 rounded-full ${autoCorrectEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-            </button>
+            {/* Dropdown Menu */}
+            {isLangMenuOpen && (
+              <div className="absolute z-30 mt-2 left-0 sm:left-auto w-72 max-w-[90vw] p-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="text-[11px] font-semibold text-slate-400 px-2 py-1.5 border-b border-slate-800/80 mb-1 flex items-center justify-between">
+                  <span>زبان منتخب کریں (Select Language)</span>
+                  <span className="text-[10px] text-slate-500">{LANGUAGES.length} زبانیں دستیاب</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 max-h-60 overflow-y-auto p-0.5">
+                  {LANGUAGES.map((lang) => {
+                    const isSelected = selectedLang === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('medium');
+                          setSelectedLang(lang.code);
+                          if (isRecording && recognitionControllerRef.current) {
+                            recognitionControllerRef.current.setLanguage(getBcp47Lang(lang.code));
+                          }
+                          setIsLangMenuOpen(false);
+                        }}
+                        className={`px-2.5 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-between gap-1.5 cursor-pointer text-left ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 font-bold'
+                            : 'hover:bg-slate-800/80 text-slate-200 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="text-base">{lang.flag}</span>
+                          <span className="truncate">{lang.label}</span>
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Quick-Pick 4 Flagship Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-semibold text-slate-400">بنیادی زبانیں:</span>
-            {TOP_FLAGSHIP_LANGS.map((lang) => {
-              const isSelected = selectedLang === lang.code;
-              return (
-                <button
-                  key={lang.code}
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setSelectedLang(lang.code);
-                    if (isRecording && recognitionControllerRef.current) {
-                      recognitionControllerRef.current.setLanguage(getBcp47Lang(lang.code));
-                    }
-                  }}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 ring-2 ring-brand-400/50 scale-[1.02]'
-                      : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 hover:border-slate-600'
-                  }`}
-                >
-                  <span className="text-sm">{lang.flag}</span>
-                  <span>{lang.label}</span>
-                  {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping ml-0.5" />}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Other Languages */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-[11px] font-semibold text-slate-400">دیگر زبانیں:</span>
-            {LANGUAGES.filter(l => !TOP_FLAGSHIP_LANGS.some(f => f.code === l.code)).map((lang) => {
-              const isSelected = selectedLang === lang.code;
-              return (
-                <button
-                  key={lang.code}
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setSelectedLang(lang.code);
-                    if (isRecording && recognitionControllerRef.current) {
-                      recognitionControllerRef.current.setLanguage(getBcp47Lang(lang.code));
-                    }
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-brand-600 text-white shadow-sm ring-1 ring-brand-400'
-                      : 'bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 border border-slate-700/50'
-                  }`}
-                >
-                  <span>{lang.flag}</span>
-                  <span className="truncate">{lang.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Auto-Correct Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              setAutoCorrectEnabled(!autoCorrectEnabled);
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border shadow-sm ${
+              autoCorrectEnabled
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/10'
+                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+            }`}
+          >
+            <Wand2 className={`w-3.5 h-3.5 ${autoCorrectEnabled ? 'text-emerald-400' : 'text-slate-400'}`} />
+            <span>{autoCorrectEnabled ? 'الفاظ کی خودکار درستگی: فعال' : 'خودکار درستگی: بند'}</span>
+            <span className={`w-2 h-2 rounded-full ${autoCorrectEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+          </button>
         </div>
       </div>
 

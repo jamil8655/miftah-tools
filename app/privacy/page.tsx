@@ -59,7 +59,7 @@ const PRIVACY_LOCALES = {
     methodATitle: 'Method A: 1-Tap In-App Data Purge',
     methodADesc: 'You can purge all cached history, recent tools, and offline assets instantly in Settings > "Clear Cache & History" or in the Privacy Center.',
     methodBTitle: 'Method B: Direct Support & Verification',
-    methodBDesc: 'If you have any questions regarding privacy or data verification, email our support team directly at support@miftahtools.com. We reply within 24 hours.',
+    methodBDesc: 'If you have any questions regarding privacy or data verification, email our support team directly at support.miftahtools@gmail.com. We reply within 24 hours.',
     s6ZeroCloud: '100% Zero-Cloud Guarantee: Uninstalling the application immediately and completely removes all local app files and cache from your device.',
     s7Title: '7. Children’s Privacy (COPPA & GDPR-K Compliance)',
     s7Desc: 'Miftah Tools is designed for general utility and technical education. We do not knowingly collect personal identifiable information from children under 13 years of age.',
@@ -112,7 +112,7 @@ const PRIVACY_LOCALES = {
     methodATitle: 'طریقہ A: ایپ کے اندر سے 1-کلک ڈیٹا ڈیلیٹ',
     methodADesc: 'آپ سیٹنگز > "Clear Cache & History" یا پرائیویسی سینٹر میں جا کر ایک کلک سے تمام ہسٹری اور محفوظ ڈیٹا ختم کر سکتے ہیں۔',
     methodBTitle: 'طریقہ B: سپورٹ ٹیم سے رابطہ',
-    methodBDesc: 'پرائیویسی سے متعلق کسی بھی سوال کے لیے ہماری ٹیم کو براہ راست ای میل کریں: support@miftahtools.com۔ ہم 24 گھنٹے میں جواب دیتے ہیں۔',
+    methodBDesc: 'پرائیویسی سے متعلق کسی بھی سوال کے لیے ہماری ٹیم کو براہ راست ای میل کریں: support.miftahtools@gmail.com۔ ہم 24 گھنٹے میں جواب دیتے ہیں۔',
     s6ZeroCloud: '100٪ زیرو کلاؤڈ گارنٹی: ایپ کو ان انسٹال کرنے سے تمام لوکل فائلز اور کیش آپ کے فون سے فوری اور مکمل طور پر ختم ہو جاتی ہے۔',
     s7Title: '7. بچوں کی پرائیویسی (COPPA و GDPR-K پالیسی)',
     s7Desc: 'مفتاح ٹولز عام افادیت اور تکنیکی تعلیم کے لیے ہے۔ ہم 13 سال سے کم عمر بچوں سے کوئی ذاتی معلومات دانستہ طور پر جمع نہیں کرتے۔',
@@ -165,7 +165,7 @@ const PRIVACY_LOCALES = {
     methodATitle: 'الطريقة الأولى: مسح البيانات بضغطة زر',
     methodADesc: 'يمكنك مسح السجل والذاكرة المؤقتة فوراً من الإعدادات > "مسح الذاكرة المؤقتة والسجل".',
     methodBTitle: 'الطريقة الثانية: التواصل مع فريق الدعم',
-    methodBDesc: 'لأي استفسارات حول الخصوصية، يرجى مراسلة فريق الدعم عبر: support@miftahtools.com. نرد خلال 24 ساعة.',
+    methodBDesc: 'لأي استفسارات حول الخصوصية، يرجى مراسلة فريق الدعم عبر: support.miftahtools@gmail.com. نرد خلال 24 ساعة.',
     s6ZeroCloud: 'ضمان الحذف التام: يؤدي إلغاء تثبيت التطبيق إلى إزالة كافة ملفاته والذاكرة المؤقتة من جهازك فوراً.',
     s7Title: '7. خصوصية الأطفال (توافق COPPA و GDPR-K)',
     s7Desc: 'تم تصميم منصة مفتاح تولز للاستخدام العام والتعليمي، ولا نجمع معلومات من الأطفال دون 13 عاماً.',
@@ -218,7 +218,7 @@ const PRIVACY_LOCALES = {
     methodATitle: 'तरीका A: 1-टैप इन-ऐप डेटा साफ़ करें',
     methodADesc: 'आप सेटिंग्स > "Clear Cache & History" में जाकर तुरंत सारा कैश डेटा हटा सकते हैं।',
     methodBTitle: 'तरीका B: सपोर्ट टीम से सहायता',
-    methodBDesc: 'गोपनीयता संबंधी किसी भी प्रश्न के लिए हमारी सपोर्ट टीम को सीधे ईमेल करें: support@miftahtools.com। हम 24 घंटों में उत्तर देते हैं।',
+    methodBDesc: 'गोपनीयता संबंधी किसी भी प्रश्न के लिए हमारी सपोर्ट टीम को सीधे ईमेल करें: support.miftahtools@gmail.com। हम 24 घंटों में उत्तर देते हैं।',
     s6ZeroCloud: '100% ज़ीरो-क्लाउड गारंटी: ऐप अनइंस्टॉल करने से सभी लोकल फाइल्स तुरंत फोन से हट जाती हैं।',
     s7Title: '7. बच्चों की गोपनीयता (COPPA व GDPR-K अनुपालन)',
     s7Desc: 'मिफ्ताह टूल्स सामान्य उपयोगिता के लिए है। हम 13 वर्ष से कम आयु के बच्चों से कोई व्यक्तिगत डेटा एकत्र नहीं करते।',
@@ -416,10 +416,10 @@ export default function PrivacyPage() {
               <div>
                 <p className="text-xs font-bold text-slate-900 dark:text-white">{loc.devName}</p>
                 <p className="text-xs text-slate-500">{loc.devTeam}</p>
-                <p className="text-xs font-mono text-brand-600 dark:text-brand-400 font-semibold mt-0.5">support@miftahtools.com</p>
+                <p className="text-xs font-mono text-brand-600 dark:text-brand-400 font-semibold mt-0.5">support.miftahtools@gmail.com</p>
               </div>
               <a
-                href="mailto:support@miftahtools.com?subject=Privacy%20Inquiry%20-%20Miftah%20Tools"
+                href="mailto:support.miftahtools@gmail.com?subject=Privacy%20Inquiry%20-%20Miftah%20Tools"
                 className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-all shadow-xs shrink-0 cursor-pointer"
               >
                 <Mail className="w-3.5 h-3.5" />

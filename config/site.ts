@@ -42,8 +42,8 @@ export const siteConfig: SiteConfig = {
     terms: '/terms',
   },
   contact: {
-    email: 'support@miftahtools.com',
-    support: 'support@miftahtools.com',
+    email: 'support.miftahtools@gmail.com',
+    support: 'support.miftahtools@gmail.com',
   },
   stats: {
     totalTools: '220+',
