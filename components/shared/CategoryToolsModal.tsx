@@ -239,7 +239,6 @@ export function CategoryToolsModal({ categoryId, onClose }: CategoryToolsModalPr
                     onClick={() => {
                       triggerHaptic('light');
                       try {
-                        sessionStorage.setItem('miftah_last_clicked_tool', tool.id);
                         sessionStorage.setItem('miftah_home_category', categoryId);
                       } catch (_) {}
                       onClose();

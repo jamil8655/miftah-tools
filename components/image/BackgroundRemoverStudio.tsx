@@ -51,6 +51,7 @@ const BG_LOCALES = {
     shareBtn: 'Share',
     uploadAnother: 'New Photo',
     processing: 'Processing AI edges...',
+    invertLabel: 'Invert Cutout',
     presets: {
       transparent: 'Transparent',
       white: 'Passport White',
@@ -84,6 +85,7 @@ const BG_LOCALES = {
     shareBtn: 'شیئر کریں',
     uploadAnother: 'نئی تصویر',
     processing: 'کنارے الگ کیے جا رہے ہیں...',
+    invertLabel: 'الٹ کریں (Invert)',
     presets: {
       transparent: 'شفاف',
       white: 'پاسپورٹ سفید',
@@ -117,6 +119,7 @@ const BG_LOCALES = {
     shareBtn: 'مشاركة',
     uploadAnother: 'صورة جديدة',
     processing: 'جاري استخراج الحواف...',
+    invertLabel: 'عكس القص',
     presets: {
       transparent: 'شفافة',
       white: 'أبيض رسمي',
@@ -150,6 +153,7 @@ const BG_LOCALES = {
     shareBtn: 'शेयर करें',
     uploadAnother: 'नई फोटो',
     processing: 'किनारे अलग किए जा रहे हैं...',
+    invertLabel: 'कटआउट उल्टा करें',
     presets: {
       transparent: 'पारदर्शी',
       white: 'पासपोर्ट सफेद',
@@ -171,17 +175,19 @@ export function BackgroundRemoverStudio() {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [transparentCutoutSrc, setTransparentCutoutSrc] = useState<string | null>(null);
   const [resultSrc, setResultSrc] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [tolerance, setTolerance] = useState<number>(32);
+  const [tolerance, setTolerance] = useState<number>(36);
   const [edgeSmoothing, setEdgeSmoothing] = useState<number>(2);
   const [backdropMode, setBackdropMode] = useState<string>('transparent');
   const [customColor, setCustomColor] = useState<string>('#ffffff');
   const [targetSampleColor, setTargetSampleColor] = useState<{ r: number; g: number; b: number } | null>(null);
+  const [invertMask, setInvertMask] = useState<boolean>(false);
 
-  // Comparison Slider
+  // Comparison Slider & View Mode - DEFAULT TO 'cutout'
   const [sliderPosition, setSliderPosition] = useState<number>(50);
-  const [viewMode, setViewMode] = useState<'split' | 'cutout' | 'original'>('split');
+  const [viewMode, setViewMode] = useState<'split' | 'cutout' | 'original'>('cutout');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -190,8 +196,11 @@ export function BackgroundRemoverStudio() {
     setImageFile(file);
     const url = URL.createObjectURL(file);
     setImageSrc(url);
+    setTransparentCutoutSrc(null);
     setResultSrc(null);
     setTargetSampleColor(null);
+    setInvertMask(false);
+    setViewMode('cutout');
     triggerHaptic('selection');
   };
 
@@ -231,100 +240,205 @@ export function BackgroundRemoverStudio() {
     img.src = imageSrc;
 
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        setIsProcessing(false);
-        return;
-      }
-
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-
-      ctx.drawImage(img, 0, 0);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
-
-      // Target background color (either sampled via eyedropper, or avg of 4 corners + top edge)
-      let bgR: number, bgG: number, bgB: number;
-
-      if (targetSampleColor) {
-        bgR = targetSampleColor.r;
-        bgG = targetSampleColor.g;
-        bgB = targetSampleColor.b;
-      } else {
-        const corner1 = [data[0], data[1], data[2]];
-        const corner2 = [data[(canvas.width - 1) * 4], data[(canvas.width - 1) * 4 + 1], data[(canvas.width - 1) * 4 + 2]];
-        const corner3 = [data[(canvas.height - 1) * canvas.width * 4], data[(canvas.height - 1) * canvas.width * 4 + 1], data[(canvas.height - 1) * canvas.width * 4 + 2]];
-        const corner4 = [data[data.length - 4], data[data.length - 3], data[data.length - 2]];
-
-        bgR = Math.round((corner1[0] + corner2[0] + corner3[0] + corner4[0]) / 4);
-        bgG = Math.round((corner1[1] + corner2[1] + corner3[1] + corner4[1]) / 4);
-        bgB = Math.round((corner1[2] + corner2[2] + corner3[2] + corner4[2]) / 4);
-      }
-
-      const thresh = tolerance * 2.8;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        // Euclidean distance in RGB color space
-        const dist = Math.sqrt(
-          (r - bgR) * (r - bgR) +
-          (g - bgG) * (g - bgG) +
-          (b - bgB) * (b - bgB)
-        );
-
-        if (dist < thresh) {
-          data[i + 3] = 0;
-        } else if (dist < thresh + edgeSmoothing * 8) {
-          const alpha = (dist - thresh) / (edgeSmoothing * 8);
-          data[i + 3] = Math.round(alpha * 255);
-        }
-      }
-
-      ctx.putImageData(imgData, 0, 0);
-
-      // Render on backdrop if not transparent
-      if (backdropMode !== 'transparent') {
-        const bgCanvas = document.createElement('canvas');
-        bgCanvas.width = canvas.width;
-        bgCanvas.height = canvas.height;
-        const bgCtx = bgCanvas.getContext('2d');
-
-        if (bgCtx) {
-          if (backdropMode.startsWith('gradient:')) {
-            const gradType = backdropMode.split(':')[1];
-            const grad = bgCtx.createLinearGradient(0, 0, bgCanvas.width, bgCanvas.height);
-            if (gradType === 'sunset') {
-              grad.addColorStop(0, '#f97316');
-              grad.addColorStop(1, '#ec4899');
-            } else if (gradType === 'ocean') {
-              grad.addColorStop(0, '#0284c7');
-              grad.addColorStop(1, '#0d9488');
-            } else if (gradType === 'neon') {
-              grad.addColorStop(0, '#8b5cf6');
-              grad.addColorStop(1, '#ec4899');
-            }
-            bgCtx.fillStyle = grad;
-          } else {
-            bgCtx.fillStyle = backdropMode === 'custom' ? customColor : backdropMode;
-          }
-
-          bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-          bgCtx.drawImage(canvas, 0, 0);
-          setResultSrc(bgCanvas.toDataURL('image/png'));
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) {
           setIsProcessing(false);
           return;
         }
-      }
 
-      setResultSrc(canvas.toDataURL('image/png'));
-      setIsProcessing(false);
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        const W = canvas.width;
+        const H = canvas.height;
+
+        // 1. Collect candidate background seed colors
+        const bgSeeds: { r: number; g: number; b: number }[] = [];
+
+        if (targetSampleColor) {
+          bgSeeds.push(targetSampleColor);
+        } else {
+          // Perimeter sampling across all 4 borders
+          const stepX = Math.max(1, Math.floor(W / 30));
+          const stepY = Math.max(1, Math.floor(H / 30));
+
+          for (let x = 0; x < W; x += stepX) {
+            const topIdx = (0 * W + x) * 4;
+            bgSeeds.push({ r: data[topIdx], g: data[topIdx + 1], b: data[topIdx + 2] });
+            const botIdx = ((H - 1) * W + x) * 4;
+            bgSeeds.push({ r: data[botIdx], g: data[botIdx + 1], b: data[botIdx + 2] });
+          }
+          for (let y = 0; y < H; y += stepY) {
+            const leftIdx = (y * W + 0) * 4;
+            bgSeeds.push({ r: data[leftIdx], g: data[leftIdx + 1], b: data[leftIdx + 2] });
+            const rightIdx = (y * W + (W - 1)) * 4;
+            bgSeeds.push({ r: data[rightIdx], g: data[rightIdx + 1], b: data[rightIdx + 2] });
+          }
+        }
+
+        // Color distance function (perceptual Euclidean)
+        const colorDist = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number) => {
+          const dr = r1 - r2;
+          const dg = g1 - g2;
+          const db = b1 - b2;
+          return Math.sqrt(0.3 * dr * dr + 0.59 * dg * dg + 0.11 * db * db);
+        };
+
+        const minSeedDist = (r: number, g: number, b: number) => {
+          let minD = 999999;
+          for (let i = 0; i < bgSeeds.length; i++) {
+            const d = colorDist(r, g, b, bgSeeds[i].r, bgSeeds[i].g, bgSeeds[i].b);
+            if (d < minD) minD = d;
+          }
+          return minD;
+        };
+
+        // Sensitivity threshold mapping
+        const thresh = (tolerance / 100) * 130 + 12;
+
+        // 2. Breadth-First Search (BFS) Flood-Fill from border pixels
+        const isBg = new Uint8Array(W * H);
+        const queue = new Int32Array(W * H);
+        let qHead = 0;
+        let qTail = 0;
+
+        // Enqueue border seeds
+        for (let x = 0; x < W; x++) {
+          const topIdx = 0 * W + x;
+          const tp = topIdx * 4;
+          if (minSeedDist(data[tp], data[tp + 1], data[tp + 2]) < thresh * 1.15) {
+            isBg[topIdx] = 1;
+            queue[qTail++] = topIdx;
+          }
+          const botIdx = (H - 1) * W + x;
+          const bp = botIdx * 4;
+          if (minSeedDist(data[bp], data[bp + 1], data[bp + 2]) < thresh * 1.15) {
+            isBg[botIdx] = 1;
+            queue[qTail++] = botIdx;
+          }
+        }
+        for (let y = 1; y < H - 1; y++) {
+          const leftIdx = y * W + 0;
+          const lp = leftIdx * 4;
+          if (minSeedDist(data[lp], data[lp + 1], data[lp + 2]) < thresh * 1.15) {
+            isBg[leftIdx] = 1;
+            queue[qTail++] = leftIdx;
+          }
+          const rightIdx = y * W + (W - 1);
+          const rp = rightIdx * 4;
+          if (minSeedDist(data[rp], data[rp + 1], data[rp + 2]) < thresh * 1.15) {
+            isBg[rightIdx] = 1;
+            queue[qTail++] = rightIdx;
+          }
+        }
+
+        // BFS traversal for connected background regions
+        while (qHead < qTail) {
+          const curr = queue[qHead++];
+          const cx = curr % W;
+          const cy = (curr / W) | 0;
+
+          const neighbors = [
+            cy > 0 ? curr - W : -1,
+            cy < H - 1 ? curr + W : -1,
+            cx > 0 ? curr - 1 : -1,
+            cx < W - 1 ? curr + 1 : -1,
+          ];
+
+          for (let i = 0; i < 4; i++) {
+            const n = neighbors[i];
+            if (n >= 0 && isBg[n] === 0) {
+              const np = n * 4;
+              if (minSeedDist(data[np], data[np + 1], data[np + 2]) < thresh) {
+                isBg[n] = 1;
+                queue[qTail++] = n;
+              }
+            }
+          }
+        }
+
+        // If targeted sample or high tolerance, also clear matching isolated background spots
+        if (targetSampleColor) {
+          for (let i = 0; i < W * H; i++) {
+            if (isBg[i] === 0) {
+              const p = i * 4;
+              if (minSeedDist(data[p], data[p + 1], data[p + 2]) < thresh * 0.9) {
+                isBg[i] = 1;
+              }
+            }
+          }
+        }
+
+        // Invert mask if toggled
+        if (invertMask) {
+          for (let i = 0; i < W * H; i++) {
+            isBg[i] = isBg[i] === 1 ? 0 : 1;
+          }
+        }
+
+        // 3. Apply Alpha Channel with edge feathering
+        const featherRange = Math.max(1, edgeSmoothing * 5);
+        for (let i = 0; i < W * H; i++) {
+          const p = i * 4;
+          if (isBg[i] === 1) {
+            data[p + 3] = 0; // Completely transparent
+          } else {
+            const d = minSeedDist(data[p], data[p + 1], data[p + 2]);
+            if (d < thresh + featherRange) {
+              const alphaFactor = (d - thresh) / featherRange;
+              data[p + 3] = Math.max(0, Math.min(255, Math.round(alphaFactor * 255)));
+            }
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        const pureTransparentDataUrl = canvas.toDataURL('image/png');
+        setTransparentCutoutSrc(pureTransparentDataUrl);
+
+        // 4. Render backdrop composite
+        if (backdropMode !== 'transparent') {
+          const bgCanvas = document.createElement('canvas');
+          bgCanvas.width = canvas.width;
+          bgCanvas.height = canvas.height;
+          const bgCtx = bgCanvas.getContext('2d');
+          if (bgCtx) {
+            if (backdropMode.startsWith('gradient:')) {
+              const gradType = backdropMode.split(':')[1];
+              const grad = bgCtx.createLinearGradient(0, 0, bgCanvas.width, bgCanvas.height);
+              if (gradType === 'sunset') {
+                grad.addColorStop(0, '#f97316');
+                grad.addColorStop(1, '#ec4899');
+              } else if (gradType === 'ocean') {
+                grad.addColorStop(0, '#0284c7');
+                grad.addColorStop(1, '#0d9488');
+              } else if (gradType === 'neon') {
+                grad.addColorStop(0, '#8b5cf6');
+                grad.addColorStop(1, '#ec4899');
+              }
+              bgCtx.fillStyle = grad;
+            } else {
+              bgCtx.fillStyle = backdropMode === 'custom' ? customColor : backdropMode;
+            }
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgCtx.drawImage(canvas, 0, 0);
+            setResultSrc(bgCanvas.toDataURL('image/png'));
+            setIsProcessing(false);
+            return;
+          }
+        }
+
+        setResultSrc(pureTransparentDataUrl);
+        setIsProcessing(false);
+      } catch (err) {
+        console.error('Cutout processing error:', err);
+        setIsProcessing(false);
+      }
     };
-  }, [imageSrc, tolerance, edgeSmoothing, backdropMode, customColor, targetSampleColor]);
+  }, [imageSrc, tolerance, edgeSmoothing, backdropMode, customColor, targetSampleColor, invertMask]);
 
   useEffect(() => {
     if (imageSrc) {
@@ -355,9 +469,10 @@ export function BackgroundRemoverStudio() {
   };
 
   const handleDownloadPng = () => {
-    if (!resultSrc) return;
+    const srcToUse = transparentCutoutSrc || resultSrc;
+    if (!srcToUse) return;
     triggerHaptic('medium');
-    const byteString = atob(resultSrc.split(',')[1]);
+    const byteString = atob(srcToUse.split(',')[1]);
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
     for (let i = 0; i < byteString.length; i++) {
@@ -365,7 +480,7 @@ export function BackgroundRemoverStudio() {
     }
     const blob = new Blob([ab], { type: 'image/png' });
     const name = (imageFile?.name || 'photo').replace(/\.[^/.]+$/, '');
-    downloadSingleFile(blob, `${name}_cutout.png`);
+    downloadSingleFile(blob, `${name}_transparent_cutout.png`);
   };
 
   const handleDownloadJpg = () => {
@@ -393,9 +508,10 @@ export function BackgroundRemoverStudio() {
   };
 
   const handleShare = () => {
-    if (!resultSrc) return;
+    const srcToUse = transparentCutoutSrc || resultSrc;
+    if (!srcToUse) return;
     triggerHaptic('light');
-    const byteString = atob(resultSrc.split(',')[1]);
+    const byteString = atob(srcToUse.split(',')[1]);
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
     for (let i = 0; i < byteString.length; i++) {
@@ -508,16 +624,38 @@ export function BackgroundRemoverStudio() {
                 <Sliders className="w-4 h-4 text-emerald-600" />
                 <span>{loc.backdropHeader}</span>
               </h3>
-              {targetSampleColor && (
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setTargetSampleColor(null)}
-                  className="text-[11px] font-bold text-emerald-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  onClick={() => {
+                    setInvertMask(!invertMask);
+                    triggerHaptic('light');
+                  }}
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                    invertMask
+                      ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/40'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                  }`}
+                  title={loc.invertLabel}
                 >
-                  <Undo2 className="w-3 h-3" />
-                  <span>Reset Sample</span>
+                  <RefreshCw className={`w-3 h-3 ${invertMask ? 'rotate-180 text-amber-500' : ''}`} />
+                  <span>{loc.invertLabel}</span>
                 </button>
-              )}
+
+                {targetSampleColor && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTargetSampleColor(null);
+                      triggerHaptic('light');
+                    }}
+                    className="text-[11px] font-bold text-emerald-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Undo2 className="w-3 h-3" />
+                    <span>Reset Sample</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Backdrop Swatches Grid */}
@@ -682,39 +820,36 @@ export function BackgroundRemoverStudio() {
               )}
             </div>
 
-            {/* Image Canvas Container with high-end glass styling */}
+            {/* Image Canvas Container with high-end glass styling & standard transparency checkerboard */}
             <div
               ref={previewContainerRef}
-              className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-square sm:aspect-[4/3] flex items-center justify-center bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] shadow-inner select-none"
+              className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 aspect-square sm:aspect-[4/3] flex items-center justify-center [background-image:linear-gradient(45deg,#e2e8f0_25%,transparent_25%),linear-gradient(-45deg,#e2e8f0_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#e2e8f0_75%),linear-gradient(-45deg,transparent_75%,#e2e8f0_75%)] [background-size:20px_20px] [background-position:0_0,0_10px,10px_-10px,-10px_0] bg-white dark:bg-slate-900 dark:[background-image:linear-gradient(45deg,#334155_25%,transparent_25%),linear-gradient(-45deg,#334155_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#334155_75%),linear-gradient(-45deg,transparent_75%,#334155_75%)] shadow-inner select-none"
             >
               {viewMode === 'split' && resultSrc && imageSrc && (
                 <div className="relative w-full h-full flex items-center justify-center">
-                  {/* Original Background Image */}
+                  {/* Cutout Left Layer (Clipped to sliderPosition%) */}
+                  <img
+                    src={resultSrc}
+                    alt="Cutout View"
+                    style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+                    className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none z-10"
+                  />
+
+                  {/* Original Right Layer (Clipped to 100 - sliderPosition% so it NEVER sits behind cutout!) */}
                   <img
                     src={imageSrc}
                     alt="Original"
                     onClick={handleImageSampleClick}
-                    className="absolute inset-0 w-full h-full object-contain cursor-crosshair"
+                    style={{ clipPath: `inset(0 0 0 ${sliderPosition}%)` }}
+                    className="absolute inset-0 w-full h-full object-contain cursor-crosshair select-none z-0"
                   />
-
-                  {/* Cutout Top Layer */}
-                  <div
-                    className="absolute inset-0 overflow-hidden flex items-center justify-center"
-                    style={{ width: `${sliderPosition}%` }}
-                  >
-                    <img
-                      src={resultSrc}
-                      alt="Cutout"
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
-                  </div>
 
                   {/* Split Divider Handle */}
                   <div
-                    className="absolute top-0 bottom-0 w-0.5 bg-white shadow-2xl cursor-ew-resize flex items-center justify-center z-10"
+                    className="absolute top-0 bottom-0 w-0.5 bg-white shadow-2xl cursor-ew-resize flex items-center justify-center z-20 pointer-events-none"
                     style={{ left: `${sliderPosition}%` }}
                   >
-                    <div className="w-6 h-6 rounded-full bg-emerald-600 text-white shadow-md flex items-center justify-center text-[9px] font-black border-2 border-white">
+                    <div className="w-7 h-7 rounded-full bg-emerald-600 text-white shadow-lg flex items-center justify-center text-[10px] font-black border-2 border-white">
                       ↔
                     </div>
                   </div>
@@ -726,7 +861,7 @@ export function BackgroundRemoverStudio() {
                     max="100"
                     value={sliderPosition}
                     onChange={(e) => setSliderPosition(Number(e.target.value))}
-                    className="absolute inset-0 opacity-0 cursor-ew-resize w-full h-full z-20"
+                    className="absolute inset-0 opacity-0 cursor-ew-resize w-full h-full z-30"
                   />
                 </div>
               )}
@@ -735,7 +870,7 @@ export function BackgroundRemoverStudio() {
                 <img
                   src={resultSrc}
                   alt="Cutout View"
-                  className="max-h-full max-w-full object-contain"
+                  className="max-h-full max-w-full object-contain select-none"
                 />
               )}
 
@@ -744,7 +879,7 @@ export function BackgroundRemoverStudio() {
                   src={imageSrc}
                   alt="Original View"
                   onClick={handleImageSampleClick}
-                  className="max-h-full max-w-full object-contain cursor-crosshair"
+                  className="max-h-full max-w-full object-contain cursor-crosshair select-none"
                 />
               )}
             </div>

@@ -8,6 +8,7 @@ import { ProgressBar } from './ProgressBar';
 import { ResultPreview } from './ResultPreview';
 import { DownloadSuccessModal } from './DownloadSuccessModal';
 import { ToolOptionControls } from './ToolOptionControls';
+import { AddToHomeButton } from './AddToHomeButton';
 import { Play, Sparkles, HelpCircle } from 'lucide-react';
 import { downloadSingleFile, downloadAsZip, SavedFileInfo } from '@/lib/utils/download';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -125,7 +126,6 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
     setIsMounted(true);
 
     try {
-      sessionStorage.setItem('miftah_last_clicked_tool', tool.id);
       recordToolUsage(tool.id, localized.name, tool.category, tool.icon);
     } catch (_) {}
 
@@ -241,16 +241,26 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
         isNative ? 'pb-28' : 'pb-20'
       }`}
     >
-      {/* Breadcrumbs */}
+      {/* Breadcrumbs with 1-Click Add to Home Page Action */}
       <Breadcrumbs
         items={[
           { label: getLocalizedCategory(tool.category, language).toUpperCase(), href: `/tools?cat=${tool.category}` },
           { label: localized.name },
         ]}
+        rightAction={
+          <AddToHomeButton
+            toolId={tool.id}
+            toolName={localized.name}
+            category={tool.category}
+            icon={tool.icon}
+            variant="pill"
+            directNavigate={true}
+          />
+        }
       />
 
-      {/* Compact Tool Header */}
-      <div className="text-center space-y-1">
+      {/* Compact Tool Header with Title, Short Description, and Add to Home Shortcut */}
+      <div className="text-center space-y-2">
         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight">
           {localized.name}
         </h1>

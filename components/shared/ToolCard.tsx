@@ -212,10 +212,7 @@ export function ToolCard({ tool }: ToolCardProps) {
   const loc = CARD_LOCALES[language] || CARD_LOCALES.en;
 
   const handleClick = () => {
-    try {
-      sessionStorage.setItem('miftah_last_clicked_tool', tool.id);
-      sessionStorage.setItem('miftah_last_scroll_y', window.scrollY.toString());
-    } catch (_) {}
+    // Clean click without storing last tool redirect
   };
 
   return (

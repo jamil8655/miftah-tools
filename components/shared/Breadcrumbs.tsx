@@ -8,6 +8,7 @@ import { useI18n } from '@/lib/i18n/i18n-context';
 
 interface BreadcrumbsProps {
   items: { label: string; href?: string }[];
+  rightAction?: React.ReactNode;
 }
 
 const BREADCRUMB_LOCALES = {
@@ -17,7 +18,7 @@ const BREADCRUMB_LOCALES = {
   hi: { back: 'वापस', backAria: 'पीछे जाएं' },
 };
 
-export function Breadcrumbs({ items }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, rightAction }: BreadcrumbsProps) {
   const router = useRouter();
   const { t, language, isRTL } = useI18n();
   const loc = BREADCRUMB_LOCALES[language] || BREADCRUMB_LOCALES.en;
@@ -72,6 +73,8 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
           ))}
         </nav>
       </div>
+
+      {rightAction && <div className="shrink-0">{rightAction}</div>}
     </div>
   );
 }

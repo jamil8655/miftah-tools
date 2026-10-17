@@ -18,6 +18,7 @@ import {
   Mic,
   Camera,
   Bookmark,
+  Pin,
   Terminal,
   ShieldCheck,
   Search,
@@ -394,6 +395,8 @@ const PAGE_LOCALES = {
     whySubheading: 'Explore our core architectural advantages: privacy, performance, and simplicity.',
     faqHeading: 'Frequently Asked Questions',
     faqSubheading: 'Everything you need to know about Miftah Tools capabilities and security.',
+    pinnedToolsHeading: 'Pinned to Home Page',
+    pinnedToolsSub: 'Your customized shortcuts for instant one-click access',
     recentToolsHeading: 'Recently Used Tools',
     recentToolsClear: 'Clear History',
     recentToolsViewAll: 'View All →',
@@ -608,6 +611,8 @@ const PAGE_LOCALES = {
     whySubheading: 'ہماری اہم ترین خصوصیات اور رازداری کے نظام کو تفصیل سے جانیے۔',
     faqHeading: 'عام پوچھے جانے والے سوالات',
     faqSubheading: 'مفتاح ٹولز کی خصوصیات اور پرائیویسی سے متعلق اہم سوالات و جوابات۔',
+    pinnedToolsHeading: 'ہوم پیج پر شامل کردہ ٹولز',
+    pinnedToolsSub: 'فوری رسائی کے لیے آپ کے مخصوص شارٹ کٹس',
     recentToolsHeading: 'حالیہ استعمال شدہ ٹولز',
     recentToolsClear: 'صاف کریں',
     recentToolsViewAll: 'تمام دیکھیں ←',
@@ -822,6 +827,8 @@ const PAGE_LOCALES = {
     whySubheading: 'تعرف على مزايانا المعمارية في الأمان والسرعة والسهولة.',
     faqHeading: 'الأسئلة الشائعة',
     faqSubheading: 'كل ما تحتاج لمعرفته حول إمكانيات وأمان منصة مفتاح تولز.',
+    pinnedToolsHeading: 'الأدوات المثبتة في الرئيسية',
+    pinnedToolsSub: 'اختصاراتك المخصصة للوصول الفوري بنقرة واحدة',
     recentToolsHeading: 'الأدوات المستخدمة مؤخراً',
     recentToolsClear: 'مسح السجل',
     recentToolsViewAll: 'عرض الكل ←',
@@ -1036,6 +1043,8 @@ const PAGE_LOCALES = {
     whySubheading: 'हमारी कोर विशेषताओं, सुरक्षा और हाई-स्पीड आर्किटेक्चर को विस्तार से समझें।',
     faqHeading: 'अक्सर पूछे जाने वाले प्रश्न',
     faqSubheading: 'मिफ़्ताह टूल्स की क्षमताओं और डेटा सुरक्षा से जुड़े सभी उत्तर।',
+    pinnedToolsHeading: 'होम पेज पर जोड़े गए टूल्स',
+    pinnedToolsSub: 'तुरंत एक्सेस के लिए आपके कस्टमाइज़्ड शॉर्टकट्स',
     recentToolsHeading: 'हाल ही में उपयोग किए गए टूल्स',
     recentToolsClear: 'साफ़ करें',
     recentToolsViewAll: 'सभी देखें →',
@@ -1227,8 +1236,8 @@ const PAGE_LOCALES = {
 
 const OLD_APP_LOCALES = {
   en: {
-    bookmarked: (count: number) => `Bookmarked Tools (${count})`,
-    manageBookmarks: 'Manage Bookmarks →',
+    bookmarked: (count: number) => `Pinned to Home Page (${count})`,
+    manageBookmarks: 'Manage Shortcuts →',
     frequentUtilities: 'Frequent Utilities',
     allToolsLink: 'All Tools →',
     toolsCount: (count: number) => `${count} tools`,
@@ -1236,8 +1245,8 @@ const OLD_APP_LOCALES = {
     exploreDirectory: (count: number) => `Explore All Tools in Directory`,
   },
   ur: {
-    bookmarked: (count: number) => `محفوظ شدہ ٹولز (${count})`,
-    manageBookmarks: 'بک مارکس کا انتظام کریں ←',
+    bookmarked: (count: number) => `ہوم پیج پر شامل کردہ ٹولز (${count})`,
+    manageBookmarks: 'شارٹ کٹس کا انتظام کریں ←',
     frequentUtilities: 'اکثر استعمال ہونے والے ٹولز',
     allToolsLink: 'تمام ٹولز دیکھیں ←',
     toolsCount: (count: number) => `${count} ٹولز`,
@@ -1245,8 +1254,8 @@ const OLD_APP_LOCALES = {
     exploreDirectory: (count: number) => `ڈائرکٹری کے تمام ٹولز دیکھیں`,
   },
   ar: {
-    bookmarked: (count: number) => `الأدوات المحفوظة (${count})`,
-    manageBookmarks: 'إدارة الإشارات المرجعية ←',
+    bookmarked: (count: number) => `الأدوات المثبتة في الرئيسية (${count})`,
+    manageBookmarks: 'إدارة الاختصارات ←',
     frequentUtilities: 'الأدوات الشائعة',
     allToolsLink: 'جميع الأدوات ←',
     toolsCount: (count: number) => `${count} أداة`,
@@ -1254,8 +1263,8 @@ const OLD_APP_LOCALES = {
     exploreDirectory: (count: number) => `استكشف جميع الأدوات في الدليل`,
   },
   hi: {
-    bookmarked: (count: number) => `बुकमार्क किए गए टूल्स (${count})`,
-    manageBookmarks: 'बुकमार्क प्रबंधित करें →',
+    bookmarked: (count: number) => `होम पेज पर जोड़े गए टूल्स (${count})`,
+    manageBookmarks: 'शॉर्टकट्स प्रबंधित करें →',
     frequentUtilities: 'अक्सर उपयोग किए जाने वाले टूल्स',
     allToolsLink: 'सभी टूल्स देखें →',
     toolsCount: (count: number) => `${count} टूल्स`,
@@ -1297,40 +1306,28 @@ function NativeAppHome() {
   const { favorites, pinnedTools } = useUserStore();
   const loc = OLD_APP_LOCALES[language] || OLD_APP_LOCALES.en;
 
-  // Restore scroll position when returning back from a tool
+  // Auto-scroll and highlight when arriving from "Add to Home Page"
   React.useEffect(() => {
     try {
-      const lastToolId = sessionStorage.getItem('miftah_last_clicked_tool');
-      const savedScroll = sessionStorage.getItem('miftah_home_scroll');
-
-      if (lastToolId) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pinnedId = urlParams.get('pinned') || sessionStorage.getItem('miftah_last_pinned_tool');
+      if (pinnedId) {
         const timer = setTimeout(() => {
-          const el = document.getElementById(`tool-card-${lastToolId}`);
+          const el = document.getElementById(`pinned-tool-${pinnedId}`) || document.getElementById(`tool-card-${pinnedId}`);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.02]');
+            el.classList.add('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.03]');
             setTimeout(() => {
-              el.classList.remove('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.02]');
-            }, 2500);
-          } else if (savedScroll) {
-            window.scrollTo({ top: parseInt(savedScroll, 10) || 0, behavior: 'smooth' });
+              el.classList.remove('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.03]');
+            }, 3500);
           }
         }, 150);
+        sessionStorage.removeItem('miftah_last_pinned_tool');
         return () => clearTimeout(timer);
       }
+      sessionStorage.removeItem('miftah_last_clicked_tool');
+      sessionStorage.removeItem('miftah_home_scroll');
     } catch (_) {}
-  }, []);
-
-  // Save scroll position before unmounting / navigating
-  React.useEffect(() => {
-    const handleScroll = () => {
-      try {
-        sessionStorage.setItem('miftah_home_scroll', window.scrollY.toString());
-      } catch (_) {}
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // User's bookmarked favorite tools
@@ -1349,12 +1346,12 @@ function NativeAppHome() {
 
   return (
     <div className="space-y-6 sm:space-y-8 pt-2 sm:pt-4 pb-28 overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
-      {/* 1. BOOKMARKED FAVORITES (Conditional on real user saving) */}
+      {/* 1. PINNED TOOLS / HOME PAGE SHORTCUTS */}
       {favoriteTools.length > 0 && (
-        <section className="px-4 sm:px-6 lg:px-8 pt-2 max-w-7xl mx-auto space-y-3">
+        <section id="pinned-tools" className="px-4 sm:px-6 lg:px-8 pt-2 max-w-7xl mx-auto space-y-3 scroll-mt-20">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Bookmark className="w-3.5 h-3.5 fill-current" />
+              <Pin className="w-3.5 h-3.5 fill-current rotate-45" />
               <span>{loc.bookmarked(favoriteTools.length)}</span>
             </h2>
             <Link href="/favorites" className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline">
@@ -1363,8 +1360,10 @@ function NativeAppHome() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {favoriteTools.slice(0, 4).map((tool) => (
-              <ToolCard key={`fav-${tool.id}`} tool={tool} />
+            {favoriteTools.map((tool) => (
+              <div key={`fav-${tool.id}`} id={`pinned-tool-${tool.id}`} className="transition-all duration-300">
+                <ToolCard tool={tool} />
+              </div>
             ))}
           </div>
         </section>
@@ -1400,9 +1399,6 @@ function NativeAppHome() {
                 href={href}
                 onClick={() => {
                   triggerHaptic('light');
-                  try {
-                    sessionStorage.setItem('miftah_last_clicked_tool', tool?.slug || def.id);
-                  } catch (_) {}
                 }}
                 className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-brand-500 dark:hover:border-brand-500 active:scale-95 transition-all flex items-center gap-3 group"
               >

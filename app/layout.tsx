@@ -14,6 +14,7 @@ import { StickyBottomAd } from '@/components/ads/StickyBottomAd';
 import { AppOpenAd } from '@/components/ads/AppOpenAd';
 import { siteConfig } from '@/config/site';
 import { adConfig } from '@/config/ads';
+import { GlobalPinnedToast } from '@/components/shared/GlobalPinnedToast';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -169,6 +170,7 @@ export default function RootLayout({
                 <StickyBottomAd />
                 <AppOpenAd />
                 <InAppReviewPrompt />
+                <GlobalPinnedToast />
               </UserStoreProvider>
             </I18nProvider>
           </AuthProvider>

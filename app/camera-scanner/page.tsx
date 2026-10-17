@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
+import { AddToHomeButton } from '@/components/shared/AddToHomeButton';
 import { CameraScannerStudio } from '@/components/camera/CameraScannerStudio';
 import { Camera, Zap, ShieldCheck, Lock, Layers } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -55,7 +56,10 @@ export default function CameraScannerPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: loc.title }]} />
+      <Breadcrumbs
+        items={[{ label: 'Home', href: '/' }, { label: loc.title }]}
+        rightAction={<AddToHomeButton toolId="camera-scanner" toolName={loc.title} category="media" variant="pill" directNavigate={true} />}
+      />
 
       <div className="text-center space-y-3">
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">

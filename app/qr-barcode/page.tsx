@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
+import { AddToHomeButton } from '@/components/shared/AddToHomeButton';
 import { QrGenerator } from '@/components/qr/QrGenerator';
 import { BarcodeStudio } from '@/components/qr/BarcodeStudio';
 import { QrCode, Barcode } from 'lucide-react';
@@ -50,7 +51,10 @@ export default function QrBarcodePage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
-      <Breadcrumbs items={[{ label: 'Utilities', href: '/tools' }, { label: loc.title }]} />
+      <Breadcrumbs
+        items={[{ label: 'Utilities', href: '/tools' }, { label: loc.title }]}
+        rightAction={<AddToHomeButton toolId="qr-barcode" toolName={loc.title} category="qr" variant="pill" directNavigate={true} />}
+      />
 
       <div className="text-center space-y-1">
         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight flex items-center justify-center gap-2">

@@ -83,24 +83,6 @@ function ToolsDirectory() {
         setSearchQuery(savedSearch);
       }
 
-      const lastToolId = sessionStorage.getItem('miftah_last_clicked_tool');
-      const savedScroll = sessionStorage.getItem('miftah_tools_scroll');
-
-      if (lastToolId) {
-        const timer = setTimeout(() => {
-          const el = document.getElementById(`tool-card-${lastToolId}`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.02]');
-            setTimeout(() => {
-              el.classList.remove('ring-4', 'ring-brand-500', 'shadow-2xl', 'scale-[1.02]');
-            }, 2500);
-          } else if (savedScroll) {
-            window.scrollTo({ top: parseInt(savedScroll, 10) || 0, behavior: 'smooth' });
-          }
-        }, 150);
-        return () => clearTimeout(timer);
-      }
     } catch (_) {}
   }, [urlCat]);
 

@@ -3,6 +3,7 @@
 import React from 'react';
 import { VisualPdfEditor } from '@/components/pdf/VisualPdfEditor';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
+import { AddToHomeButton } from '@/components/shared/AddToHomeButton';
 import { Edit3, Sparkles } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
@@ -35,7 +36,10 @@ export default function PdfEditorPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: loc.title }]} />
+      <Breadcrumbs
+        items={[{ label: 'Home', href: '/' }, { label: loc.title }]}
+        rightAction={<AddToHomeButton toolId="pdf-editor" toolName={loc.title} category="pdf" variant="pill" directNavigate={true} />}
+      />
 
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border border-brand-200 dark:border-brand-800 shadow-sm">
