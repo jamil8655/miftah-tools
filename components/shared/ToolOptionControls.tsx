@@ -311,15 +311,18 @@ export function ToolOptionControls({
       {/* 1. UNIVERSAL MB & KB TARGET SIZE CONTROLLER & SLIDER */}
       {showTargetSizeSection && (() => {
         const SLIDER_STOPS = [
-          { pos: 0, kb: 20 },
-          { pos: 12, kb: 50 },
-          { pos: 25, kb: 100 },
-          { pos: 38, kb: 200 },
-          { pos: 52, kb: 500 },
+          { pos: 0, kb: 1 },
+          { pos: 8, kb: 10 },
+          { pos: 16, kb: 20 },
+          { pos: 25, kb: 50 },
+          { pos: 35, kb: 100 },
+          { pos: 45, kb: 200 },
+          { pos: 55, kb: 500 },
           { pos: 66, kb: 1024 },  // 1 MB
-          { pos: 78, kb: 2048 },  // 2 MB
-          { pos: 88, kb: 5120 },  // 5 MB
-          { pos: 100, kb: 10240 },// 10 MB
+          { pos: 76, kb: 2048 },  // 2 MB
+          { pos: 85, kb: 5120 },  // 5 MB
+          { pos: 93, kb: 10240 }, // 10 MB
+          { pos: 100, kb: 20480 },// 20 MB
         ];
 
         const kbToSliderPos = (kb: number): number => {
@@ -333,21 +336,24 @@ export function ToolOptionControls({
               return Math.round(s1.pos + ratio * (s2.pos - s1.pos));
             }
           }
-          return 25;
+          return 35;
         };
 
         const sliderPosToKb = (pos: number): number => {
-          if (pos <= 0) return 20;
-          if (pos >= 100) return 10240;
+          if (pos <= 0) return 1;
+          if (pos >= 100) return 20480;
           for (let i = 0; i < SLIDER_STOPS.length - 1; i++) {
             const s1 = SLIDER_STOPS[i];
             const s2 = SLIDER_STOPS[i + 1];
             if (pos >= s1.pos && pos <= s2.pos) {
               const ratio = (pos - s1.pos) / (s2.pos - s1.pos);
               const rawKb = s1.kb + ratio * (s2.kb - s1.kb);
-              if (rawKb < 200) return Math.round(rawKb / 5) * 5;
+              if (rawKb < 15) return Math.max(1, Math.round(rawKb));
+              if (rawKb < 50) return Math.round(rawKb / 5) * 5;
+              if (rawKb < 200) return Math.round(rawKb / 10) * 10;
               if (rawKb < 1000) return Math.round(rawKb / 25) * 25;
-              return Math.round(rawKb / 100) * 100;
+              if (rawKb < 5000) return Math.round(rawKb / 256) * 256;
+              return Math.round(rawKb / 512) * 512;
             }
           }
           return 100;
@@ -356,7 +362,7 @@ export function ToolOptionControls({
         const currentTargetKb = options.targetKb || 100;
 
         const handleSliderChange = (newKb: number) => {
-          const validKb = Math.max(10, newKb);
+          const validKb = Math.max(1, newKb);
           const isMb = validKb >= 1024;
           const numVal = isMb
             ? (validKb / 1024).toFixed(validKb % 1024 === 0 ? 0 : 1)
@@ -393,7 +399,7 @@ export function ToolOptionControls({
                   TARGET SIZE
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  Choose your preferred output size
+                  Choose your preferred output size (from 1 KB to 20 MB)
                 </p>
               </div>
             </div>
@@ -410,7 +416,7 @@ export function ToolOptionControls({
               </div>
             </div>
 
-            {/* 3. Slider with 5 Spaced Tick Labels */}
+            {/* 3. Slider with Spaced Tick Labels */}
             <div dir="ltr" className="space-y-2.5">
               <input
                 type="range"
@@ -427,27 +433,36 @@ export function ToolOptionControls({
                 aria-label="Target Size Slider"
               />
               <div className="flex justify-between text-[11px] text-slate-400 dark:text-slate-500 font-semibold px-1 select-none">
-                <span className={currentTargetKb <= 35 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>20 KB</span>
+                <span className={currentTargetKb <= 5 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>1 KB</span>
+                <span className={currentTargetKb >= 15 && currentTargetKb <= 30 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>20 KB</span>
+                <span className={currentTargetKb >= 80 && currentTargetKb <= 120 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>100 KB</span>
                 <span className={currentTargetKb >= 400 && currentTargetKb <= 600 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>500 KB</span>
                 <span className={currentTargetKb >= 900 && currentTargetKb <= 1200 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>1 MB</span>
                 <span className={currentTargetKb >= 4500 && currentTargetKb <= 5500 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>5 MB</span>
-                <span className={currentTargetKb >= 9500 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>10 MB</span>
+                <span className={currentTargetKb >= 9500 && currentTargetKb <= 11000 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>10 MB</span>
+                <span className={currentTargetKb >= 19000 ? 'text-[#0052cc] dark:text-blue-400 font-black' : ''}>20 MB</span>
               </div>
             </div>
 
-            {/* 4. Quick Size (3x2 clean grid of pills) */}
+            {/* 4. Quick Size (Clean responsive grid of pills) */}
             <div className="space-y-3">
               <h4 className="text-sm font-bold text-slate-800 dark:text-white">
-                Quick Size
+                Quick Size Presets
               </h4>
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {[
+                  { label: '1 KB', kb: 1 },
+                  { label: '10 KB', kb: 10 },
+                  { label: '20 KB', kb: 20 },
                   { label: '50 KB', kb: 50 },
                   { label: '100 KB', kb: 100 },
                   { label: '200 KB', kb: 200 },
                   { label: '500 KB', kb: 500 },
                   { label: '1 MB', kb: 1024 },
                   { label: '2 MB', kb: 2048 },
+                  { label: '5 MB', kb: 5120 },
+                  { label: '10 MB', kb: 10240 },
+                  { label: '20 MB', kb: 20480 },
                 ].map((preset) => {
                   const isSelected = currentTargetKb === preset.kb;
                   return (
@@ -455,13 +470,13 @@ export function ToolOptionControls({
                       key={preset.label}
                       type="button"
                       onClick={() => handleSliderChange(preset.kb)}
-                      className={`py-3 px-3 rounded-full text-xs sm:text-sm font-bold border transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer ${
+                      className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold border transition-all active:scale-95 flex items-center justify-center gap-1 cursor-pointer ${
                         isSelected
                           ? 'bg-[#0052cc] text-white border-[#0052cc] shadow-md shadow-blue-500/20'
                           : 'bg-slate-50/70 dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300'
                       }`}
                     >
-                      {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       <span>{preset.label}</span>
                     </button>
                   );
