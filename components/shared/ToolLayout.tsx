@@ -9,6 +9,7 @@ import { ResultPreview } from './ResultPreview';
 import { DownloadSuccessModal } from './DownloadSuccessModal';
 import { ToolOptionControls } from './ToolOptionControls';
 import { AddToHomeButton } from './AddToHomeButton';
+import { FavoriteButton } from './FavoriteButton';
 import { Play, Sparkles, HelpCircle } from 'lucide-react';
 import { downloadSingleFile, downloadAsZip, SavedFileInfo } from '@/lib/utils/download';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -248,14 +249,16 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
           { label: localized.name },
         ]}
         rightAction={
-          <AddToHomeButton
-            toolId={tool.id}
-            toolName={localized.name}
-            category={tool.category}
-            icon={tool.icon}
-            variant="pill"
-            directNavigate={true}
-          />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <FavoriteButton toolId={tool.id} />
+            <AddToHomeButton
+              toolId={tool.id}
+              toolName={localized.name}
+              category={tool.category}
+              icon={tool.icon}
+              variant="pill"
+            />
+          </div>
         }
       />
 
