@@ -24,7 +24,9 @@ import android.widget.Toast;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -887,18 +889,14 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        EdgeToEdge.enable(this);
+        // Modern Android 15+ Edge-to-Edge with transparent system bars
+        EdgeToEdge.enable(
+            this,
+            SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+            SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
+        );
         super.onCreate(savedInstanceState);
         handleIncomingRoute(getIntent());
-
-        // Modern Android 15+ Edge-to-Edge Insets handling
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, windowInsets) -> {
-            Insets insets = windowInsets.getInsets(
-                WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
-            );
-            view.setPadding(insets.left, insets.top, insets.right, insets.bottom);
-            return WindowInsetsCompat.CONSUMED;
-        });
 
         createNotificationChannel();
         requestNativePermissions();
