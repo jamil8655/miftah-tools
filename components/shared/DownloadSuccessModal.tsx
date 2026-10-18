@@ -23,6 +23,7 @@ import { triggerHaptic } from '@/lib/motion/motion-system';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { recordActionAndMaybePromptReview } from '@/components/ratings/InAppReviewPrompt';
+import { recordToolExecutionProof } from '@/lib/ratings/rating-service';
 
 const DOWNLOAD_MODAL_LOCALES = {
   en: {
@@ -86,6 +87,7 @@ export function DownloadSuccessModal({ fileInfo, onClose }: DownloadSuccessModal
     if (fileInfo) {
       triggerHaptic('success');
       recordActionAndMaybePromptReview();
+      recordToolExecutionProof(fileInfo.name);
     }
   }, [fileInfo]);
 

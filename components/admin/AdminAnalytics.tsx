@@ -43,9 +43,18 @@ import {
   Cloud,
   ChevronRight,
   Info,
+  Star,
+  MessageSquare,
 } from 'lucide-react';
 import { formatBytes } from '@/lib/utils/formatters';
 import { TOOLS_LIST, CATEGORIES_CONFIG } from '@/lib/tools-config';
+import {
+  subscribeToAllRatingsForAdmin,
+  approveLiveRating,
+  rejectLiveRating,
+  deleteLiveRating,
+  RatingReview,
+} from '@/lib/ratings/rating-service';
 import {
   getActivityHistory,
   getAllStoredFiles,
@@ -384,6 +393,7 @@ export function AdminAnalytics() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<
     | 'overview'
+    | 'reviews'
     | 'users'
     | 'tools'
     | 'jobs'
@@ -411,6 +421,9 @@ export function AdminAnalytics() {
   const [cloudUsers, setCloudUsers] = useState<FirestoreUserProfile[]>([]);
   const [cloudJobs, setCloudJobs] = useState<FirestoreJobRecord[]>([]);
   const [cloudTools, setCloudTools] = useState<FirestoreToolMeta[]>([]);
+  const [adminReviews, setAdminReviews] = useState<RatingReview[]>([]);
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [isProcessingReview, setIsProcessingReview] = useState<string | null>(null);
 
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -472,11 +485,16 @@ export function AdminAnalytics() {
       setCloudJobs(jobs);
     });
 
+    const unsubReviews = subscribeToAllRatingsForAdmin((revs) => {
+      setAdminReviews(revs);
+    });
+
     return () => {
       unsubQueue();
       unsubUsers();
       unsubTools();
       unsubJobs();
+      if (typeof unsubReviews === 'function') unsubReviews();
     };
   }, []);
 
@@ -554,8 +572,16 @@ export function AdminAnalytics() {
     );
   });
 
+  const pendingReviewCount = adminReviews.filter((r) => !r.approved || r.status === 'pending').length;
+
   const navMenuItems = [
     { id: 'overview', label: adminLoc.tabs.overview || 'Dashboard Overview', icon: Activity },
+    {
+      id: 'reviews',
+      label: 'Reviews & Moderation',
+      icon: MessageSquare,
+      badge: pendingReviewCount > 0 ? `${pendingReviewCount} Pending` : (adminReviews.length > 0 ? `${adminReviews.length}` : undefined),
+    },
     { id: 'users', label: adminLoc.tabs.users || 'Users & RBAC', icon: Users, badge: cloudUsers.length > 0 ? `${cloudUsers.length}` : undefined },
     { id: 'tools', label: adminLoc.tabs.tools || 'Tool Catalog', icon: Layers, badge: `${TOOLS_LIST.length}` },
     { id: 'jobs', label: adminLoc.tabs.jobs || 'Processing Jobs', icon: Workflow, badge: activeJobs.length + cloudJobs.length > 0 ? `${activeJobs.length + cloudJobs.length}` : undefined },
@@ -846,6 +872,219 @@ export function AdminAnalytics() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* REVIEWS & MODERATION TAB */}
+          {activeTab === 'reviews' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-brand-500" />
+                    <span>Reviews & Anti-Spam Moderation Queue</span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Approve or reject real user reviews. Only approved reviews are displayed publicly and included in aggregate ratings.
+                  </p>
+                </div>
+              </div>
+
+              {/* Moderation Metrics */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase">Total Submissions</div>
+                  <div className="text-xl sm:text-2xl font-black text-white mt-1">{adminReviews.length}</div>
+                </div>
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                  <div className="text-[11px] font-bold text-amber-400 uppercase">Pending Approval</div>
+                  <div className="text-xl sm:text-2xl font-black text-amber-300 mt-1">{pendingReviewCount}</div>
+                </div>
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="text-[11px] font-bold text-emerald-400 uppercase">Approved Live</div>
+                  <div className="text-xl sm:text-2xl font-black text-emerald-300 mt-1">
+                    {adminReviews.filter((r) => r.approved === true).length}
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase">Approved Avg Rating</div>
+                  <div className="text-xl sm:text-2xl font-black text-amber-400 mt-1 flex items-center gap-1">
+                    <span>★</span>
+                    <span>
+                      {adminReviews.filter((r) => r.approved === true).length > 0
+                        ? (
+                            adminReviews
+                              .filter((r) => r.approved === true)
+                              .reduce((acc, r) => acc + r.rating, 0) /
+                            adminReviews.filter((r) => r.approved === true).length
+                          ).toFixed(1)
+                        : '0.0'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filter Tabs */}
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto text-xs">
+                {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => {
+                  const count =
+                    f === 'all'
+                      ? adminReviews.length
+                      : f === 'pending'
+                      ? adminReviews.filter((r) => !r.approved || r.status === 'pending').length
+                      : f === 'approved'
+                      ? adminReviews.filter((r) => r.approved === true).length
+                      : adminReviews.filter((r) => r.status === 'rejected').length;
+
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setReviewFilter(f)}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition-all capitalize flex items-center gap-1.5 ${
+                        reviewFilter === f
+                          ? 'bg-brand-600 text-white shadow-xs'
+                          : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      <span>{f}</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[9px] ${
+                        reviewFilter === f ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300'
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Reviews List */}
+              <div className="space-y-3">
+                {adminReviews
+                  .filter((r) => {
+                    if (reviewFilter === 'pending') return !r.approved || r.status === 'pending';
+                    if (reviewFilter === 'approved') return r.approved === true;
+                    if (reviewFilter === 'rejected') return r.status === 'rejected';
+                    return true;
+                  })
+                  .map((r) => {
+                    const isPending = !r.approved || r.status === 'pending';
+                    const isApproved = r.approved === true;
+                    const isRejected = r.status === 'rejected';
+
+                    return (
+                      <div
+                        key={r.id}
+                        className={`p-4 sm:p-5 rounded-2xl bg-slate-900 border transition-all ${
+                          isPending
+                            ? 'border-amber-500/40 bg-amber-950/10'
+                            : isApproved
+                            ? 'border-emerald-500/20'
+                            : 'border-rose-500/20 opacity-70'
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-white text-sm">{r.userName}</span>
+                              {r.userEmail && (
+                                <span className="text-[11px] text-slate-400 font-mono">({r.userEmail})</span>
+                              )}
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                                  isPending
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                    : isApproved
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                }`}
+                              >
+                                {isPending ? '⏳ Pending Review' : isApproved ? '✓ Approved Live' : '✕ Rejected'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-xs text-slate-400">
+                              <div className="flex items-center text-amber-400">
+                                {[1, 2, 3, 4, 5].map((st) => (
+                                  <span key={st} className={st <= r.rating ? 'text-amber-400' : 'text-slate-700'}>
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
+                              <span>•</span>
+                              <span className="text-brand-400 font-semibold">{r.toolName || 'Miftah Tools'}</span>
+                              <span>•</span>
+                              <span>{r.formattedDate || new Date(r.createdAt).toLocaleString()}</span>
+                            </div>
+
+                            <p className="text-xs sm:text-sm text-slate-200 mt-2 bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                              "{r.comment}"
+                            </p>
+                          </div>
+
+                          {/* Moderation Action Buttons */}
+                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-start">
+                            {!isApproved && (
+                              <button
+                                type="button"
+                                disabled={isProcessingReview === r.id}
+                                onClick={async () => {
+                                  setIsProcessingReview(r.id);
+                                  await approveLiveRating(r.id);
+                                  addAuditLog(`Approved Review from ${r.userName}`, 'Reviews Moderation', 'SUCCESS');
+                                  setIsProcessingReview(null);
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Approve</span>
+                              </button>
+                            )}
+
+                            {!isRejected && (
+                              <button
+                                type="button"
+                                disabled={isProcessingReview === r.id}
+                                onClick={async () => {
+                                  setIsProcessingReview(r.id);
+                                  await rejectLiveRating(r.id);
+                                  addAuditLog(`Rejected Review from ${r.userName}`, 'Reviews Moderation', 'WARNING');
+                                  setIsProcessingReview(null);
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all disabled:opacity-50"
+                              >
+                                <span>Reject</span>
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              disabled={isProcessingReview === r.id}
+                              onClick={async () => {
+                                if (window.confirm(`Delete review from ${r.userName} permanently?`)) {
+                                  setIsProcessingReview(r.id);
+                                  await deleteLiveRating(r.id);
+                                  addAuditLog(`Deleted Review from ${r.userName}`, 'Reviews Moderation', 'CRITICAL');
+                                  setIsProcessingReview(null);
+                                }
+                              }}
+                              className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-all"
+                              title="Delete Permanently"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                {adminReviews.length === 0 && (
+                  <div className="p-8 text-center bg-slate-900 rounded-2xl border border-slate-800 text-slate-400 text-xs">
+                    No user reviews submitted yet. Submissions from users will appear here in real-time.
                   </div>
                 )}
               </div>

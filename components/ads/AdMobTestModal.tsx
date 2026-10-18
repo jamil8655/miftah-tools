@@ -112,9 +112,8 @@ export function AdMobTestModal({ type, unitId, onClose, onReward }: AdMobModalPr
               : 'Experience next-generation lightning speed document manipulation with 100% offline privacy.'}
           </p>
 
-          <div className="flex items-center justify-center gap-2 mt-3 text-xs text-amber-400 font-semibold">
-            <span>★★★★★</span>
-            <span className="text-slate-400">(4.9 • 450,000+ Downloads)</span>
+          <div className="flex items-center justify-center gap-2 mt-3 text-xs text-brand-600 dark:text-brand-400 font-semibold">
+            <span>100% Free & Unlimited Tools Suite</span>
           </div>
         </div>
 

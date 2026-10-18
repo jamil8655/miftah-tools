@@ -370,8 +370,6 @@ function getRecentToolAccent(tool: any) {
 const PAGE_LOCALES = {
   en: {
     heroEyebrow: 'MIFTAH TOOLS',
-    ratingScore: '4.9 / 5.0',
-    ratingLabel: '100,000+ Happy Users',
     heroHeading1: '220+ Digital Tools.',
     heroHeading2: 'One Simple Workspace.',
     heroSupporting: 'Convert, edit, compress and create with fast, privacy-focused tools designed for everyday digital work.',
@@ -586,8 +584,6 @@ const PAGE_LOCALES = {
   },
   ur: {
     heroEyebrow: 'مفتاح ٹولز',
-    ratingScore: '4.9 / 5.0',
-    ratingLabel: '100,000+ مطمئن صارفین',
     heroHeading1: '220+ ڈیجیٹل ٹولز۔',
     heroHeading2: 'ایک سادہ ورک اسپیس۔',
     heroSupporting: 'روزمرہ ڈیجیٹل کام کے لیے تیز رفتار، نجی اور جدید ٹولز کے ذریعے فائلیں تبدیل کریں، ترمیم کریں، کمپریس کریں اور بنائیں بغیر سرور اپلوڈ کے۔',
@@ -802,8 +798,6 @@ const PAGE_LOCALES = {
   },
   ar: {
     heroEyebrow: 'مفتاح تولز',
-    ratingScore: '4.9 / 5.0',
-    ratingLabel: 'أكثر من 100,000 مستخدم',
     heroHeading1: '220+ أداة رقمية.',
     heroHeading2: 'في مساحة عمل واحدة.',
     heroSupporting: 'قم بتحويل المستندات، وتعديلها، وضغطها، وإنشائها باستخدام أدوات سريعة وآمنة ومصممة للعمل اليومي المتقن.',
@@ -1018,8 +1012,6 @@ const PAGE_LOCALES = {
   },
   hi: {
     heroEyebrow: 'मिफ़्ताह टूल्स',
-    ratingScore: '4.9 / 5.0',
-    ratingLabel: '100,000+ संतुष्ट उपयोगकर्ता',
     heroHeading1: '220+ डिजिटल टूल्स।',
     heroHeading2: 'एक सरल वर्कस्पेस।',
     heroSupporting: 'फ़ाइलें कन्वर्ट, एडिट, कंप्रेस और क्रिएट करें — रोज़मर्रा के डिजिटल काम के लिए तेज़ और 100% सुरक्षित टूल्स।',

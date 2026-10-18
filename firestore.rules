@@ -23,6 +23,22 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Helper functions for Ratings & Reviews collection validation
+    function hasValidReviewName(data) {
+      return (
+        ('userName' in data && data.userName is string && data.userName.size() <= 50) ||
+        ('name' in data && data.name is string && data.name.size() <= 50)
+      );
+    }
+
+    function isValidReview(data) {
+      return hasValidReviewName(data) &&
+             data.comment is string && data.comment.size() <= 500 &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.approved is bool &&
+             data.status is string;
+    }
+
     // Users Collection (Strict User Data Isolation)
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
@@ -73,6 +89,39 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow create: if isSignedIn();
       allow update, delete: if isAdmin();
+    }
+
+    // Ratings & Reviews Collection (Strict Moderation & Role-Based Access)
+    match /ratings_reviews/{reviewId} {
+      // 1. Public read is allowed if resource.data.approved == true.
+      // 2. The review author can read their own review even if pending.
+      // 3. Admins can read all reviews regardless of approval status.
+      allow read: if (resource.data.approved == true) ||
+                     (isSignedIn() && resource.data.userId == request.auth.uid) ||
+                     isAdmin();
+
+      // 4. Create validation: name <= 50, comment <= 500, rating 1-5, approved=false and status='pending' unless admin
+      allow create: if isValidReview(request.resource.data) &&
+                       (request.resource.data.approved == false || isAdmin()) &&
+                       (request.resource.data.status == 'pending' || isAdmin()) &&
+                       (!('userId' in request.resource.data) ||
+                        request.resource.data.userId == null ||
+                        request.resource.data.userId == '' ||
+                        (isSignedIn() && request.resource.data.userId == request.auth.uid) ||
+                        isAdmin());
+
+      // 5. Update validation: Admin can update any review; authenticated owner can update comment/rating but CANNOT change approved status
+      allow update: if isValidReview(request.resource.data) &&
+                       (isAdmin() || (
+                         isSignedIn() &&
+                         resource.data.userId == request.auth.uid &&
+                         (request.resource.data.userId == resource.data.userId) &&
+                         (request.resource.data.approved == resource.data.approved) &&
+                         (request.resource.data.status == resource.data.status)
+                       ));
+
+      // 6. Delete validation: Admin or authenticated owner
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
   }
 }

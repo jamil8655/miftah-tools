@@ -10,6 +10,8 @@ import {
   updateLiveRating,
   deleteLiveRating,
   formatFullDateTime,
+  canSubmitReview,
+  hasValidToolSessionProof,
 } from '@/lib/ratings/rating-service';
 import {
   Star,
@@ -73,6 +75,7 @@ export function LiveRatingStudio({
   const [authorEmail, setAuthorEmail] = useState<string>('');
   const [selectedTool, setSelectedTool] = useState<string>(initialToolName || 'Miftah Tools (Overall Platform)');
   const [comment, setComment] = useState<string>('');
+  const [honeypot, setHoneypot] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -119,12 +122,33 @@ export function LiveRatingStudio({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Anti-spam honeypot detection
+    if (honeypot.trim().length > 0) {
+      return;
+    }
+
+    const rateCheck = canSubmitReview();
+    if (!rateCheck.allowed) {
+      setSubmitError(`Rate limit reached: Maximum 3 reviews allowed per 24 hours. Reset in ~${rateCheck.resetInHours}h.`);
+      return;
+    }
+
+    if (!user && !hasValidToolSessionProof()) {
+      setSubmitError('Please use at least one tool on Miftah Tools before submitting a review.');
+      return;
+    }
+
     if (!authorName.trim()) {
       setSubmitError('Please enter your name');
       return;
     }
-    if (!comment.trim()) {
-      setSubmitError('Please write your review feedback');
+    if (comment.trim().length < 5) {
+      setSubmitError('Please write at least 5 characters in your review');
+      return;
+    }
+    if (comment.trim().length > 500) {
+      setSubmitError('Review comment is too long (maximum 500 characters)');
       return;
     }
 
@@ -133,14 +157,15 @@ export function LiveRatingStudio({
     triggerHaptic('medium');
 
     const result = await submitLiveRating({
-      userName: authorName.trim(),
+      userName: authorName.trim().slice(0, 50),
       userEmail: authorEmail.trim() || user?.email || '',
       userId: user?.uid || '',
       userPhoto: user?.photoURL || '',
       rating: selectedRating,
       toolName: selectedTool,
       toolSlug: initialToolSlug || 'general',
-      comment: comment.trim(),
+      comment: comment.trim().slice(0, 500),
+      honeypot,
     });
 
     setIsSubmitting(false);
@@ -152,7 +177,7 @@ export function LiveRatingStudio({
         setSubmitSuccess(false);
         setShowForm(false);
         setComment('');
-      }, 2000);
+      }, 2500);
     } else {
       setSubmitError(result.error || 'Could not submit review. Please try again.');
     }
@@ -401,12 +426,18 @@ export function LiveRatingStudio({
               {/* Name & Email Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-[#182230] dark:text-slate-200">
-                    Your Full Name *
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[#182230] dark:text-slate-200">
+                      Your Full Name *
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                      {authorName.length}/50
+                    </span>
+                  </div>
                   <input
                     type="text"
                     required
+                    maxLength={50}
                     value={authorName}
                     onChange={(e) => setAuthorName(e.target.value)}
                     placeholder="e.g. Tariq Ansari"
@@ -426,6 +457,18 @@ export function LiveRatingStudio({
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#F5F7F9] dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-xs sm:text-sm text-[#182230] dark:text-white focus:outline-none focus:border-[#0B79B7]"
                   />
                 </div>
+              </div>
+
+              {/* Invisible Honeypot Field for anti-bot spam protection */}
+              <div className="hidden opacity-0 pointer-events-none absolute -left-[9999px]" aria-hidden="true">
+                <input
+                  type="text"
+                  name="miftah_security_hp"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
               </div>
 
               {/* Tool Category Selector */}
@@ -448,12 +491,18 @@ export function LiveRatingStudio({
 
               {/* Review Text */}
               <div className="space-y-1">
-                <label className="text-xs font-bold text-[#182230] dark:text-slate-200">
-                  Your Review / Experience *
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-[#182230] dark:text-slate-200">
+                    Your Review / Experience *
+                  </label>
+                  <span className={`text-[10px] font-medium ${comment.length > 450 ? 'text-amber-500 font-bold' : 'text-slate-400'}`}>
+                    {comment.length}/500
+                  </span>
+                </div>
                 <textarea
                   required
                   rows={3}
+                  maxLength={500}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Share your experience with processing speed, features, or output quality..."
@@ -474,11 +523,11 @@ export function LiveRatingStudio({
                 className="w-full py-3 rounded-xl bg-[#0B79B7] hover:bg-[#075B8C] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#0B79B7]/20 active:scale-95 transition-all inline-flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
-                  <span>Publishing to Firebase...</span>
+                  <span>Publishing to Review Queue...</span>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>Submit Live Review</span>
+                    <span>Submit Verified Review</span>
                   </>
                 )}
               </button>
@@ -684,6 +733,11 @@ export function LiveRatingStudio({
                                 You
                               </span>
                             )}
+                            {rev.approved === false && (
+                              <span className="inline-flex items-center px-1.5 py-0.2 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[9px] font-black border border-amber-200/50">
+                                ⏳ Under Moderation
+                              </span>
+                            )}
                           </div>
                           {rev.userEmail && (
                             <p className="text-[10px] text-[#687587] dark:text-slate-400 truncate">
@@ -756,6 +810,29 @@ export function LiveRatingStudio({
         )}
 
       </div>
+
+      {/* 5. Dynamic AggregateRating Schema: ONLY emitted when at least 5 approved reviews exist */}
+      {stats.totalReviews >= 5 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebApplication',
+              name: initialToolName || 'Miftah Tools',
+              applicationCategory: 'UtilitiesApplication',
+              operatingSystem: 'All',
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: stats.averageRating.toFixed(1),
+                reviewCount: stats.totalReviews.toString(),
+                bestRating: '5',
+                worstRating: '1',
+              },
+            }),
+          }}
+        />
+      )}
 
     </div>
   );
