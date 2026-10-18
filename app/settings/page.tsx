@@ -70,7 +70,7 @@ const SETTINGS_LOCALES = {
   en: {
     pageTitle: 'Settings',
     pageSubtitle: 'Manage your app preferences and personalization.',
-    versionBadge: 'v1.0.7',
+    versionBadge: 'v1.1.0',
 
     // Section 1: Appearance & Language
     appearanceHeader: 'Appearance & Language',
@@ -131,7 +131,7 @@ const SETTINGS_LOCALES = {
   ur: {
     pageTitle: 'سیٹنگز (Settings)',
     pageSubtitle: 'ایپ کی ترجیحات، زبان اور ظاہری شکل کا انتظام کریں۔',
-    versionBadge: 'ورژن 1.0.7',
+    versionBadge: 'ورژن 1.1.0',
 
     // Section 1: Appearance & Language
     appearanceHeader: 'ظاہری شکل اور زبان',
@@ -192,7 +192,7 @@ const SETTINGS_LOCALES = {
   ar: {
     pageTitle: 'الإعدادات',
     pageSubtitle: 'تخصيص المظهر، اللغة، الإشعارات والتخزين.',
-    versionBadge: 'الإصدار 1.0.7',
+    versionBadge: 'الإصدار 1.1.0',
 
     // Section 1: Appearance & Language
     appearanceHeader: 'المظهر واللغة',
@@ -253,7 +253,7 @@ const SETTINGS_LOCALES = {
   hi: {
     pageTitle: 'सेटिंग्स',
     pageSubtitle: 'ऐप की भाषा, थीम और प्राथमिकताओं को प्रबंधित करें।',
-    versionBadge: 'v1.0.7',
+    versionBadge: 'v1.1.0',
 
     // Section 1: Appearance & Language
     appearanceHeader: 'थीम व भाषा',
