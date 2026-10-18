@@ -1,78 +1,58 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, X, Sparkles, Send, ExternalLink, Heart, MessageSquareHeart } from 'lucide-react';
+import { Star, X, Sparkles, Send, Heart } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { useAuth } from '@/lib/auth/auth-context';
-import { requestInAppReviewNative, openPlayStorePageNative, isNativeAndroid } from '@/lib/native/android-bridge';
+import { requestInAppReviewNative, isNativeAndroid } from '@/lib/native/android-bridge';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { submitLiveRating } from '@/lib/ratings/rating-service';
 
 const REVIEW_LOCALES = {
   en: {
-    title: 'Enjoying Miftah Tools?',
-    subtitle: 'Tap a star to rate your experience',
-    greatHeader: 'Thank you so much!',
-    greatDesc:
-      'We are delighted Miftah Tools helped you! Would you mind taking 10 seconds to leave a 5-star review on Google Play? It helps us keep all 220+ tools free forever.',
-    rateOnPlayStore: 'Rate on Google Play Store',
-    improveHeader: 'How can we improve?',
-    improveDesc: 'We are sorry your experience was not ideal. Please tell us what we can do better:',
-    feedbackPlaceholder: 'Write your thoughts, missing features, or suggestions...',
-    sendFeedback: 'Send Feedback',
-    sending: 'Sending...',
-    feedbackSent: 'Thank you! Your feedback helps us improve.',
+    title: 'How is your experience with Miftah Tools?',
+    subtitle: 'Tap a star to rate our free productivity utilities',
+    feedbackPrompt: 'Your feedback helps us continuously improve our 220+ tools.',
+    feedbackPlaceholder: 'Share your thoughts, suggestions, or feature requests (optional)...',
+    submitBtn: 'Submit Rating',
+    submitting: 'Submitting...',
+    feedbackSent: 'Thank you for your valuable feedback!',
     maybeLater: 'Maybe Later',
     dontAskAgain: "Don't ask again",
     thankYou: 'Thank you for your support!',
   },
   hi: {
-    title: 'क्या आपको Miftah Tools पसंद आ रहा है?',
-    subtitle: 'अपना अनुभव साझा करने के लिए स्टार पर टैप करें',
-    greatHeader: 'आपका बहुत-बहुत धन्यवाद!',
-    greatDesc:
-      'हमें खुशी है कि Miftah Tools आपके काम आया! क्या आप Google Play पर 5-स्टार रिव्यू देकर हमारा हौसला बढ़ाएंगे? इससे सभी 220+ टूल्स हमेशा मुफ़्त रहेंगे।',
-    rateOnPlayStore: 'Google Play पर रिव्यू दें',
-    improveHeader: 'हम इसे और बेहतर कैसे बनाएं?',
-    improveDesc: 'हमें खेद है कि आपका अनुभव मनमुताबिक नहीं रहा। कृपया बताएं कि हम क्या सुधार कर सकते हैं:',
-    feedbackPlaceholder: 'अपने सुझाव, समस्या या मनपसंद फ़ीचर यहाँ लिखें...',
-    sendFeedback: 'फीडबैक भेजें',
-    sending: 'भेजा जा रहा है...',
-    feedbackSent: 'धन्यवाद! आपकी राय हमारे लिए बहुत मूल्यवान है।',
-    maybeLater: 'बाद में याद दिलाएं',
+    title: 'Miftah Tools के साथ आपका अनुभव कैसा रहा?',
+    subtitle: 'टूल्स की रेटिंग के लिए स्टार पर टैप करें',
+    feedbackPrompt: 'आपकी राय 220+ टूल्स को और बेहतर बनाने में मदद करती है।',
+    feedbackPlaceholder: 'अपने सुझाव या राय यहाँ लिखें (वैकल्पिक)...',
+    submitBtn: 'रेटिंग सबमिट करें',
+    submitting: 'सबमिट हो रहा है...',
+    feedbackSent: 'आपकी राय हमारे लिए अत्यंत मूल्यवान है, धन्यवाद!',
+    maybeLater: 'बाद में',
     dontAskAgain: 'दोबारा न पूछें',
-    thankYou: 'आपके सहयोग के लिए धन्यवाद!',
+    thankYou: 'सहयोग के लिए धन्यवाद!',
   },
   ur: {
-    title: 'کیا آپ کو مفتاح ٹولز پسند آیا؟',
-    subtitle: 'اپنے تجربے کی درجہ بندی کے لیے ستارے پر ٹیپ کریں',
-    greatHeader: 'آپ کا بہت بہت شکریہ!',
-    greatDesc:
-      'ہمیں خوشی ہے کہ مفتاح ٹولز آپ کے کام آیا! کیا آپ گوگل پلے پر 5 اسٹار ریویو دے کر ہماری حوصلہ افزائی کریں گے؟ اس سے تمام 220+ ٹولز ہمیشہ مفت رہیں گے۔',
-    rateOnPlayStore: 'گوگل پلے پر ریویو دیں',
-    improveHeader: 'ہم اسے مزید بہتر کیسے بنائیں؟',
-    improveDesc: 'ہمیں افسوس ہے کہ آپ کا تجربہ توقع کے مطابق نہیں رہا۔ براہ کرم بتائیں کہ ہم کیا بہتری لا سکتے ہیں:',
-    feedbackPlaceholder: 'اپنی رائے، مسئلہ یا تجاویز یہاں لکھیں...',
-    sendFeedback: 'رائے بھیجیں',
-    sending: 'بھیجا جا رہا ہے...',
-    feedbackSent: 'شکریہ! آپ کی رائے ہمارے لیے بہت قیمتی ہے۔',
+    title: 'مفتاح ٹولز کے ساتھ آپ کا تجربہ کیسا رہا؟',
+    subtitle: 'درجہ بندی کے لیے ستارے پر کلک کریں',
+    feedbackPrompt: 'آپ کی رائے ہمارے 220+ ٹولز کو مزید بہتر بنانے میں مدد دیتی ہے۔',
+    feedbackPlaceholder: 'اپنی قیمتی رائے یا تجاویز درج کریں (اختیاری)...',
+    submitBtn: 'ریٹنگ جمع کرائیں',
+    submitting: 'جمع ہو رہا ہے...',
+    feedbackSent: 'آپ کے تاثرات کا بہت شکریہ!',
     maybeLater: 'بعد میں',
     dontAskAgain: 'دوبارہ نہ پوچھیں',
     thankYou: 'آپ کے تعاون کا شکریہ!',
   },
   ar: {
-    title: 'هل يعجبك تطبيق مفتاح تولز؟',
-    subtitle: 'انقر على نجمة لتقييم تجربتك',
-    greatHeader: 'شكراً جزيلاً لك!',
-    greatDesc:
-      'يسعدنا أن التطبيق ساعدك! هل تمانع في تخصيص 10 ثوانٍ لترك تقييم 5 نجوم على متجر جوجل بلاي؟ هذا يساعدنا على إبقاء جميع الأدوات مجانية للجميع.',
-    rateOnPlayStore: 'التقييم على متجر جوجل بلاي',
-    improveHeader: 'كيف يمكننا التحسين؟',
-    improveDesc: 'نعتذر إذا لم تكن التجربة مثالية. يرجى إخبارنا بما يمكننا فعله لتحسين التطبيق:',
-    feedbackPlaceholder: 'اكتب اقتراحاتك أو ملاحظاتك هنا...',
-    sendFeedback: 'إرسال الملاحظات',
-    sending: 'جاري الإرسال...',
-    feedbackSent: 'شكراً لك! ملاحظاتك تساعدنا على التطور دائماً.',
+    title: 'كيف كانت تجربتك مع أدوات مفتاح تولز؟',
+    subtitle: 'انقر على النجوم لتقييم تجربتك',
+    feedbackPrompt: 'ملاحظاتك تساعدنا على تحسين وتطوير أكثر من 220 أداة باستمرار.',
+    feedbackPlaceholder: 'شاركنا اقتراحاتك أو ملاحظاتك (اختياري)...',
+    submitBtn: 'إرسال التقييم',
+    submitting: 'جاري الإرسال...',
+    feedbackSent: 'شكراً جزيلاً لملاحظاتك القيمة!',
     maybeLater: 'لاحقاً',
     dontAskAgain: 'عدم السؤال مجدداً',
     thankYou: 'شكراً لدعمك المتواصل!',
@@ -81,10 +61,17 @@ const REVIEW_LOCALES = {
 
 const STORAGE_KEYS = {
   COMPLETED_COUNT: 'miftah_completed_actions',
-  REVIEW_DONE: 'miftah_review_completed',
+  LAST_REQUESTED: 'miftah_review_last_requested_at',
   NEVER_ASK: 'miftah_review_never_ask',
   SNOOZE_UNTIL: 'miftah_review_snooze_until',
 };
+
+// Cooldown period: minimum 14 days between review requests to respect quotas & user experience
+const MIN_COOLDOWN_DAYS = 14;
+const MIN_COOLDOWN_MS = MIN_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+
+// Minimum completed useful actions (conversions, compressions, etc.) before first prompt
+const MIN_ACTIONS_THRESHOLD = 3;
 
 export function InAppReviewPrompt() {
   const { language, isRTL } = useI18n();
@@ -92,71 +79,61 @@ export function InAppReviewPrompt() {
   const loc = REVIEW_LOCALES[language] || REVIEW_LOCALES.en;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [rating, setRating] = useState<number>(0);
+  const [rating, setRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [feedbackText, setFeedbackText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Check if review prompt should be shown
+  // Frequency-control validation
   const checkShouldPrompt = (force = false): boolean => {
     if (typeof window === 'undefined') return false;
     if (force) return true;
 
-    // If user already reviewed or chose never ask again, don't show
-    if (localStorage.getItem(STORAGE_KEYS.REVIEW_DONE) === 'true') return false;
+    // 1. User opted out
     if (localStorage.getItem(STORAGE_KEYS.NEVER_ASK) === 'true') return false;
 
-    // If snoozed ("Later"), check if snooze period (3 days) has elapsed
+    // 2. Snoozed by user
     const snoozeUntil = parseInt(localStorage.getItem(STORAGE_KEYS.SNOOZE_UNTIL) || '0', 10);
     if (Date.now() < snoozeUntil) return false;
 
-    // Check action threshold (at least 2 actions completed)
+    // 3. Minimum 14-day frequency cooldown
+    const lastRequested = parseInt(localStorage.getItem(STORAGE_KEYS.LAST_REQUESTED) || '0', 10);
+    if (Date.now() - lastRequested < MIN_COOLDOWN_MS) return false;
+
+    // 4. Action threshold (minimum 3 completed tools)
     const count = parseInt(localStorage.getItem(STORAGE_KEYS.COMPLETED_COUNT) || '0', 10);
-    return count >= 2;
+    return count >= MIN_ACTIONS_THRESHOLD;
   };
 
   useEffect(() => {
-    // 1. Listen for global review trigger events from downloads / tool completions
+    // Listen for completion checkpoints (triggered after a file is successfully downloaded / converted)
     const handleTrigger = (e: Event) => {
       const customEvent = e as CustomEvent<{ force?: boolean }>;
       const force = customEvent?.detail?.force || false;
 
-      // Small delay so user finishes admiring their downloaded file before prompt appears
+      // 1.5s delay so user first receives and admires their downloaded file
       setTimeout(() => {
-        if (checkShouldPrompt(force)) {
-          if (isNativeAndroid()) {
-            // Directly trigger official Google Play In-App Review API without any web UI
-            const triggered = requestInAppReviewNative();
-            if (!triggered) {
-              openPlayStorePageNative();
-            }
-            localStorage.setItem(STORAGE_KEYS.REVIEW_DONE, 'true');
-          } else {
-            setIsOpen(true);
-            triggerHaptic('medium');
-          }
+        if (!checkShouldPrompt(force)) return;
+
+        if (isNativeAndroid()) {
+          // Record prompt timestamp to enforce the 14-day cooldown
+          localStorage.setItem(STORAGE_KEYS.LAST_REQUESTED, Date.now().toString());
+
+          // Request official Google Play In-App Review API directly
+          // Under Google Play Policy: If it fails or quota is exhausted, continue seamlessly without redirecting to Play Store!
+          requestInAppReviewNative();
+        } else {
+          setIsOpen(true);
+          triggerHaptic('medium');
         }
-      }, 1200);
+      }, 1500);
     };
 
     window.addEventListener('miftah:trigger-review-prompt', handleTrigger);
 
-    // 2. Also check on mount after initial session activity
-    const timer = setTimeout(() => {
-      if (checkShouldPrompt(false)) {
-        if (isNativeAndroid()) {
-          requestInAppReviewNative();
-          localStorage.setItem(STORAGE_KEYS.REVIEW_DONE, 'true');
-        } else {
-          setIsOpen(true);
-        }
-      }
-    }, 12000);
-
     return () => {
       window.removeEventListener('miftah:trigger-review-prompt', handleTrigger);
-      clearTimeout(timer);
     };
   }, []);
 
@@ -165,76 +142,41 @@ export function InAppReviewPrompt() {
     triggerHaptic('selection');
   };
 
-  // User clicked "Rate on Google Play"
-  const handleRateOnPlayStore = () => {
-    triggerHaptic('success');
-    localStorage.setItem(STORAGE_KEYS.REVIEW_DONE, 'true');
-
-    // If on native Android app: trigger in-app review or direct Play Store intent
-    if (isNativeAndroid()) {
-      const nativeTriggered = requestInAppReviewNative();
-      if (!nativeTriggered) {
-        openPlayStorePageNative();
-      }
-    } else {
-      openPlayStorePageNative();
-    }
-
-    // Record review in Firestore as verified 5-star rating
-    submitLiveRating({
-      userName: user?.name || 'Verified App User',
-      userEmail: user?.email || '',
-      userId: user?.uid || '',
-      rating: 5,
-      toolName: 'Miftah Tools Mobile App',
-      toolSlug: 'android-app',
-      comment: 'Rated 5 stars on Google Play Store!',
-    }).catch(() => {});
-
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsOpen(false);
-    }, 2000);
-  };
-
-  // User clicked "Send Feedback" (for 1-3 stars)
-  const handleSubmitFeedback = async () => {
-    if (!feedbackText.trim()) return;
+  // Submit community rating (Web fallback only — native Android uses Google Play sheet)
+  const handleSubmitRating = async () => {
     setIsSubmitting(true);
     triggerHaptic('medium');
+    localStorage.setItem(STORAGE_KEYS.LAST_REQUESTED, Date.now().toString());
 
     try {
       await submitLiveRating({
-        userName: user?.name || 'Feedback User',
+        userName: user?.name || 'Community User',
         userEmail: user?.email || '',
         userId: user?.uid || '',
-        rating: rating || 3,
-        toolName: 'Miftah Tools User Feedback',
-        toolSlug: 'app-feedback',
-        comment: feedbackText.trim(),
+        rating: rating || 5,
+        toolName: 'Miftah Tools Web App',
+        toolSlug: 'miftah-app',
+        comment: feedbackText.trim() || `Rated ${rating} stars`,
       });
-      localStorage.setItem(STORAGE_KEYS.REVIEW_DONE, 'true');
       setIsSubmitted(true);
       setTimeout(() => {
         setIsOpen(false);
-      }, 2500);
+      }, 2000);
     } catch (e) {
-      console.warn('Feedback save note:', e);
-      localStorage.setItem(STORAGE_KEYS.REVIEW_DONE, 'true');
+      console.warn('Rating submission notice:', e);
       setIsSubmitted(true);
       setTimeout(() => {
         setIsOpen(false);
-      }, 2500);
+      }, 2000);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // User clicked "Maybe Later" (हटा दिया / बाद में)
+  // User clicked "Maybe Later" (snooze for 7 days)
   const handleSnooze = () => {
     triggerHaptic('selection');
-    // Snooze for 3 days (3 * 24 * 60 * 60 * 1000 ms)
-    const snoozeTime = Date.now() + 3 * 24 * 60 * 60 * 1000;
+    const snoozeTime = Date.now() + 7 * 24 * 60 * 60 * 1000;
     localStorage.setItem(STORAGE_KEYS.SNOOZE_UNTIL, snoozeTime.toString());
     setIsOpen(false);
   };
@@ -246,11 +188,7 @@ export function InAppReviewPrompt() {
     setIsOpen(false);
   };
 
-  // Close with top X button
-  const handleDismiss = () => {
-    handleSnooze();
-  };
-
+  // Native Android uses the Google Play In-App Review dialog directly; Web dialog only renders on web when triggered
   if (isNativeAndroid() || !isOpen) return null;
 
   return (
@@ -261,7 +199,7 @@ export function InAppReviewPrompt() {
       >
         {/* Close Button */}
         <button
-          onClick={handleDismiss}
+          onClick={handleSnooze}
           className="absolute top-4 right-4 rtl:right-auto rtl:left-4 p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           title="Close"
           aria-label="Close review dialog"
@@ -279,22 +217,20 @@ export function InAppReviewPrompt() {
           </div>
         ) : (
           <>
-            {/* Mascot / Icon Badge */}
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white shadow-lg shadow-brand-500/25 mx-auto">
               <Sparkles className="w-7 h-7" />
             </div>
 
-            {/* Header Text */}
             <div className="space-y-1">
               <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                {rating >= 4 ? loc.greatHeader : rating > 0 && rating <= 3 ? loc.improveHeader : loc.title}
+                {loc.title}
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                {rating >= 4 ? loc.greatDesc : rating > 0 && rating <= 3 ? loc.improveDesc : loc.subtitle}
+                {loc.subtitle}
               </p>
             </div>
 
-            {/* Interactive 5-Star Rating Buttons */}
+            {/* Interactive 1-5 Star Selection (No Gating, Free User Choice) */}
             <div className="flex items-center justify-center gap-2 py-1">
               {[1, 2, 3, 4, 5].map((star) => {
                 const isLit = (hoverRating || rating) >= star;
@@ -305,14 +241,14 @@ export function InAppReviewPrompt() {
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(0)}
                     onClick={() => handleSelectStar(star)}
-                    className="p-1 transition-transform hover:scale-125 active:scale-95 focus:outline-none"
+                    className="p-1.5 transition-transform hover:scale-125 active:scale-95 focus:outline-hidden"
                     aria-label={`Rate ${star} star`}
                   >
                     <Star
-                      className={`w-9 h-9 sm:w-10 sm:h-10 transition-colors ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 transition-colors ${
                         isLit
                           ? 'fill-amber-400 text-amber-400 drop-shadow-sm'
-                          : 'fill-slate-100 text-slate-300 dark:fill-slate-800 dark:text-slate-700'
+                          : 'text-slate-300 dark:text-slate-700'
                       }`}
                     />
                   </button>
@@ -320,56 +256,33 @@ export function InAppReviewPrompt() {
               })}
             </div>
 
-            {/* Conditional Branch Based on Selected Stars */}
-            {rating >= 4 ? (
-              /* Positive Review Branch (4-5 Stars) -> Google Play Store In-App Review / Direct Link */
-              <div className="space-y-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleRateOnPlayStore}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-brand-600/30 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>{loc.rateOnPlayStore}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSnooze}
-                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                >
-                  {loc.maybeLater}
-                </button>
-              </div>
-            ) : rating > 0 && rating <= 3 ? (
-              /* Constructive Feedback Branch (1-3 Stars) -> Direct in-app feedback to improve */
-              <div className="space-y-3 pt-1 text-left rtl:text-right">
-                <textarea
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder={loc.feedbackPlaceholder}
-                  rows={3}
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-                <button
-                  type="button"
-                  disabled={isSubmitting || !feedbackText.trim()}
-                  onClick={handleSubmitFeedback}
-                  className="w-full py-3 px-4 rounded-2xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-bold text-xs shadow-md flex items-center justify-center gap-2 transition-all"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{isSubmitting ? loc.sending : loc.sendFeedback}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSnooze}
-                  className="w-full py-2 text-center text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  {loc.maybeLater}
-                </button>
-              </div>
-            ) : (
-              /* Initial State (No star tapped yet) */
-              <div className="flex items-center justify-between pt-3 text-[11px] text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800">
+            {/* Optional Feedback Input */}
+            <div className="space-y-2 text-left rtl:text-right">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {loc.feedbackPrompt}
+              </p>
+              <textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                rows={3}
+                placeholder={loc.feedbackPlaceholder}
+                className="w-full p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500/40 resize-none transition-all"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 space-y-2">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleSubmitRating}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-brand-500/25 active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+                <span>{isSubmitting ? loc.submitting : loc.submitBtn}</span>
+              </button>
+
+              <div className="flex items-center justify-between text-xs text-slate-400 pt-2 px-1">
                 <button
                   type="button"
                   onClick={handleSnooze}
@@ -385,7 +298,7 @@ export function InAppReviewPrompt() {
                   {loc.dontAskAgain}
                 </button>
               </div>
-            )}
+            </div>
           </>
         )}
       </div>
@@ -394,16 +307,25 @@ export function InAppReviewPrompt() {
 }
 
 /**
- * Global trigger utility that any tool or download modal can invoke
+ * Meaningful Task Checkpoint:
+ * Called after a successful file conversion, compression, or download.
+ * Enforces action threshold and frequency cooldown before triggering the review prompt.
  */
 export function recordActionAndMaybePromptReview() {
   if (typeof window === 'undefined') return;
+
   const current = parseInt(localStorage.getItem(STORAGE_KEYS.COMPLETED_COUNT) || '0', 10);
   const next = current + 1;
   localStorage.setItem(STORAGE_KEYS.COMPLETED_COUNT, next.toString());
 
-  // Prompt on 2nd, 5th, 10th action, etc.
-  if (next === 2 || next === 5 || next % 10 === 0) {
+  // Check 14-day frequency cooldown
+  const lastRequested = parseInt(localStorage.getItem(STORAGE_KEYS.LAST_REQUESTED) || '0', 10);
+  if (Date.now() - lastRequested < MIN_COOLDOWN_MS) {
+    return;
+  }
+
+  // Trigger on meaningful milestones: 3rd successful tool run, 8th tool run, and every 15 thereafter
+  if (next === 3 || next === 8 || (next > 8 && next % 15 === 0)) {
     window.dispatchEvent(new CustomEvent('miftah:trigger-review-prompt'));
   }
 }

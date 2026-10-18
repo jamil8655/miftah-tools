@@ -14,8 +14,11 @@ import {
   ArrowRight,
   Code,
   Globe2,
+  Star,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
+import { openPlayStorePageNative } from '@/lib/native/android-bridge';
+import { triggerHaptic } from '@/lib/motion/motion-system';
 
 const ABOUT_LOCALES = {
   en: {
@@ -158,6 +161,17 @@ export default function AboutPage() {
               <Layers className="w-4 h-4 text-brand-600" />
               {loc.workflowsBtn}
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('success');
+                openPlayStorePageNative();
+              }}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-sm shadow-md shadow-amber-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <Star className="w-4 h-4 fill-current" />
+              <span>{language === 'ur' ? 'گوگل پلے پر ریویو دیں' : language === 'ar' ? 'تقييم على Google Play' : language === 'hi' ? 'Google Play पर रेटिंग दें' : 'Rate on Google Play'}</span>
+            </button>
           </div>
         </div>
 

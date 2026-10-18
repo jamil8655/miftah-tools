@@ -100,14 +100,20 @@ public class MainActivity extends BridgeActivity {
                             ReviewInfo reviewInfo = task.getResult();
                             Task<Void> flow = manager.launchReviewFlow(MainActivity.this, reviewInfo);
                             flow.addOnCompleteListener(flowTask -> {
-                                // Review flow finished successfully
+                                // The flow has finished. The Google Play API does not inform the app
+                                // whether the user reviewed, rated, or cancelled.
+                                // Under Google Play guidelines, we continue normal app workflow.
+                                android.util.Log.d("MiftahReview", "In-app review flow completed.");
                             });
                         } else {
-                            openPlayStoreReview();
+                            // Review flow request was unsuccessful or quota exceeded.
+                            // CRITICAL POLICY: Never redirect to Play Store when in-app review fails!
+                            Exception err = task.getException();
+                            android.util.Log.w("MiftahReview", "In-app review request unavailable: " + (err != null ? err.getMessage() : "unknown"));
                         }
                     });
                 } catch (Exception e) {
-                    openPlayStoreReview();
+                    android.util.Log.w("MiftahReview", "In-app review trigger exception: " + e.getMessage());
                 }
             });
         }
@@ -115,20 +121,35 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public void openPlayStoreReview() {
             runOnUiThread(() -> {
+                String packageName = getPackageName();
                 try {
-                    Uri uri = Uri.parse("market://details?id=" + getPackageName());
-                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                                    Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
-                                    Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-                    startActivity(intent);
+                    // 1. Direct intent targeting Google Play Store application
+                    Uri marketUri = Uri.parse("market://details?id=" + packageName);
+                    Intent marketIntent = new Intent(Intent.ACTION_VIEW, marketUri);
+                    marketIntent.setPackage("com.android.vending");
+                    marketIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                                         Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                                         Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                    startActivity(marketIntent);
                 } catch (Exception e) {
                     try {
-                        Intent webIntent = new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()));
-                        startActivity(webIntent);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                        // 2. Generic market URI intent for any app store
+                        Uri genericMarketUri = Uri.parse("market://details?id=" + packageName);
+                        Intent genericIntent = new Intent(Intent.ACTION_VIEW, genericMarketUri);
+                        genericIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
+                                              Intent.FLAG_ACTIVITY_NEW_DOCUMENT |
+                                              Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                        startActivity(genericIntent);
+                    } catch (Exception ex1) {
+                        try {
+                            // 3. Fallback to official HTTPS Play Store URL
+                            Intent webIntent = new Intent(Intent.ACTION_VIEW,
+                                Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
+                            webIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(webIntent);
+                        } catch (Exception ex2) {
+                            android.util.Log.e("MiftahReview", "Failed to open Play Store listing: " + ex2.getMessage());
+                        }
                     }
                 }
             });
