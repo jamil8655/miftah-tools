@@ -10,6 +10,7 @@ import { DownloadSuccessModal } from './DownloadSuccessModal';
 import { ToolOptionControls } from './ToolOptionControls';
 import { AddToHomeButton } from './AddToHomeButton';
 import { FavoriteButton } from './FavoriteButton';
+import { ToolActionHeader } from './ToolActionHeader';
 import { Play, Sparkles, HelpCircle } from 'lucide-react';
 import { downloadSingleFile, downloadAsZip, SavedFileInfo } from '@/lib/utils/download';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -270,6 +271,13 @@ export function ToolLayout({ tool, onProcess, customWorkspace }: ToolLayoutProps
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
           {localized.shortDesc}
         </p>
+        <ToolActionHeader
+          toolId={tool.id}
+          toolName={localized.name}
+          category={tool.category}
+          icon={tool.icon}
+          slug={tool.slug}
+        />
       </div>
 
       {/* Main Tool Card Container */}

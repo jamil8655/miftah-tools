@@ -1453,6 +1453,11 @@ function NativeAppHome() {
           </Link>
         </div>
       </section>
+
+      {/* Bottom In-Feed Ad Placement */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+        <AdSlot placement="in-feed" />
+      </section>
     </div>
   );
 }

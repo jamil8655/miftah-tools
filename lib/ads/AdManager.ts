@@ -257,6 +257,13 @@ export class AdManager {
   /**
    * 2. BOTTOM ADAPTIVE BANNER with Production Priority & Guaranteed Display
    */
+  public getBannerVisible(): boolean {
+    return this.isBannerVisible;
+  }
+
+  /**
+   * 2. BOTTOM ADAPTIVE BANNER with Production Priority & Guaranteed Display
+   */
   public async showAdaptiveBanner(): Promise<void> {
     if (!adConfig.enabled || this.isPremium || !this.isNativeEnvironment()) return;
 
@@ -265,8 +272,37 @@ export class AdManager {
     }
 
     try {
-      const { AdMob, BannerAdPosition, BannerAdSize } = await import('@capacitor-community/admob');
+      const { AdMob, BannerAdPosition, BannerAdSize, BannerAdPluginEvents } = await import('@capacitor-community/admob');
       const liveAdId = adConfig.admob.adaptiveBannerId || 'ca-app-pub-3660764533582226/7382282057';
+
+      // Automatic fallback listener if production banner has no fill / account in review
+      let fallbackAttempted = false;
+      const failHandler = await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, async (err: any) => {
+        console.warn('[AdMob] Live banner failed to load (inventory warm-up):', err);
+        if (!fallbackAttempted) {
+          fallbackAttempted = true;
+          try {
+            await AdMob.showBanner({
+              adId: adConfig.testAdmob.bannerId,
+              adSize: BannerAdSize.ADAPTIVE_BANNER,
+              position: BannerAdPosition.BOTTOM_CENTER,
+              margin: 0,
+              isTesting: true,
+            });
+            this.isBannerVisible = true;
+            console.log('[AdMob] Fallback test banner active successfully.');
+          } catch (fbErr) {
+            console.warn('[AdMob] Fallback banner notice:', fbErr);
+          }
+        }
+        failHandler.remove();
+      });
+
+      const loadHandler = await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+        console.log('[AdMob] Live Banner loaded successfully.');
+        failHandler.remove();
+        loadHandler.remove();
+      });
 
       try {
         await AdMob.showBanner({
@@ -279,17 +315,20 @@ export class AdManager {
         this.isBannerVisible = true;
       } catch (prodErr) {
         console.warn('[AdMob] Live banner request notice, loading fallback:', prodErr);
-        try {
-          await AdMob.showBanner({
-            adId: adConfig.testAdmob.bannerId,
-            adSize: BannerAdSize.ADAPTIVE_BANNER,
-            position: BannerAdPosition.BOTTOM_CENTER,
-            margin: 0,
-            isTesting: true,
-          });
-          this.isBannerVisible = true;
-        } catch (fallbackErr) {
-          console.error('[AdMob] Banner fallback error:', fallbackErr);
+        if (!fallbackAttempted) {
+          fallbackAttempted = true;
+          try {
+            await AdMob.showBanner({
+              adId: adConfig.testAdmob.bannerId,
+              adSize: BannerAdSize.ADAPTIVE_BANNER,
+              position: BannerAdPosition.BOTTOM_CENTER,
+              margin: 0,
+              isTesting: true,
+            });
+            this.isBannerVisible = true;
+          } catch (fallbackErr) {
+            console.error('[AdMob] Banner fallback error:', fallbackErr);
+          }
         }
       }
     } catch (e) {
@@ -327,25 +366,52 @@ export class AdManager {
 
     this.isInterstitialLoading = true;
     try {
-      const { AdMob } = await import('@capacitor-community/admob');
+      const { AdMob, InterstitialAdPluginEvents } = await import('@capacitor-community/admob');
       const liveAdId = adConfig.admob.interstitialId || 'ca-app-pub-3660764533582226/8769822246';
+
+      let fallbackPrepared = false;
+      const failHandler = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, async (err: any) => {
+        console.warn('[AdMob] Live Interstitial preload notice (warm-up):', err);
+        if (!fallbackPrepared) {
+          fallbackPrepared = true;
+          try {
+            await AdMob.prepareInterstitial({
+              adId: adConfig.testAdmob.interstitialId,
+              isTesting: true,
+            });
+            console.log('[AdMob] Fallback Interstitial prepared successfully.');
+          } catch (fbErr) {
+            console.warn('[AdMob] Fallback Interstitial notice:', fbErr);
+          }
+        }
+        failHandler.remove();
+      });
+
+      const loadHandler = await AdMob.addListener(InterstitialAdPluginEvents.Loaded, () => {
+        console.log('[AdMob] Live Interstitial preloaded successfully.');
+        failHandler.remove();
+        loadHandler.remove();
+      });
 
       try {
         await AdMob.prepareInterstitial({
           adId: liveAdId,
           isTesting: false,
         });
-        console.log('[AdMob] Production Interstitial preloaded successfully.');
+        console.log('[AdMob] Production Interstitial prepare requested.');
       } catch (prodErr) {
         console.warn('[AdMob] Production Interstitial preload notice, preparing fallback:', prodErr);
-        try {
-          await AdMob.prepareInterstitial({
-            adId: adConfig.testAdmob.interstitialId,
-            isTesting: true,
-          });
-          console.log('[AdMob] Fallback Interstitial preloaded successfully.');
-        } catch (fallbackErr) {
-          console.warn('[AdMob] Fallback Interstitial preload notice:', fallbackErr);
+        if (!fallbackPrepared) {
+          fallbackPrepared = true;
+          try {
+            await AdMob.prepareInterstitial({
+              adId: adConfig.testAdmob.interstitialId,
+              isTesting: true,
+            });
+            console.log('[AdMob] Fallback Interstitial preloaded successfully.');
+          } catch (fallbackErr) {
+            console.warn('[AdMob] Fallback Interstitial preload notice:', fallbackErr);
+          }
         }
       }
     } catch (e) {
@@ -357,8 +423,17 @@ export class AdManager {
 
   /**
    * 4. INTERSTITIAL AD — EXACT DOWNLOAD WORKFLOW INTEGRATION
+   * CRITICAL GUARANTEE: Never freezes or displays a white blank screen!
+   * Downloads are ALWAYS triggered immediately. Interstitials are displayed non-blockingly.
    */
   public async showInterstitialOnDownload(onDownloadAction: () => Promise<void> | void): Promise<void> {
+    // 1. Immediately trigger the download action so the user receives their file with ZERO delay
+    try {
+      await onDownloadAction();
+    } catch (err) {
+      console.error('[Download] Direct execution error:', err);
+    }
+
     const isEligible =
       adConfig.enabled &&
       !this.isPremium &&
@@ -368,46 +443,39 @@ export class AdManager {
       Date.now() - this.lastInterstitialTime >= adConfig.cooldowns.interstitialMs;
 
     if (!isEligible) {
-      // Immediate download execution without ad delay
-      await onDownloadAction();
       return;
     }
 
+    // 2. Non-blocking Interstitial display with watchdog timer
     try {
       const { AdMob, InterstitialAdPluginEvents } = await import('@capacitor-community/admob');
       this.isFullscreenShowing = true;
-      let downloadStarted = false;
 
-      const triggerDownloadOnce = async () => {
-        if (!downloadStarted) {
-          downloadStarted = true;
-          this.isFullscreenShowing = false;
-          try {
-            await onDownloadAction();
-          } catch (err) {
-            console.error('[Download] Execution error:', err);
-          }
-        }
-      };
+      // 3.5s watchdog so UI state never gets permanently stuck
+      const safetyWatchdog = setTimeout(() => {
+        this.isFullscreenShowing = false;
+      }, 3500);
 
-      // Set dismiss listener
       const dismissHandle = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
         this.lastInterstitialTime = Date.now();
-        triggerDownloadOnce();
+        this.isFullscreenShowing = false;
+        clearTimeout(safetyWatchdog);
+        dismissHandle.remove();
+        // Preload next interstitial in background
+        this.preloadInterstitial().catch(() => {});
+      });
+
+      const failedHandle = await AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, () => {
+        this.isFullscreenShowing = false;
+        clearTimeout(safetyWatchdog);
+        failedHandle.remove();
         dismissHandle.remove();
       });
 
-      // Show interstitial
-      try {
-        await AdMob.showInterstitial();
-      } catch (showErr) {
-        console.warn('[AdMob] Interstitial show notice, downloading directly:', showErr);
-        dismissHandle.remove();
-        await triggerDownloadOnce();
-      }
+      await AdMob.showInterstitial();
     } catch (e) {
-      console.warn('[AdMob] Interstitial trigger notice:', e);
-      await onDownloadAction();
+      this.isFullscreenShowing = false;
+      console.warn('[AdMob] Interstitial show notice:', e);
     }
   }
 

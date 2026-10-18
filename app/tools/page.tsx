@@ -237,6 +237,9 @@ function ToolsDirectory() {
         </div>
       )}
 
+      {/* Top Feed Ad Slot */}
+      <AdSlot placement="in-feed" className="my-2" />
+
       {/* Tools Cards Grid */}
       {filteredTools.length === 0 ? (
         <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">

@@ -3,6 +3,8 @@
 import React from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { AddToHomeButton } from '@/components/shared/AddToHomeButton';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { ToolActionHeader } from '@/components/shared/ToolActionHeader';
 import { CameraScannerStudio } from '@/components/camera/CameraScannerStudio';
 import { Camera, Zap, ShieldCheck, Lock, Layers } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
@@ -58,7 +60,12 @@ export default function CameraScannerPage() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <Breadcrumbs
         items={[{ label: 'Home', href: '/' }, { label: loc.title }]}
-        rightAction={<AddToHomeButton toolId="camera-scanner" toolName={loc.title} category="media" variant="pill" directNavigate={true} />}
+        rightAction={
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <FavoriteButton toolId="camera-scanner" />
+            <AddToHomeButton toolId="camera-scanner" toolName={loc.title} category="media" variant="pill" />
+          </div>
+        }
       />
 
       <div className="text-center space-y-3">
@@ -73,6 +80,7 @@ export default function CameraScannerPage() {
         <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
           {loc.desc}
         </p>
+        <ToolActionHeader toolId="camera-scanner" toolName={loc.title} category="media" slug="camera-scanner" />
       </div>
 
       <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl">

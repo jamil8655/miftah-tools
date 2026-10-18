@@ -15,9 +15,13 @@ export function StickyBottomAd() {
       const isSafe = adManager.isRouteAdSafe(pathname);
       if (isSafe) {
         const timer = setTimeout(() => {
-          adManager.showAdaptiveBanner().catch((e) => {
-            console.warn('[AdMob] Native Banner show skipped:', e);
-          });
+          if (adManager.getBannerVisible()) {
+            adManager.resumeBanner().catch(() => {});
+          } else {
+            adManager.showAdaptiveBanner().catch((e) => {
+              console.warn('[AdMob] Native Banner show skipped:', e);
+            });
+          }
         }, 300);
         return () => clearTimeout(timer);
       } else {

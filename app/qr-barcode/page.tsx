@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { AddToHomeButton } from '@/components/shared/AddToHomeButton';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { ToolActionHeader } from '@/components/shared/ToolActionHeader';
 import { QrGenerator } from '@/components/qr/QrGenerator';
 import { BarcodeStudio } from '@/components/qr/BarcodeStudio';
 import { QrCode, Barcode } from 'lucide-react';
@@ -53,7 +55,12 @@ export default function QrBarcodePage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-5">
       <Breadcrumbs
         items={[{ label: 'Utilities', href: '/tools' }, { label: loc.title }]}
-        rightAction={<AddToHomeButton toolId="qr-barcode" toolName={loc.title} category="qr" variant="pill" directNavigate={true} />}
+        rightAction={
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <FavoriteButton toolId="qr-barcode" />
+            <AddToHomeButton toolId="qr-barcode" toolName={loc.title} category="qr" variant="pill" />
+          </div>
+        }
       />
 
       <div className="text-center space-y-1">
@@ -64,6 +71,7 @@ export default function QrBarcodePage() {
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto line-clamp-1">
           {loc.desc}
         </p>
+        <ToolActionHeader toolId="qr-barcode" toolName={loc.title} category="qr" slug="qr-barcode" />
       </div>
 
       {/* Selector */}

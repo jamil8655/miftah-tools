@@ -3,6 +3,8 @@ import { Metadata } from 'next';
 import { LiveSpeechTranslator } from '@/components/translator/LiveSpeechTranslator';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { AddToHomeButton } from '@/components/shared/AddToHomeButton';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { ToolActionHeader } from '@/components/shared/ToolActionHeader';
 
 export const metadata: Metadata = {
   title: 'Live Speech Translator – Free Real-Time Voice Translation | Miftah Tools',
@@ -37,11 +39,19 @@ export const metadata: Metadata = {
 export default function LiveSpeechTranslatorPage() {
   return (
     <div className="w-full bg-[#FAFBFC] dark:bg-[#121820] min-h-screen py-4 sm:py-6">
-      <div className="max-w-6xl mx-auto px-4 mb-4">
+      <div className="max-w-6xl mx-auto px-4 mb-4 space-y-3">
         <Breadcrumbs
           items={[{ label: 'Home', href: '/' }, { label: 'Live Speech Translator' }]}
-          rightAction={<AddToHomeButton toolId="live-speech-translator" toolName="Live Speech Translator" category="media" variant="pill" directNavigate={true} />}
+          rightAction={
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <FavoriteButton toolId="live-speech-translator" />
+              <AddToHomeButton toolId="live-speech-translator" toolName="Live Speech Translator" category="media" variant="pill" />
+            </div>
+          }
         />
+        <div className="text-center space-y-1">
+          <ToolActionHeader toolId="live-speech-translator" toolName="Live Speech Translator" category="media" slug="live-speech-translator" />
+        </div>
       </div>
       <LiveSpeechTranslator />
     </div>

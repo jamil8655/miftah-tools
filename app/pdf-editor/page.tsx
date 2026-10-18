@@ -4,6 +4,8 @@ import React from 'react';
 import { VisualPdfEditor } from '@/components/pdf/VisualPdfEditor';
 import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { AddToHomeButton } from '@/components/shared/AddToHomeButton';
+import { FavoriteButton } from '@/components/shared/FavoriteButton';
+import { ToolActionHeader } from '@/components/shared/ToolActionHeader';
 import { Edit3, Sparkles } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 
@@ -38,7 +40,12 @@ export default function PdfEditorPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <Breadcrumbs
         items={[{ label: 'Home', href: '/' }, { label: loc.title }]}
-        rightAction={<AddToHomeButton toolId="pdf-editor" toolName={loc.title} category="pdf" variant="pill" directNavigate={true} />}
+        rightAction={
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <FavoriteButton toolId="pdf-editor" />
+            <AddToHomeButton toolId="pdf-editor" toolName={loc.title} category="pdf" variant="pill" />
+          </div>
+        }
       />
 
       <div className="text-center space-y-2">
@@ -53,6 +60,7 @@ export default function PdfEditorPage() {
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
           {loc.sub}
         </p>
+        <ToolActionHeader toolId="pdf-editor" toolName={loc.title} category="pdf" slug="pdf-editor" />
       </div>
 
       <div className="p-4 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">

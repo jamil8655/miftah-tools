@@ -19,7 +19,7 @@ export interface AddToHomeButtonProps {
   category?: string;
   icon?: string;
   className?: string;
-  variant?: 'icon' | 'pill' | 'button' | 'badge';
+  variant?: 'icon' | 'pill' | 'button' | 'badge' | 'banner';
   size?: 'sm' | 'md' | 'lg';
   directNavigate?: boolean;
   showLabel?: boolean;
@@ -185,15 +185,62 @@ export function AddToHomeButton({
 
   const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-5 h-5' : 'w-4 h-4';
 
-  // 1. Prominent Pill / Button Variant (for tool headers & workspace banners)
+  // 1. Banner Variant (Prominent full-width or card banner)
+  if (variant === 'banner') {
+    return (
+      <div
+        className={`relative overflow-hidden rounded-2xl border p-3 sm:p-4 transition-all duration-200 bg-gradient-to-r from-sky-500/10 via-indigo-500/10 to-blue-500/10 border-sky-500/25 dark:border-sky-500/30 ${className}`}
+      >
+        <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-sky-600/30">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <span>{loc.modalTitle}</span>
+                <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500 text-white uppercase tracking-wider">
+                  1-Tap
+                </span>
+              </p>
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                {loc.modalDesc(resolvedName)}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddToPhoneScreen}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-black text-xs text-white bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 active:scale-95 shadow-md shadow-sky-600/25 transition-all cursor-pointer select-none shrink-0"
+          >
+            {justAdded ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-300 stroke-[3]" />
+                <span>{loc.addedSuccess}</span>
+              </>
+            ) : (
+              <>
+                <Smartphone className="w-4 h-4" />
+                <span>{loc.btnTitle}</span>
+              </>
+            )}
+          </button>
+        </div>
+        {showWebModal && renderWebModal()}
+      </div>
+    );
+  }
+
+  // 2. Prominent Pill / Button Variant (for tool headers & breadcrumbs)
   if (variant === 'pill' || variant === 'button') {
     if (justAdded) {
       return (
         <div
-          className={`inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs transition-all duration-200 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 shadow-xs animate-in zoom-in-95 ${className}`}
+          className={`inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs transition-all duration-200 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 shadow-xs animate-in zoom-in-95 shrink-0 ${className}`}
         >
           <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
-          <span>{loc.addedSuccess}</span>
+          <span className="hidden sm:inline">{loc.addedSuccess}</span>
+          <span className="inline sm:hidden">{loc.btnShort}</span>
           <Smartphone className="w-3.5 h-3.5 opacity-80" />
         </div>
       );
@@ -206,13 +253,14 @@ export function AddToHomeButton({
           onClick={handleAddToPhoneScreen}
           title={loc.btnTitle}
           aria-label={loc.btnTitle}
-          className={`group/homebtn inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs transition-all duration-200 cursor-pointer active:scale-95 select-none bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 text-white shadow-sm hover:shadow-md shadow-sky-600/25 border border-sky-400/30 ${className}`}
+          className={`group/homebtn inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs transition-all duration-200 cursor-pointer active:scale-95 select-none bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 text-white shadow-sm hover:shadow-md shadow-sky-600/25 border border-sky-400/30 shrink-0 ${className}`}
         >
           <div className="relative flex items-center justify-center">
             <Smartphone className="w-3.5 h-3.5 shrink-0 group-hover/homebtn:scale-110 transition-transform" />
             <Plus className="w-2 h-2 absolute -top-1 -right-1 text-white stroke-[4]" />
           </div>
-          <span>{loc.btnTitle}</span>
+          <span className="hidden sm:inline">{loc.btnTitle}</span>
+          <span className="inline sm:hidden">{loc.btnShort}</span>
         </button>
 
         {showWebModal && renderWebModal()}
