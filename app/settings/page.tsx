@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { useTheme } from '@/components/layout/ThemeContext';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import {
-  Settings,
   Languages,
   Sun,
   Moon,
@@ -391,32 +389,7 @@ export default function SettingsPage() {
       dir={isRTL ? 'rtl' : 'ltr'}
       className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5 animate-in fade-in duration-300 pb-28"
     >
-      <div className="hidden sm:block">
-        <Breadcrumbs items={[{ label: loc.pageTitle }]} />
-      </div>
-
-      {/* 1. Header Card */}
-      <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-800">
-            <Settings className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-              {loc.pageTitle}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {loc.pageSubtitle}
-            </p>
-          </div>
-        </div>
-
-        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-mono font-bold">
-          {loc.versionBadge}
-        </span>
-      </div>
-
-      {/* 2. Appearance & Language */}
+      {/* 1. Appearance & Language */}
       <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
           <Languages className="w-4 h-4 text-brand-600" />
