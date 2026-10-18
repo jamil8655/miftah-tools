@@ -47,12 +47,12 @@ import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
 
 const TOP_FLAGSHIP_LANGS = [
-  { code: 'ur', label: 'اردو', nativeName: 'اردو', flag: '🇵🇰' },
-  { code: 'hi', label: 'हिन्दी', nativeName: 'हिन्दी', flag: '🇮🇳' },
-  { code: 'bn', label: 'বাংলা', nativeName: 'বাংলা', flag: '🇧🇩' },
-  { code: 'fa', label: 'فارسی', nativeName: 'فارسی', flag: '🇮🇷' },
-  { code: 'ar', label: 'العربية', nativeName: 'العربية', flag: '🇸🇦' },
   { code: 'en', label: 'English', nativeName: 'English', flag: '🇺🇸' },
+  { code: 'ur', label: 'Urdu', nativeName: 'اردو', flag: '🇵🇰' },
+  { code: 'hi', label: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'ar', label: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+  { code: 'bn', label: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩' },
+  { code: 'fa', label: 'Persian', nativeName: 'فارسی', flag: '🇮🇷' },
 ];
 
 const TRANSLATOR_LOCALES = {
@@ -1029,14 +1029,7 @@ export function LiveSpeechTranslator() {
 
             {/* Quick Flagship Chips for Target */}
             <div className="flex items-center flex-wrap gap-1 pt-1">
-              {[
-                { code: 'en', label: 'English', nativeName: 'English', flag: '🇺🇸' },
-                { code: 'ur', label: 'Urdu', nativeName: 'اردو', flag: '🇵🇰' },
-                { code: 'hi', label: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
-                { code: 'ar', label: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
-                { code: 'bn', label: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩' },
-                { code: 'fa', label: 'Persian', nativeName: 'فارسی', flag: '🇮🇷' },
-              ].map((fl) => {
+              {TOP_FLAGSHIP_LANGS.map((fl) => {
                 const isSelected = targetLang === fl.code;
                 return (
                   <button
