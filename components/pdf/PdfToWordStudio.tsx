@@ -135,7 +135,18 @@ export function PdfToWordStudio() {
       cleanArtifacts,
       preserveExactFontSize: preserveExactSizes,
       normalizeArabic,
-      language: directionMode === 'rtl' ? 'ara' : 'auto',
+      language:
+        directionMode === 'rtl'
+          ? language === 'ur'
+            ? 'urd'
+            : 'ara'
+          : directionMode === 'ltr'
+          ? 'eng'
+          : detectedRtl
+          ? language === 'ur'
+            ? 'urd'
+            : 'ara'
+          : 'auto',
     };
 
     try {

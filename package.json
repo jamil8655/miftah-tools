@@ -10,6 +10,7 @@
     "render-build": "npm install",
     "render-start": "node server/video-server.js",
     "lint": "next lint",
+    "test": "node scripts/test-pdf-engine.mjs",
     "zip": "tar -a -c -f C:/Users/jrahm/Desktop/miftahtools-live.zip -C out .",
     "deploy": "node scripts/deploy-hostinger.mjs",
     "deploy:all": "npm run build && npx cap sync android && node scripts/deploy-hostinger.mjs && git add -A && git commit -m \"chore: auto deploy update\" && git push origin main",
