@@ -30,6 +30,7 @@ import {
   X,
 } from 'lucide-react';
 import { triggerHaptic } from '@/lib/motion/motion-system';
+import { useIsNativeApp } from '@/lib/native/android-bridge';
 
 interface LiveRatingStudioProps {
   initialToolName?: string;
@@ -56,6 +57,14 @@ export function LiveRatingStudio({
   initialToolSlug,
   compact = false,
 }: LiveRatingStudioProps) {
+  const isNative = useIsNativeApp();
+
+  // On Native Android App: Google Play Store natively handles reviews & ratings.
+  // Custom website reviews form and community cards are completely hidden in the app.
+  if (isNative) {
+    return null;
+  }
+
   const { user, isAuthenticated } = useAuth();
 
   const [reviews, setReviews] = useState<RatingReview[]>([]);
