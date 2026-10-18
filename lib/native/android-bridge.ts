@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
-import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Share } from '@capacitor/share';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -43,13 +42,7 @@ export const initNativeAndroidBridge = (routerBack?: () => void) => {
     SplashScreen.hide();
   } catch (e) {}
 
-  // 2. Setup Status Bar
-  try {
-    StatusBar.setStyle({ style: Style.Dark });
-    StatusBar.setBackgroundColor({ color: '#020617' });
-  } catch (e) {}
-
-  // 3. Android Hardware Back Button Listener
+  // 2. Android Hardware Back Button Listener
   try {
     CapApp.addListener('backButton', ({ canGoBack }) => {
       if (typeof window !== 'undefined' && window.location.pathname === '/') {
@@ -66,22 +59,22 @@ export const initNativeAndroidBridge = (routerBack?: () => void) => {
 };
 
 /**
- * Update Android Status Bar to match Theme
+ * Update Status Bar Meta Theme Color to match Theme
  */
 export const syncAndroidStatusBarTheme = (theme: 'light' | 'dark' | 'system') => {
-  if (!Capacitor.isNativePlatform()) return;
-
   try {
     const isDark =
       theme === 'dark' ||
       (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-    StatusBar.setStyle({
-      style: isDark ? Style.Dark : Style.Light,
-    });
-    StatusBar.setBackgroundColor({
-      color: isDark ? '#020617' : '#FFFFFF',
-    });
+    const themeColor = isDark ? '#020617' : '#FFFFFF';
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'theme-color');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', themeColor);
   } catch (e) {}
 };
 

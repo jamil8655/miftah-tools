@@ -890,12 +890,17 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // Modern Android 15+ Edge-to-Edge with transparent system bars
-        EdgeToEdge.enable(
-            this,
-            SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
-            SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
-        );
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
+
+        // Explicitly handle window insets for Android 15+ compliance
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
+            );
+            return windowInsets;
+        });
+
         handleIncomingRoute(getIntent());
 
         createNotificationChannel();
