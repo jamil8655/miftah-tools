@@ -1588,7 +1588,7 @@ function WebAppHome() {
           {/* Clean Eyebrow Badge */}
           <div className="flex items-center justify-center">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 border border-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] text-[11px] sm:text-xs font-bold uppercase tracking-widest select-none shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-[#0B79B7] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[#0B79B7]" />
               <span>{loc.heroEyebrow}</span>
             </div>
           </div>
@@ -1804,7 +1804,7 @@ function WebAppHome() {
                       {loc.recentToolsHeading}
                     </h2>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0B79B7]/10 dark:bg-[#0B79B7]/20 text-[#0B79B7] dark:text-[#38a8f8] text-[10px] font-black border border-[#0B79B7]/20">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#0B79B7] animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0B79B7]" />
                       <span>{recentTools.length} active</span>
                     </span>
                   </div>
@@ -1874,7 +1874,7 @@ function WebAppHome() {
 
                     <div className="pt-2.5 mt-2.5 border-t border-[#E1E7EC]/60 dark:border-slate-700/60 flex items-center justify-between text-[10px] font-bold text-[#0B79B7] dark:text-[#38a8f8]">
                       <span className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         <span>Ready</span>
                       </span>
                       <span className="group-hover:translate-x-1 transition-transform flex items-center gap-0.5 font-bold">

@@ -141,7 +141,7 @@ export function HorizontalRecentToolsCarousel({ className = '' }: HorizontalRece
                 {/* Card Action / Indicator Footer */}
                 <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-400">
                   <span className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     <span>{loc.ready}</span>
                   </span>
 

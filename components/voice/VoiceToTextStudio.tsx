@@ -28,6 +28,8 @@ import {
   Zap,
   Wand2,
   ChevronDown,
+  Search,
+  X,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -45,24 +47,36 @@ import { autoCorrectSpokenText } from '@/lib/translator/auto-correct';
 import { SpeechRecognitionController, deduplicateSentenceStream } from '@/lib/translator/speech-recognition';
 
 export const TOP_FLAGSHIP_LANGS = [
-  { code: 'ur', label: 'اردو', flag: '🇵🇰' },
-  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
-  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
-  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'ur', label: 'Urdu', nativeName: 'اردو', flag: '🇵🇰' },
+  { code: 'hi', label: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'bn', label: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩' },
+  { code: 'fa', label: 'Persian', nativeName: 'فارسی', flag: '🇮🇷' },
+  { code: 'ar', label: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+  { code: 'en', label: 'English', nativeName: 'English', flag: '🇺🇸' },
 ];
 
-const LANGUAGES = [
-  { code: 'ur', label: 'Urdu', flag: '🇵🇰', bcp47: 'ur-IN' },
-  { code: 'hi', label: 'Hindi', flag: '🇮🇳', bcp47: 'hi-IN' },
-  { code: 'ar', label: 'Arabic', flag: '🇸🇦', bcp47: 'ar-SA' },
-  { code: 'en', label: 'English', flag: '🇺🇸', bcp47: 'en-US' },
-  { code: 'bn', label: 'Bengali', flag: '🇧🇩', bcp47: 'bn-BD' },
-  { code: 'fa', label: 'Persian', flag: '🇮🇷', bcp47: 'fa-IR' },
-  { code: 'tr', label: 'Turkish', flag: '🇹🇷', bcp47: 'tr-TR' },
-  { code: 'fr', label: 'French', flag: '🇫🇷', bcp47: 'fr-FR' },
-  { code: 'es', label: 'Spanish', flag: '🇪🇸', bcp47: 'es-ES' },
-  { code: 'de', label: 'German', flag: '🇩🇪', bcp47: 'de-DE' },
-  { code: 'pa', label: 'Punjabi', flag: '🇵🇰', bcp47: 'pa-PK' },
+export const LANGUAGES = [
+  { code: 'ur', label: 'Urdu', nativeName: 'اردو', flag: '🇵🇰', bcp47: 'ur-IN' },
+  { code: 'hi', label: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', bcp47: 'hi-IN' },
+  { code: 'bn', label: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩', bcp47: 'bn-BD' },
+  { code: 'fa', label: 'Persian', nativeName: 'فارسی', flag: '🇮🇷', bcp47: 'fa-IR' },
+  { code: 'ar', label: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', bcp47: 'ar-SA' },
+  { code: 'en', label: 'English', nativeName: 'English', flag: '🇺🇸', bcp47: 'en-US' },
+  { code: 'tr', label: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷', bcp47: 'tr-TR' },
+  { code: 'pa', label: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ / پنجابی', flag: '🇮🇳', bcp47: 'pa-IN' },
+  { code: 'fr', label: 'French', nativeName: 'Français', flag: '🇫🇷', bcp47: 'fr-FR' },
+  { code: 'es', label: 'Spanish', nativeName: 'Español', flag: '🇪🇸', bcp47: 'es-ES' },
+  { code: 'de', label: 'German', nativeName: 'Deutsch', flag: '🇩🇪', bcp47: 'de-DE' },
+  { code: 'id', label: 'Indonesian', nativeName: 'Bahasa Indonesia', flag: '🇮🇩', bcp47: 'id-ID' },
+  { code: 'ms', label: 'Malay', nativeName: 'Bahasa Melayu', flag: '🇲🇾', bcp47: 'ms-MY' },
+  { code: 'ta', label: 'Tamil', nativeName: 'தமிழ்', flag: '🇮🇳', bcp47: 'ta-IN' },
+  { code: 'te', label: 'Telugu', nativeName: 'తెలుగు', flag: '🇮🇳', bcp47: 'te-IN' },
+  { code: 'ru', label: 'Russian', nativeName: 'Русский', flag: '🇷🇺', bcp47: 'ru-RU' },
+  { code: 'zh', label: 'Chinese', nativeName: '中文', flag: '🇨🇳', bcp47: 'zh-CN' },
+  { code: 'ja', label: 'Japanese', nativeName: '日本語', flag: '🇯🇵', bcp47: 'ja-JP' },
+  { code: 'ko', label: 'Korean', nativeName: '한국어', flag: '🇰🇷', bcp47: 'ko-KR' },
+  { code: 'it', label: 'Italian', nativeName: 'Italiano', flag: '🇮🇹', bcp47: 'it-IT' },
+  { code: 'pt', label: 'Portuguese', nativeName: 'Português', flag: '🇧🇷', bcp47: 'pt-BR' },
 ];
 
 const LOCALES = {
@@ -224,24 +238,8 @@ export function VoiceToTextStudio() {
   const [activeTab, setActiveTab] = useState<'record' | 'upload'>('record');
   const [selectedLang, setSelectedLang] = useState<string>(currentLang === 'en' ? 'en' : currentLang === 'ar' ? 'ar' : currentLang === 'hi' ? 'hi' : 'ur');
   const [autoCorrectEnabled, setAutoCorrectEnabled] = useState<boolean>(true);
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState<boolean>(false);
-  const langDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
-        setIsLangMenuOpen(false);
-      }
-    };
-    if (isLangMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [isLangMenuOpen]);
+  const [isLangModalOpen, setIsLangModalOpen] = useState<boolean>(false);
+  const [langSearchQuery, setLangSearchQuery] = useState<string>('');
 
   // Recording states
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -734,7 +732,7 @@ export function VoiceToTextStudio() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/25 shrink-0">
-              <Mic className={`w-7 h-7 text-white ${isRecording ? 'animate-pulse' : ''}`} />
+              <Mic className="w-7 h-7 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -754,70 +752,71 @@ export function VoiceToTextStudio() {
 
         {/* Spoken Language Selector & Auto-Correct Bar */}
         <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
-          {/* Collapsible Spoken Language Picker */}
-          <div className="relative" ref={langDropdownRef}>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Languages className="w-4 h-4 text-brand-400" />
-                <span>{loc.langLabel}:</span>
+          {/* Active Spoken Language Button & Quick Pills */}
+          <div className="flex items-center flex-wrap gap-2">
+            <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <Languages className="w-4 h-4 text-brand-400" />
+              <span>{loc.langLabel}:</span>
+            </span>
+
+            {/* Active Language Main Selector Pill */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setIsLangModalOpen(true);
+              }}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 shadow-sm active:scale-95"
+              title="Click to view and choose from all supported languages"
+            >
+              <span className="text-base">{LANGUAGES.find(l => l.code === selectedLang)?.flag || '🌐'}</span>
+              <span className="font-bold text-white">
+                {LANGUAGES.find(l => l.code === selectedLang)?.label} ({LANGUAGES.find(l => l.code === selectedLang)?.nativeName})
               </span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {/* Quick Flagship Language Chips */}
+            <div className="flex items-center flex-wrap gap-1">
+              {TOP_FLAGSHIP_LANGS.map((lang) => {
+                const isSelected = selectedLang === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setSelectedLang(lang.code);
+                      if (isRecording && recognitionControllerRef.current) {
+                        recognitionControllerRef.current.setLanguage(getBcp47Lang(lang.code));
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-sm ring-1 ring-brand-400'
+                        : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60'
+                    }`}
+                  >
+                    <span>{lang.flag}</span>
+                    <span>{lang.nativeName || lang.label}</span>
+                  </button>
+                );
+              })}
 
               <button
                 type="button"
                 onClick={() => {
                   triggerHaptic('light');
-                  setIsLangMenuOpen(!isLangMenuOpen);
+                  setIsLangModalOpen(true);
                 }}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer bg-slate-800 hover:bg-slate-700/80 text-white border border-slate-700 shadow-sm active:scale-95"
+                className="px-2 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 border border-slate-700/40 cursor-pointer"
               >
-                <span className="text-base">{LANGUAGES.find(l => l.code === selectedLang)?.flag || '🌐'}</span>
-                <span className="font-semibold text-slate-100">{LANGUAGES.find(l => l.code === selectedLang)?.label || selectedLang}</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isLangMenuOpen ? 'rotate-180' : ''}`} />
+                + All
               </button>
             </div>
-
-            {/* Dropdown Menu */}
-            {isLangMenuOpen && (
-              <div className="absolute z-30 mt-2 left-0 sm:left-auto w-72 max-w-[90vw] p-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
-                <div className="text-[11px] font-semibold text-slate-400 px-2 py-1.5 border-b border-slate-800/80 mb-1 flex items-center justify-between">
-                  <span>زبان منتخب کریں (Select Language)</span>
-                  <span className="text-[10px] text-slate-500">{LANGUAGES.length} زبانیں دستیاب</span>
-                </div>
-                <div className="grid grid-cols-2 gap-1 max-h-60 overflow-y-auto p-0.5">
-                  {LANGUAGES.map((lang) => {
-                    const isSelected = selectedLang === lang.code;
-                    return (
-                      <button
-                        key={lang.code}
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('medium');
-                          setSelectedLang(lang.code);
-                          if (isRecording && recognitionControllerRef.current) {
-                            recognitionControllerRef.current.setLanguage(getBcp47Lang(lang.code));
-                          }
-                          setIsLangMenuOpen(false);
-                        }}
-                        className={`px-2.5 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-between gap-1.5 cursor-pointer text-left ${
-                          isSelected
-                            ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 font-bold'
-                            : 'hover:bg-slate-800/80 text-slate-200 hover:text-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 truncate">
-                          <span className="text-base">{lang.flag}</span>
-                          <span className="truncate">{lang.label}</span>
-                        </div>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Auto-Correct Toggle */}
+          {/* Auto-Correct Toggle (Clean Solid Dot, Zero Blinking) */}
           <button
             type="button"
             onClick={() => {
@@ -832,7 +831,7 @@ export function VoiceToTextStudio() {
           >
             <Wand2 className={`w-3.5 h-3.5 ${autoCorrectEnabled ? 'text-emerald-400' : 'text-slate-400'}`} />
             <span>{autoCorrectEnabled ? 'الفاظ کی خودکار درستگی: فعال' : 'خودکار درستگی: بند'}</span>
-            <span className={`w-2 h-2 rounded-full ${autoCorrectEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+            <span className={`w-2 h-2 rounded-full ${autoCorrectEnabled ? 'bg-emerald-400' : 'bg-slate-500'}`} />
           </button>
         </div>
       </div>
@@ -917,7 +916,7 @@ export function VoiceToTextStudio() {
 
             {/* Live Interim Speech Badge */}
             {isRecording && liveInterim && (
-              <div className="w-full max-w-lg px-4 py-2.5 rounded-2xl bg-brand-50/90 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-xs text-brand-700 dark:text-brand-300 flex items-center gap-2.5 animate-pulse font-semibold shadow-xs">
+              <div className="w-full max-w-lg px-4 py-2.5 rounded-2xl bg-brand-50/90 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-xs text-brand-700 dark:text-brand-300 flex items-center gap-2.5 font-semibold shadow-xs">
                 <Radio className="w-4 h-4 text-rose-500 shrink-0" />
                 <span className="truncate">{loc.liveInterimBadge} "{liveInterim}"</span>
               </div>
@@ -926,7 +925,7 @@ export function VoiceToTextStudio() {
             {/* Glowing Microphone Button & Timer */}
             <div className="flex flex-col items-center space-y-4">
               <div className="flex items-center gap-2 font-mono text-2xl sm:text-3xl font-black text-slate-800 dark:text-white">
-                <div className={`w-3.5 h-3.5 rounded-full ${isRecording ? 'bg-rose-500 animate-ping' : 'bg-slate-300'}`} />
+                <div className={`w-3.5 h-3.5 rounded-full ${isRecording ? 'bg-rose-500' : 'bg-slate-300'}`} />
                 <span>{formatSeconds(recordingSeconds)}</span>
               </div>
 
@@ -1142,6 +1141,144 @@ export function VoiceToTextStudio() {
           </div>
         )}
       </div>
+
+      {/* 4. Non-Clipped Global Viewport Language Selector Modal */}
+      {isLangModalOpen && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
+          onClick={() => setIsLangModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center shadow-md">
+                  <Languages className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-white">
+                    زبان منتخب کریں • Select Language
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    بولی جانے والی زبان کا انتخاب کریں (Choose Spoken Language)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLangModalOpen(false)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Search */}
+            <div className="pt-3 pb-2">
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={langSearchQuery}
+                  onChange={(e) => setLangSearchQuery(e.target.value)}
+                  placeholder="تلاش کریں / Search (Urdu, Hindi, Arabic, Bengali, Persian...)"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-brand-500"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Quick Flagship Bar */}
+            <div className="py-2 flex items-center flex-wrap gap-1.5 border-b border-slate-800/80">
+              <span className="text-[11px] font-bold text-slate-400 mr-1">بنیادی:</span>
+              {TOP_FLAGSHIP_LANGS.map((fl) => {
+                const isSelected = selectedLang === fl.code;
+                return (
+                  <button
+                    key={`quick-${fl.code}`}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('medium');
+                      setSelectedLang(fl.code);
+                      if (isRecording && recognitionControllerRef.current) {
+                        recognitionControllerRef.current.setLanguage(getBcp47Lang(fl.code));
+                      }
+                      setIsLangModalOpen(false);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                      isSelected
+                        ? 'bg-brand-600 text-white shadow-sm ring-1 ring-brand-400'
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                    }`}
+                  >
+                    <span>{fl.flag}</span>
+                    <span>{fl.nativeName || fl.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Scrollable Language List */}
+            <div className="flex-1 overflow-y-auto pr-1 mt-3 space-y-1.5 max-h-[50vh]">
+              {LANGUAGES.filter((l) => {
+                if (!langSearchQuery.trim()) return true;
+                const q = langSearchQuery.toLowerCase();
+                return (
+                  l.label.toLowerCase().includes(q) ||
+                  (l.nativeName && l.nativeName.toLowerCase().includes(q)) ||
+                  l.code.toLowerCase().includes(q)
+                );
+              }).map((lang) => {
+                const isSelected = selectedLang === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('medium');
+                      setSelectedLang(lang.code);
+                      if (isRecording && recognitionControllerRef.current) {
+                        recognitionControllerRef.current.setLanguage(getBcp47Lang(lang.code));
+                      }
+                      setIsLangModalOpen(false);
+                    }}
+                    className={`w-full p-3 rounded-2xl flex items-center justify-between transition-all cursor-pointer text-left border ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-brand-600/30 to-indigo-600/30 border-brand-500 text-white shadow-sm'
+                        : 'bg-slate-800/40 hover:bg-slate-800 border-slate-800 hover:border-slate-700 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{lang.flag}</span>
+                      <div>
+                        <div className="text-sm font-bold text-white flex items-center gap-2">
+                          <span>{lang.label}</span>
+                          <span className="text-xs text-brand-400 font-semibold">({lang.nativeName})</span>
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          Speech Code: {lang.bcp47}
+                        </div>
+                      </div>
+                    </div>
+
+                    {isSelected ? (
+                      <div className="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full border border-slate-700" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -813,7 +813,7 @@ export function BackgroundRemoverStudio() {
               </div>
 
               {isProcessing && (
-                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 animate-pulse">
+                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   <span>{loc.processing}</span>
                 </span>

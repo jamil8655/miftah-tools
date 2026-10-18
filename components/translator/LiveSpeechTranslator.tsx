@@ -31,6 +31,7 @@ import {
   Radio,
   Send,
   Wand2,
+  Search,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { triggerHaptic } from '@/lib/motion/motion-system';
@@ -46,10 +47,12 @@ import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
 
 const TOP_FLAGSHIP_LANGS = [
-  { code: 'ur', label: 'اردو', flag: '🇵🇰' },
-  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
-  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
-  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'ur', label: 'اردو', nativeName: 'اردو', flag: '🇵🇰' },
+  { code: 'hi', label: 'हिन्दी', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'bn', label: 'বাংলা', nativeName: 'বাংলা', flag: '🇧🇩' },
+  { code: 'fa', label: 'فارسی', nativeName: 'فارسی', flag: '🇮🇷' },
+  { code: 'ar', label: 'العربية', nativeName: 'العربية', flag: '🇸🇦' },
+  { code: 'en', label: 'English', nativeName: 'English', flag: '🇺🇸' },
 ];
 
 const TRANSLATOR_LOCALES = {
@@ -323,6 +326,8 @@ export function LiveSpeechTranslator() {
   const [manualText, setManualText] = useState<string>('');
   const [isManualTranslating, setIsManualTranslating] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [langModalMode, setLangModalMode] = useState<'source' | 'target' | null>(null);
+  const [langModalSearch, setLangModalSearch] = useState<string>('');
 
   const recognitionControllerRef = useRef<SpeechRecognitionController | null>(null);
   const timerIntervalRef = useRef<any>(null);
@@ -911,59 +916,70 @@ export function LiveSpeechTranslator() {
           ================================================== */}
       <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-[#E1E7EC] dark:border-slate-800 shadow-xs space-y-4">
         
-        {/* Flagship 4-Language Quick Selector Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E1E7EC]/60 dark:border-slate-800 pb-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-[#687587] dark:text-slate-400">
-            <Languages className="w-4 h-4 text-[#0B79B7]" />
-            <span>{loc.iSpeak}:</span>
-          </div>
-
-          <div className="flex items-center flex-wrap gap-1.5">
-            {TOP_FLAGSHIP_LANGS.map((fl) => {
-              const isSelected = sourceLang === fl.code;
-              return (
-                <button
-                  key={fl.code}
-                  type="button"
-                  onClick={() => handleQuickSelectSource(fl.code)}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                    isSelected
-                      ? 'bg-[#0B79B7] text-white shadow-xs ring-2 ring-[#0B79B7]/40'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                  }`}
-                >
-                  <span>{fl.flag}</span>
-                  <span>{fl.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Detailed Dual Dropdown Selector with Swap */}
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto,1fr] items-center gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr,auto,1fr] items-start gap-4">
           
           {/* Source Language Picker */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#687587] dark:text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
-              <span>{loc.iSpeak}:</span>
-              {sourceLangObj.isRTL && (
-                <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px]">RTL</span>
-              )}
-            </label>
-            <div className="relative">
-              <select
-                value={sourceLang}
-                onChange={(e) => handleQuickSelectSource(e.target.value)}
-                className="w-full h-12 px-4 rounded-2xl bg-[#F5F7F9] dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-sm font-bold text-[#182230] dark:text-white focus:outline-none focus:border-[#0B79B7] appearance-none cursor-pointer"
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-[#687587] dark:text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
+                <Languages className="w-3.5 h-3.5 text-[#0B79B7]" />
+                <span>{loc.iSpeak}:</span>
+                {sourceLangObj.isRTL && (
+                  <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px] font-bold">RTL</span>
+                )}
+              </label>
+            </div>
+
+            {/* Active Source Language Button */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setLangModalMode('source');
+              }}
+              className="w-full h-12 px-4 rounded-2xl bg-[#F5F7F9] dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-sm font-bold text-[#182230] dark:text-white flex items-center justify-between cursor-pointer hover:border-[#0B79B7] active:scale-[0.99] transition-all shadow-xs"
+              title="Click to change source language"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-xl">{sourceLangObj.flag}</span>
+                <span className="font-extrabold text-[#182230] dark:text-white truncate">
+                  {sourceLangObj.label} ({sourceLangObj.nativeName})
+                </span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-[#687587] shrink-0" />
+            </button>
+
+            {/* Quick Flagship Chips for Source */}
+            <div className="flex items-center flex-wrap gap-1 pt-1">
+              {TOP_FLAGSHIP_LANGS.map((fl) => {
+                const isSelected = sourceLang === fl.code;
+                return (
+                  <button
+                    key={`src-quick-${fl.code}`}
+                    type="button"
+                    onClick={() => handleQuickSelectSource(fl.code)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-[#0B79B7] text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>{fl.flag}</span>
+                    <span>{fl.nativeName || fl.label}</span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setLangModalMode('source');
+                }}
+                className="px-2 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 cursor-pointer"
               >
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <option key={`src-${lang.code}`} value={lang.code}>
-                    {lang.flag} {lang.label} ({lang.nativeName})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-[#687587] absolute right-4 rtl:right-auto rtl:left-4 top-4 pointer-events-none" />
+                + All
+              </button>
             </div>
           </div>
 
@@ -974,39 +990,242 @@ export function LiveSpeechTranslator() {
               onClick={handleSwapLanguages}
               className="w-12 h-12 rounded-2xl bg-[#0B79B7]/10 hover:bg-[#0B79B7] text-[#0B79B7] hover:text-white border border-[#0B79B7]/20 flex items-center justify-center transition-all duration-200 active:scale-95 shadow-xs cursor-pointer group"
               aria-label="Swap Languages"
+              title="Swap Languages (اُلٹیں)"
             >
               <ArrowLeftRight className="w-5 h-5 group-hover:rotate-180 transition-transform duration-300" />
             </button>
           </div>
 
           {/* Target Language Picker */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#687587] dark:text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
-              <span>{loc.translateTo}:</span>
-              {targetLangObj.isRTL && (
-                <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px]">RTL</span>
-              )}
-            </label>
-            <div className="relative">
-              <select
-                value={targetLang}
-                onChange={(e) => {
-                  setTargetLang(e.target.value);
-                  setLiveTranslatedText('');
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-[#687587] dark:text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
+                <Globe className="w-3.5 h-3.5 text-indigo-500" />
+                <span>{loc.translateTo}:</span>
+                {targetLangObj.isRTL && (
+                  <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[9px] font-bold">RTL</span>
+                )}
+              </label>
+            </div>
+
+            {/* Active Target Language Button */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                setLangModalMode('target');
+              }}
+              className="w-full h-12 px-4 rounded-2xl bg-[#F5F7F9] dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-sm font-bold text-[#182230] dark:text-white flex items-center justify-between cursor-pointer hover:border-indigo-500 active:scale-[0.99] transition-all shadow-xs"
+              title="Click to change target language"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-xl">{targetLangObj.flag}</span>
+                <span className="font-extrabold text-[#182230] dark:text-white truncate">
+                  {targetLangObj.label} ({targetLangObj.nativeName})
+                </span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-[#687587] shrink-0" />
+            </button>
+
+            {/* Quick Flagship Chips for Target */}
+            <div className="flex items-center flex-wrap gap-1 pt-1">
+              {[
+                { code: 'en', label: 'English', nativeName: 'English', flag: '🇺🇸' },
+                { code: 'ur', label: 'Urdu', nativeName: 'اردو', flag: '🇵🇰' },
+                { code: 'hi', label: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+                { code: 'ar', label: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
+                { code: 'bn', label: 'Bengali', nativeName: 'বাংলা', flag: '🇧🇩' },
+                { code: 'fa', label: 'Persian', nativeName: 'فارسی', flag: '🇮🇷' },
+              ].map((fl) => {
+                const isSelected = targetLang === fl.code;
+                return (
+                  <button
+                    key={`tgt-quick-${fl.code}`}
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('selection');
+                      setTargetLang(fl.code);
+                      setLiveTranslatedText('');
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>{fl.flag}</span>
+                    <span>{fl.nativeName || fl.label}</span>
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setLangModalMode('target');
                 }}
-                className="w-full h-12 px-4 rounded-2xl bg-[#F5F7F9] dark:bg-slate-800 border border-[#E1E7EC] dark:border-slate-700 text-sm font-bold text-[#182230] dark:text-white focus:outline-none focus:border-[#0B79B7] appearance-none cursor-pointer"
+                className="px-2 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 cursor-pointer"
               >
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <option key={`tgt-${lang.code}`} value={lang.code}>
-                    {lang.flag} {lang.label} ({lang.nativeName})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-[#687587] absolute right-4 rtl:right-auto rtl:left-4 top-4 pointer-events-none" />
+                + All
+              </button>
             </div>
           </div>
 
         </div>
+
+        {/* Global Viewport-Fixed Full Language Modal */}
+        {langModalMode && (
+          <div
+            className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200"
+            onClick={() => {
+              setLangModalMode(null);
+              setLangModalSearch('');
+            }}
+          >
+            <div
+              className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-3.5 border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0B79B7] to-indigo-600 text-white flex items-center justify-center shadow-md">
+                    <Languages className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-white">
+                      {langModalMode === 'source' ? 'میری بولنے کی زبان منتخب کریں' : 'ترجمہ کی زبان منتخب کریں'}
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      {langModalMode === 'source'
+                        ? 'Select Spoken Language (I speak)'
+                        : 'Select Target Translation Language (Translate to)'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLangModalMode(null);
+                    setLangModalSearch('');
+                  }}
+                  className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Search */}
+              <div className="pt-3 pb-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={langModalSearch}
+                    onChange={(e) => setLangModalSearch(e.target.value)}
+                    placeholder="تلاش کریں / Search language (Urdu, Hindi, Bengali, Persian, Arabic...)"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-[#0B79B7]"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {/* Quick Flagship Bar */}
+              <div className="py-2 flex items-center flex-wrap gap-1.5 border-b border-slate-800/80">
+                <span className="text-[11px] font-bold text-slate-400 mr-1">بنیادی:</span>
+                {TOP_FLAGSHIP_LANGS.map((fl) => {
+                  const currentActive = langModalMode === 'source' ? sourceLang : targetLang;
+                  const isSelected = currentActive === fl.code;
+                  return (
+                    <button
+                      key={`modal-quick-${fl.code}`}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('medium');
+                        if (langModalMode === 'source') {
+                          handleQuickSelectSource(fl.code);
+                        } else {
+                          setTargetLang(fl.code);
+                          setLiveTranslatedText('');
+                        }
+                        setLangModalMode(null);
+                        setLangModalSearch('');
+                      }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#0B79B7] text-white shadow-sm ring-1 ring-[#0B79B7]'
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                      }`}
+                    >
+                      <span>{fl.flag}</span>
+                      <span>{fl.nativeName || fl.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Scrollable Language List */}
+              <div className="flex-1 overflow-y-auto pr-1 mt-3 space-y-1.5 max-h-[50vh]">
+                {SUPPORTED_LANGUAGES.filter((l) => {
+                  if (!langModalSearch.trim()) return true;
+                  const q = langModalSearch.toLowerCase();
+                  return (
+                    l.label.toLowerCase().includes(q) ||
+                    (l.nativeName && l.nativeName.toLowerCase().includes(q)) ||
+                    l.code.toLowerCase().includes(q)
+                  );
+                }).map((lang) => {
+                  const currentActive = langModalMode === 'source' ? sourceLang : targetLang;
+                  const isSelected = currentActive === lang.code;
+                  return (
+                    <button
+                      key={`full-list-${lang.code}`}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('medium');
+                        if (langModalMode === 'source') {
+                          handleQuickSelectSource(lang.code);
+                        } else {
+                          setTargetLang(lang.code);
+                          setLiveTranslatedText('');
+                        }
+                        setLangModalMode(null);
+                        setLangModalSearch('');
+                      }}
+                      className={`w-full p-3 rounded-2xl flex items-center justify-between transition-all cursor-pointer text-left border ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-[#0B79B7]/30 to-indigo-600/30 border-[#0B79B7] text-white shadow-sm'
+                          : 'bg-slate-800/40 hover:bg-slate-800 border-slate-800 hover:border-slate-700 text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{lang.flag}</span>
+                        <div>
+                          <div className="text-sm font-bold text-white flex items-center gap-2">
+                            <span>{lang.label}</span>
+                            <span className="text-xs text-[#38a8f8] font-semibold">({lang.nativeName})</span>
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            Locale: {lang.bcp47} {lang.isRTL ? '• RTL' : ''}
+                          </div>
+                        </div>
+                      </div>
+
+                      {isSelected ? (
+                        <div className="w-6 h-6 rounded-full bg-[#0B79B7] text-white flex items-center justify-center">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full border border-slate-700" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Quick Mode & Feature Toggles Strip */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E1E7EC]/60 dark:border-slate-800">
@@ -1163,7 +1382,7 @@ export function LiveSpeechTranslator() {
 
         {/* Conversation Mode Speaker Indicator */}
         {settings.conversationMode && isListening && (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-black text-xs uppercase tracking-wider animate-pulse">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-black text-xs uppercase tracking-wider">
             <User className="w-3.5 h-3.5" />
             <span>
               {currentSpeaker === 'user' ? `${loc.personA} (${sourceLangObj.label})` : `${loc.personB} (${targetLangObj.label})`}
@@ -1180,7 +1399,6 @@ export function LiveSpeechTranslator() {
               className="group relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-tr from-[#0B79B7] to-[#075B8C] text-white flex flex-col items-center justify-center shadow-lg shadow-[#0B79B7]/30 hover:scale-105 active:scale-95 transition-all duration-300 select-none cursor-pointer"
               aria-label={loc.tapToSpeak}
             >
-              <div className="absolute inset-0 rounded-full bg-[#0B79B7] animate-ping opacity-20 pointer-events-none" />
               <Mic className="w-12 h-12 mb-1 group-hover:scale-110 transition-transform" />
               <span className="text-[11px] font-black uppercase tracking-wider">
                 {loc.tapToSpeak}
@@ -1188,8 +1406,8 @@ export function LiveSpeechTranslator() {
             </button>
           ) : (
             <div className="flex flex-col items-center space-y-4">
-              {/* Active Pulsing Mic Circle */}
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-rose-600 text-white flex flex-col items-center justify-center shadow-xl shadow-rose-600/30 animate-pulse">
+              {/* Active Steady Mic Circle */}
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-rose-600 text-white flex flex-col items-center justify-center shadow-xl shadow-rose-600/30">
                 <Mic className="w-12 h-12 mb-1" />
                 <span className="text-[10px] font-black uppercase tracking-wider">
                   {formattedTime}
@@ -1245,7 +1463,7 @@ export function LiveSpeechTranslator() {
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2 border-b border-[#E1E7EC]/60 dark:border-slate-700 pb-2">
                 <div className="flex items-center gap-1.5 text-xs font-black text-[#182230] dark:text-slate-200 uppercase tracking-wider">
-                  <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-rose-500 animate-ping' : 'bg-slate-400'}`} />
+                  <span className={`w-2 h-2 rounded-full ${isListening ? 'bg-rose-500' : 'bg-slate-400'}`} />
                   <span>{loc.liveSpokenTitle}</span>
                   <span className="text-[#687587] font-normal">({sourceLangObj.label})</span>
                 </div>

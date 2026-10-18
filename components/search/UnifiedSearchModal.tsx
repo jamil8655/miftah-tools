@@ -542,7 +542,7 @@ export function UnifiedSearchModal({
               onClick={startVoiceSearch}
               className={`p-2 rounded-xl transition-all ${
                 isListening
-                  ? 'bg-rose-600 text-white animate-pulse shadow-md'
+                  ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-400'
                   : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
               }`}
               title="Voice Search (Speak in Urdu, Arabic, Hindi, or English)"

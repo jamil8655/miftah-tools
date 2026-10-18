@@ -665,7 +665,7 @@ export function CameraScannerStudio() {
         <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-black text-emerald-400">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <span>{loc.liveNotice}</span>
             </div>
             <button
