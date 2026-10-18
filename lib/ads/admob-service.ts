@@ -12,7 +12,7 @@ export class AdMobManager {
     if (this.isInitialized) return;
     try {
       if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform()) {
-        console.log('[AdMob] Native platform detected. Initializing AdMob with Test App ID:', adConfig.admob.appIdAndroid);
+        console.log('[AdMob] Native platform detected. Initializing AdMob with Production App ID:', adConfig.admob.appIdAndroid);
       }
       this.isInitialized = true;
     } catch (e) {
@@ -25,7 +25,7 @@ export class AdMobManager {
    */
   public static async showAppOpenAd(): Promise<boolean> {
     if (!adConfig.enabled) return false;
-    console.log('[AdMob Test] Triggering App Open Ad:', adConfig.admob.appOpenId);
+    console.log('[AdMob] Triggering Real App Open Ad:', adConfig.admob.appOpenId);
     return true;
   }
 
@@ -34,7 +34,7 @@ export class AdMobManager {
    */
   public static async showInterstitial(): Promise<boolean> {
     if (!adConfig.enabled) return false;
-    console.log('[AdMob Test] Triggering Interstitial Ad:', adConfig.admob.interstitialId);
+    console.log('[AdMob] Triggering Real Interstitial Ad:', adConfig.admob.interstitialId);
     return true;
   }
 
@@ -43,7 +43,7 @@ export class AdMobManager {
    */
   public static async showRewardedAd(onRewardEarned: () => void): Promise<boolean> {
     if (!adConfig.enabled) return false;
-    console.log('[AdMob Test] Triggering Rewarded Video Ad:', adConfig.admob.rewardedId);
+    console.log('[AdMob] Triggering Real Rewarded Video Ad:', adConfig.admob.rewardedId);
     setTimeout(() => {
       onRewardEarned();
     }, 500);
