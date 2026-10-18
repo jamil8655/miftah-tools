@@ -22,11 +22,16 @@ import android.webkit.URLUtil;
 import android.webkit.WebView;
 import android.widget.Toast;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import androidx.activity.EdgeToEdge;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -52,6 +57,7 @@ public class MainActivity extends BridgeActivity {
 
     private static final String NOTIFICATION_CHANNEL_ID = "miftah_tools_notifications";
     private static final int RUNTIME_PERMISSIONS_REQ_CODE = 1001;
+    private String pendingRoute = null;
 
     public class AndroidDownloaderInterface {
         private final Context mContext;
@@ -126,6 +132,85 @@ public class MainActivity extends BridgeActivity {
                     }
                 }
             });
+        }
+
+        @JavascriptInterface
+        public String getInitialRoute() {
+            String route = pendingRoute;
+            pendingRoute = null; // consume once
+            return route != null ? route : "";
+        }
+
+        @JavascriptInterface
+        public boolean isHomeScreenShortcutSupported() {
+            try {
+                return ShortcutManagerCompat.isRequestPinShortcutSupported(mContext);
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public boolean createHomeScreenShortcut(String toolId, String toolName, String routeUrl, String iconBase64) {
+            try {
+                final String targetRoute = (routeUrl != null && !routeUrl.isEmpty()) ? routeUrl : "/";
+                final String safeTitle = (toolName != null && !toolName.isEmpty()) ? toolName : "Miftah Tool";
+                final String shortcutId = "tool_shortcut_" + ((toolId != null && !toolId.isEmpty()) ? toolId : "tool");
+
+                Intent shortcutIntent = new Intent(mContext, MainActivity.class);
+                shortcutIntent.setAction(Intent.ACTION_VIEW);
+                shortcutIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                shortcutIntent.putExtra("route", targetRoute);
+                if (toolId != null) {
+                    shortcutIntent.putExtra("toolId", toolId);
+                }
+
+                IconCompat iconCompat = null;
+                if (iconBase64 != null && !iconBase64.trim().isEmpty()) {
+                    try {
+                        String clean = iconBase64.contains(",") ? iconBase64.substring(iconBase64.indexOf(",") + 1) : iconBase64;
+                        byte[] decoded = Base64.decode(clean, Base64.DEFAULT);
+                        Bitmap bmp = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+                        if (bmp != null) {
+                            iconCompat = IconCompat.createWithBitmap(bmp);
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+
+                if (iconCompat == null) {
+                    iconCompat = IconCompat.createWithResource(mContext, R.mipmap.ic_launcher);
+                }
+
+                if (ShortcutManagerCompat.isRequestPinShortcutSupported(mContext)) {
+                    ShortcutInfoCompat pinShortcutInfo = new ShortcutInfoCompat.Builder(mContext, shortcutId)
+                        .setShortLabel(safeTitle)
+                        .setLongLabel(safeTitle)
+                        .setIcon(iconCompat)
+                        .setIntent(shortcutIntent)
+                        .build();
+
+                    boolean requested = ShortcutManagerCompat.requestPinShortcut(mContext, pinShortcutInfo, null);
+                    showToast(requested ? "Adding shortcut to home screen: " + safeTitle : "Shortcut created: " + safeTitle);
+                    return requested;
+                } else {
+                    // Legacy broadcast fallback for Android 7.1 and below
+                    Intent addIntent = new Intent("com.android.launcher.action.INSTALL_SHORTCUT");
+                    addIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
+                    addIntent.putExtra(Intent.EXTRA_SHORTCUT_NAME, safeTitle);
+                    addIntent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE,
+                        Intent.ShortcutIconResource.fromContext(mContext, R.mipmap.ic_launcher));
+                    addIntent.putExtra("duplicate", false);
+                    mContext.sendBroadcast(addIntent);
+                    showToast("Shortcut added to home screen: " + safeTitle);
+                    return true;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                showToast("Failed to create shortcut: " + e.getMessage());
+                return false;
+            }
         }
 
         @JavascriptInterface
@@ -747,10 +832,43 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    private void handleIncomingRoute(Intent intent) {
+        if (intent != null && intent.hasExtra("route")) {
+            String route = intent.getStringExtra("route");
+            if (route != null && !route.trim().isEmpty()) {
+                pendingRoute = route.trim();
+                navigateToRoute(pendingRoute);
+            }
+        }
+    }
+
+    private void navigateToRoute(String route) {
+        if (route == null || route.isEmpty()) return;
+        runOnUiThread(() -> {
+            try {
+                if (bridge != null && bridge.getWebView() != null) {
+                    String safeRoute = route.replace("\\", "\\\\").replace("'", "\\'");
+                    String js = "if (window.__onAndroidDeepLink) { window.__onAndroidDeepLink('" + safeRoute + "'); } else { window.location.href = '" + safeRoute + "'; }";
+                    bridge.getWebView().evaluateJavascript(js, null);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIncomingRoute(intent);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
+        handleIncomingRoute(getIntent());
 
         // Modern Android 15+ Edge-to-Edge Insets handling
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (view, windowInsets) -> {
@@ -768,6 +886,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onStart() {
         super.onStart();
+        if (pendingRoute != null) {
+            navigateToRoute(pendingRoute);
+        }
         if (this.bridge != null && this.bridge.getWebView() != null) {
             WebView webView = this.bridge.getWebView();
             webView.getSettings().setMediaPlaybackRequiresUserGesture(false);

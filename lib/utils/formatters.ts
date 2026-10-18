@@ -73,11 +73,38 @@ export async function getPdfJsLib(): Promise<any> {
   pdfjsPromise = (async () => {
     const setupWorker = (lib: any, workerUrl: string) => {
       try {
-        // In Android WebView and cross-origin environments, create a Blob URL to avoid SecurityError
-        const blob = new Blob([`importScripts("${workerUrl}");`], { type: 'application/javascript' });
-        lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+        if (!workerUrl) {
+          lib.GlobalWorkerOptions.workerSrc = '';
+          return;
+        }
+
+        // Convert relative path to absolute URL based on window.location
+        let absUrl = workerUrl;
+        if (
+          !workerUrl.startsWith('http://') &&
+          !workerUrl.startsWith('https://') &&
+          !workerUrl.startsWith('blob:') &&
+          typeof window !== 'undefined' &&
+          window.location
+        ) {
+          try {
+            absUrl = new URL(workerUrl, window.location.href).href;
+          } catch (_) {
+            absUrl = workerUrl;
+          }
+        }
+
+        if (absUrl.startsWith('http://') || absUrl.startsWith('https://')) {
+          try {
+            const blob = new Blob([`importScripts("${absUrl}");`], { type: 'application/javascript' });
+            lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(blob);
+            return;
+          } catch (_) {}
+        }
+
+        lib.GlobalWorkerOptions.workerSrc = absUrl;
       } catch (_) {
-        lib.GlobalWorkerOptions.workerSrc = workerUrl;
+        lib.GlobalWorkerOptions.workerSrc = '';
       }
     };
 

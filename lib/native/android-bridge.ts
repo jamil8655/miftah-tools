@@ -314,4 +314,79 @@ export const openPlayStorePageNative = (): void => {
   }
 };
 
+/**
+ * Create a real native Android Launcher Shortcut directly on the phone's Home Screen
+ */
+export const createNativeHomeScreenShortcut = async (
+  toolId: string,
+  toolName: string,
+  routeUrl: string,
+  iconBase64?: string
+): Promise<boolean> => {
+  if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.createHomeScreenShortcut) {
+    try {
+      const res = (window as any).AndroidDownloader.createHomeScreenShortcut(
+        toolId,
+        toolName,
+        routeUrl,
+        iconBase64 || ''
+      );
+      return !!res;
+    } catch (e) {
+      console.error('Error creating native home screen shortcut:', e);
+      return false;
+    }
+  }
+  return false;
+};
+
+/**
+ * Check if the launcher supports pinning home screen shortcuts
+ */
+export const isHomeScreenShortcutSupported = (): boolean => {
+  if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.isHomeScreenShortcutSupported) {
+    try {
+      return !!(window as any).AndroidDownloader.isHomeScreenShortcutSupported();
+    } catch (e) {
+      return false;
+    }
+  }
+  return false;
+};
+
+/**
+ * Retrieve any pending route passed from an Android Launcher Shortcut or Notification
+ */
+export const getNativeInitialRoute = (): string | null => {
+  if (typeof window !== 'undefined' && (window as any).AndroidDownloader?.getInitialRoute) {
+    try {
+      const route = (window as any).AndroidDownloader.getInitialRoute();
+      return route && route.trim().length > 0 ? route.trim() : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
+/**
+ * Register global deep-link listener for shortcuts tapped while app is running
+ */
+export const registerNativeDeepLinkHandler = (callback: (route: string) => void): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
+
+  (window as any).__onAndroidDeepLink = (route: string) => {
+    if (route && typeof callback === 'function') {
+      callback(route);
+    }
+  };
+
+  return () => {
+    if ((window as any).__onAndroidDeepLink) {
+      delete (window as any).__onAndroidDeepLink;
+    }
+  };
+};
+
+
 

@@ -102,196 +102,203 @@ export async function compressPdfAdvanced(
     if (pdfjsLib) {
       onProgress?.(12, 'Inspecting pages and embedded streams...');
 
-      const workerSafeData = getIsolatedBytes();
-      const loadingTask = pdfjsLib.getDocument({
-        data: workerSafeData,
-        useSystemFonts: true,
-        disableFontFace: false,
-      });
-
-      const pdfDoc = await loadingTask.promise;
-      pageCount = pdfDoc.numPages;
-
-      if (pageCount > 0) {
-        // Target budget calculation with smart internal safety buffer
-        const totalBudget = hasTargetKb
-          ? Math.min(originalSize * 0.96, safetyTargetBytes)
-          : originalSize * (level === 'extreme' ? 0.35 : level === 'medium' ? 0.55 : 0.75);
-
-        const perPageBudget = Math.max(100, Math.floor(totalBudget / pageCount));
-
-        // High-DPI baseline to guarantee 100% crisp, readable text
-        let baseScale = 1.65;
-        let baseQuality = 0.80;
-
-        if (perPageBudget < 3 * 1024) {
-          baseScale = 0.35;
-          baseQuality = 0.20;
-        } else if (perPageBudget < 8 * 1024) {
-          baseScale = 0.55;
-          baseQuality = 0.35;
-        } else if (perPageBudget < 20 * 1024) {
-          baseScale = 0.85;
-          baseQuality = 0.50;
-        } else if (perPageBudget < 40 * 1024) {
-          baseScale = 1.15;
-          baseQuality = 0.60;
-        } else if (perPageBudget < 80 * 1024) {
-          baseScale = 1.40;
-          baseQuality = 0.70;
-        } else if (perPageBudget < 160 * 1024) {
-          baseScale = 1.60;
-          baseQuality = 0.78;
-        } else if (perPageBudget < 350 * 1024) {
-          baseScale = 1.85;
-          baseQuality = 0.82;
-        } else {
-          baseScale = 2.00;
-          baseQuality = 0.88;
+      let pdfDoc: any = null;
+      try {
+        const loadingTask = pdfjsLib.getDocument({
+          data: getIsolatedBytes(),
+          useSystemFonts: true,
+          disableFontFace: false,
+        });
+        pdfDoc = await loadingTask.promise;
+      } catch (workerErr) {
+        console.warn('PDF.js worker failed, falling back to fake worker on main thread:', workerErr);
+        try {
+          if (pdfjsLib.GlobalWorkerOptions) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+          }
+          const fallbackTask = pdfjsLib.getDocument({
+            data: getIsolatedBytes(),
+            useSystemFonts: true,
+            disableFontFace: false,
+          });
+          pdfDoc = await fallbackTask.promise;
+        } catch (fakeErr) {
+          console.error('PDF.js main thread fallback failed:', fakeErr);
         }
+      }
 
-        if (options.quality && !hasTargetKb) {
-          baseQuality = Math.max(0.20, options.quality);
-          baseScale = options.scale || (options.quality < 0.4 ? 1.0 : options.quality < 0.7 ? 1.45 : 1.85);
-        }
+      if (pdfDoc) {
+        pageCount = pdfDoc.numPages;
 
-        onProgress?.(15, `Compressing ${pageCount} page(s) (Target: ${(targetBytes / 1024).toFixed(0)} KB)...`);
+        if (pageCount > 0) {
+          // Target budget calculation
+          const effectiveTargetBytes = hasTargetKb
+            ? targetBytes
+            : Math.round(originalSize * (level === 'extreme' ? 0.35 : level === 'medium' ? 0.55 : 0.75));
 
-        const isUltraLow = finalTargetKb !== undefined && finalTargetKb <= 35;
+          const perPageBudget = Math.max(100, Math.floor(effectiveTargetBytes / pageCount));
 
-        const renderPdfWithParams = async (scale: number, quality: number, forceGrayscale = false): Promise<Uint8Array> => {
-          const newPdf = await PDFDocument.create();
+          // Direct initial scale and quality calibrated to the target!
+          let baseScale = 1.35;
+          let baseQuality = 0.75;
 
-          for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
-            const pct = Math.round(15 + (pageNum / pageCount) * 75);
-            onProgress?.(pct, `Compressing page ${pageNum} of ${pageCount}...`);
+          if (perPageBudget < 6 * 1024) {
+            baseScale = 0.45;
+            baseQuality = 0.20;
+          } else if (perPageBudget < 15 * 1024) {
+            baseScale = 0.65;
+            baseQuality = 0.35;
+          } else if (perPageBudget < 35 * 1024) {
+            baseScale = 0.85;
+            baseQuality = 0.50;
+          } else if (perPageBudget < 80 * 1024) {
+            baseScale = 1.05;
+            baseQuality = 0.62;
+          } else if (perPageBudget < 200 * 1024) {
+            baseScale = 1.25;
+            baseQuality = 0.72;
+          } else if (perPageBudget < 500 * 1024) {
+            baseScale = 1.45;
+            baseQuality = 0.80;
+          } else {
+            baseScale = 1.65;
+            baseQuality = 0.85;
+          }
 
-            if (pageNum % 2 === 0 || pageCount > 8) {
-              await new Promise((resolve) => setTimeout(resolve, 5));
-            }
+          if (options.quality && !hasTargetKb) {
+            baseQuality = Math.max(0.20, options.quality);
+            baseScale = options.scale || (options.quality < 0.4 ? 0.90 : options.quality < 0.7 ? 1.25 : 1.60);
+          }
 
-            const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: Math.max(0.10, scale) });
+          onProgress?.(15, `Compressing ${pageCount} page(s) (Target: ${(effectiveTargetBytes / 1024).toFixed(0)} KB)...`);
 
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.max(16, Math.floor(viewport.width));
-            canvas.height = Math.max(16, Math.floor(viewport.height));
+          const isUltraLow = finalTargetKb !== undefined && finalTargetKb <= 35;
 
-            const ctx = canvas.getContext('2d', { alpha: false });
-            if (ctx) {
-              ctx.imageSmoothingEnabled = true;
-              ctx.imageSmoothingQuality = 'medium';
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
+          const renderPdfWithParams = async (scale: number, quality: number, forceGrayscale = false): Promise<Uint8Array> => {
+            const newPdf = await PDFDocument.create();
 
-              await page.render({
-                canvasContext: ctx,
-                viewport,
-              }).promise;
+            for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+              const pct = Math.round(15 + (pageNum / pageCount) * 75);
+              onProgress?.(pct, `Compressing page ${pageNum} of ${pageCount}...`);
 
-              if (forceGrayscale || (isUltraLow && perPageBudget < 10 * 1024)) {
-                try {
-                  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                  const d = imgData.data;
-                  for (let j = 0; j < d.length; j += 4) {
-                    const gray = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
-                    d[j] = gray;
-                    d[j + 1] = gray;
-                    d[j + 2] = gray;
+              if (pageNum % 2 === 0 || pageCount > 8) {
+                await new Promise((resolve) => setTimeout(resolve, 5));
+              }
+
+              const page = await pdfDoc.getPage(pageNum);
+              const viewport = page.getViewport({ scale: Math.max(0.10, scale) });
+
+              const canvas = document.createElement('canvas');
+              canvas.width = Math.max(16, Math.floor(viewport.width));
+              canvas.height = Math.max(16, Math.floor(viewport.height));
+
+              const ctx = canvas.getContext('2d', { alpha: false });
+              if (ctx) {
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'medium';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                await page.render({
+                  canvasContext: ctx,
+                  viewport,
+                }).promise;
+
+                if (forceGrayscale || (isUltraLow && perPageBudget < 10 * 1024)) {
+                  try {
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const d = imgData.data;
+                    for (let j = 0; j < d.length; j += 4) {
+                      const gray = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
+                      d[j] = gray;
+                      d[j + 1] = gray;
+                      d[j + 2] = gray;
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+                  } catch {
+                    // Ignore canvas read error
                   }
-                  ctx.putImageData(imgData, 0, 0);
-                } catch {
-                  // Ignore canvas read error if tainted
+                }
+
+                const clampedQuality = Math.max(0.05, Math.min(0.95, quality));
+
+                // 1. Try instant synchronous toDataURL (rock solid on Android WebView)
+                let imgBytes: Uint8Array | null = null;
+                try {
+                  const dataUrl = canvas.toDataURL('image/jpeg', clampedQuality);
+                  const b64 = dataUrl.split(',')[1];
+                  if (b64) {
+                    const bin = atob(b64);
+                    imgBytes = new Uint8Array(bin.length);
+                    for (let k = 0; k < bin.length; k++) {
+                      imgBytes[k] = bin.charCodeAt(k);
+                    }
+                  }
+                } catch (_) {}
+
+                // 2. Fallback to toBlob
+                if (!imgBytes) {
+                  const jpegBlob = await new Promise<Blob | null>((resolve) =>
+                    canvas.toBlob(resolve, 'image/jpeg', clampedQuality)
+                  );
+                  if (jpegBlob) {
+                    imgBytes = new Uint8Array(await jpegBlob.arrayBuffer());
+                  }
+                }
+
+                if (imgBytes) {
+                  const embeddedImg = await newPdf.embedJpg(imgBytes);
+                  const origViewport = page.getViewport({ scale: 1.0 });
+                  const pdfPage = newPdf.addPage([origViewport.width, origViewport.height]);
+
+                  pdfPage.drawImage(embeddedImg, {
+                    x: 0,
+                    y: 0,
+                    width: origViewport.width,
+                    height: origViewport.height,
+                  });
                 }
               }
 
-              const clampedQuality = Math.max(0.05, Math.min(0.95, quality));
-              const jpegBlob = await new Promise<Blob | null>((resolve) =>
-                canvas.toBlob(resolve, 'image/jpeg', clampedQuality)
-              );
-
-              if (jpegBlob) {
-                const bytes = new Uint8Array(await jpegBlob.arrayBuffer());
-                const embeddedImg = await newPdf.embedJpg(bytes);
-                const origViewport = page.getViewport({ scale: 1.0 });
-                const pdfPage = newPdf.addPage([origViewport.width, origViewport.height]);
-
-                pdfPage.drawImage(embeddedImg, {
-                  x: 0,
-                  y: 0,
-                  width: origViewport.width,
-                  height: origViewport.height,
-                });
-              }
+              canvas.width = 0;
+              canvas.height = 0;
             }
 
-            canvas.width = 0;
-            canvas.height = 0;
-          }
+            newPdf.setProducer('Miftah Precision Engine');
+            newPdf.setCreator('Miftah Tools');
 
-          newPdf.setProducer('Miftah Precision Engine');
-          newPdf.setCreator('Miftah Tools');
+            return await newPdf.save({
+              useObjectStreams: true,
+              addDefaultPage: false,
+              objectsPerTick: 50,
+            });
+          };
 
-          return await newPdf.save({
-            useObjectStreams: true,
-            addDefaultPage: false,
-            objectsPerTick: 50,
-          });
-        };
+          let currentScale = baseScale;
+          let currentQuality = baseQuality;
 
-        let currentScale = baseScale;
-        let currentQuality = baseQuality;
-        let bestCandidateUnderTarget: Uint8Array | null = null;
+          rasterBytes = await renderPdfWithParams(currentScale, currentQuality, isUltraLow);
 
-        rasterBytes = await renderPdfWithParams(currentScale, currentQuality, isUltraLow);
-        if (rasterBytes.byteLength <= targetBytes) {
-          bestCandidateUnderTarget = rasterBytes;
-        }
-
-        // Fast adaptive calibration (up to 4 passes max)
-        if (hasTargetKb && (!bestCandidateUnderTarget || rasterBytes.byteLength > targetBytes)) {
-          for (let pass = 0; pass < 4; pass++) {
-            const areaScaleFactor = Math.sqrt(safetyTargetBytes / rasterBytes.byteLength);
-
-            currentScale = Math.max(0.15, Math.min(baseScale, currentScale * Math.min(0.90, areaScaleFactor * 0.94)));
-            currentQuality = Math.max(0.08, Math.min(baseQuality, currentQuality * Math.min(0.90, areaScaleFactor * 0.92)));
+          // Adaptive fine-tuning if over the target:
+          let passes = 0;
+          while (passes < 5 && rasterBytes && rasterBytes.byteLength > effectiveTargetBytes) {
+            passes++;
+            const ratio = effectiveTargetBytes / rasterBytes.byteLength;
+            currentScale = Math.max(0.12, currentScale * Math.min(0.85, Math.sqrt(ratio)));
+            currentQuality = Math.max(0.06, currentQuality * Math.min(0.85, ratio));
 
             onProgress?.(
-              Math.min(98, 70 + (pass + 1) * 7),
-              `Optimizing size (${(rasterBytes.byteLength / 1024).toFixed(0)} KB ➔ Target ${(targetBytes / 1024).toFixed(0)} KB)...`
+              Math.min(98, 70 + passes * 6),
+              `Fine-tuning compression (${(rasterBytes.byteLength / 1024).toFixed(0)} KB ➔ Target ${(effectiveTargetBytes / 1024).toFixed(0)} KB)...`
             );
 
-            const nextBytes = await renderPdfWithParams(currentScale, currentQuality, isUltraLow || pass >= 1);
-            if (nextBytes.byteLength < rasterBytes.byteLength) {
+            const nextBytes = await renderPdfWithParams(currentScale, currentQuality, isUltraLow || passes >= 2);
+            if (nextBytes && nextBytes.byteLength < rasterBytes.byteLength) {
               rasterBytes = nextBytes;
             }
-
-            if (nextBytes.byteLength <= targetBytes) {
-              bestCandidateUnderTarget = nextBytes;
+            if (nextBytes && nextBytes.byteLength <= effectiveTargetBytes) {
               break;
             }
-          }
-
-          // Emergency downscale: if still above targetBytes, push downscale further
-          if (!bestCandidateUnderTarget || bestCandidateUnderTarget.byteLength > targetBytes) {
-            let forcedScale = Math.min(0.35, Math.sqrt(safetyTargetBytes / (originalSize || safetyTargetBytes * 2)) * 0.80);
-            let forcedQuality = 0.18;
-            for (let emergency = 0; emergency < 4; emergency++) {
-              const forcedBytes = await renderPdfWithParams(Math.max(0.10, forcedScale), Math.max(0.05, forcedQuality), true);
-              if (forcedBytes.byteLength < rasterBytes.byteLength) {
-                rasterBytes = forcedBytes;
-              }
-              if (forcedBytes.byteLength <= targetBytes) {
-                bestCandidateUnderTarget = forcedBytes;
-                break;
-              }
-              forcedScale *= 0.70;
-              forcedQuality *= 0.70;
-            }
-          }
-
-          if (bestCandidateUnderTarget && bestCandidateUnderTarget.byteLength <= targetBytes) {
-            rasterBytes = bestCandidateUnderTarget;
           }
         }
       }

@@ -1,13 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Pin, Check, ArrowRight, Home, Sparkles, X } from 'lucide-react';
-import { useUserStore } from '@/lib/user/user-store';
+import { Smartphone, Check, ExternalLink, Copy, X, Sparkles, Plus, Share2 } from 'lucide-react';
 import { TOOLS_LIST } from '@/lib/tools-config';
 import { triggerHaptic } from '@/lib/motion/motion-system';
 import { useI18n } from '@/lib/i18n/i18n-context';
 import { getLocalizedTool } from '@/lib/i18n/catalog-translations';
+import {
+  isNativeAndroid,
+  createNativeHomeScreenShortcut,
+  showNativeNotification,
+} from '@/lib/native/android-bridge';
+import { generateToolShortcutIcon } from '@/lib/utils/shortcut-icon';
 
 export interface AddToHomeButtonProps {
   toolId: string;
@@ -17,42 +21,66 @@ export interface AddToHomeButtonProps {
   className?: string;
   variant?: 'icon' | 'pill' | 'button' | 'badge';
   size?: 'sm' | 'md' | 'lg';
-  directNavigate?: boolean; // When true, immediately navigates to Home Page
+  directNavigate?: boolean;
   showLabel?: boolean;
 }
 
 const LOCALES = {
   en: {
-    addToHome: 'Add to Home Page',
-    pinnedToHome: 'Pinned to Home',
-    goToHome: 'View on Home Page',
-    unpin: 'Remove from Home',
-    addedToast: 'Added to Home Page!',
-    viewNow: 'View on Home →',
+    btnTitle: 'Add to Phone Screen',
+    btnShort: 'Phone Screen',
+    addedSuccess: 'Added to Phone Screen!',
+    toastSuccess: 'Shortcut added to your mobile home screen! You can now launch this tool directly from your phone.',
+    modalTitle: 'Add Shortcut to Phone Screen',
+    modalDesc: (name: string) =>
+      `Access ${name} directly from your phone's desktop or home screen with 1 tap.`,
+    androidStep: '1. In Chrome, tap ⋮ (Top Right Menu) and select "Add to Home screen"',
+    iosStep: '2. In Safari, tap the Share button ⎋ and select "Add to Home Screen"',
+    copyLink: 'Copy Tool Direct Link',
+    copied: 'Link Copied!',
+    close: 'Close',
   },
   ur: {
-    addToHome: 'ہوم پیج پر شامل کریں',
-    pinnedToHome: 'ہوم پیج پر پن ہے',
-    goToHome: 'ہوم پیج پر دیکھیں',
-    unpin: 'ہوم پیج سے ہٹائیں',
-    addedToast: 'ہوم پیج پر شامل کر دیا گیا!',
-    viewNow: 'ہوم پیج پر دیکھیں ←',
+    btnTitle: 'موبائل اسکرین پر شامل کریں',
+    btnShort: 'موبائل اسکرین',
+    addedSuccess: 'فون اسکرین پر شامل ہو گیا!',
+    toastSuccess: 'شارٹ کٹ آپ کے موبائل کی ہوم اسکرین پر شامل کر دیا گیا ہے! اب آپ اسے براہ راست اپنے فون کی اسکرین سے کھول سکتے ہیں۔',
+    modalTitle: 'موبائل ہوم اسکرین پر شارٹ کٹ بنائیں',
+    modalDesc: (name: string) =>
+      `اب آپ ${name} کو براہ راست اپنے موبائل کے ڈیسک ٹاپ سے ایک کلک میں کھول سکتے ہیں۔`,
+    androidStep: '1. کروم میں اوپر تین نقطوں (⋮) پر کلک کر کے "Add to Home screen" پر کلک کریں۔',
+    iosStep: '2. سفاری میں شیئر بٹن ⎋ پر کلک کر کے "Add to Home Screen" منتخب کریں۔',
+    copyLink: 'ٹول کا براہ راست لنک کاپی کریں',
+    copied: 'لنک کاپی ہو گیا!',
+    close: 'بند کریں',
   },
   ar: {
-    addToHome: 'إضافة إلى الصفحة الرئيسية',
-    pinnedToHome: 'مثبت في الرئيسية',
-    goToHome: 'عرض في الرئيسية',
-    unpin: 'إزالة من الرئيسية',
-    addedToast: 'تمت الإضافة إلى الرئيسية!',
-    viewNow: 'عرض في الرئيسية ←',
+    btnTitle: 'إضافة لشاشة الهاتف',
+    btnShort: 'شاشة الهاتف',
+    addedSuccess: 'تمت الإضافة لشاشة الهاتف!',
+    toastSuccess: 'تمت إضافة اختصار التطبيق إلى شاشة هاتفك الرئيسية! يمكنك الآن فتح هذه الأداة بضغطة واحدة من الشاشة مباشرة.',
+    modalTitle: 'إضافة اختصار لشاشة الهاتف الرئيسية',
+    modalDesc: (name: string) =>
+      `افتح ${name} مباشرة من شاشة هاتفك الرئيسية بضغطة واحدة.`,
+    androidStep: '1. في كروم، اضغط على القائمة (⋮) ثم اختر "إضافة إلى الشاشة الرئيسية"',
+    iosStep: '2. في سفاري، اضغط على زر المشاركة ⎋ ثم اختر "إضافة إلى الشاشة الرئيسية"',
+    copyLink: 'نسخ رابط الأداة المباشر',
+    copied: 'تم النسخ!',
+    close: 'إغلاق',
   },
   hi: {
-    addToHome: 'होम पेज पर जोड़ें',
-    pinnedToHome: 'होम पेज पर पिन है',
-    goToHome: 'होम पेज पर देखें',
-    unpin: 'होम पेज से हटाएं',
-    addedToast: 'होम पेज पर जोड़ दिया गया!',
-    viewNow: 'होम पेज पर देखें →',
+    btnTitle: 'फ़ोन स्क्रीन पर जोड़ें',
+    btnShort: 'फ़ोन स्क्रीन',
+    addedSuccess: 'फ़ोन स्क्रीन पर जुड़ गया!',
+    toastSuccess: 'शॉर्टकट आपके मोबाइल की होम स्क्रीन पर जोड़ दिया गया है! अब आप सीधे मोबाइल स्क्रीन से इसे खोल सकते हैं।',
+    modalTitle: 'फ़ोन की होम स्क्रीन पर शॉर्टकट बनाएं',
+    modalDesc: (name: string) =>
+      `${name} को अपने मोबाइल के डेस्कटॉप / होम स्क्रीन पर जोड़ें ताकि सीधे 1-क्लिक में खुल सके।`,
+    androidStep: '1. Chrome ब्राउज़र में ऊपर 3 डॉट्स (⋮) दबाएं और "Add to Home screen" चुनें।',
+    iosStep: '2. Safari में शेयर बटन ⎋ दबाएं और "Add to Home Screen" चुनें।',
+    copyLink: 'टूल का डायरेक्ट लिंक कॉपी करें',
+    copied: 'लिंक कॉपी हो गया!',
+    close: 'बंद करें',
   },
 };
 
@@ -60,17 +88,14 @@ export function AddToHomeButton({
   toolId,
   toolName,
   category,
-  icon,
   className = '',
-  variant = 'icon',
+  variant = 'pill',
   size = 'md',
-  directNavigate = false,
-  showLabel = false,
 }: AddToHomeButtonProps) {
-  const router = useRouter();
-  const { language, isRTL } = useI18n();
-  const { isToolPinned, togglePinTool, isFavorite, toggleFavorite } = useUserStore();
-  const [justPinned, setJustPinned] = useState(false);
+  const { language } = useI18n();
+  const [justAdded, setJustAdded] = useState(false);
+  const [showWebModal, setShowWebModal] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const loc = LOCALES[language as keyof typeof LOCALES] || LOCALES.en;
 
@@ -79,161 +104,217 @@ export function AddToHomeButton({
   const localized = tool ? getLocalizedTool(tool, language) : null;
   const resolvedName = toolName || localized?.name || tool?.name || toolId;
   const resolvedCategory = category || tool?.category || 'utility';
-  const resolvedIcon = icon || tool?.icon || 'tool';
+  const targetRoute = `/tools/${tool?.slug || toolId}`;
 
-  // Check if pinned either via pinnedTools or favorites
-  const pinned = isToolPinned(toolId) || isFavorite(toolId);
-
-  const handleAction = (e: React.MouseEvent) => {
+  const handleAddToPhoneScreen = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    triggerHaptic(pinned ? 'light' : 'success');
+    triggerHaptic('success');
 
-    // If already pinned and clicked on a prominent button, navigate directly to home
-    if (pinned && (variant === 'pill' || variant === 'button')) {
+    // 1. Android Native App Environment
+    if (isNativeAndroid()) {
       try {
-        sessionStorage.setItem('miftah_last_pinned_tool', toolId);
-        sessionStorage.setItem('miftah_last_clicked_tool', toolId);
-      } catch (_) {}
-      router.push(`/?pinned=${encodeURIComponent(toolId)}#pinned-tools`);
-      return;
-    }
-
-    // Toggle Pin in store
-    togglePinTool(toolId);
-    toggleFavorite({
-      id: toolId,
-      type: 'tool',
-      title: resolvedName,
-      category: resolvedCategory,
-      url: `/tools/${tool?.slug || toolId}`,
-      iconName: resolvedIcon,
-    });
-
-    if (!pinned) {
-      // Just added to home page!
-      setJustPinned(true);
-      setTimeout(() => setJustPinned(false), 3000);
-
-      try {
-        sessionStorage.setItem('miftah_last_pinned_tool', toolId);
-        sessionStorage.setItem('miftah_last_clicked_tool', toolId);
-      } catch (_) {}
-
-      // Dispatch global event for animated toast notification
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('miftah:tool-pinned', {
-            detail: {
-              toolId,
-              toolName: resolvedName,
-              url: `/tools/${tool?.slug || toolId}`,
-            },
-          })
+        const iconBase64 = generateToolShortcutIcon(toolId, resolvedName, resolvedCategory);
+        const success = await createNativeHomeScreenShortcut(
+          toolId,
+          resolvedName,
+          targetRoute,
+          iconBase64
         );
-      }
 
-      // If directNavigate is enabled (e.g. from tool header button), jump straight to Home Page!
-      if (directNavigate) {
-        setTimeout(() => {
-          router.push(`/?pinned=${encodeURIComponent(toolId)}#pinned-tools`);
-        }, 150);
+        if (success) {
+          setJustAdded(true);
+          setTimeout(() => setJustAdded(false), 3500);
+
+          // Dispatch visual notification
+          showNativeNotification(
+            'Miftah Tools',
+            `${resolvedName}: ${loc.toastSuccess}`,
+            targetRoute
+          );
+
+          // Trigger custom event for in-app toast
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('miftah:tool-pinned', {
+                detail: {
+                  toolId,
+                  toolName: resolvedName,
+                  url: targetRoute,
+                  message: loc.toastSuccess,
+                },
+              })
+            );
+          }
+          return;
+        }
+      } catch (err) {
+        console.error('Error invoking native shortcut:', err);
       }
+    }
+
+    // 2. Web / Browser Environment: Try PWA beforeinstallprompt or show helpful modal
+    if (typeof window !== 'undefined' && (window as any).deferredPrompt) {
+      try {
+        const promptEvent = (window as any).deferredPrompt;
+        promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (choice.outcome === 'accepted') {
+          (window as any).deferredPrompt = null;
+          setJustAdded(true);
+          setTimeout(() => setJustAdded(false), 3500);
+          return;
+        }
+      } catch (err) {}
+    }
+
+    // Show instructional web modal
+    setShowWebModal(true);
+  };
+
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined' && navigator.clipboard) {
+      const fullUrl = `${window.location.origin}${targetRoute}`;
+      navigator.clipboard.writeText(fullUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+      triggerHaptic('light');
     }
   };
 
-  const handleUnpin = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    triggerHaptic('light');
-    if (isToolPinned(toolId)) togglePinTool(toolId);
-    if (isFavorite(toolId)) {
-      toggleFavorite({
-        id: toolId,
-        type: 'tool',
-        title: resolvedName,
-        category: resolvedCategory,
-        url: `/tools/${tool?.slug || toolId}`,
-        iconName: resolvedIcon,
-      });
-    }
-  };
+  const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-5 h-5' : 'w-4 h-4';
 
   // 1. Prominent Pill / Button Variant (for tool headers & workspace banners)
   if (variant === 'pill' || variant === 'button') {
-    if (pinned) {
+    if (justAdded) {
       return (
-        <div className={`inline-flex items-center rounded-2xl border p-1 shadow-xs transition-all duration-200 bg-brand-50/90 dark:bg-brand-950/70 border-brand-200 dark:border-brand-800/80 text-brand-700 dark:text-brand-300 ${className}`}>
-          <button
-            type="button"
-            onClick={handleAction}
-            title={loc.goToHome}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-black hover:text-brand-800 dark:hover:text-brand-200 cursor-pointer active:scale-95 transition-all"
-          >
-            <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
-            <span>{loc.pinnedToHome}</span>
-            <span className="text-[10px] opacity-75 font-bold flex items-center gap-1 bg-white/60 dark:bg-black/40 px-2 py-0.5 rounded-lg border border-brand-200/50 dark:border-brand-800/50">
-              <Home className="w-3 h-3" />
-              <span>{loc.viewNow}</span>
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={handleUnpin}
-            title={loc.unpin}
-            aria-label={loc.unpin}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-all cursor-pointer"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
+        <div
+          className={`inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs transition-all duration-200 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 shadow-xs animate-in zoom-in-95 ${className}`}
+        >
+          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
+          <span>{loc.addedSuccess}</span>
+          <Smartphone className="w-3.5 h-3.5 opacity-80" />
         </div>
       );
     }
 
     return (
-      <button
-        type="button"
-        onClick={handleAction}
-        title={loc.addToHome}
-        aria-label={loc.addToHome}
-        className={`inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs sm:text-xs transition-all duration-200 cursor-pointer active:scale-95 select-none bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-sm hover:shadow-md shadow-brand-600/20 ${className}`}
-      >
-        <Pin className="w-3.5 h-3.5 fill-current rotate-45 shrink-0" />
-        <span>{loc.addToHome}</span>
-        <Home className="w-3.5 h-3.5 opacity-80 shrink-0" />
-      </button>
+      <>
+        <button
+          type="button"
+          onClick={handleAddToPhoneScreen}
+          title={loc.btnTitle}
+          aria-label={loc.btnTitle}
+          className={`group/homebtn inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs transition-all duration-200 cursor-pointer active:scale-95 select-none bg-gradient-to-r from-sky-600 via-indigo-600 to-blue-700 hover:from-sky-500 hover:to-blue-600 text-white shadow-sm hover:shadow-md shadow-sky-600/25 border border-sky-400/30 ${className}`}
+        >
+          <div className="relative flex items-center justify-center">
+            <Smartphone className="w-3.5 h-3.5 shrink-0 group-hover/homebtn:scale-110 transition-transform" />
+            <Plus className="w-2 h-2 absolute -top-1 -right-1 text-white stroke-[4]" />
+          </div>
+          <span>{loc.btnTitle}</span>
+        </button>
+
+        {showWebModal && renderWebModal()}
+      </>
     );
   }
 
-  // 2. Icon Variant (for tool cards, grids, compact bars)
-  const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-5 h-5' : 'w-4 h-4';
-
+  // 2. Icon Variant (for compact bars and grids)
   return (
-    <button
-      type="button"
-      onClick={handleAction}
-      aria-label={pinned ? loc.unpin : loc.addToHome}
-      title={pinned ? `${loc.pinnedToHome} • ${loc.unpin}` : loc.addToHome}
-      className={`group/pin relative p-2 rounded-xl transition-all duration-200 active:scale-75 select-none cursor-pointer ${
-        pinned
-          ? 'text-brand-600 dark:text-brand-400 bg-brand-500/15 dark:bg-brand-500/25 shadow-xs border border-brand-500/30 ring-2 ring-brand-500/20'
-          : 'text-slate-400 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800'
-      } ${className}`}
-    >
-      <Pin
-        className={`${iconSize} transition-transform duration-200 ${
-          pinned ? 'fill-current rotate-45 scale-110 text-brand-600 dark:text-brand-400' : 'group-hover/pin:rotate-45'
-        }`}
-      />
+    <>
+      <button
+        type="button"
+        onClick={handleAddToPhoneScreen}
+        aria-label={loc.btnTitle}
+        title={loc.btnTitle}
+        className={`group/phonebtn relative p-2 rounded-xl transition-all duration-200 active:scale-75 select-none cursor-pointer text-slate-500 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-slate-800 ${className}`}
+      >
+        <div className="relative">
+          <Smartphone className={`${iconSize} transition-transform duration-200 group-hover/phonebtn:scale-110`} />
+          <Plus className="w-2.5 h-2.5 absolute -top-1 -right-1 text-sky-500 stroke-[3]" />
+        </div>
 
-      {/* Tiny celebratory sparkle dot when just added */}
-      {justPinned && (
-        <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500" />
-        </span>
-      )}
-    </button>
+        {justAdded && (
+          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+          </span>
+        )}
+      </button>
+
+      {showWebModal && renderWebModal()}
+    </>
   );
+
+  function renderWebModal() {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+        onClick={() => setShowWebModal(false)}
+      >
+        <div
+          dir={language === 'ur' || language === 'ar' ? 'rtl' : 'ltr'}
+          className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => setShowWebModal(false)}
+            aria-label={loc.close}
+            className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-sky-500/10 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
+              <Smartphone className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900 dark:text-slate-100">
+                {loc.modalTitle}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                {resolvedName}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            {loc.modalDesc(resolvedName)}
+          </p>
+
+          <div className="space-y-2.5 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 text-xs text-slate-700 dark:text-slate-300">
+            <div className="flex items-start gap-2">
+              <span className="font-bold text-sky-600 dark:text-sky-400">Android:</span>
+              <span>{loc.androidStep}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-bold text-sky-600 dark:text-sky-400">iPhone:</span>
+              <span>{loc.iosStep}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-sky-600 hover:bg-sky-500 text-white transition-all active:scale-95 cursor-pointer shadow-sm"
+            >
+              {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span>{copiedLink ? loc.copied : loc.copyLink}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowWebModal(false)}
+              className="px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
+            >
+              {loc.close}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }

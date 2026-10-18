@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { initNativeAndroidBridge, syncAndroidStatusBarTheme } from '@/lib/native/android-bridge';
+import {
+  initNativeAndroidBridge,
+  syncAndroidStatusBarTheme,
+  getNativeInitialRoute,
+  registerNativeDeepLinkHandler,
+} from '@/lib/native/android-bridge';
 import { adManager } from '@/lib/ads/AdManager';
 import { useTheme } from './ThemeContext';
 import { WifiOff, CheckCircle2 } from 'lucide-react';
@@ -16,6 +21,19 @@ export function NativeAndroidRuntime() {
   useEffect(() => {
     initNativeAndroidBridge(() => {
       router.back();
+    });
+
+    // Check initial native deep-link route from home screen shortcut or notification
+    const initialRoute = getNativeInitialRoute();
+    if (initialRoute) {
+      router.push(initialRoute);
+    }
+
+    // Listen for live deep link intents while the app is running
+    const unregisterDeepLink = registerNativeDeepLinkHandler((route) => {
+      if (route) {
+        router.push(route);
+      }
     });
 
     // Initialize official Google Mobile Ads SDK & UMP
@@ -42,6 +60,7 @@ export function NativeAndroidRuntime() {
     }
 
     return () => {
+      unregisterDeepLink();
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
