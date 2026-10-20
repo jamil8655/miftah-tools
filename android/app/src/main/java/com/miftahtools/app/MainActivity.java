@@ -60,6 +60,7 @@ public class MainActivity extends BridgeActivity {
     private static final String NOTIFICATION_CHANNEL_ID = "miftah_tools_notifications";
     private static final int RUNTIME_PERMISSIONS_REQ_CODE = 1001;
     private String pendingRoute = null;
+    private InAppUpdateHandler inAppUpdateHandler = null;
 
     public class AndroidDownloaderInterface {
         private final Context mContext;
@@ -153,6 +154,15 @@ public class MainActivity extends BridgeActivity {
                             android.util.Log.e("MiftahReview", "Failed to open Play Store listing: " + ex2.getMessage());
                         }
                     }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void checkForAppUpdate() {
+            runOnUiThread(() -> {
+                if (inAppUpdateHandler != null) {
+                    inAppUpdateHandler.checkForAppUpdate(true);
                 }
             });
         }
@@ -905,6 +915,10 @@ public class MainActivity extends BridgeActivity {
 
         createNotificationChannel();
         requestNativePermissions();
+
+        // Initialize Google Play In-App Updates and check for available updates
+        inAppUpdateHandler = new InAppUpdateHandler(this);
+        inAppUpdateHandler.checkForAppUpdate(false);
     }
 
     @Override
@@ -962,5 +976,28 @@ public class MainActivity extends BridgeActivity {
             });
         }
     }
-}
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (inAppUpdateHandler != null) {
+            inAppUpdateHandler.onResume();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (inAppUpdateHandler != null) {
+            inAppUpdateHandler.onDestroy();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (inAppUpdateHandler != null) {
+            inAppUpdateHandler.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+}

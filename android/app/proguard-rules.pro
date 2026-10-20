@@ -54,3 +54,8 @@
 -dontwarn com.google.firebase.**
 -dontwarn org.apache.http.**
 -dontwarn okio.**
+
+# Google Play In-App Updates & In-App Review
+-keep class com.google.android.play.core.appupdate.** { *; }
+-keep class com.google.android.play.core.install.** { *; }
+-keep class com.google.android.play.core.review.** { *; }
