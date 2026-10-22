@@ -4,4 +4,9 @@
     <string name="package_name">com.miftahtools.app</string>
     <string name="custom_url_scheme">com.miftahtools.app</string>
     <string name="server_client_id">701477341899-g0nbe75iskjqsjqat0r5u7ob5escu01v.apps.googleusercontent.com</string>
+
+    <!-- Meta (Facebook) App Configuration for App Events & Install Attribution -->
+    <string name="facebook_app_id">4850821388537330</string>
+    <string name="fb_login_protocol_scheme">fb4850821388537330</string>
+    <string name="facebook_client_token">4850821388537330</string>
 </resources>

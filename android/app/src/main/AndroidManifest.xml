@@ -56,6 +56,21 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3660764533582226~6406066130"/>
+
+        <!-- Meta (Facebook) App Credentials and Automatic Event Configuration -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="@string/facebook_client_token" />
+        <meta-data
+            android:name="com.facebook.sdk.AutoLogAppEventsEnabled"
+            android:value="true" />
+        <meta-data
+            android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled"
+            android:value="true" />
+
     </application>
 
     <!-- Permissions for Camera Scanner, Voice-to-Text / Microphone, and System Notifications -->
@@ -67,6 +82,9 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+
+    <!-- Google Play Advertising ID permission for Meta App Events & Ad Attribution -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <!-- Hardware camera & mic features (optional to allow installation on devices without physical camera/mic) -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />

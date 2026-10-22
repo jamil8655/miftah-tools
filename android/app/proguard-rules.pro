@@ -59,3 +59,21 @@
 -keep class com.google.android.play.core.appupdate.** { *; }
 -keep class com.google.android.play.core.install.** { *; }
 -keep class com.google.android.play.core.review.** { *; }
+
+# Meta (Facebook) Android SDK Rules
+-keep class com.facebook.** { *; }
+-dontwarn com.facebook.**
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keepnames class com.facebook.FacebookActivity
+-keepnames class com.facebook.CustomTabActivity
+
+# Preserve Google Play Services Advertising ID reflection used by Meta SDK for App Attribution
+-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient {
+    public static com.google.android.gms.ads.identifier.AdvertisingIdClient$Info getAdvertisingIdInfo(android.content.Context);
+}
+-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient$Info {
+    java.lang.String getId();
+    boolean isLimitAdTrackingEnabled();
+}

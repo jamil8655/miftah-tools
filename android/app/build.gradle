@@ -47,6 +47,9 @@ dependencies {
     implementation 'com.google.android.play:app-update:2.1.0'
     implementation 'com.google.android.material:material:1.12.0'
 
+    // Meta (Facebook) Android SDK Integration for App Events & Install Attribution
+    implementation 'com.facebook.android:facebook-android-sdk:18.3.0'
+
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

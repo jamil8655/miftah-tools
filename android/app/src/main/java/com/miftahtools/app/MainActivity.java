@@ -46,6 +46,8 @@ import com.google.android.play.core.review.ReviewManager;
 import com.google.android.play.core.review.ReviewManagerFactory;
 import com.google.android.gms.tasks.Task;
 
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
 
@@ -154,6 +156,31 @@ public class MainActivity extends BridgeActivity {
                             android.util.Log.e("MiftahReview", "Failed to open Play Store listing: " + ex2.getMessage());
                         }
                     }
+                }
+            });
+        }
+
+        
+        @JavascriptInterface
+        public void logMetaEvent(String eventName, String eventParamsJson) {
+            runOnUiThread(() -> {
+                try {
+                    AppEventsLogger logger = AppEventsLogger.newLogger(MainActivity.this);
+                    if (eventParamsJson != null && !eventParamsJson.trim().isEmpty()) {
+                        Bundle bundle = new Bundle();
+                        org.json.JSONObject json = new org.json.JSONObject(eventParamsJson);
+                        java.util.Iterator<String> keys = json.keys();
+                        while (keys.hasNext()) {
+                            String key = keys.next();
+                            bundle.putString(key, json.optString(key));
+                        }
+                        logger.logEvent(eventName, bundle);
+                    } else {
+                        logger.logEvent(eventName);
+                    }
+                    android.util.Log.d("MiftahMeta", "Logged Meta event: " + eventName);
+                } catch (Exception e) {
+                    android.util.Log.w("MiftahMeta", "Error logging Meta event: " + e.getMessage());
                 }
             });
         }
@@ -919,6 +946,16 @@ public class MainActivity extends BridgeActivity {
         // Initialize Google Play In-App Updates and check for available updates
         inAppUpdateHandler = new InAppUpdateHandler(this);
         inAppUpdateHandler.checkForAppUpdate(false);
+        // Initialize Meta (Facebook) SDK and activate automatic event tracking
+        try {
+            if (!FacebookSdk.isInitialized()) {
+                FacebookSdk.sdkInitialize(getApplicationContext());
+            }
+            AppEventsLogger.activateApp(getApplication());
+            android.util.Log.d("MiftahMeta", "Meta SDK initialized successfully. App events active.");
+        } catch (Exception e) {
+            android.util.Log.w("MiftahMeta", "Meta SDK initialization note: " + e.getMessage());
+        }
     }
 
     @Override
